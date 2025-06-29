@@ -781,59 +781,397 @@ defmodule AriaEngineCore.Math.Primitives do
   @spec xor_bool(boolean(), boolean()) :: boolean()
   def xor_bool(a, b), do: (a and not b) or (not a and b)
 
+  ## Hyperbolic Operations
+
+  @doc """
+  Hyperbolic sine function.
+
+  Implements `math/sinh` operation from KHR Interactivity spec.
+  """
+  @spec sinh_float(float()) :: float()
+  def sinh_float(a) do
+    cond do
+      a == 0.0 or a == -0.0 -> a
+      is_infinite(a) -> a
+      true -> :math.sinh(a)
+    end
+  end
+
+  @doc """
+  Hyperbolic cosine function.
+
+  Implements `math/cosh` operation from KHR Interactivity spec.
+  """
+  @spec cosh_float(float()) :: float()
+  def cosh_float(a) do
+    cond do
+      a == 0.0 or a == -0.0 -> 1.0
+      is_infinite(a) -> inf()
+      true -> :math.cosh(a)
+    end
+  end
+
+  @doc """
+  Hyperbolic tangent function.
+
+  Implements `math/tanh` operation from KHR Interactivity spec.
+  """
+  @spec tanh_float(float()) :: float()
+  def tanh_float(a) do
+    cond do
+      a == 0.0 or a == -0.0 -> a
+      is_infinite(a) and a > 0 -> 1.0
+      is_infinite(a) and a < 0 -> -1.0
+      true -> :math.tanh(a)
+    end
+  end
+
+  @doc """
+  Inverse hyperbolic sine function.
+
+  Implements `math/asinh` operation from KHR Interactivity spec.
+  """
+  @spec asinh_float(float()) :: float()
+  def asinh_float(a) do
+    cond do
+      a == 0.0 or a == -0.0 -> a
+      is_infinite(a) -> a
+      true -> :math.asinh(a)
+    end
+  end
+
+  @doc """
+  Inverse hyperbolic cosine function.
+
+  Implements `math/acosh` operation from KHR Interactivity spec.
+  """
+  @spec acosh_float(float()) :: float()
+  def acosh_float(a) do
+    cond do
+      a < 1.0 -> nan()
+      a == 1.0 -> 0.0
+      is_infinite(a) and a > 0 -> inf()
+      true -> :math.acosh(a)
+    end
+  end
+
+  @doc """
+  Inverse hyperbolic tangent function.
+
+  Implements `math/atanh` operation from KHR Interactivity spec.
+  """
+  @spec atanh_float(float()) :: float()
+  def atanh_float(a) do
+    cond do
+      abs(a) > 1.0 -> nan()
+      a == 1.0 -> inf()
+      a == -1.0 -> -inf()
+      a == 0.0 or a == -0.0 -> a
+      true -> :math.atanh(a)
+    end
+  end
+
   ## Bitwise Operations (Integer)
-
-  @doc """
-  Bitwise AND operation for integers.
-
-  Implements `math/bitand` operation from KHR Interactivity spec.
-  """
-  @spec bitand_int(integer(), integer()) :: integer()
-  def bitand_int(a, b), do: (a &&& b) &&& 0xFFFFFFFF |> to_signed_32()
-
-  @doc """
-  Bitwise OR operation for integers.
-
-  Implements `math/bitor` operation from KHR Interactivity spec.
-  """
-  @spec bitor_int(integer(), integer()) :: integer()
-  def bitor_int(a, b), do: (a ||| b) &&& 0xFFFFFFFF |> to_signed_32()
-
-  @doc """
-  Bitwise XOR operation for integers.
-
-  Implements `math/bitxor` operation from KHR Interactivity spec.
-  """
-  @spec bitxor_int(integer(), integer()) :: integer()
-  def bitxor_int(a, b), do: bxor(a, b) &&& 0xFFFFFFFF |> to_signed_32()
 
   @doc """
   Bitwise NOT operation for integers.
 
-  Implements `math/bitnot` operation from KHR Interactivity spec.
+  Implements `math/not` operation from KHR Interactivity spec.
   """
-  @spec bitnot_int(integer()) :: integer()
-  def bitnot_int(a), do: (~~~a) &&& 0xFFFFFFFF |> to_signed_32()
+  @spec not_int(integer()) :: integer()
+  def not_int(a), do: (~~~a) &&& 0xFFFFFFFF |> to_signed_32()
 
   @doc """
-  Bitwise left shift operation for integers.
+  Bitwise AND operation for integers.
 
-  Implements `math/lshift` operation from KHR Interactivity spec.
+  Implements `math/and` operation from KHR Interactivity spec.
   """
-  @spec lshift_int(integer(), integer()) :: integer()
-  def lshift_int(_a, b) when b >= 32, do: 0
-  def lshift_int(a, b) when b <= 0, do: a &&& 0xFFFFFFFF |> to_signed_32()
-  def lshift_int(a, b), do: (a <<< b) &&& 0xFFFFFFFF |> to_signed_32()
+  @spec and_int(integer(), integer()) :: integer()
+  def and_int(a, b), do: (a &&& b) &&& 0xFFFFFFFF |> to_signed_32()
 
   @doc """
-  Bitwise right shift operation for integers.
+  Bitwise OR operation for integers.
 
-  Implements `math/rshift` operation from KHR Interactivity spec.
+  Implements `math/or` operation from KHR Interactivity spec.
   """
-  @spec rshift_int(integer(), integer()) :: integer()
-  def rshift_int(a, b) when b >= 32, do: if(a < 0, do: -1, else: 0)
-  def rshift_int(a, b) when b <= 0, do: a &&& 0xFFFFFFFF |> to_signed_32()
-  def rshift_int(a, b), do: (a >>> b) &&& 0xFFFFFFFF |> to_signed_32()
+  @spec or_int(integer(), integer()) :: integer()
+  def or_int(a, b), do: (a ||| b) &&& 0xFFFFFFFF |> to_signed_32()
+
+  @doc """
+  Bitwise XOR operation for integers.
+
+  Implements `math/xor` operation from KHR Interactivity spec.
+  """
+  @spec xor_int(integer(), integer()) :: integer()
+  def xor_int(a, b), do: bxor(a, b) &&& 0xFFFFFFFF |> to_signed_32()
+
+  @doc """
+  Right shift operation for integers.
+
+  Implements `math/asr` operation from KHR Interactivity spec.
+  Only the lowest 5 bits of b are considered.
+  """
+  @spec asr_int(integer(), integer()) :: integer()
+  def asr_int(a, b) do
+    shift_amount = b &&& 0x1F  # Only use lowest 5 bits
+    result = a >>> shift_amount
+    result &&& 0xFFFFFFFF |> to_signed_32()
+  end
+
+  @doc """
+  Left shift operation for integers.
+
+  Implements `math/lsl` operation from KHR Interactivity spec.
+  Only the lowest 5 bits of b are considered.
+  """
+  @spec lsl_int(integer(), integer()) :: integer()
+  def lsl_int(a, b) do
+    shift_amount = b &&& 0x1F  # Only use lowest 5 bits
+    result = a <<< shift_amount
+    result &&& 0xFFFFFFFF |> to_signed_32()
+  end
+
+  @doc """
+  Count leading zeros operation for integers.
+
+  Implements `math/clz` operation from KHR Interactivity spec.
+  """
+  @spec clz_int(integer()) :: integer()
+  def clz_int(0), do: 32
+  def clz_int(a) when a < 0, do: 0
+  def clz_int(a) do
+    # Convert to 32-bit unsigned and count leading zeros
+    unsigned_a = a &&& 0xFFFFFFFF
+    count_leading_zeros(unsigned_a, 0)
+  end
+
+  @doc """
+  Count trailing zeros operation for integers.
+
+  Implements `math/ctz` operation from KHR Interactivity spec.
+  """
+  @spec ctz_int(integer()) :: integer()
+  def ctz_int(0), do: 32
+  def ctz_int(a) do
+    # Count trailing zeros by finding position of least significant bit
+    unsigned_a = a &&& 0xFFFFFFFF
+    count_trailing_zeros(unsigned_a, 0)
+  end
+
+  @doc """
+  Count set bits operation for integers.
+
+  Implements `math/popcnt` operation from KHR Interactivity spec.
+  """
+  @spec popcnt_int(integer()) :: integer()
+  def popcnt_int(0), do: 0
+  def popcnt_int(-1), do: 32
+  def popcnt_int(a) do
+    unsigned_a = a &&& 0xFFFFFFFF
+    count_set_bits(unsigned_a, 0)
+  end
+
+  ## Type Conversion Operations
+
+  @doc """
+  Boolean to integer conversion.
+
+  Implements `type/boolToInt` operation from KHR Interactivity spec.
+  """
+  @spec bool_to_int(boolean()) :: integer()
+  def bool_to_int(true), do: 1
+  def bool_to_int(false), do: 0
+
+  @doc """
+  Boolean to float conversion.
+
+  Implements `type/boolToFloat` operation from KHR Interactivity spec.
+  """
+  @spec bool_to_float(boolean()) :: float()
+  def bool_to_float(true), do: 1.0
+  def bool_to_float(false), do: 0.0
+
+  @doc """
+  Integer to boolean conversion.
+
+  Implements `type/intToBool` operation from KHR Interactivity spec.
+  """
+  @spec int_to_bool(integer()) :: boolean()
+  def int_to_bool(0), do: false
+  def int_to_bool(_), do: true
+
+  @doc """
+  Integer to float conversion.
+
+  Implements `type/intToFloat` operation from KHR Interactivity spec.
+  """
+  @spec int_to_float(integer()) :: float()
+  def int_to_float(a), do: a / 1.0
+
+  @doc """
+  Float to boolean conversion.
+
+  Implements `type/floatToBool` operation from KHR Interactivity spec.
+  """
+  @spec float_to_bool(float()) :: boolean()
+  def float_to_bool(a) do
+    cond do
+      is_nan(a) -> false
+      a == 0.0 -> false
+      a == -0.0 -> false
+      true -> true
+    end
+  end
+
+  @doc """
+  Float to integer conversion.
+
+  Implements `type/floatToInt` operation from KHR Interactivity spec.
+  """
+  @spec float_to_int(float()) :: integer()
+  def float_to_int(a) do
+    cond do
+      a == 0.0 or a == -0.0 or is_infinite(a) or is_nan(a) -> 0
+      true ->
+        # Truncate towards zero and handle 32-bit signed overflow
+        truncated = trunc(a)
+        # Apply 32-bit signed integer conversion as per spec
+        k = rem(truncated, 4_294_967_296)
+        if k >= 2_147_483_648 do
+          k - 4_294_967_296
+        else
+          k
+        end
+    end
+  end
+
+  ## Swizzle Operations
+
+  @doc """
+  Combine two floats into a float2 vector.
+
+  Implements `math/combine2` operation from KHR Interactivity spec.
+  """
+  @spec combine2(float(), float()) :: {float(), float()}
+  def combine2(a, b), do: {a, b}
+
+  @doc """
+  Combine three floats into a float3 vector.
+
+  Implements `math/combine3` operation from KHR Interactivity spec.
+  """
+  @spec combine3(float(), float(), float()) :: {float(), float(), float()}
+  def combine3(a, b, c), do: {a, b, c}
+
+  @doc """
+  Combine four floats into a float4 vector.
+
+  Implements `math/combine4` operation from KHR Interactivity spec.
+  """
+  @spec combine4(float(), float(), float(), float()) :: {float(), float(), float(), float()}
+  def combine4(a, b, c, d), do: {a, b, c, d}
+
+  @doc """
+  Extract two floats from a float2 vector.
+
+  Implements `math/extract2` operation from KHR Interactivity spec.
+  """
+  @spec extract2({float(), float()}) :: {float(), float()}
+  def extract2({a, b}), do: {a, b}
+
+  @doc """
+  Extract three floats from a float3 vector.
+
+  Implements `math/extract3` operation from KHR Interactivity spec.
+  """
+  @spec extract3({float(), float(), float()}) :: {float(), float(), float()}
+  def extract3({a, b, c}), do: {a, b, c}
+
+  @doc """
+  Extract four floats from a float4 vector.
+
+  Implements `math/extract4` operation from KHR Interactivity spec.
+  """
+  @spec extract4({float(), float(), float(), float()}) :: {float(), float(), float(), float()}
+  def extract4({a, b, c, d}), do: {a, b, c, d}
+
+  ## Matrix Combination Operations
+
+  @doc """
+  Combine 4 floats into a 2x2 matrix.
+
+  Implements `math/combine2x2` operation from KHR Interactivity spec.
+  """
+  @spec combine2x2(float(), float(), float(), float()) :: {{float(), float()}, {float(), float()}}
+  def combine2x2(a, b, c, d), do: {{a, b}, {c, d}}
+
+  @doc """
+  Combine 9 floats into a 3x3 matrix.
+
+  Implements `math/combine3x3` operation from KHR Interactivity spec.
+  """
+  @spec combine3x3(float(), float(), float(), float(), float(), float(), float(), float(), float()) ::
+    {{float(), float(), float()}, {float(), float(), float()}, {float(), float(), float()}}
+  def combine3x3(a, b, c, d, e, f, g, h, i), do: {{a, b, c}, {d, e, f}, {g, h, i}}
+
+  @doc """
+  Combine 16 floats into a 4x4 matrix.
+
+  Implements `math/combine4x4` operation from KHR Interactivity spec.
+  """
+  @spec combine4x4(float(), float(), float(), float(), float(), float(), float(), float(),
+                   float(), float(), float(), float(), float(), float(), float(), float()) ::
+    {{float(), float(), float(), float()}, {float(), float(), float(), float()},
+     {float(), float(), float(), float()}, {float(), float(), float(), float()}}
+  def combine4x4(a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p) do
+    {{a, b, c, d}, {e, f, g, h}, {i, j, k, l}, {m, n, o, p}}
+  end
+
+  @doc """
+  Extract 4 floats from a 2x2 matrix.
+
+  Implements `math/extract2x2` operation from KHR Interactivity spec.
+  """
+  @spec extract2x2({{float(), float()}, {float(), float()}}) :: {float(), float(), float(), float()}
+  def extract2x2({{a, b}, {c, d}}), do: {a, b, c, d}
+
+  @doc """
+  Extract 9 floats from a 3x3 matrix.
+
+  Implements `math/extract3x3` operation from KHR Interactivity spec.
+  """
+  @spec extract3x3({{float(), float(), float()}, {float(), float(), float()}, {float(), float(), float()}}) ::
+    {float(), float(), float(), float(), float(), float(), float(), float(), float()}
+  def extract3x3({{a, b, c}, {d, e, f}, {g, h, i}}), do: {a, b, c, d, e, f, g, h, i}
+
+  @doc """
+  Extract 16 floats from a 4x4 matrix.
+
+  Implements `math/extract4x4` operation from KHR Interactivity spec.
+  """
+  @spec extract4x4({{float(), float(), float(), float()}, {float(), float(), float(), float()},
+                    {float(), float(), float(), float()}, {float(), float(), float(), float()}}) ::
+    {float(), float(), float(), float(), float(), float(), float(), float(),
+     float(), float(), float(), float(), float(), float(), float(), float()}
+  def extract4x4({{a, b, c, d}, {e, f, g, h}, {i, j, k, l}, {m, n, o, p}}) do
+    {a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p}
+  end
+
+  ## Helper Functions for Bitwise Operations
+
+  defp count_leading_zeros(0, acc), do: 32 - acc
+  defp count_leading_zeros(n, acc) when n >= 0x80000000, do: acc
+  defp count_leading_zeros(n, acc), do: count_leading_zeros(n <<< 1, acc + 1)
+
+  defp count_trailing_zeros(n, acc) when (n &&& 1) == 1, do: acc
+  defp count_trailing_zeros(0, _acc), do: 32
+  defp count_trailing_zeros(n, acc), do: count_trailing_zeros(n >>> 1, acc + 1)
+
+  defp count_set_bits(0, acc), do: acc
+  defp count_set_bits(n, acc) do
+    new_acc = if (n &&& 1) == 1, do: acc + 1, else: acc
+    count_set_bits(n >>> 1, new_acc)
+  end
 
   ## Helper Functions
 

@@ -1,8 +1,8 @@
-defmodule AriaEngineCore.Math.IKNode3D do
+defmodule AriaEngineCore.Math.Joint do
   @moduledoc """
   Transform hierarchy management for EWBIK bone chains.
 
-  IKNode3D provides efficient transform hierarchy management with parent-child
+  Joint provides efficient transform hierarchy management with parent-child
   relationships, dirty state tracking, and coordinate space conversions. This is
   a port of the IKNode3D class from the many_bone_ik project.
 
@@ -18,20 +18,20 @@ defmodule AriaEngineCore.Math.IKNode3D do
   ## Usage
 
       # Create root bone
-      {:ok, root} = IKNode3D.new()
+      {:ok, root} = Joint.new()
 
       # Create child bone with parent relationship
-      {:ok, child} = IKNode3D.new(parent: root)
+      {:ok, child} = Joint.new(parent: root)
 
       # Set local transform
-      child = IKNode3D.set_transform(child, transform)
+      child = Joint.set_transform(child, transform)
 
       # Get global transform (automatically computed from hierarchy)
-      global_transform = IKNode3D.get_global_transform(child)
+      global_transform = Joint.get_global_transform(child)
 
   ## Transform Hierarchy
 
-  Each IKNode3D maintains:
+  Each Joint maintains:
   - **Local Transform**: Transform relative to parent bone
   - **Global Transform**: Absolute transform in world space (computed from hierarchy)
   - **Dirty State**: Tracks what needs recomputation for efficiency
@@ -41,10 +41,10 @@ defmodule AriaEngineCore.Math.IKNode3D do
   ## Coordinate Space Conversions
 
       # Convert point from world space to local bone space
-      local_point = IKNode3D.to_local(bone, world_point)
+      local_point = Joint.to_local(bone, world_point)
 
       # Convert point from local bone space to world space
-      world_point = IKNode3D.to_global(bone, local_point)
+      world_point = Joint.to_global(bone, local_point)
 
   ## Citations
 
@@ -92,7 +92,7 @@ defmodule AriaEngineCore.Math.IKNode3D do
   ]
 
   # Global registry for node hierarchy management
-  @registry_name :ik_node_3d_registry
+  @registry_name :joint_registry
 
   # Dirty state constants
   @dirty_none :dirty_none
@@ -101,23 +101,23 @@ defmodule AriaEngineCore.Math.IKNode3D do
   @dirty_global :dirty_global
 
   @doc """
-  Create a new IKNode3D with optional parent relationship.
+  Create a new Joint with optional parent relationship.
 
   ## Options
 
-  - `:parent` - Parent IKNode3D to attach to (creates parent-child relationship)
+  - `:parent` - Parent Joint to attach to (creates parent-child relationship)
   - `:disable_scale` - Whether to disable scale propagation (default: false)
 
   ## Examples
 
       # Create root node
-      {:ok, root} = IKNode3D.new()
+      {:ok, root} = Joint.new()
 
       # Create child node
-      {:ok, child} = IKNode3D.new(parent: root)
+      {:ok, child} = Joint.new(parent: root)
 
       # Create node with scale disabled
-      {:ok, joint} = IKNode3D.new(disable_scale: true)
+      {:ok, joint} = Joint.new(disable_scale: true)
 
   ## Returns
 
@@ -132,12 +132,18 @@ defmodule AriaEngineCore.Math.IKNode3D do
       }
 
       # Register the node
-      Registry.register(@registry_name, node.id, node)
+      case Registry.register(@registry_name, node.id, node) do
+        {:ok, _pid} ->
+          # Set parent if provided
+          case Keyword.get(opts, :parent) do
+            nil -> {:ok, node}
+            parent_node ->
+              case set_parent(node, parent_node) do
+                updated_node -> {:ok, updated_node}
+              end
+          end
 
-      # Set parent if provided
-      case Keyword.get(opts, :parent) do
-        nil -> {:ok, node}
-        parent_node -> set_parent(node, parent_node)
+        {:error, reason} -> {:error, reason}
       end
     end
   end
@@ -151,7 +157,7 @@ defmodule AriaEngineCore.Math.IKNode3D do
   ## Examples
 
       transform = Matrix4.translation({0.5, 1.0, 0.0})
-      node = IKNode3D.set_transform(node, transform)
+      node = Joint.set_transform(node, transform)
 
   """
   @spec set_transform(t(), transform()) :: t()
@@ -179,7 +185,7 @@ defmodule AriaEngineCore.Math.IKNode3D do
   ## Examples
 
       global_transform = Matrix4.translation({1.0, 2.0, 3.0})
-      node = IKNode3D.set_global_transform(node, global_transform)
+      node = Joint.set_global_transform(node, global_transform)
 
   """
   @spec set_global_transform(t(), transform()) :: t()
@@ -190,7 +196,7 @@ defmodule AriaEngineCore.Math.IKNode3D do
 
       parent_node ->
         parent_global = get_global_transform(parent_node)
-        parent_inverse = Matrix4.inverse(parent_global)
+        {parent_inverse, _valid} = Matrix4.inverse(parent_global)
         Matrix4.multiply(parent_inverse, global_transform)
     end
 
@@ -211,7 +217,7 @@ defmodule AriaEngineCore.Math.IKNode3D do
 
   ## Examples
 
-      local_transform = IKNode3D.get_transform(node)
+      local_transform = Joint.get_transform(node)
 
   """
   @spec get_transform(t()) :: transform()
@@ -232,40 +238,40 @@ defmodule AriaEngineCore.Math.IKNode3D do
 
   ## Examples
 
-      global_transform = IKNode3D.get_global_transform(node)
+      global_transform = Joint.get_global_transform(node)
 
   """
   @spec get_global_transform(t()) :: transform()
   def get_global_transform(node) do
-    node = if has_dirty_flag?(node.dirty, @dirty_global) do
-      node = if has_dirty_flag?(node.dirty, @dirty_local) do
+    if has_dirty_flag?(node.dirty, @dirty_global) do
+      updated_node = if has_dirty_flag?(node.dirty, @dirty_local) do
         update_local_transform(node)
       else
         node
       end
 
-      global_transform = case get_parent_node(node) do
+      global_transform = case get_parent_node(updated_node) do
         nil ->
-          node.local_transform
+          updated_node.local_transform
 
         parent_node ->
           parent_global = get_global_transform(parent_node)
-          Matrix4.multiply(parent_global, node.local_transform)
+          Matrix4.multiply(parent_global, updated_node.local_transform)
       end
 
-      global_transform = if node.disable_scale do
+      global_transform = if updated_node.disable_scale do
         Matrix4.orthogonalize(global_transform)
       else
         global_transform
       end
 
-      updated_node = %{node |
+      final_node = %{updated_node |
         global_transform: global_transform,
-        dirty: remove_dirty_flag(node.dirty, @dirty_global)
+        dirty: remove_dirty_flag(updated_node.dirty, @dirty_global)
       }
 
-      update_registry(updated_node)
-      updated_node.global_transform
+      update_registry(final_node)
+      final_node.global_transform
     else
       node.global_transform
     end
@@ -279,7 +285,7 @@ defmodule AriaEngineCore.Math.IKNode3D do
 
   ## Examples
 
-      child = IKNode3D.set_parent(child, parent)
+      child = Joint.set_parent(child, parent)
 
   """
   @spec set_parent(t(), t() | nil) :: t()
@@ -321,7 +327,7 @@ defmodule AriaEngineCore.Math.IKNode3D do
 
   ## Examples
 
-      parent = IKNode3D.get_parent(node)
+      parent = Joint.get_parent(node)
 
   Returns `nil` if node has no parent.
   """
@@ -336,13 +342,13 @@ defmodule AriaEngineCore.Math.IKNode3D do
   ## Examples
 
       global_point = {1.0, 2.0, 3.0}
-      local_point = IKNode3D.to_local(node, global_point)
+      local_point = Joint.to_local(node, global_point)
 
   """
   @spec to_local(t(), Vector3.t()) :: Vector3.t()
   def to_local(node, global_point) do
     global_transform = get_global_transform(node)
-    inverse_transform = Matrix4.inverse(global_transform)
+    {inverse_transform, _valid} = Matrix4.inverse(global_transform)
     Matrix4.transform_point(inverse_transform, global_point)
   end
 
@@ -352,7 +358,7 @@ defmodule AriaEngineCore.Math.IKNode3D do
   ## Examples
 
       local_point = {0.5, 0.0, 0.0}
-      global_point = IKNode3D.to_global(node, local_point)
+      global_point = Joint.to_global(node, local_point)
 
   """
   @spec to_global(t(), Vector3.t()) :: Vector3.t()
@@ -373,7 +379,7 @@ defmodule AriaEngineCore.Math.IKNode3D do
   ## Examples
 
       rotation_basis = Matrix4.rotation_y(Math.pi / 4)
-      node = IKNode3D.rotate_local_with_global(node, rotation_basis, true)
+      node = Joint.rotate_local_with_global(node, rotation_basis, true)
 
   """
   @spec rotate_local_with_global(t(), basis(), boolean()) :: t()
@@ -420,7 +426,7 @@ defmodule AriaEngineCore.Math.IKNode3D do
 
   ## Examples
 
-      node = IKNode3D.set_disable_scale(node, true)
+      node = Joint.set_disable_scale(node, true)
 
   """
   @spec set_disable_scale(t(), boolean()) :: t()
@@ -435,7 +441,7 @@ defmodule AriaEngineCore.Math.IKNode3D do
 
   ## Examples
 
-      is_disabled = IKNode3D.is_scale_disabled(node)
+      is_disabled = Joint.is_scale_disabled(node)
 
   """
   @spec is_scale_disabled(t()) :: boolean()
@@ -450,7 +456,7 @@ defmodule AriaEngineCore.Math.IKNode3D do
 
   ## Examples
 
-      IKNode3D.cleanup(node)
+      Joint.cleanup(node)
 
   """
   @spec cleanup(t()) :: :ok

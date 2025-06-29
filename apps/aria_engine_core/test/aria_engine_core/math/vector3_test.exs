@@ -2,7 +2,7 @@ defmodule AriaEngineCore.Math.Vector3Test do
   use ExUnit.Case
   doctest AriaEngineCore.Math.Vector3
 
-  alias AriaEngineCore.Math.Vector3
+  alias AriaEngineCore.Math.{Vector3, Primitives}
 
   describe "Vector3.new/3" do
     test "creates vector from three floats" do
@@ -34,10 +34,10 @@ defmodule AriaEngineCore.Math.Vector3Test do
 
     test "handles special IEEE-754 cases" do
       # Infinity components should return positive infinity
-      inf = :math.pow(1.0, 0.0) / 0.0
-      assert :math.is_infinite(Vector3.length({inf, 0.0, 0.0}))
-      assert :math.is_infinite(Vector3.length({0.0, inf, 0.0}))
-      assert :math.is_infinite(Vector3.length({0.0, 0.0, inf}))
+      inf = Primitives.inf()
+      assert Primitives.isinf_float(Vector3.length({inf, 0.0, 0.0}))
+      assert Primitives.isinf_float(Vector3.length({0.0, inf, 0.0}))
+      assert Primitives.isinf_float(Vector3.length({0.0, 0.0, inf}))
     end
   end
 

@@ -12,7 +12,7 @@ defmodule AriaEngineCore.Math do
   defdelegate new_vector3(x, y, z), to: AriaEngineCore.Math.Vector3, as: :new
   defdelegate new_quaternion(x, y, z, w), to: AriaEngineCore.Math.Quaternion, as: :new
   defdelegate new_matrix4(m0, m1, m2, m3, m4, m5, m6, m7, m8, m9, m10, m11, m12, m13, m14, m15), to: AriaEngineCore.Math.Matrix4, as: :new
-  defdelegate new_ik_node_3d(opts), to: AriaEngineCore.Math.IKNode3D, as: :new
+  defdelegate new_joint(opts), to: AriaEngineCore.Math.Joint, as: :new
 
   # Commonly used constants
   defdelegate vector3_zero(), to: AriaEngineCore.Math.Vector3, as: :zero

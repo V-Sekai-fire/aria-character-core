@@ -183,7 +183,7 @@ defmodule AriaEngineCore.Math.Matrix4Test do
       {ox, oy, oz, ow} = rotation
       # Compare magnitudes since quaternions q and -q represent same rotation
       rotation_dot = Quaternion.dot(recovered_rotation, rotation)
-      assert(:math.abs(rotation_dot) > 0.999)  # Should be very close to ±1
+      assert(abs(rotation_dot) > 0.999)  # Should be very close to ±1
     end
   end
 
