@@ -9,6 +9,7 @@ defmodule AriaEngineCore.Domain do
   alias AriaEngineCore.Domain.Methods
   alias AriaEngineCore.Domain.Utils
   alias AriaEngineCore.Domain.BehaviourImpl
+  alias AriaCore.Domain, as: AriaCoreDomain # Alias to avoid conflict with AriaEngineCore.Domain
   @type t :: Core.t()
   defdelegate new(name), to: Core
   defdelegate validate(domain), to: Core
@@ -26,17 +27,19 @@ defmodule AriaEngineCore.Domain do
   defdelegate add_unigoal_methods(domain, goal_type, method_tuples), to: Methods
   defdelegate add_multigoal_method(domain, method_name, method_fn), to: Methods
   defdelegate add_multigoal_method(domain, method_fn), to: Methods
+  defdelegate add_multitodo_method(domain, method_name, method_fn), to: Methods # Added
   defdelegate get_task_methods(domain, task_name), to: Methods
   defdelegate get_unigoal_methods(domain, goal_type), to: Methods
   defdelegate get_multigoal_methods(domain), to: Methods
+  defdelegate get_multitodo_methods(domain), to: Methods # Added
   defdelegate get_goal_methods(domain, predicate), to: Methods
   defdelegate get_method(domain, method_name), to: Methods
   defdelegate has_task_methods?(domain, task_name), to: Methods
   defdelegate has_unigoal_methods?(domain, goal_type), to: Methods
-  defdelegate set_entity_registry(domain, registry), to: Core
-  defdelegate get_entity_registry(domain), to: Core
-  defdelegate set_temporal_specifications(domain, specs), to: Core
-  defdelegate get_temporal_specifications(domain), to: Core
+  defdelegate set_entity_registry(domain, registry), to: AriaCoreDomain
+  defdelegate get_entity_registry(domain), to: AriaCoreDomain
+  defdelegate set_temporal_specifications(domain, specs), to: AriaCoreDomain
+  defdelegate get_temporal_specifications(domain), to: AriaCoreDomain
 
   defdelegate verify_goal(state, method_name, state_var, args, desired_values, depth, verbose),
     to: Utils

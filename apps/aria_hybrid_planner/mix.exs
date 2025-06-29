@@ -27,7 +27,6 @@ defmodule AriaHybridPlanner.MixProject do
   defp deps do
     [
       # Internal dependencies
-      {:aria_engine_core, path: "../aria_engine_core"},
       {:aria_state, path: "../aria_state"},
       {:aria_timeline, path: "../aria_timeline"},
       {:aria_minizinc_stn, path: "../aria_minizinc_stn"},
