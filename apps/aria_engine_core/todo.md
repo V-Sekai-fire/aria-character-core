@@ -30,25 +30,11 @@ AriaEngineCore provides the foundational temporal planning and execution capabil
 
 ## Implementation Plan
 
-### Phase 1: EWBIK Math Solver Ports (FOUNDATION - CRITICAL PRIORITY)
+### Phase 0: KHR Interactivity Mathematical Primitives Foundation (CRITICAL FOUNDATION)
 
-**Priority: CRITICAL - Mathematical foundation for all IK operations**
+**Priority: CRITICAL FOUNDATION - Mathematical bedrock for all EWBIK algorithms and test domain**
 
-- [ ] **Quaternion Characteristic Polynomial (QCP) Algorithm Port**
-  - [ ] Create `lib/aria_engine_core/math/qcp.ex`
-  - [ ] Port `weighted_superpose/4` function from C++ implementation
-  - [ ] Implement inner product matrix calculation
-  - [ ] Implement characteristic polynomial solving for optimal quaternion
-  - [ ] Add numerical stability handling and edge case management
-  - [ ] Comprehensive test suite for QCP algorithm accuracy
-
-- [ ] **IKNode3D Hierarchy Management Port**
-  - [ ] Create `lib/aria_engine_core/math/ik_node_3d.ex`
-  - [ ] Port transform hierarchy management from C++
-  - [ ] Implement local/global coordinate space conversions
-  - [ ] Add transform propagation and dirty state tracking
-  - [ ] Support parent-child bone relationships
-  - [ ] Scale management and transform composition
+All subsequent phases depend on these fundamental mathematical operations. These are pure mathematical functions that enable both EWBIK algorithms and the test domain to function properly.
 
 - [ ] **KHR Interactivity Mathematical Primitives (Standards-Based)**
   - [ ] Create `lib/aria_engine_core/math/vector3.ex` - Implements glTF KHR Interactivity `float3` operations
@@ -86,20 +72,44 @@ AriaEngineCore provides the foundational temporal planning and execution capabil
     - [ ] Performance optimizations while maintaining specification compliance
     - [ ] Comprehensive test suite validating against KHR Interactivity test cases
 
+### Phase 1: EWBIK Math Solver Ports (CRITICAL PRIORITY)
+
+**Priority: CRITICAL - Specialized EWBIK mathematical algorithms built on Phase 0 foundation**
+
+**Dependencies:** Requires Phase 0 mathematical primitives (vector3, quaternion, transform3d operations)
+
+- [ ] **Quaternion Characteristic Polynomial (QCP) Algorithm Port**
+  - [ ] Create `lib/aria_engine_core/math/qcp.ex`
+  - [ ] Port `weighted_superpose/4` function from C++ implementation
+  - [ ] Implement inner product matrix calculation using Phase 0 matrix operations
+  - [ ] Implement characteristic polynomial solving for optimal quaternion
+  - [ ] Add numerical stability handling and edge case management
+  - [ ] Comprehensive test suite for QCP algorithm accuracy
+
+- [ ] **IKNode3D Hierarchy Management Port**
+  - [ ] Create `lib/aria_engine_core/math/ik_node_3d.ex`
+  - [ ] Port transform hierarchy management from C++ using Phase 0 transform operations
+  - [ ] Implement local/global coordinate space conversions
+  - [ ] Add transform propagation and dirty state tracking
+  - [ ] Support parent-child bone relationships
+  - [ ] Scale management and transform composition
+
 ### Phase 2: EWBIK Algorithm Implementation (HIGH PRIORITY)
 
 **Priority: HIGH - Core EWBIK solver for multi-effector coordination**
 
+**Dependencies:** Requires Phase 0 mathematical primitives and Phase 1 specialized EWBIK math solvers
+
 - [ ] **Skeleton Segmentation System**
   - [ ] Create `lib/aria_engine_core/ewbik/segmentation.ex`
-  - [ ] Implement bone chain dependency analysis
+  - [ ] Implement bone chain dependency analysis using Phase 1 IKNode3D hierarchy
   - [ ] Create processing order determination
   - [ ] Handle multiple effector hierarchies
   - [ ] Segment validation and error handling
 
 - [ ] **Multi-Effector EWBIK Solver**
   - [ ] Create `lib/aria_engine_core/ewbik/solver.ex`
-  - [ ] Implement core EWBIK algorithm with QCP integration
+  - [ ] Implement core EWBIK algorithm with QCP integration from Phase 1
   - [ ] Multi-effector coordination with priority weighting
   - [ ] Iterative solving with convergence criteria
   - [ ] Dampening and stabilization pass implementation
@@ -107,7 +117,7 @@ AriaEngineCore provides the foundational temporal planning and execution capabil
 
 - [ ] **Kusudama Constraint System**
   - [ ] Create `lib/aria_engine_core/ewbik/kusudama.ex`
-  - [ ] Implement cone-based joint orientation constraints
+  - [ ] Implement cone-based joint orientation constraints using Phase 0 quaternion operations
   - [ ] Continuous constraint boundary handling
   - [ ] Sequence cone and tangent cone validation
   - [ ] Twist limit enforcement
@@ -116,11 +126,11 @@ AriaEngineCore provides the foundational temporal planning and execution capabil
 - [ ] **Motion Propagation Management**
   - [ ] Create `lib/aria_engine_core/ewbik/propagation.ex`
   - [ ] Implement hierarchical effector influence calculation
-  - [ ] Motion propagation factor application
+  - [ ] Motion propagation factor application using Phase 0 transform operations
   - [ ] Ancestor-descendant weight distribution
   - [ ] Ultimate vs intermediary target handling
 
-### Phase 2.5: Kusudama Constraint Visualization (HIGH PRIORITY)
+### Phase 3: Kusudama Constraint Visualization (HIGH PRIORITY)
 
 **Priority: HIGH - Visual debugging and constraint validation for EWBIK**
 
@@ -156,9 +166,11 @@ AriaEngineCore provides the foundational temporal planning and execution capabil
   - [ ] LOD system for constraint visualization (detailed vs simplified)
   - [ ] Error handling when constraint evaluation fails
 
-### Phase 3: EWBIK-Enhanced KHR Interactivity Test Domain (HIGH PRIORITY)
+### Phase 4: EWBIK-Enhanced KHR Interactivity Test Domain (HIGH PRIORITY)
 
 **Priority: HIGH - Realistic IK testing with sophisticated constraint validation**
+
+**Dependencies:** Requires Phase 0 mathematical primitives, Phase 1 EWBIK math solvers, and Phase 2 EWBIK algorithms
 
 - [ ] **EWBIK Entity Types for KHR Interactivity**
   - [ ] Create `test/support/ewbik_khr_domain.ex`
@@ -186,7 +198,7 @@ AriaEngineCore provides the foundational temporal planning and execution capabil
   - [ ] `@multigoal_method` - EWBIK-specific multi-effector optimization ONLY
   - [ ] Conservative multigoal usage following R25W1398085 guidelines
 
-### Phase 4: EWBIK Test Scenarios (HIGH PRIORITY)
+### Phase 5: EWBIK Test Scenarios (HIGH PRIORITY)
 
 **Priority: HIGH - Comprehensive EWBIK validation scenarios**
 
@@ -233,9 +245,11 @@ AriaEngineCore provides the foundational temporal planning and execution capabil
   - [ ] Temporal IK sequence coordination
   - [ ] Error handling and graceful degradation
 
-### Phase 5: R25W1398085 Specification Validation with EWBIK (CRITICAL)
+### Phase 6: R25W1398085 Specification Validation with EWBIK (CRITICAL)
 
 **Priority: CRITICAL - Core requirement validation with production-quality IK**
+
+**Dependencies:** Requires all previous phases - complete EWBIK implementation with test domain
 
 - [ ] **Enhanced Method Type Implementation Validation**
   - [ ] `@action` - EWBIK parameter setting (effector targets, weights, constraints)
@@ -259,7 +273,7 @@ AriaEngineCore provides the foundational temporal planning and execution capabil
   - [ ] Temporal dependency resolution in IK chains
   - [ ] Performance degradation handling under time pressure
 
-### Phase 6: Mock AriaGltf Integration (MEDIUM PRIORITY)
+### Phase 7: Mock AriaGltf Integration (MEDIUM PRIORITY)
 
 **Priority: MEDIUM - Enables immediate testing without full glTF implementation**
 
@@ -277,9 +291,11 @@ AriaEngineCore provides the foundational temporal planning and execution capabil
   - [ ] IK solving trigger and coordination through behavior graphs
   - [ ] Event system integration for IK completion/failure
 
-### Phase 7: Comprehensive Test Suite Implementation (HIGH PRIORITY)
+### Phase 8: Comprehensive Test Suite Implementation (HIGH PRIORITY)
 
 **Priority: HIGH - Comprehensive EWBIK and R25W1398085 validation**
+
+**Dependencies:** Requires phases 0-7 complete for comprehensive testing
 
 - [ ] **EWBIK Domain Integration Tests**
   - [ ] Create `test/aria_engine_core/ewbik_khr_interactivity_test.exs`
@@ -306,7 +322,7 @@ AriaEngineCore provides the foundational temporal planning and execution capabil
   - [ ] Real-time constraint validation with performance limits
   - [ ] Behavior graph execution flow with EWBIK integration
 
-### Phase 8: Documentation and Examples (MEDIUM PRIORITY)
+### Phase 9: Documentation and Examples (MEDIUM PRIORITY)
 
 **Priority: MEDIUM - Developer experience and EWBIK adoption**
 
@@ -329,9 +345,11 @@ AriaEngineCore provides the foundational temporal planning and execution capabil
   - [ ] EWBIK debugging and troubleshooting guides
   - [ ] Performance tuning and optimization guides
 
-### Phase 9: Performance and Optimization (LOW PRIORITY)
+### Phase 10: Performance and Optimization (LOW PRIORITY)
 
 **Priority: LOW - Performance enhancements after core EWBIK functionality**
+
+**Dependencies:** Requires complete EWBIK implementation from phases 0-9
 
 - [ ] **EWBIK Performance Benchmarking**
   - [ ] Multi-effector solving performance with complex scenarios
@@ -345,9 +363,11 @@ AriaEngineCore provides the foundational temporal planning and execution capabil
   - [ ] Memory pool management for IK solving
   - [ ] EWBIK execution pipeline optimization
 
-### Phase 10: Real AriaGltf Integration (FUTURE)
+### Phase 11: Real AriaGltf Integration (FUTURE)
 
 **Priority: FUTURE - After aria_gltf Phase 1 completion**
+
+**Dependencies:** Requires aria_gltf app completion and all EWBIK phases complete
 
 - [ ] **Replace Mock Modules with Real EWBIK Integration**
   - [ ] Remove mock AriaGltf modules
@@ -673,10 +693,11 @@ goals = [
 ## Implementation Status
 
 - [ ] ✅ AriaEngineCore external API complete and functional
-- [ ] 🔄 EWBIK math solver ports - Critical foundation, ready for implementation
-- [ ] 🔧 EWBIK algorithm implementation - Depends on math solvers
-- [ ] 📋 EWBIK-enhanced KHR Interactivity test domain - Planning complete
-- [ ] 🎯 Ready for Phase 1 EWBIK math solver implementation
+- [ ] 🏗️ Phase 0: KHR Interactivity Mathematical Primitives - CRITICAL FOUNDATION, ready for implementation
+- [ ] 🔧 Phase 1: EWBIK math solver ports - Depends on Phase 0 mathematical primitives
+- [ ] ⚙️ Phase 2: EWBIK algorithm implementation - Depends on Phase 0 + Phase 1
+- [ ] 📋 Phase 4: EWBIK-enhanced KHR Interactivity test domain - Planning complete
+- [ ] 🎯 Ready for Phase 0 mathematical primitives implementation (absolute foundation)
 
 ## Open Problems
 
@@ -745,7 +766,7 @@ goals = [
 
 **EWBIK Integration Rationale:** Integrating production-quality EWBIK provides realistic multi-effector inverse kinematics testing that exercises the full complexity of R25W1398085 specification. The sophisticated constraint handling, multi-effector coordination, and hierarchical motion propagation create authentic scenarios for temporal planning validation.
 
-**Math Solver Port Priority:** The QCP algorithm and IKNode3D hierarchy management are critical foundations that must be ported first. Without these mathematical components, EWBIK integration would be superficial mocking rather than authentic production-quality testing.
+**Mathematical Foundation Priority:** Phase 0 KHR Interactivity mathematical primitives (vector3, quaternion, transform3d) are the absolute bedrock that all other phases depend on. Phase 1 EWBIK math solvers (QCP, IKNode3D) build on these primitives to provide specialized EWBIK capabilities. Without this proper dependency hierarchy, EWBIK integration would be superficial mocking rather than authentic production-quality testing.
 
 **Conservative Multigoal Usage:** @multigoal_method usage follows R25W1398085 guidelines, only applied to genuine EWBIK multi-effector optimization scenarios where the mathematical properties of the problem specifically benefit from coordinated solving.
 
