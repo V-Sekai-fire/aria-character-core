@@ -47,15 +47,15 @@ defmodule AriaCore.ActionAttributes do
   @spec __using__(keyword()) :: Macro.t()
   defmacro __using__(_opts) do
     quote do
-      # Register all attributes as accumulating
-      Module.register_attribute(__MODULE__, :action, accumulate: true)
-      Module.register_attribute(__MODULE__, :command, accumulate: true)
-      Module.register_attribute(__MODULE__, :task_method, accumulate: true)
-      Module.register_attribute(__MODULE__, :unigoal_method, accumulate: true)
-      Module.register_attribute(__MODULE__, :multigoal_method, accumulate: true)
-      Module.register_attribute(__MODULE__, :multitodo_method, accumulate: true)
+      # Register attributes as non-accumulating, to be processed one by one
+      Module.register_attribute(__MODULE__, :action, [])
+      Module.register_attribute(__MODULE__, :command, [])
+      Module.register_attribute(__MODULE__, :task_method, [])
+      Module.register_attribute(__MODULE__, :unigoal_method, [])
+      Module.register_attribute(__MODULE__, :multigoal_method, [])
+      Module.register_attribute(__MODULE__, :multitodo_method, [])
 
-      # Internal tracking attributes
+      # Internal tracking attributes (accumulating)
       Module.register_attribute(__MODULE__, :action_metadata, accumulate: true)
       Module.register_attribute(__MODULE__, :command_metadata, accumulate: true)
       Module.register_attribute(__MODULE__, :method_metadata, accumulate: true)
@@ -63,20 +63,12 @@ defmodule AriaCore.ActionAttributes do
       Module.register_attribute(__MODULE__, :multigoal_metadata, accumulate: true)
       Module.register_attribute(__MODULE__, :multitodo_metadata, accumulate: true)
 
-      # Pending attributes (non-persistent)
-      Module.register_attribute(__MODULE__, :pending_action_metadata, persist: false)
-      Module.register_attribute(__MODULE__, :pending_command_metadata, persist: false)
-      Module.register_attribute(__MODULE__, :pending_task_metadata, persist: false)
-      Module.register_attribute(__MODULE__, :pending_unigoal_metadata, persist: false)
-      Module.register_attribute(__MODULE__, :pending_multigoal_metadata, persist: false)
-      Module.register_attribute(__MODULE__, :pending_multitodo_metadata, persist: false)
-
       # Hook into compilation process
       @on_definition {AriaCore.ActionAttributes, :__on_definition__}
       @before_compile AriaCore.ActionAttributes
 
-      # Import the attribute consumption macro
-      import AriaCore.ActionAttributes, only: [task_method: 0]
+      # Import the attribute consumption macros
+      import AriaCore.ActionAttributes, only: [task_method: 0, task_method: 1]
     end
   end
 
@@ -217,20 +209,52 @@ defmodule AriaCore.ActionAttributes do
   def unigoal_method_attribute_docs, do: :ok
 
   @doc """
-  Macro to properly consume @task_method attribute.
+  Macro to register a function as a task method.
 
-  This macro ensures the @task_method attribute is properly consumed
-  to avoid Elixir warnings about unused attributes.
+  This macro registers a function as a task method without
+  relying on module attributes, avoiding the attribute timing issues.
 
   Task methods provide decomposition strategies for complex workflows
   according to ADR-181. They are for workflow decomposition only.
+
+  ## Usage
+
+  Call at module level after function definition:
+
+      def prepare_meal(state, [meal_id]) do
+        {:ok, [{:cook_meal, [meal_id]}]}
+      end
+      task_method(:prepare_meal)
+
+  Or call inside function body (function name inferred):
+
+      def prepare_meal(state, [meal_id]) do
+        task_method()
+        {:ok, [{:cook_meal, [meal_id]}]}
+      end
   """
   @spec task_method() :: Macro.t()
   defmacro task_method() do
     quote do
-      # Consume the @task_method attribute by assigning it
-      _ = @task_method
-      # Return the consumed value to satisfy Elixir's requirements
+      # Register this function as a task method by storing its name
+      # We'll use the function name from the calling context
+      case __ENV__.function do
+        {function_name, _arity} ->
+          Module.put_attribute(__MODULE__, :method_metadata, {function_name, %{type: :task_method}})
+          # Return true to satisfy the function call
+          true
+        nil ->
+          raise ArgumentError, "task_method() called outside function context. Use task_method(:function_name) instead."
+      end
+    end
+  end
+
+  @spec task_method(atom()) :: Macro.t()
+  defmacro task_method(function_name) when is_atom(function_name) do
+    quote do
+      # Register the specified function as a task method
+      Module.put_attribute(__MODULE__, :method_metadata, {unquote(function_name), %{type: :task_method}})
+      # Return true for consistency
       true
     end
   end
@@ -242,85 +266,55 @@ defmodule AriaCore.ActionAttributes do
   """
   @spec __on_definition__(Macro.Env.t(), atom(), atom(), list(), list(), term()) :: :ok
   def __on_definition__(env, kind, name, _args, _guards, _body) when kind in [:def, :defp] do
-    # Functional approach: consume attributes by reading and transforming them
-
-    # Process @action attribute - consume by reading and transforming
-    case Module.get_attribute(env.module, :action) do
-      [] -> :ok
-      [action_metadata | _rest] = attrs ->
-        # Consume the attribute by assigning it (satisfies Elixir's "return" requirement)
-        _consumed_action_attrs = attrs
-        Module.put_attribute(env.module, :action_metadata, {name, action_metadata})
+    # Process @action attribute
+    if action_metadata = Module.get_attribute(env.module, :action) do
+      Module.put_attribute(env.module, :action_metadata, {name, action_metadata})
+      Module.delete_attribute(env.module, :action)
     end
 
-    # Process @command attribute - consume by reading and transforming
-    case Module.get_attribute(env.module, :command) do
-      [] -> :ok
-      [command_metadata | _rest] = attrs ->
-        # Consume the attribute by assigning it (satisfies Elixir's "return" requirement)
-        _consumed_command_attrs = attrs
-        Module.put_attribute(env.module, :command_metadata, {name, command_metadata})
-        # Clear the attribute to prevent accumulation
-        Module.delete_attribute(env.module, :command)
+    # Process @command attribute
+    if command_metadata = Module.get_attribute(env.module, :command) do
+      Module.put_attribute(env.module, :command_metadata, {name, command_metadata})
+      Module.delete_attribute(env.module, :command)
     end
 
-    # Process @task_method attribute - consume by reading and transforming
-    # Handle both @task_method and @task_method <value> patterns
-    task_attrs = Module.get_attribute(env.module, :task_method)
-    case task_attrs do
-      [] -> :ok
-      nil -> :ok
-      attrs when is_list(attrs) and length(attrs) > 0 ->
-        # Consume the attribute by assigning it (satisfies Elixir's "return" requirement)
-        _consumed_task_attrs = attrs
-        Module.put_attribute(env.module, :method_metadata, {name, %{type: :task_method}})
-        # Clear the attribute to prevent accumulation
-        Module.delete_attribute(env.module, :task_method)
-      other when other != [] ->
-        # Handle any other attribute value (including bare @task_method)
-        _consumed_task_attr = other
-        Module.put_attribute(env.module, :method_metadata, {name, %{type: :task_method}})
-        # Clear the attribute to prevent accumulation
-        Module.delete_attribute(env.module, :task_method)
+    # Process @task_method attribute
+    if Module.has_attribute?(env.module, :task_method) do
+      task_metadata = Module.get_attribute(env.module, :task_method)
+      # Ensure task_metadata is a map before merging
+      task_metadata = if is_map(task_metadata), do: task_metadata, else: %{}
+      Module.put_attribute(env.module, :method_metadata, {name, %{type: :task_method} |> Map.merge(task_metadata)})
+      Module.delete_attribute(env.module, :task_method)
     end
 
-    # Process @unigoal_method attribute - consume by reading and transforming
-    case Module.get_attribute(env.module, :unigoal_method) do
-      [] -> :ok
-      [unigoal_metadata | _rest] = attrs ->
-        # Consume the attribute by assigning it (satisfies Elixir's "return" requirement)
-        _consumed_unigoal_attrs = attrs
-
-        # Validate required predicate attribute
-        predicate = unigoal_metadata[:predicate]
-        if is_nil(predicate) do
-          raise ArgumentError, "unigoal_method requires predicate: attribute, got: #{inspect(unigoal_metadata)}"
-        end
-
-        Module.put_attribute(env.module, :unigoal_metadata, {name, unigoal_metadata})
+    # Process @unigoal_method attribute
+    if unigoal_metadata = Module.get_attribute(env.module, :unigoal_method) do
+      # Validate required predicate attribute
+      predicate = unigoal_metadata[:predicate]
+      if is_nil(predicate) do
+        raise ArgumentError, "unigoal_method requires predicate: attribute, got: #{inspect(unigoal_metadata)}"
+      end
+      Module.put_attribute(env.module, :unigoal_metadata, {name, unigoal_metadata})
+      Module.delete_attribute(env.module, :unigoal_method)
     end
 
-    # Process @multigoal_method attribute - consume by reading and transforming
-    case Module.get_attribute(env.module, :multigoal_method) do
-      [] -> :ok
-      [multigoal_metadata | _rest] = attrs ->
-        _consumed_multigoal_attrs = attrs
-        Module.put_attribute(env.module, :multigoal_metadata, {name, multigoal_metadata})
+    # Process @multigoal_method attribute
+    if _multigoal_metadata = Module.get_attribute(env.module, :multigoal_method) do
+      # Store the function name itself as metadata for simple true/false attributes
+      Module.put_attribute(env.module, :multigoal_metadata, {name, name})
+      Module.delete_attribute(env.module, :multigoal_method)
     end
 
-    # Process @multitodo_method attribute - consume by reading and transforming
-    case Module.get_attribute(env.module, :multitodo_method) do
-      [] -> :ok
-      [multitodo_metadata | _rest] = attrs ->
-        _consumed_multitodo_attrs = attrs
-        Module.put_attribute(env.module, :multitodo_metadata, {name, multitodo_metadata})
+    # Process @multitodo_method attribute
+    if _multitodo_metadata = Module.get_attribute(env.module, :multitodo_method) do
+      # Store the function name itself as metadata for simple true/false attributes
+      Module.put_attribute(env.module, :multitodo_metadata, {name, name})
+      Module.delete_attribute(env.module, :multitodo_method)
     end
 
     # Continue with normal compilation
     :ok
   end
-
-  def __on_definition__(_env, _kind, _name, _args, _guards, _body), do: :ok
 
   @doc """
   Compile-time hook that processes accumulated @action and @task_method attributes.
@@ -336,6 +330,14 @@ defmodule AriaCore.ActionAttributes do
     multitodos = Module.get_attribute(env.module, :multitodo_metadata) || []
 
     quote do
+      # Debugging: Inspect accumulated metadata
+      IO.inspect(unquote(Macro.escape(actions)), label: "Actions Metadata")
+      IO.inspect(unquote(Macro.escape(commands)), label: "Commands Metadata")
+      IO.inspect(unquote(Macro.escape(methods)), label: "Methods Metadata")
+      IO.inspect(unquote(Macro.escape(unigoals)), label: "Unigoals Metadata")
+      IO.inspect(unquote(Macro.escape(multigoals)), label: "Multigoals Metadata")
+      IO.inspect(unquote(Macro.escape(multitodos)), label: "Multitodos Metadata")
+
       def __action_metadata__, do: unquote(Macro.escape(actions))
       def __command_metadata__, do: unquote(Macro.escape(commands))
       def __method_metadata__, do: unquote(Macro.escape(methods))
@@ -383,16 +385,16 @@ defmodule AriaCore.ActionAttributes do
 
         # Process multigoal methods using existing systems (SOCIABLE approach)
         domain_with_multigoals =
-          Enum.reduce(__multigoal_metadata__(), domain_with_unigoals, fn {name, metadata}, acc ->
-            multigoal_spec = AriaCore.ActionAttributes.convert_multigoal_metadata(metadata, name, __MODULE__)
-            Domain.add_multigoal_method(acc, name, multigoal_spec)
+          Enum.reduce(__multigoal_metadata__(), domain_with_unigoals, fn {name, _metadata}, acc ->
+            multigoal_fn = AriaCore.ActionAttributes.convert_multigoal_metadata(name, name, __MODULE__)
+            Domain.add_multigoal_method(acc, Atom.to_string(name), multigoal_fn)
           end)
 
         # Process multitodo methods using existing systems (SOCIABLE approach)
         domain_with_multitodos =
-          Enum.reduce(__multitodo_metadata__(), domain_with_multigoals, fn {name, metadata}, acc ->
-            multitodo_spec = AriaCore.ActionAttributes.convert_multitodo_metadata(metadata, name, __MODULE__)
-            Domain.add_multitodo_method(acc, name, multitodo_spec)
+          Enum.reduce(__multitodo_metadata__(), domain_with_multigoals, fn {name, _metadata}, acc ->
+            multitodo_fn = AriaCore.ActionAttributes.convert_multitodo_metadata(name, name, __MODULE__)
+            Domain.add_multitodo_method(acc, Atom.to_string(name), multitodo_fn)
           end)
 
         # Set up entity registry (LEVERAGE existing entity system)
@@ -410,21 +412,17 @@ defmodule AriaCore.ActionAttributes do
   @doc """
   Converts @multigoal_method metadata to Domain multigoal method specification.
   """
-  @spec convert_multigoal_metadata(map(), atom(), module()) :: map()
+  @spec convert_multigoal_metadata(map(), atom(), module()) :: function()
   def convert_multigoal_metadata(_metadata, method_name, module) do
-    %{
-      multigoal_fn: Function.capture(module, method_name, 2)
-    }
+    Function.capture(module, method_name, 2)
   end
 
   @doc """
   Converts @multitodo_method metadata to Domain multitodo method specification.
   """
-  @spec convert_multitodo_metadata(map(), atom(), module()) :: map()
+  @spec convert_multitodo_metadata(map(), atom(), module()) :: function()
   def convert_multitodo_metadata(_metadata, method_name, module) do
-    %{
-      multitodo_fn: Function.capture(module, method_name, 2)
-    }
+    Function.capture(module, method_name, 2)
   end
 
   @doc """
@@ -432,6 +430,17 @@ defmodule AriaCore.ActionAttributes do
 
   This function bridges the new attribute syntax to existing Domain.add_action format.
   """
+  @spec convert_action_metadata(true, atom(), module()) :: map()
+  def convert_action_metadata(true, action_name, module) do
+    %{
+      duration: convert_duration(nil), # Default to instant action
+      entity_requirements: [],
+      preconditions: [],
+      effects: [],
+      action_fn: Function.capture(module, action_name, 2)
+    }
+  end
+
   @spec convert_action_metadata(action_metadata(), atom(), module()) :: map()
   def convert_action_metadata(metadata, action_name, module) do
     %{
@@ -439,7 +448,9 @@ defmodule AriaCore.ActionAttributes do
       entity_requirements: convert_entity_requirements(metadata[:requires_entities] || []),
       preconditions: metadata[:preconditions] || [],
       effects: metadata[:effects] || [],
-      action_fn: Function.capture(module, action_name, 2)
+      action_fn: Function.capture(module, action_name, 2),
+      start_time: metadata[:start], # Add start_time
+      end_time: metadata[:end] # Add end_time
     }
   end
 
@@ -449,6 +460,18 @@ defmodule AriaCore.ActionAttributes do
   Commands are execution-time logic with failure handling according to ADR-181.
   They use the same specification format as actions but are intended for execution.
   """
+  @spec convert_command_metadata(true, atom(), module()) :: map()
+  def convert_command_metadata(true, command_name, module) do
+    %{
+      duration: convert_duration(nil), # Default to instant action
+      entity_requirements: [],
+      preconditions: [],
+      effects: [],
+      action_fn: Function.capture(module, command_name, 2),
+      command: true  # Mark as command for execution-time logic
+    }
+  end
+
   @spec convert_command_metadata(action_metadata(), atom(), module()) :: map()
   def convert_command_metadata(metadata, command_name, module) do
     %{
@@ -457,7 +480,9 @@ defmodule AriaCore.ActionAttributes do
       preconditions: metadata[:preconditions] || [],
       effects: metadata[:effects] || [],
       action_fn: Function.capture(module, command_name, 2),
-      command: true  # Mark as command for execution-time logic
+      command: true,  # Mark as command for execution-time logic
+      start_time: metadata[:start], # Add start_time
+      end_time: metadata[:end] # Add end_time
     }
   end
 
@@ -492,9 +517,12 @@ defmodule AriaCore.ActionAttributes do
   SOCIABLE APPROACH: Leverages existing AriaCore.Entity.Management system.
   """
   def create_entity_registry(action_metadata) do
+    # Filter out non-map metadata (e.g., `true` for @action true)
+    filtered_metadata = Enum.filter(action_metadata, fn {_name, metadata} -> is_map(metadata) end)
+
     # Extract all entity requirements from actions
     all_requirements =
-      action_metadata
+      filtered_metadata
       |> Enum.flat_map(fn {_name, metadata} ->
         metadata[:requires_entities] || []
       end)
@@ -514,9 +542,12 @@ defmodule AriaCore.ActionAttributes do
   SOCIABLE APPROACH: Leverages existing AriaCore.Temporal.Interval system.
   """
   def create_temporal_specifications(action_metadata) do
+    # Filter out non-map metadata (e.g., `true` for @action true)
+    filtered_metadata = Enum.filter(action_metadata, fn {_name, metadata} -> is_map(metadata) end)
+
     # Extract all duration specifications
     duration_specs =
-      action_metadata
+      filtered_metadata
       |> Enum.map(fn {name, metadata} ->
         {name, convert_duration(metadata[:duration])}
       end)
