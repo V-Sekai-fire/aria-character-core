@@ -38,6 +38,7 @@ We temporarily disabled the markdownlint pre-commit hook to allow development to
 ### Verification
 
 Testing with `pre-commit run markdownlint --all-files` shows:
+
 - Hook executes successfully
 - Files are automatically formatted when needed
 - No blocking errors preventing commits

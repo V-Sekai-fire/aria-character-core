@@ -5,9 +5,11 @@ This directory contains Architecture Decision Records (ADRs) that have been arch
 ## Archive Structure
 
 ### `completed/`
+
 Contains ADRs for work that has been successfully completed. These ADRs tracked implementation tasks, bug fixes, and feature development that reached their success criteria.
 
 ### `obsolete/`
+
 Contains ADRs for systems, features, or components that have been removed from the project. These ADRs are preserved for historical context but are no longer relevant to active development.
 
 ## Archive Process
@@ -21,6 +23,7 @@ ADRs are archived when:
 ## Archived ADR Format
 
 Each archived ADR is replaced with a tombstone that includes:
+
 - Original title and dates
 - Summary of what was accomplished or why it became obsolete
 - Archive reason and location

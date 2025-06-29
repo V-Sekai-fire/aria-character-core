@@ -7,12 +7,15 @@
 **Archive Location:** `decisions/archived/completed/`
 
 ## Summary
+
 Successfully resolved 28 Timeline STN test failures across three main categories: missing MiniZincSolver module, API return type inconsistencies, and bridge validation issues. All LOD test failures (13/13) were also resolved with proper error handling for unsatisfiable temporal constraints.
 
 ## Archive Reason
+
 **Completed ADR:** Work successfully finished, all success criteria met, no longer requires active tracking.
 
 ## Historical Context
+
 This ADR addressed critical test failures in the Timeline STN (Simple Temporal Network) system. The work involved:
 
 - **Missing MiniZincSolver Module**: Created and implemented proper integration with AriaMinizincStn
@@ -21,6 +24,7 @@ This ADR addressed critical test failures in the Timeline STN (Simple Temporal N
 - **LOD System**: Implemented missing functions (`rescale_lod/2`, `convert_units/2`) and comprehensive error handling
 
 ## Key Achievements
+
 - ✅ All 28 STN test failures resolved
 - ✅ All 13 LOD test failures resolved  
 - ✅ Proper `{:error, :unsatisfiable}` handling implemented
