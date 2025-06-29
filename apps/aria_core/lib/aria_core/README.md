@@ -196,15 +196,15 @@ assert AriaState.RelationalState.satisfies_goals?(state, goals)
 
 ```elixir
 # Planning only - returns solution tree
-@spec plan(AriaEngine.Domain.t(), AriaState.t(), [AriaEngine.todo_item()]) :: 
+@spec plan(AriaEngineCore.Domain.t(), AriaState.t(), [AriaEngineCore.todo_item()]) :: 
   {:ok, AriaEngineCore.Plan.solution_tree()} | {:error, atom()}
 
 # Planning + execution - returns final state  
-@spec run_lazy(AriaEngine.Domain.t(), AriaState.t(), [AriaEngine.todo_item()]) :: 
+@spec run_lazy(AriaEngineCore.Domain.t(), AriaState.t(), [AriaEngineCore.todo_item()]) :: 
   {:ok, {AriaState.t(), AriaEngineCore.Plan.solution_tree()}} | {:error, atom()}
 
 # Take a pre-made plan and execute it
-@spec run_lazy_tree(AriaEngine.Domain.t(), AriaState.t(), AriaEngineCore.Plan.solution_tree()) :: 
+@spec run_lazy_tree(AriaEngineCore.Domain.t(), AriaState.t(), AriaEngineCore.Plan.solution_tree()) :: 
   {:ok, {AriaState.t(), AriaEngineCore.Plan.solution_tree()}} | {:error, atom()}
 ```
 

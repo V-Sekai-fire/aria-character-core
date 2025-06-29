@@ -176,16 +176,20 @@ defmodule Membrane.PlannerFilter do
 
   defp create_default_domain do
     # Create domain following unified specification from ADR R25W1398085
-    # Try AriaEngineCore types first, fallback to AriaEngine types
+    # Use AriaCore.Domain directly since AriaEngineCore.Domain is internal
     try do
-      domain = AriaEngineCore.Domain.new("membrane_pipeline_domain")
+      domain = AriaCore.Domain.new("membrane_pipeline_domain")
       # Enable solution tree as per ADR specification
-      AriaEngineCore.Domain.enable_solution_tree(domain, true)
+      AriaCore.Domain.enable_solution_tree(domain, true)
     rescue
       _ ->
-        # Fallback to AriaEngine if AriaEngineCore is not available
-        domain = AriaEngine.Domain.new("membrane_pipeline_domain")
-        AriaEngine.Domain.enable_solution_tree(domain, true)
+        # Fallback to basic map structure if AriaCore is not available
+        %{
+          name: "membrane_pipeline_domain",
+          actions: %{},
+          methods: %{},
+          solution_tree_enabled: true
+        }
     end
   end
 

@@ -64,22 +64,22 @@ defmodule AriaCoreComplianceTest do
 
     # Task method
     @task_method true
-    @spec prepare_meal(AriaState.t(), []) :: {:ok, [AriaEngine.todo_item()]} | {:error, atom()}
+    @spec prepare_meal(AriaState.t(), []) :: {:ok, [AriaEngineCore.todo_item()]} | {:error, atom()}
     def prepare_meal(state, []), do: {:ok, [{:cook_meal, []}]}
 
     # Unigoal method
     @unigoal_method predicate: "location"
-    @spec move_to_location(AriaState.t(), {AriaState.subject(), AriaState.value()}) :: {:ok, [AriaEngine.todo_item()]} | {:error, atom()}
+    @spec move_to_location(AriaState.t(), {AriaState.subject(), AriaState.value()}) :: {:ok, [AriaEngineCore.todo_item()]} | {:error, atom()}
     def move_to_location(state, {_, _}), do: {:ok, []}
 
     # Multigoal method
     @multigoal_method true
-    @spec optimize_goals(AriaState.t(), AriaEngine.multigoal()) :: {:ok, AriaEngine.multigoal()} | {:error, atom()}
+    @spec optimize_goals(AriaState.t(), AriaEngineCore.multigoal()) :: {:ok, AriaEngineCore.multigoal()} | {:error, atom()}
     def optimize_goals(state, multigoal), do: {:ok, multigoal}
 
     # Multitodo method
     @multitodo_method true
-    @spec optimize_todos(AriaState.t(), [AriaEngine.todo_item()]) :: {:ok, [AriaEngine.todo_item()]} | {:error, atom()}
+    @spec optimize_todos(AriaState.t(), [AriaEngineCore.todo_item()]) :: {:ok, [AriaEngineCore.todo_item()]} | {:error, atom()}
     def optimize_todos(state, todo_list), do: {:ok, todo_list}
   end
 
