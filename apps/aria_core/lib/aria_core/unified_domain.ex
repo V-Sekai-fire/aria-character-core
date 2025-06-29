@@ -63,15 +63,10 @@ defmodule AriaCore.UnifiedDomain do
       [:simple_action]
   """
   def create_from_module(domain_module) do
-    # Directly call the module's create_domain function
-    # This leverages the sociable approach built into ActionAttributes
-    try do
-      domain_module.create_domain()
-    rescue
-      UndefinedFunctionError ->
-        # If create_domain doesn't exist, try manual processing
-        create_domain_manually(domain_module)
-    end
+    # Always use manual processing to ensure we get an AriaCore.Domain struct
+    # The module's create_domain() function returns AriaEngineCore.Domain.Core
+    # but we need AriaCore.Domain for compatibility with the rest of the system
+    create_domain_manually(domain_module)
   end
 
   @doc """
@@ -208,27 +203,59 @@ defmodule AriaCore.UnifiedDomain do
     # Extract @action attributes using Phase 1 work
     actions = get_action_metadata(domain_module)
 
+    # Extract @command attributes using Phase 1 work
+    commands = get_command_metadata(domain_module)
+
     # Extract @task_method attributes using Phase 1 work
     methods = get_method_metadata(domain_module)
+
+    # Extract @unigoal_method attributes using Phase 1 work
+    unigoals = get_unigoal_metadata(domain_module)
+
+    # Extract @multigoal_method attributes using Phase 1 work
+    multigoals = get_multigoal_metadata(domain_module)
+
+    # Extract @multitodo_method attributes using Phase 1 work
+    multitodos = get_multitodo_metadata(domain_module)
 
     # Process actions using existing systems (SOCIABLE approach)
     domain_with_actions = process_module_actions(base_domain, actions, domain_module)
 
+    # Process commands using existing systems (SOCIABLE approach)
+    domain_with_commands = process_module_commands(domain_with_actions, commands, domain_module)
+
     # Process methods using existing systems (SOCIABLE approach)
-    domain_with_methods = process_module_methods(domain_with_actions, methods, domain_module)
+    domain_with_methods = process_module_methods(domain_with_commands, methods, domain_module)
+
+    # Process unigoal methods using existing systems (SOCIABLE approach)
+    domain_with_unigoals = process_module_unigoals(domain_with_methods, unigoals, domain_module)
+
+    # Process multigoal methods using existing systems (SOCIABLE approach)
+    domain_with_multigoals = process_module_multigoals(domain_with_unigoals, multigoals, domain_module)
+
+    # Process multitodo methods using existing systems (SOCIABLE approach)
+    domain_with_multitodos = process_module_multitodos(domain_with_multigoals, multitodos, domain_module)
 
     # Set up entity registry (LEVERAGE existing entity system)
     entity_registry = create_entity_registry_from_actions(actions)
-    domain_with_entities = AriaEngineCore.Domain.set_entity_registry(domain_with_methods, entity_registry)
+    domain_with_entities = AriaCore.Domain.set_entity_registry(domain_with_multitodos, entity_registry)
 
     # Set up temporal specifications (LEVERAGE existing temporal system)
     temporal_specs = create_temporal_specifications_from_actions(actions)
-    AriaEngineCore.Domain.set_temporal_specifications(domain_with_entities, temporal_specs)
+    AriaCore.Domain.set_temporal_specifications(domain_with_entities, temporal_specs)
   end
 
   defp get_action_metadata(domain_module) do
     if function_exported?(domain_module, :__action_metadata__, 0) do
       domain_module.__action_metadata__()
+    else
+      []
+    end
+  end
+
+  defp get_command_metadata(domain_module) do
+    if function_exported?(domain_module, :__command_metadata__, 0) do
+      domain_module.__command_metadata__()
     else
       []
     end
@@ -242,6 +269,30 @@ defmodule AriaCore.UnifiedDomain do
     end
   end
 
+  defp get_unigoal_metadata(domain_module) do
+    if function_exported?(domain_module, :__unigoal_metadata__, 0) do
+      domain_module.__unigoal_metadata__()
+    else
+      []
+    end
+  end
+
+  defp get_multigoal_metadata(domain_module) do
+    if function_exported?(domain_module, :__multigoal_metadata__, 0) do
+      domain_module.__multigoal_metadata__()
+    else
+      []
+    end
+  end
+
+  defp get_multitodo_metadata(domain_module) do
+    if function_exported?(domain_module, :__multitodo_metadata__, 0) do
+      domain_module.__multitodo_metadata__()
+    else
+      []
+    end
+  end
+
   defp process_module_actions(domain, actions, domain_module) do
     Enum.reduce(actions, domain, fn {action_name, metadata}, acc ->
       # LEVERAGE existing action conversion (Phase 1 work)
@@ -250,11 +301,47 @@ defmodule AriaCore.UnifiedDomain do
     end)
   end
 
+  defp process_module_commands(domain, commands, domain_module) do
+    Enum.reduce(commands, domain, fn {command_name, metadata}, acc ->
+      # LEVERAGE existing command conversion (Phase 1 work)
+      command_spec = AriaCore.ActionAttributes.convert_command_metadata(metadata, command_name, domain_module)
+      AriaCore.Domain.add_action(acc, command_name, command_spec)
+    end)
+  end
+
   defp process_module_methods(domain, methods, domain_module) do
     Enum.reduce(methods, domain, fn {method_name, metadata}, acc ->
       # LEVERAGE existing method conversion (Phase 1 work)
       method_spec = AriaCore.ActionAttributes.convert_method_metadata(metadata, method_name, domain_module)
       AriaCore.Domain.add_method(acc, method_name, method_spec)
+    end)
+  end
+
+  defp process_module_unigoals(domain, unigoals, domain_module) do
+    Enum.reduce(unigoals, domain, fn {unigoal_name, metadata}, acc ->
+      # LEVERAGE existing unigoal conversion (Phase 1 work)
+      unigoal_spec = AriaCore.ActionAttributes.convert_unigoal_metadata(metadata, unigoal_name, domain_module)
+      AriaCore.Domain.add_unigoal_method(acc, unigoal_name, unigoal_spec)
+    end)
+  end
+
+  defp process_module_multigoals(domain, multigoals, domain_module) do
+    Enum.reduce(multigoals, domain, fn {multigoal_name, _metadata}, acc ->
+      # LEVERAGE existing multigoal conversion (Phase 1 work)
+      multigoal_fn = AriaCore.ActionAttributes.convert_multigoal_metadata(multigoal_name, multigoal_name, domain_module)
+      # Add as regular method with multigoal_fn field
+      method_spec = %{multigoal_fn: multigoal_fn}
+      AriaCore.Domain.add_method(acc, multigoal_name, method_spec)
+    end)
+  end
+
+  defp process_module_multitodos(domain, multitodos, domain_module) do
+    Enum.reduce(multitodos, domain, fn {multitodo_name, _metadata}, acc ->
+      # LEVERAGE existing multitodo conversion (Phase 1 work)
+      multitodo_fn = AriaCore.ActionAttributes.convert_multitodo_metadata(multitodo_name, multitodo_name, domain_module)
+      # Add as regular method with multitodo_fn field
+      method_spec = %{multitodo_fn: multitodo_fn}
+      AriaCore.Domain.add_method(acc, multitodo_name, method_spec)
     end)
   end
 

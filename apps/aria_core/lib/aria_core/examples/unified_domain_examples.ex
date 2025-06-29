@@ -2,8 +2,8 @@ defmodule AriaCore.Examples.UnifiedDomainExamples do
   @moduledoc """
   Examples demonstrating the use of unified domain attributes.
   """
-  use AriaEngine.Domain
-  alias AriaState.RelationalState
+  use AriaCore.Domain
+  alias AriaCore.State.Relational, as: RelationalState
   require Logger
 
   @doc """
@@ -47,7 +47,7 @@ defmodule AriaCore.Examples.UnifiedDomainExamples do
   Example multitodo method: Reorder tasks for efficiency.
   """
   @multitodo_method true
-  @spec reorder_tasks_for_efficiency(AriaState.t(), [AriaEngine.todo_item()]) :: {:ok, [AriaEngine.todo_item()]} | {:error, atom()}
+  @spec reorder_tasks_for_efficiency(AriaState.t(), [AriaCore.todo_item()]) :: {:ok, [AriaCore.todo_item()]} | {:error, atom()}
   def reorder_tasks_for_efficiency(state, todo_list) do
     Logger.info("Reordering todo list for efficiency: #{inspect(todo_list)}")
     # In a real scenario, this would reorder the todo_list
@@ -57,8 +57,8 @@ defmodule AriaCore.Examples.UnifiedDomainExamples do
   @doc """
   Creates a domain for these examples.
   """
-  @spec create_domain() :: AriaEngine.Domain.t()
+  @spec create_domain() :: AriaCore.Domain.t()
   def create_domain do
-    AriaEngine.Domain.create_from_module(__MODULE__)
+    AriaCore.UnifiedDomain.create_from_module(__MODULE__)
   end
 end
