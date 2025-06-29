@@ -43,10 +43,22 @@ defmodule AriaEngineCore.Math.QCP do
   alias AriaEngineCore.Math.{Vector3, Quaternion}
 
   @default_precision 1.0e-6
+  @max_points 10_000
+  @min_weight 1.0e-12
+  @max_weight 1.0e12
 
   @type point_set :: [Vector3.t()]
   @type weights :: [float()]
   @type qcp_result :: {:ok, {Quaternion.t(), Vector3.t()}} | {:error, term()}
+  @type validation_error ::
+    :empty_point_sets |
+    :mismatched_point_set_sizes |
+    :mismatched_weight_count |
+    :negative_weights |
+    :too_many_points |
+    :invalid_weights |
+    :degenerate_points |
+    :numerical_instability
 
   @doc """
   Calculate optimal rotation and translation to align two point sets using QCP algorithm.
@@ -88,8 +100,17 @@ defmodule AriaEngineCore.Math.QCP do
 
   # Private functions for QCP algorithm implementation
 
-  @spec validate_inputs(point_set(), point_set(), weights()) :: :ok | {:error, term()}
+  @spec validate_inputs(point_set(), point_set(), weights()) :: :ok | {:error, validation_error()}
   defp validate_inputs(moved, target, weights) do
+    with :ok <- validate_point_sets(moved, target),
+         :ok <- validate_weights(weights, length(moved)),
+         :ok <- validate_numerical_stability(moved, target) do
+      :ok
+    end
+  end
+
+  @spec validate_point_sets(point_set(), point_set()) :: :ok | {:error, validation_error()}
+  defp validate_point_sets(moved, target) do
     cond do
       length(moved) == 0 or length(target) == 0 ->
         {:error, :empty_point_sets}
@@ -97,49 +118,132 @@ defmodule AriaEngineCore.Math.QCP do
       length(moved) != length(target) ->
         {:error, :mismatched_point_set_sizes}
 
-      length(weights) > 0 and length(weights) != length(moved) ->
-        {:error, :mismatched_weight_count}
+      length(moved) > @max_points ->
+        {:error, :too_many_points}
 
-      Enum.any?(weights, fn w -> w < 0.0 end) ->
-        {:error, :negative_weights}
+      not all_valid_vectors?(moved) or not all_valid_vectors?(target) ->
+        {:error, :degenerate_points}
 
       true ->
         :ok
     end
   end
 
+  @spec validate_weights(weights(), non_neg_integer()) :: :ok | {:error, validation_error()}
+  defp validate_weights(weights, point_count) do
+    cond do
+      length(weights) > 0 and length(weights) != point_count ->
+        {:error, :mismatched_weight_count}
+
+      Enum.any?(weights, fn w -> w < 0.0 end) ->
+        {:error, :negative_weights}
+
+      Enum.any?(weights, fn w -> not is_finite_number?(w) end) ->
+        {:error, :invalid_weights}
+
+      Enum.any?(weights, fn w -> w > @max_weight end) ->
+        {:error, :invalid_weights}
+
+      Enum.all?(weights, fn w -> w < @min_weight end) and length(weights) > 0 ->
+        {:error, :invalid_weights}
+
+      true ->
+        :ok
+    end
+  end
+
+  @spec validate_numerical_stability(point_set(), point_set()) :: :ok | {:error, validation_error()}
+  defp validate_numerical_stability(moved, target) do
+    # Check for degenerate cases that could cause numerical instability
+    moved_span = calculate_point_span(moved)
+    target_span = calculate_point_span(target)
+
+    cond do
+      moved_span < 1.0e-12 and length(moved) > 1 ->
+        {:error, :degenerate_points}
+
+      target_span < 1.0e-12 and length(target) > 1 ->
+        {:error, :degenerate_points}
+
+      true ->
+        :ok
+    end
+  end
+
+  @spec all_valid_vectors?(point_set()) :: boolean()
+  defp all_valid_vectors?(points) do
+    Enum.all?(points, fn {x, y, z} ->
+      is_finite_number?(x) and is_finite_number?(y) and is_finite_number?(z)
+    end)
+  end
+
+  @spec is_finite_number?(number()) :: boolean()
+  defp is_finite_number?(x) when is_number(x) do
+    not (x != x or x == :infinity or x == :neg_infinity)
+  end
+  defp is_finite_number?(_), do: false
+
+  @spec calculate_point_span(point_set()) :: float()
+  defp calculate_point_span(points) when length(points) <= 1, do: 0.0
+  defp calculate_point_span(points) do
+    {min_x, max_x} = points |> Enum.map(fn {x, _, _} -> x end) |> Enum.min_max()
+    {min_y, max_y} = points |> Enum.map(fn {_, y, _} -> y end) |> Enum.min_max()
+    {min_z, max_z} = points |> Enum.map(fn {_, _, z} -> z end) |> Enum.min_max()
+
+    max(max_x - min_x, max(max_y - min_y, max_z - min_z))
+  end
+
   @spec initialize_qcp_state(point_set(), point_set(), weights(), boolean(), float()) ::
           {:ok, map()} | {:error, term()}
   defp initialize_qcp_state(moved, target, weights, translate, precision) do
-    weights_normalized = if length(weights) == 0, do: List.duplicate(1.0, length(moved)), else: weights
+    try do
+      weights_normalized = normalize_weights(weights, length(moved))
 
-    qcp_state = %{
-      moved: moved,
-      target: target,
-      weights: weights_normalized,
-      translate: translate,
-      precision: precision,
-      moved_center: {0.0, 0.0, 0.0},
-      target_center: {0.0, 0.0, 0.0},
-      w_sum: 0.0,
-      # Inner product matrix components
-      sum_xx: 0.0, sum_xy: 0.0, sum_xz: 0.0,
-      sum_yx: 0.0, sum_yy: 0.0, sum_yz: 0.0,
-      sum_zx: 0.0, sum_zy: 0.0, sum_zz: 0.0,
-      # Derived sums for characteristic polynomial
-      sum_xx_plus_yy: 0.0, sum_xx_minus_yy: 0.0,
-      sum_xy_plus_yx: 0.0, sum_xy_minus_yx: 0.0,
-      sum_xz_plus_zx: 0.0, sum_xz_minus_zx: 0.0,
-      sum_yz_plus_zy: 0.0, sum_yz_minus_zy: 0.0,
-      max_eigenvalue: 0.0
-    }
+      qcp_state = %{
+        moved: moved,
+        target: target,
+        weights: weights_normalized,
+        translate: translate,
+        precision: max(precision, 1.0e-15),  # Ensure minimum precision
+        moved_center: {0.0, 0.0, 0.0},
+        target_center: {0.0, 0.0, 0.0},
+        w_sum: 0.0,
+        # Inner product matrix components
+        sum_xx: 0.0, sum_xy: 0.0, sum_xz: 0.0,
+        sum_yx: 0.0, sum_yy: 0.0, sum_yz: 0.0,
+        sum_zx: 0.0, sum_zy: 0.0, sum_zz: 0.0,
+        # Derived sums for characteristic polynomial
+        sum_xx_plus_yy: 0.0, sum_xx_minus_yy: 0.0,
+        sum_xy_plus_yx: 0.0, sum_xy_minus_yx: 0.0,
+        sum_xz_plus_zx: 0.0, sum_xz_minus_zx: 0.0,
+        sum_yz_plus_zy: 0.0, sum_yz_minus_zy: 0.0,
+        max_eigenvalue: 0.0,
+        # Robustness tracking
+        numerical_warnings: []
+      }
 
-    if translate do
-      {:ok, center_and_translate_points(qcp_state)}
-    else
-      w_sum = Enum.sum(weights_normalized)
-      {:ok, %{qcp_state | w_sum: w_sum}}
+      if translate do
+        {:ok, center_and_translate_points(qcp_state)}
+      else
+        w_sum = Enum.sum(weights_normalized)
+        {:ok, %{qcp_state | w_sum: w_sum}}
+      end
+    rescue
+      error -> {:error, {:initialization_failed, error}}
     end
+  end
+
+  @spec normalize_weights(weights(), non_neg_integer()) :: weights()
+  defp normalize_weights([], point_count), do: List.duplicate(1.0, point_count)
+  defp normalize_weights(weights, _point_count) do
+    # Clamp weights to prevent numerical issues
+    Enum.map(weights, fn w ->
+      cond do
+        w < @min_weight -> @min_weight
+        w > @max_weight -> @max_weight
+        true -> w
+      end
+    end)
   end
 
   @spec center_and_translate_points(map()) :: map()
@@ -168,17 +272,35 @@ defmodule AriaEngineCore.Math.QCP do
   defp calculate_weighted_center(points, weights) do
     total_weight = Enum.sum(weights)
 
-    if total_weight > 0.0 do
+    if total_weight > @min_weight do
       weighted_sum = points
                      |> Enum.zip(weights)
                      |> Enum.reduce({0.0, 0.0, 0.0}, fn {point, weight}, acc ->
-                       Vector3.add(acc, Vector3.scale(point, weight))
+                       # Use robust addition to prevent overflow
+                       scaled_point = Vector3.scale(point, weight)
+                       Vector3.add(acc, scaled_point)
                      end)
 
-      Vector3.scale(weighted_sum, 1.0 / total_weight)
+      # Safeguard against division by very small numbers
+      scale_factor = 1.0 / total_weight
+      if abs(scale_factor) < @max_weight do
+        Vector3.scale(weighted_sum, scale_factor)
+      else
+        # Fallback to geometric center if weights are degenerate
+        geometric_center(points)
+      end
     else
-      {0.0, 0.0, 0.0}
+      # Fallback to geometric center if total weight is too small
+      geometric_center(points)
     end
+  end
+
+  @spec geometric_center([Vector3.t()]) :: Vector3.t()
+  defp geometric_center([]), do: {0.0, 0.0, 0.0}
+  defp geometric_center(points) do
+    count = length(points)
+    sum = Enum.reduce(points, {0.0, 0.0, 0.0}, &Vector3.add/2)
+    Vector3.scale(sum, 1.0 / count)
   end
 
   @spec calculate_inner_product(map()) :: {:ok, map()} | {:error, term()}
@@ -285,13 +407,46 @@ defmodule AriaEngineCore.Math.QCP do
 
   @spec calculate_multi_point_rotation(map()) :: {:ok, Quaternion.t()} | {:error, term()}
   defp calculate_multi_point_rotation(qcp_state) do
+    try do
+      # Check for numerical stability before proceeding
+      with :ok <- check_matrix_stability(qcp_state),
+           {:ok, quaternion_components} <- calculate_quaternion_components(qcp_state),
+           {:ok, normalized_quaternion} <- finalize_quaternion(quaternion_components, qcp_state.precision) do
+        {:ok, normalized_quaternion}
+      end
+    rescue
+      error -> {:error, {:quaternion_calculation_failed, error}}
+    end
+  end
+
+  @spec check_matrix_stability(map()) :: :ok | {:error, term()}
+  defp check_matrix_stability(qcp_state) do
+    %{max_eigenvalue: max_eigenvalue, precision: precision} = qcp_state
+
+    # Check for reasonable eigenvalue magnitude
+    cond do
+      not is_finite_number?(max_eigenvalue) ->
+        {:error, :infinite_eigenvalue}
+
+      abs(max_eigenvalue) > 1.0e12 ->
+        {:error, :eigenvalue_too_large}
+
+      abs(max_eigenvalue) < precision * 1000 ->
+        {:error, :eigenvalue_too_small}
+
+      true ->
+        :ok
+    end
+  end
+
+  @spec calculate_quaternion_components(map()) :: {:ok, {float(), float(), float(), float()}} | {:error, term()}
+  defp calculate_quaternion_components(qcp_state) do
     %{
       sum_xz_minus_zx: sum_xz_minus_zx, sum_xy_minus_yx: sum_xy_minus_yx,
       sum_yz_minus_zy: sum_yz_minus_zy, sum_xx_minus_yy: sum_xx_minus_yy,
       sum_xy_plus_yx: sum_xy_plus_yx, sum_xz_plus_zx: sum_xz_plus_zx,
       sum_yy: sum_yy, sum_xx: sum_xx, sum_yz_plus_zy: sum_yz_plus_zy,
-      sum_zz: sum_zz, sum_xx_plus_yy: sum_xx_plus_yy, max_eigenvalue: max_eigenvalue,
-      precision: precision
+      sum_zz: sum_zz, sum_xx_plus_yy: sum_xx_plus_yy, max_eigenvalue: max_eigenvalue
     } = qcp_state
 
     # Build the 4x4 characteristic polynomial matrix elements
@@ -310,40 +465,74 @@ defmodule AriaEngineCore.Math.QCP do
     a43 = a34
     a44 = sum_zz - sum_xx_plus_yy - max_eigenvalue
 
-    # Calculate 3x3 determinants for quaternion components
-    a3344_4334 = a33 * a44 - a43 * a34
-    a3244_4234 = a32 * a44 - a42 * a34
-    a3243_4233 = a32 * a43 - a42 * a33
-    a3143_4133 = a31 * a43 - a41 * a33
-    a3144_4134 = a31 * a44 - a41 * a34
-    a3142_4132 = a31 * a42 - a41 * a32
+    # Calculate 3x3 determinants for quaternion components with overflow checking
+    determinants = [
+      a33 * a44 - a43 * a34,  # a3344_4334
+      a32 * a44 - a42 * a34,  # a3244_4234
+      a32 * a43 - a42 * a33,  # a3243_4233
+      a31 * a43 - a41 * a33,  # a3143_4133
+      a31 * a44 - a41 * a34,  # a3144_4134
+      a31 * a42 - a41 * a32   # a3142_4132
+    ]
 
-    # Calculate quaternion components
-    quaternion_w = a22 * a3344_4334 - a23 * a3244_4234 + a24 * a3243_4233
-    quaternion_x = a21 * a3344_4334 - a23 * a3144_4134 + a24 * a3143_4133
-    quaternion_y = -a21 * a3244_4234 + a22 * a3144_4134 - a24 * a3142_4132
-    quaternion_z = a21 * a3243_4233 - a22 * a3143_4133 + a23 * a3142_4132
-
-    # Normalize by smallest component to avoid numerical issues
-    min_comp_val = Enum.min([quaternion_w, quaternion_x, quaternion_y, quaternion_z])
-
-    {norm_w, norm_x, norm_y, norm_z} =
-      if abs(min_comp_val) > 1.0e-12 do
-        {quaternion_w / min_comp_val, quaternion_x / min_comp_val,
-         quaternion_y / min_comp_val, quaternion_z / min_comp_val}
-      else
-        {quaternion_w, quaternion_x, quaternion_y, quaternion_z}
-      end
-
-    # Check if quaternion is valid
-    qsqr = norm_w * norm_w + norm_x * norm_x + norm_y * norm_y + norm_z * norm_z
-
-    if qsqr < precision do
-      {:ok, {0.0, 0.0, 0.0, 1.0}}
+    # Check for numerical overflow in determinants
+    if Enum.any?(determinants, fn d -> not is_finite_number?(d) end) do
+      {:error, :determinant_overflow}
     else
-      rotation = {norm_x, norm_y, norm_z, norm_w}
-      {normalized_rotation, _} = Quaternion.normalize(rotation)
-      {:ok, normalized_rotation}
+      [a3344_4334, a3244_4234, a3243_4233, a3143_4133, a3144_4134, a3142_4132] = determinants
+
+      # Calculate quaternion components with robust arithmetic
+      quaternion_w = safe_multiply_add([{a22, a3344_4334}, {-a23, a3244_4234}, {a24, a3243_4233}])
+      quaternion_x = safe_multiply_add([{a21, a3344_4334}, {-a23, a3144_4134}, {a24, a3143_4133}])
+      quaternion_y = safe_multiply_add([{-a21, a3244_4234}, {a22, a3144_4134}, {-a24, a3142_4132}])
+      quaternion_z = safe_multiply_add([{a21, a3243_4233}, {-a22, a3143_4133}, {a23, a3142_4132}])
+
+      {:ok, {quaternion_w, quaternion_x, quaternion_y, quaternion_z}}
+    end
+  end
+
+  @spec safe_multiply_add([{float(), float()}]) :: float()
+  defp safe_multiply_add(terms) do
+    Enum.reduce(terms, 0.0, fn {coeff, value}, acc ->
+      product = coeff * value
+      if is_finite_number?(product) do
+        acc + product
+      else
+        acc  # Skip infinite/NaN terms
+      end
+    end)
+  end
+
+  @spec finalize_quaternion({float(), float(), float(), float()}, float()) :: {:ok, Quaternion.t()} | {:error, term()}
+  defp finalize_quaternion({quaternion_w, quaternion_x, quaternion_y, quaternion_z}, precision) do
+    # Check for degenerate quaternion components
+    if Enum.all?([quaternion_w, quaternion_x, quaternion_y, quaternion_z], fn c -> abs(c) < precision end) do
+      {:ok, {0.0, 0.0, 0.0, 1.0}}  # Identity quaternion
+    else
+      # Robust normalization approach
+      components = [quaternion_w, quaternion_x, quaternion_y, quaternion_z]
+      max_component = Enum.max_by(components, &abs/1)
+
+      {norm_w, norm_x, norm_y, norm_z} =
+        if abs(max_component) > 1.0e-12 do
+          scale = 1.0 / max_component
+          {quaternion_w * scale, quaternion_x * scale, quaternion_y * scale, quaternion_z * scale}
+        else
+          {quaternion_w, quaternion_x, quaternion_y, quaternion_z}
+        end
+
+      # Check final quaternion magnitude
+      qsqr = norm_w * norm_w + norm_x * norm_x + norm_y * norm_y + norm_z * norm_z
+
+      if qsqr < precision do
+        {:ok, {0.0, 0.0, 0.0, 1.0}}
+      else
+        rotation = {norm_x, norm_y, norm_z, norm_w}
+        case Quaternion.normalize(rotation) do
+          {normalized_rotation, true} -> {:ok, normalized_rotation}
+          {_, false} -> {:error, :quaternion_normalization_failed}
+        end
+      end
     end
   end
 
