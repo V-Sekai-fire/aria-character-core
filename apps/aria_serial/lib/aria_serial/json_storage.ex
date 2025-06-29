@@ -2,16 +2,13 @@
 # SPDX-License-Identifier: MIT
 
 defmodule AriaSerial.JsonStorage do
-  @moduledoc """
-  Project file with serial number: R25W007JSXN
-
-  Decode: mix serial.decode R25W007JSXN
-  """
-
   @serial_number "R25W007JSXN"
 
   @moduledoc """
   JSON-based storage system for serial number registry data.
+
+  Project file with serial number: R25W007JSXN
+  Decode: mix serial.decode R25W007JSXN
 
   Provides persistent storage for serial numbers organized by year, week, and factory.
   Supports atomic operations, backup creation, and data validation.
@@ -19,9 +16,9 @@ defmodule AriaSerial.JsonStorage do
 
   @doc "Returns the serial number for this module"
   def serial_number do
-    case lookup_serial("R25W007JSXN") do
-      {:ok, _info} -> "R25W007JSXN"
-      {:error, _} -> "R25W007JSXN"  # fallback
+    case lookup_serial(@serial_number) do
+      {:ok, _info} -> @serial_number
+      {:error, _} -> @serial_number  # fallback
     end
   end
 

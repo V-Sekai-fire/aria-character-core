@@ -7,6 +7,8 @@ defmodule Mix.Tasks.Serial.Decode do
   @moduledoc """
   Decode Aria project serial numbers.
 
+  Project file with serial number: R25W002DECX
+
   ## Usage
 
       mix serial.decode A25W001GLTL
@@ -54,9 +56,9 @@ defmodule Mix.Tasks.Serial.Decode do
 
   @doc "Returns the serial number for this module"
   def serial_number do
-    case AriaSerial.JsonStorage.lookup_serial("R25W002DECX") do
-      {:ok, _info} -> "R25W002DECX"
-      {:error, _} -> "R25W002DECX"  # fallback
+    case AriaSerial.JsonStorage.lookup_serial(@serial_number) do
+      {:ok, _info} -> @serial_number
+      {:error, _} -> @serial_number  # fallback
     end
   end
 

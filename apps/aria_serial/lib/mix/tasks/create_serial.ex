@@ -2,16 +2,13 @@
 # SPDX-License-Identifier: MIT
 
 defmodule Mix.Tasks.Serial.Create do
-  @moduledoc """
-  Project file with serial number: R25W004CREA
-
-  Decode: mix serial.decode R25W004CREA
-  """
-
   @serial_number "R25W004CREA"
 
   @moduledoc """
   Create new serial numbers for migration tools.
+
+  Project file with serial number: R25W004CREA
+  Decode: mix serial.decode R25W004CREA
 
   ## Usage
 
@@ -34,9 +31,9 @@ defmodule Mix.Tasks.Serial.Create do
 
   @doc "Returns the serial number for this module"
   def serial_number do
-    case AriaSerial.JsonStorage.lookup_serial("R25W004CREA") do
-      {:ok, _info} -> "R25W004CREA"
-      {:error, _} -> "R25W004CREA"  # fallback
+    case AriaSerial.JsonStorage.lookup_serial(@serial_number) do
+      {:ok, _info} -> @serial_number
+      {:error, _} -> @serial_number  # fallback
     end
   end
 

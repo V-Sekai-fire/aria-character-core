@@ -10,9 +10,9 @@ defmodule AriaSerial do
 
   @doc "Returns the serial number for this module"
   def serial_number do
-    case AriaSerial.JsonStorage.lookup_serial("R25W001ARXA") do
-      {:ok, _info} -> "R25W001ARXA"
-      {:error, _} -> "R25W001ARXA"  # fallback
+    case AriaSerial.JsonStorage.lookup_serial(@serial_number) do
+      {:ok, _info} -> @serial_number
+      {:error, _} -> @serial_number  # fallback
     end
   end
 
