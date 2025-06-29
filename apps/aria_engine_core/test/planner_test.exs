@@ -27,8 +27,8 @@ defmodule AriaEngineCore.PlannerTest do
     end)
 
     # Create mock domain and state for tests
-    domain = %AriaEngineCore.Domain{id: "test_domain"}
-    state = %AriaEngineCore.State{id: "test_state"}
+    domain = %AriaEngineCore.Domain.Core{name: "test_domain"}
+    state = AriaEngineCore.State.new()
     goals = [{"achieve", "goal1", "value1"}]
 
     %{domain: domain, state: state, goals: goals}

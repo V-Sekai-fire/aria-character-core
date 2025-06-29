@@ -5,263 +5,204 @@ defmodule AriaEngineCore.Mocks.PlannerMockHelpers do
   @moduledoc """
   Helper functions for setting up planner mocks in tests.
 
-  This module provides convenient functions for configuring the PlannerMock
-  with common scenarios, making tests easier to write and maintain.
-
-  ## Usage
-
-      import AriaEngineCore.Mocks.PlannerMockHelpers
-
-      test "successful planning" do
-        expect_successful_planning()
-
-        {:ok, solution_tree} = AriaEngineCore.plan(domain, state, goals)
-        assert solution_tree != nil
-      end
-
-  ## Mock Scenarios
-
-  - `expect_successful_planning/1` - Mock successful planning and execution
-  - `expect_planning_failure/2` - Mock planning failure with specific reason
-  - `expect_execution_failure/2` - Mock execution failure with specific reason
-  - `expect_coordinator_creation_failure/1` - Mock coordinator creation failure
+  This module provides convenience functions for configuring mock expectations
+  and creating test data structures for planner testing.
   """
 
   import Mox
-
-  @mock_module AriaEngineCore.Mocks.PlannerMock
+  alias AriaEngineCore.Mocks.PlannerMock
 
   @doc """
-  Set up mock expectations for successful planning and execution.
-
-  This is the most common test scenario where all operations succeed.
-
-  ## Parameters
-
-  - `mock` - Mock module (defaults to PlannerMock)
-
-  ## Example
-
-      test "successful planning workflow" do
-        expect_successful_planning()
-
-        {:ok, {final_state, solution_tree}} = AriaEngineCore.run_lazy(domain, state, goals)
-        assert final_state != nil
-        assert solution_tree != nil
-      end
+  Sets up a successful planning mock that returns a solution tree.
   """
-  @spec expect_successful_planning(module()) :: :ok
-  def expect_successful_planning(mock \\ @mock_module) do
-    expect(mock, :new_coordinator, fn -> :mock_coordinator end)
-
-    expect(mock, :plan, fn _coordinator, _domain, _state, _goals ->
+  def setup_successful_planning_mock do
+    expect(PlannerMock, :new_coordinator, fn -> :mock_coordinator end)
+    expect(PlannerMock, :plan, fn _coordinator, _domain, _state, _goals ->
       {:ok, %{
+        "type" => "solution_tree",
+        "root_id" => "root",
         "actions" => [
-          %{"name" => "mock_action_1", "args" => ["arg1"]},
-          %{"name" => "mock_action_2", "args" => ["arg2"]}
-        ],
-        "metadata" => %{"planning_time" => 0.1}
+          %{"name" => "action1", "args" => ["arg1"]},
+          %{"name" => "action2", "args" => ["arg2"]}
+        ]
       }}
     end)
-
-    expect(mock, :execute, fn _coordinator, _domain, _state, _plan ->
-      {:ok, :mock_final_state}
-    end)
-
-    :ok
   end
 
   @doc """
-  Set up mock expectations for planning failure.
-
-  ## Parameters
-
-  - `reason` - Atom describing the failure reason
-  - `mock` - Mock module (defaults to PlannerMock)
-
-  ## Example
-
-      test "planning failure handling" do
-        expect_planning_failure(:no_solution_found)
-
-        {:error, :planning_failed} = AriaEngineCore.plan(domain, state, goals)
-      end
+  Sets up a planning failure mock that returns an error.
   """
-  @spec expect_planning_failure(atom(), module()) :: :ok
-  def expect_planning_failure(reason, mock \\ @mock_module) do
-    expect(mock, :new_coordinator, fn -> :mock_coordinator end)
+  def setup_planning_failure_mock do
+    expect(PlannerMock, :new_coordinator, fn -> :mock_coordinator end)
+    expect(PlannerMock, :plan, fn _coordinator, _domain, _state, _goals ->
+      {:error, "Planning failed"}
+    end)
+  end
 
-    expect(mock, :plan, fn _coordinator, _domain, _state, _goals ->
+  @doc """
+  Sets up a successful execution mock.
+  """
+  def setup_successful_execution_mock do
+    expect(PlannerMock, :execute, fn _coordinator, _domain, _state, _solution_tree ->
+      {:ok, AriaEngineCore.State.new()}
+    end)
+  end
+
+  @doc """
+  Sets up an execution failure mock.
+  """
+  def setup_execution_failure_mock do
+    expect(PlannerMock, :execute, fn _coordinator, _domain, _state, _solution_tree ->
+      {:error, :execution_failed}
+    end)
+  end
+
+  @doc """
+  Sets up a coordinator creation failure mock.
+  """
+  def setup_coordinator_failure_mock do
+    expect(PlannerMock, :new_coordinator, fn ->
+      raise RuntimeError, "Mock coordinator creation failure"
+    end)
+  end
+
+  @doc """
+  Sets up a planning exception mock.
+  """
+  def setup_planning_exception_mock do
+    expect(PlannerMock, :new_coordinator, fn -> :mock_coordinator end)
+    expect(PlannerMock, :plan, fn _coordinator, _domain, _state, _goals ->
+      raise RuntimeError, "Mock planning exception"
+    end)
+  end
+
+  @doc """
+  Sets up an execution exception mock.
+  """
+  def setup_execution_exception_mock do
+    expect(PlannerMock, :execute, fn _coordinator, _domain, _state, _solution_tree ->
+      raise RuntimeError, "Mock execution exception"
+    end)
+  end
+
+  @doc """
+  Creates a sample domain for testing.
+  """
+  def create_test_domain do
+    AriaEngineCore.Domain.Core.new("test_domain")
+  end
+
+  @doc """
+  Creates a sample state for testing.
+  """
+  def create_test_state do
+    AriaEngineCore.State.new()
+    |> AriaEngineCore.State.set_fact("location", "player", "room1")
+    |> AriaEngineCore.State.set_fact("has", "player", "sword")
+  end
+
+  @doc """
+  Creates sample goals for testing.
+  """
+  def create_test_goals do
+    [{"achieve", "location", "player", "room2"}]
+  end
+
+  @doc """
+  Creates a sample solution tree for testing.
+  """
+  def create_test_solution_tree do
+    %{
+      "type" => "solution_tree",
+      "root_id" => "root",
+      "actions" => [
+        %{"name" => "action1", "args" => ["arg1"]},
+        %{"name" => "action2", "args" => ["arg2"]}
+      ]
+    }
+  end
+
+  @doc """
+  Creates a failing solution tree for testing execution failures.
+  """
+  def create_failing_solution_tree do
+    %{
+      "type" => "solution_tree",
+      "root_id" => "root",
+      "actions" => [
+        %{"name" => "failing_action", "args" => []}
+      ]
+    }
+  end
+
+  @doc """
+  Sets up successful planning expectations.
+  """
+  def expect_successful_planning do
+    setup_successful_planning_mock()
+  end
+
+  @doc """
+  Sets up planning failure expectations with a specific reason.
+  """
+  def expect_planning_failure(reason) do
+    expect(PlannerMock, :new_coordinator, fn -> :mock_coordinator end)
+    expect(PlannerMock, :plan, fn _coordinator, _domain, _state, _goals ->
       {:error, reason}
     end)
-
-    :ok
   end
 
   @doc """
-  Set up mock expectations for execution failure.
-
-  Planning succeeds but execution fails with the specified reason.
-
-  ## Parameters
-
-  - `reason` - Atom describing the execution failure reason
-  - `mock` - Mock module (defaults to PlannerMock)
-
-  ## Example
-
-      test "execution failure handling" do
-        expect_execution_failure(:action_failed)
-
-        {:error, :action_failed} = AriaEngineCore.run_lazy(domain, state, goals)
-      end
+  Sets up execution failure expectations with a specific reason.
   """
-  @spec expect_execution_failure(atom(), module()) :: :ok
-  def expect_execution_failure(reason, mock \\ @mock_module) do
-    expect(mock, :new_coordinator, fn -> :mock_coordinator end)
-
-    expect(mock, :plan, fn _coordinator, _domain, _state, _goals ->
-      {:ok, %{"actions" => [%{"name" => "failing_action", "args" => []}]}}
-    end)
-
-    expect(mock, :execute, fn _coordinator, _domain, _state, _plan ->
+  def expect_execution_failure(reason) do
+    setup_successful_planning_mock()
+    expect(PlannerMock, :execute, fn _coordinator, _domain, _state, _solution_tree ->
       {:error, reason}
     end)
-
-    :ok
   end
 
   @doc """
-  Set up mock expectations for coordinator creation failure.
-
-  ## Parameters
-
-  - `mock` - Mock module (defaults to PlannerMock)
-
-  ## Example
-
-      test "coordinator creation failure" do
-        expect_coordinator_creation_failure()
-
-        assert_raise RuntimeError, fn ->
-          AriaEngineCore.plan(domain, state, goals)
-        end
-      end
+  Sets up coordinator creation failure expectations.
   """
-  @spec expect_coordinator_creation_failure(module()) :: :ok
-  def expect_coordinator_creation_failure(mock \\ @mock_module) do
-    expect(mock, :new_coordinator, fn ->
-      raise "Mock coordinator creation failure"
-    end)
-
-    :ok
+  def expect_coordinator_creation_failure do
+    setup_coordinator_failure_mock()
   end
 
   @doc """
-  Set up mock expectations for multiple planning calls.
-
-  Useful for testing scenarios where planning is called multiple times
-  with different results.
-
-  ## Parameters
-
-  - `results` - List of tuples `{:ok, plan}` or `{:error, reason}`
-  - `mock` - Mock module (defaults to PlannerMock)
-
-  ## Example
-
-      test "multiple planning attempts" do
-        expect_multiple_planning_calls([
-          {:error, :no_solution},
-          {:ok, %{"actions" => []}}
-        ])
-
-        # First call fails
-        {:error, :planning_failed} = AriaEngineCore.plan(domain, state, goals)
-
-        # Second call succeeds
-        {:ok, solution_tree} = AriaEngineCore.plan(domain, state, goals)
-      end
+  Sets up custom planning expectations with specific plan and final state.
   """
-  @spec expect_multiple_planning_calls([{:ok, map()} | {:error, atom()}], module()) :: :ok
-  def expect_multiple_planning_calls(results, mock \\ @mock_module) do
-    # Set up coordinator creation for each call
-    Enum.each(results, fn _ ->
-      expect(mock, :new_coordinator, fn -> :mock_coordinator end)
+  def expect_custom_planning(custom_plan, final_state) do
+    expect(PlannerMock, :new_coordinator, fn -> :mock_coordinator end)
+    expect(PlannerMock, :plan, fn _coordinator, _domain, _state, _goals ->
+      {:ok, custom_plan}
     end)
-
-    # Set up planning results in sequence
-    Enum.each(results, fn result ->
-      expect(mock, :plan, fn _coordinator, _domain, _state, _goals ->
-        result
-      end)
-    end)
-
-    :ok
-  end
-
-  @doc """
-  Set up mock expectations with custom plan data.
-
-  Allows testing with specific plan structures.
-
-  ## Parameters
-
-  - `plan_data` - Custom plan data structure
-  - `final_state` - Expected final state after execution
-  - `mock` - Mock module (defaults to PlannerMock)
-
-  ## Example
-
-      test "custom plan execution" do
-        custom_plan = %{
-          "actions" => [%{"name" => "custom_action", "args" => ["custom_arg"]}],
-          "metadata" => %{"custom_field" => "custom_value"}
-        }
-
-        expect_custom_planning(custom_plan, :custom_final_state)
-
-        {:ok, {final_state, _}} = AriaEngineCore.run_lazy(domain, state, goals)
-        assert final_state == :custom_final_state
-      end
-  """
-  @spec expect_custom_planning(map(), any(), module()) :: :ok
-  def expect_custom_planning(plan_data, final_state, mock \\ @mock_module) do
-    expect(mock, :new_coordinator, fn -> :mock_coordinator end)
-
-    expect(mock, :plan, fn _coordinator, _domain, _state, _goals ->
-      {:ok, plan_data}
-    end)
-
-    expect(mock, :execute, fn _coordinator, _domain, _state, _plan ->
+    expect(PlannerMock, :execute, fn _coordinator, _domain, _state, _solution_tree ->
       {:ok, final_state}
     end)
-
-    :ok
   end
 
   @doc """
-  Verify that all expected mock calls were made.
-
-  Call this at the end of tests to ensure all expectations were satisfied.
-
-  ## Parameters
-
-  - `mock` - Mock module (defaults to PlannerMock)
-
-  ## Example
-
-      test "planning workflow" do
-        expect_successful_planning()
-
-        AriaEngineCore.plan(domain, state, goals)
-
-        verify_mock_calls()
-      end
+  Sets up multiple planning call expectations with different outcomes.
   """
-  @spec verify_mock_calls(module()) :: :ok
-  def verify_mock_calls(mock \\ @mock_module) do
-    verify!(mock)
-    :ok
+  def expect_multiple_planning_calls(outcomes) do
+    expect(PlannerMock, :new_coordinator, length(outcomes), fn -> :mock_coordinator end)
+
+    for outcome <- outcomes do
+      case outcome do
+        {:success, plan} ->
+          expect(PlannerMock, :plan, fn _coordinator, _domain, _state, _goals ->
+            {:ok, plan}
+          end)
+        {:failure, reason} ->
+          expect(PlannerMock, :plan, fn _coordinator, _domain, _state, _goals ->
+            {:error, reason}
+          end)
+        {:error, reason} ->
+          expect(PlannerMock, :plan, fn _coordinator, _domain, _state, _goals ->
+            {:error, reason}
+          end)
+      end
+    end
   end
 end

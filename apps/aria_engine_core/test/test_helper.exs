@@ -1,8 +1,8 @@
 # Copyright (c) 2025-present K. S. Ernest (iFire) Lee
 # SPDX-License-Identifier: MIT
 
-# Configure Mox for dependency injection testing
-Mox.defmock(AriaEngineCore.Mocks.PlannerMock,
-  for: AriaEngineCore.Behaviours.PlannerBehaviour)
+# Load mock definitions
+Code.require_file("mocks/planner_mock.ex", __DIR__)
+Code.require_file("mocks/planner_mock_helpers.ex", __DIR__)
 
 ExUnit.start()
