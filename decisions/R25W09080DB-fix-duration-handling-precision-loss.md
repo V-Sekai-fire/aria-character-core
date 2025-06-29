@@ -1,12 +1,10 @@
-# R25W09080DB: Fix Duration Handling Precision Loss
+# TOMBSTONE: Fix Duration Handling Precision Loss
 
-<!-- @adr_serial R25W09080DB -->
+**Status:** Moved and Archived  
+**Archived Date:** June 28, 2025  
+**Moved To:** R25W1405B8B-fix-duration-handling-precision-loss.md
 
-**Status:** Moved  
-**Date:** 2025-06-25  
+This ADR has been moved to a new serial number. See the current version at R25W1405B8B.
 
-## Notice
-
-This ADR has been moved to **R25W1405B8B**.
-
-Please see: [decisions/182-fix-duration-handling-precision-loss.md](./182-fix-duration-handling-precision-loss.md)
+---
+*For active ADRs, see the main `decisions/` directory.*
