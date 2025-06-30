@@ -27,33 +27,68 @@
 
 ### 2. ~~Missing AriaEngineCore.Domain Module~~ **TOMBSTONED ✅**
 
-**Status:** SOLVED - Functions exist in internal modules, fix delegation
+**Status:** PARTIALLY SOLVED - Mixed delegation pattern identified
 
 **Problem:** `AriaEngineCore` was delegating to non-existent `AriaEngineCore.Domain` module
 
-**Solution Found:** Functions exist in top-level external APIs and should delegate there:
-- Domain management functions in `AriaCore` (external API)
-- Method functions need investigation for proper delegation targets
-- Action functions need investigation for proper delegation targets
+**Current Delegation Analysis:** Examining `lib/aria_engine_core.ex` and `apps/aria_core/lib/aria_core.ex`:
 
-**Fix Required:** Update delegation lines in `lib/aria_engine_core.ex`:
-
+**✅ Functions available in AriaCore external API:**
 ```elixir
-# Functions that exist in AriaCore external API:
-defdelegate new(name), to: AriaCore, as: :new_domain
+# Currently missing, should be added to AriaEngineCore:
+defdelegate new_domain(), to: AriaCore
+defdelegate new_domain(name), to: AriaCore
 defdelegate add_action(domain, action_name, action_spec), to: AriaCore
 defdelegate add_method(domain, method_name, method_spec), to: AriaCore
 defdelegate add_unigoal_method(domain, method_name, unigoal_spec), to: AriaCore
 defdelegate set_entity_registry(domain, registry), to: AriaCore
 defdelegate set_temporal_specifications(domain, specifications), to: AriaCore
-
-# Functions needing investigation for correct targets:
-# get_unigoal_methods/2 -> possibly AriaCore.get_unigoal_methods_for_predicate/2
-# get_task_methods/2, get_multigoal_methods/1, get_multitodo_methods/1
-# get_action_metadata/2, get_entity_registry/1, get_durative_action/2, execute_action/4
 ```
 
-**Note:** Clean architecture requires delegating to external APIs (AriaCore) rather than internal modules when functionality exists in top-level APIs.
+**🔄 Functions needing signature mapping:**
+```elixir
+# Current: get_unigoal_methods(domain, predicate)
+# AriaCore: get_unigoal_methods_for_predicate(domain, predicate)
+defdelegate get_unigoal_methods(domain, predicate), to: AriaCore, as: :get_unigoal_methods_for_predicate
+```
+
+**❌ Functions missing from AriaCore external API (with current implementation locations):**
+```elixir
+# These functions exist but need proper delegation path:
+
+# Currently in AriaEngineCore.Domain.Methods - should delegate through AriaCore
+defdelegate get_task_methods(domain, task_name), to: AriaCore
+defdelegate get_multigoal_methods(domain), to: AriaCore  
+defdelegate get_multitodo_methods(domain), to: AriaCore
+
+# Currently in AriaEngineCore.Domain.Actions - should delegate through AriaCore  
+defdelegate get_action_metadata(domain, action_name), to: AriaCore
+defdelegate execute_action(domain, state, action_name, args), to: AriaCore
+
+# Currently in AriaCore.Domain (internal) - needs external API exposure
+defdelegate get_entity_registry(domain), to: AriaCore
+
+# Need to locate implementation
+defdelegate get_durative_action(domain, action_name), to: AriaCore
+```
+
+**Current Implementation Status:**
+- `get_task_methods/2`: ✅ Implemented in `AriaEngineCore.Domain.Methods` 
+- `get_multigoal_methods/1`: ✅ Implemented in `AriaEngineCore.Domain.Methods`
+- `get_multitodo_methods/1`: ✅ Implemented in `AriaEngineCore.Domain.Methods`
+- `get_action_metadata/2`: ✅ Implemented in `AriaEngineCore.Domain.Actions`
+- `execute_action/4`: ✅ Implemented in `AriaEngineCore.Domain.Actions`
+- `get_entity_registry/1`: ✅ Implemented in `AriaCore.Domain` (internal)
+- `get_durative_action/2`: ✅ Implemented in `AriaEngineCore.Domain.Core`
+
+**All functions have implementations - delegation architecture fix required**
+
+**Implementation Strategy:**
+1. **Phase 1:** Add missing functions to AriaCore external API with proper internal delegation
+2. **Phase 2:** Update AriaEngineCore to delegate to AriaCore instead of internal modules
+3. **Phase 3:** Verify all cross-app calls use external APIs only
+
+**Note:** Clean architecture requires complete external API coverage before delegation fixes can be applied.
 
 ### 3. Missing AriaHybridPlanner.Core Module
 
