@@ -336,12 +336,18 @@ defmodule AriaJoint.Joint do
   def set_transform(node, transform) do
     with :ok <- validate_node_struct(node),
          :ok <- validate_transform_input(transform) do
-      if Matrix4.equal?(node.local_transform, transform) do
-        node
+      # Get the latest node state from registry to ensure we have current children list
+      current_node = case get_node_by_id(node.id) do
+        nil -> node
+        registry_node -> registry_node
+      end
+
+      if Matrix4.equal?(current_node.local_transform, transform) do
+        current_node
       else
-        updated_node = %{node |
+        updated_node = %{current_node |
           local_transform: transform,
-          dirty: add_dirty_flag(node.dirty, @dirty_global)
+          dirty: add_dirty_flag(current_node.dirty, @dirty_global)
         }
 
         case safe_update_registry(updated_node) do
@@ -927,20 +933,24 @@ defmodule AriaJoint.Joint do
       case get_node_by_id(child_id) do
         nil -> nil
         child_node ->
-          safe_propagate_transform_changed(child_node)
+          # Mark child as dirty and propagate to its children
+          dirty_child = %{child_node | dirty: add_dirty_flag(child_node.dirty, @dirty_global)}
+          safe_update_registry(dirty_child)
+          safe_propagate_transform_changed(dirty_child)
           child_id
       end
     end |> Enum.reject(&is_nil/1)
 
     # Update node with cleaned children list if needed
-    if length(valid_children) != length(node.children) do
-      updated_node = %{node | children: valid_children}
-      safe_update_registry(updated_node)
+    updated_node = if length(valid_children) != length(node.children) do
+      %{node | children: valid_children}
+    else
+      node
     end
 
-    # Mark this node as globally dirty
-    updated_node = %{node | dirty: add_dirty_flag(node.dirty, @dirty_global)}
-    safe_update_registry(updated_node)
+    # Mark this node as globally dirty and update in registry
+    final_node = %{updated_node | dirty: add_dirty_flag(updated_node.dirty, @dirty_global)}
+    safe_update_registry(final_node)
     :ok
   end
 
