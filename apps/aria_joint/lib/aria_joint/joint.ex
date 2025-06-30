@@ -79,7 +79,9 @@ defmodule AriaJoint.Joint do
     dirty: dirty_state(),
     parent: node_id() | nil,
     children: [node_id()],
-    disable_scale: boolean()
+    disable_scale: boolean(),
+    nested_set_offset: non_neg_integer() | nil,
+    nested_set_span: non_neg_integer() | nil
   }
 
   defstruct [
@@ -91,7 +93,9 @@ defmodule AriaJoint.Joint do
     dirty: :dirty_none,
     parent: nil,
     children: [],
-    disable_scale: false
+    disable_scale: false,
+    nested_set_offset: nil,
+    nested_set_span: nil
   ]
 
   # Global registry for node hierarchy management
@@ -144,15 +148,95 @@ defmodule AriaJoint.Joint do
   """
   @spec new(keyword()) :: {:ok, t()} | {:error, joint_error() | term()}
   def new(opts \\ []) do
-    try do
-      with {:ok, _pid} <- ensure_registry_with_timeout(),
-           {:ok, validated_opts} <- validate_creation_options(opts),
-           {:ok, node} <- create_and_register_node(validated_opts) do
-        {:ok, node}
-      end
-    rescue
-      error -> {:error, {:joint_creation_failed, error}}
+    # Ensure registry exists
+    case ensure_registry() do
+      {:error, reason} -> {:error, reason}
+      :ok ->
+        node = %__MODULE__{
+          id: make_ref(),
+          disable_scale: Keyword.get(opts, :disable_scale, false)
+        }
+
+        case Keyword.get(opts, :parent) do
+          nil ->
+            # Register node and return
+            case Registry.register(@registry_name, node.id, node) do
+              {:ok, _pid} -> {:ok, node}
+              {:error, reason} -> {:error, reason}
+            end
+
+          parent_node ->
+            # Use establish_parent_child for consistent bidirectional relationships
+            {updated_parent, updated_child} = establish_parent_child(parent_node, node)
+
+            # Register child first
+            case Registry.register(@registry_name, updated_child.id, updated_child) do
+              {:ok, _pid} ->
+                # Update parent in registry with proper synchronization
+                case Registry.update_value(@registry_name, parent_node.id, fn _old -> updated_parent end) do
+                  {_old_parent, _new_parent} ->
+                    # Verify the update worked by checking registry
+                    case Registry.lookup(@registry_name, parent_node.id) do
+                      [{_pid, final_parent}] ->
+                        if updated_child.id in final_parent.children do
+                          {:ok, updated_child}
+                        else
+                          {:error, :registry_sync_failed}
+                        end
+                      [] ->
+                        {:error, :parent_not_found}
+                    end
+                  {:error, reason} -> {:error, reason}
+                end
+              {:error, reason} -> {:error, reason}
+            end
+        end
     end
+  end
+
+  @spec ensure_registry() :: :ok | {:error, joint_error()}
+  defp ensure_registry do
+    case Process.whereis(@registry_name) do
+      nil ->
+        # Try to start registry
+        case Registry.start_link(keys: :unique, name: @registry_name) do
+          {:ok, _pid} -> :ok
+          {:error, {:already_started, _pid}} -> :ok
+          {:error, reason} -> {:error, reason}
+        end
+      _pid -> :ok
+    end
+  end
+
+  @doc """
+  Establish proper bidirectional parent-child relationship.
+
+  This creates both the parent->child and child->parent links needed for
+  hierarchy traversal. Gets the latest parent state from registry to ensure
+  all existing children are preserved.
+
+  ## Examples
+
+      {:ok, root} = Joint.new()
+      {:ok, child} = Joint.new()
+      {updated_parent, updated_child} = Joint.establish_parent_child(root, child)
+
+  ## Returns
+
+  `{parent_with_child, child_with_parent}` tuple with updated nodes.
+  """
+  @spec establish_parent_child(t(), t()) :: {t(), t()}
+  def establish_parent_child(parent_node, child_node) do
+    # Get the latest parent state from registry to preserve existing children
+    current_parent = case get_node_by_id(parent_node.id) do
+      nil -> parent_node  # Fallback to passed parent if not in registry
+      registry_parent -> registry_parent
+    end
+
+    # Add new child to existing children list
+    updated_parent = %{current_parent | children: [child_node.id | current_parent.children]}
+    updated_child = %{child_node | parent: parent_node.id}
+    {updated_parent, updated_child}
   end
 
   @spec validate_creation_options(keyword()) :: {:ok, keyword()} | {:error, joint_error()}
@@ -655,6 +739,36 @@ defmodule AriaJoint.Joint do
   end
 
   @doc """
+  Collect all nodes in hierarchy starting from root nodes.
+
+  Pure functional approach to gather complete node hierarchy without
+  relying on Registry state during traversal. This enables functional
+  nested set building.
+
+  ## Parameters
+
+  - `root_nodes` - List of root nodes to traverse from
+
+  ## Returns
+
+  List of all nodes in the hierarchy (roots + all descendants).
+
+  ## Examples
+
+      {:ok, root} = Joint.new()
+      {:ok, child} = Joint.new(parent: root)
+      all_nodes = Joint.collect_hierarchy([root])
+      # Returns [root, child]
+
+  """
+  @spec collect_hierarchy([t()]) :: [t()]
+  def collect_hierarchy(root_nodes) when is_list(root_nodes) do
+    root_nodes
+    |> Enum.flat_map(&collect_subtree/1)
+    |> Enum.uniq_by(& &1.id)
+  end
+
+  @doc """
   Clean up node and remove from hierarchy.
 
   Removes all parent-child relationships and cleans up registry entries.
@@ -701,6 +815,44 @@ defmodule AriaJoint.Joint do
 
   # Private helper functions
 
+  @spec collect_subtree(t()) :: [t()]
+  defp collect_subtree(node) do
+    # Get current node from registry to ensure we have latest state
+    current_node = case get_node_by_id(node.id) do
+      nil -> node  # Fallback to passed node if not in registry
+      registry_node -> registry_node
+    end
+
+    # Get all children from registry with retry logic
+    children = collect_children_with_retry(current_node, 3)
+
+    # Recursively collect children and their descendants
+    child_nodes = Enum.flat_map(children, &collect_subtree/1)
+
+    # Return current node plus all descendants
+    [current_node | child_nodes]
+  end
+
+  @spec collect_children_with_retry(t(), non_neg_integer()) :: [t()]
+  defp collect_children_with_retry(node, retries_left) do
+    children = for child_id <- node.children do
+      case get_node_by_id(child_id) do
+        nil -> nil  # Skip missing children
+        child_node -> child_node
+      end
+    end |> Enum.reject(&is_nil/1)
+
+    # If we're missing children and have retries left, try again
+    missing_count = length(node.children) - length(children)
+    if missing_count > 0 and retries_left > 0 do
+      # Small delay to allow registry updates to complete
+      Process.sleep(1)
+      collect_children_with_retry(node, retries_left - 1)
+    else
+      children
+    end
+  end
+
   @spec ensure_registry_with_timeout() :: {:ok, pid()} | {:error, joint_error()}
   defp ensure_registry_with_timeout do
     try do
@@ -718,8 +870,10 @@ defmodule AriaJoint.Joint do
     try do
       case Registry.lookup(@registry_name, node.id) do
         [{_pid, _old_node}] ->
-          Registry.update_value(@registry_name, node.id, fn _old_node -> node end)
-          :ok
+          case Registry.update_value(@registry_name, node.id, fn _old_node -> node end) do
+            {_old_value, _new_value} -> :ok
+            {:error, reason} -> {:error, reason}
+          end
 
         [] ->
           {:error, :node_not_found}

@@ -50,7 +50,7 @@ defmodule AriaJoint do
       world_point = AriaJoint.to_global(bone, local_point)
   """
 
-  alias AriaJoint.Joint
+  alias AriaJoint.{Joint, HierarchyManager}
 
   @doc """
   Create a new Joint with optional parent relationship.
