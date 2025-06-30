@@ -58,22 +58,24 @@ Extract all implementation code from `aria_engine_core` and move it to appropria
 - [x] Updated references to old `AriaEngineCore.Domain.Core` struct to use generic maps
 - [x] Verified compilation succeeds across all apps
 
-### Phase 2: Planner Implementation Migration (PRIORITY: HIGH)
+### Phase 2: Planner Implementation Migration (PRIORITY: HIGH) ✅ COMPLETED
 
 **Target App:** `aria_hybrid_planner`
 
-**Files to migrate:**
+**Files migrated:**
 
-- [ ] `lib/aria_engine_core/planner.ex` implementation → `apps/aria_hybrid_planner/lib/aria_hybrid_planner/engine_integration.ex`
-- [ ] `lib/aria_engine_core/plan/` directory → `apps/aria_hybrid_planner/lib/aria_hybrid_planner/plan/`
-- [ ] `lib/aria_engine_core/adapters/` directory → `apps/aria_hybrid_planner/lib/aria_hybrid_planner/adapters/`
-- [ ] `lib/aria_engine_core/behaviours/` directory → `apps/aria_hybrid_planner/lib/aria_hybrid_planner/behaviours/`
+- [x] `lib/aria_engine_core/planner.ex` implementation → `apps/aria_hybrid_planner/lib/aria_hybrid_planner/engine_integration.ex`
+- [x] `lib/aria_engine_core/plan/` directory → `apps/aria_hybrid_planner/lib/aria_hybrid_planner/plan/`
+- [x] `lib/aria_engine_core/adapters/` directory → `apps/aria_hybrid_planner/lib/aria_hybrid_planner/adapters/`
+- [x] `lib/aria_engine_core/behaviours/` directory → `apps/aria_hybrid_planner/lib/aria_hybrid_planner/behaviours/`
 
-**Implementation Required:**
+**Implementation Completed:**
 
-- [ ] Add planning integration functions to `AriaHybridPlanner` external API
-- [ ] Update `lib/aria_engine_core/planner.ex` to delegate to `AriaHybridPlanner`
-- [ ] Ensure solution tree and plan types are available through external APIs
+- [x] Added planning integration functions to `AriaHybridPlanner` external API
+- [x] Created `AriaHybridPlanner.EngineIntegration` module for backward compatibility
+- [x] Migrated solution tree and plan types to `AriaHybridPlanner.Plan`
+- [x] Updated module namespaces and references for proper app boundaries
+- [x] Verified compilation succeeds across all apps
 
 ### Phase 3: Core Types Simplification (PRIORITY: MEDIUM)
 
