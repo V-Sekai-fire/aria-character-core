@@ -132,7 +132,7 @@ defmodule AriaMath.Matrix4 do
 
     cond do
       # If determinant is zero, NaN, or infinity, return identity and false
-      det == 0.0 or is_nan(det) or is_infinite(det) ->
+      det == 0.0 or is_nan_float(det) or is_infinite_float(det) ->
         {identity(), false}
 
       # If determinant is valid, calculate inverse
@@ -242,6 +242,55 @@ defmodule AriaMath.Matrix4 do
     # Extract the upper-left 3x3 rotation matrix and ensure it's orthonormal
     rotation_3x3 = extract_basis({m0, m1, m2, m3, m4, m5, m6, m7, m8, m9, m10, m11, m12, m13, m14, m15})
     orthogonalize(rotation_3x3)
+  end
+
+  @doc """
+  Create rotation matrix from Euler angles (yaw, pitch, roll).
+
+  Creates a rotation matrix from Euler angles in radians using ZYX rotation order.
+  This is equivalent to rotating around Z axis (yaw), then Y axis (pitch), then X axis (roll).
+
+  ## Examples
+
+      iex> AriaMath.Matrix4.from_euler(0.0, 0.0, :math.pi / 2)
+      {0.0, 1.0, 0.0, 0.0, -1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0}
+
+      iex> AriaMath.Matrix4.from_euler(:math.pi / 2, 0.0, 0.0)
+      {0.0, 0.0, -1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0}
+  """
+  @spec from_euler(float(), float(), float()) :: t()
+  def from_euler(yaw, pitch, roll) when is_number(yaw) and is_number(pitch) and is_number(roll) do
+    # Calculate trigonometric values
+    cy = :math.cos(yaw)
+    sy = :math.sin(yaw)
+    cp = :math.cos(pitch)
+    sp = :math.sin(pitch)
+    cr = :math.cos(roll)
+    sr = :math.sin(roll)
+
+    # ZYX rotation order: R = Rz(yaw) * Ry(pitch) * Rx(roll)
+    {
+      # Column 0
+      cy * cp,
+      sy * cp,
+      -sp,
+      0.0,
+      # Column 1
+      cy * sp * sr - sy * cr,
+      sy * sp * sr + cy * cr,
+      cp * sr,
+      0.0,
+      # Column 2
+      cy * sp * cr + sy * sr,
+      sy * sp * cr - cy * sr,
+      cp * cr,
+      0.0,
+      # Column 3
+      0.0,
+      0.0,
+      0.0,
+      1.0
+    }
   end
 
   @doc """
@@ -470,26 +519,29 @@ defmodule AriaMath.Matrix4 do
   end
 
   @doc """
-  Alias for scaling/1 to match IKNode3D usage.
+  Transform a 3D vector by this matrix (alias for transform_direction/2).
+
+  This is an alias for transform_direction/2 to provide compatibility
+  with common naming conventions.
 
   ## Examples
 
-      iex> AriaMath.Matrix4.scale({2.0, 3.0, 4.0})
-      {2.0, 0.0, 0.0, 0.0, 0.0, 3.0, 0.0, 0.0, 0.0, 0.0, 4.0, 0.0, 0.0, 0.0, 0.0, 1.0}
+      iex> matrix = AriaMath.Matrix4.scaling({2.0, 3.0, 4.0})
+      iex> AriaMath.Matrix4.transform_vector(matrix, {1.0, 1.0, 1.0})
+      {2.0, 3.0, 4.0}
   """
-  @spec scale(Vector3.t()) :: t()
-  def scale(scale_vector) do
-    scaling(scale_vector)
+  @spec transform_vector(t(), Vector3.t()) :: Vector3.t()
+  def transform_vector(matrix, vector) do
+    transform_direction(matrix, vector)
   end
 
-  # Helper functions
-
-  defp is_nan(x) do
-    x != x
+  # Helper functions for IEEE-754 compliance
+  defp is_nan_float(value) when is_float(value) do
+    value != value
   end
 
-  defp is_infinite(x) do
-    x == :positive_infinity or x == :negative_infinity
+  defp is_infinite_float(value) when is_float(value) do
+    value == :positive_infinity or value == :negative_infinity
   end
 
   defp calculate_inverse({m0, m1, m2, m3, m4, m5, m6, m7, m8, m9, m10, m11, m12, m13, m14, m15}, det) do

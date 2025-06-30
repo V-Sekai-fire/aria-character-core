@@ -407,6 +407,57 @@ defmodule AriaMath.Quaternion do
   end
 
   @doc """
+  Rotate a Vector3 by this quaternion (alias for rotate_vector/2).
+
+  This is an alias for rotate_vector/2 to provide compatibility
+  with common naming conventions.
+
+  ## Examples
+
+      iex> AriaMath.Quaternion.rotate({0.0, 0.0, 0.7071067811865475, 0.7071067811865476}, {1.0, 0.0, 0.0})
+      {0.0, 1.0, 0.0}
+  """
+  @spec rotate(t(), Vector3.t()) :: Vector3.t()
+  def rotate(quaternion, vector) do
+    rotate_vector(quaternion, vector)
+  end
+
+  @doc """
+  Create quaternion from Euler angles (yaw, pitch, roll).
+
+  Creates a quaternion from Euler angles in radians.
+  Order of rotation: yaw (Y), pitch (X), roll (Z).
+
+  ## Examples
+
+      iex> AriaMath.Quaternion.from_euler(0.0, 0.0, :math.pi / 2)
+      {0.0, 0.0, 0.7071067811865475, 0.7071067811865476}
+  """
+  @spec from_euler(float(), float(), float()) :: t()
+  def from_euler(yaw, pitch, roll) when is_number(yaw) and is_number(pitch) and is_number(roll) do
+    # Convert to half angles
+    half_yaw = yaw * 0.5
+    half_pitch = pitch * 0.5
+    half_roll = roll * 0.5
+
+    # Calculate trigonometric values
+    cy = :math.cos(half_yaw)
+    sy = :math.sin(half_yaw)
+    cp = :math.cos(half_pitch)
+    sp = :math.sin(half_pitch)
+    cr = :math.cos(half_roll)
+    sr = :math.sin(half_roll)
+
+    # Calculate quaternion components
+    {
+      cy * sp * cr + sy * cp * sr,  # x
+      sy * cp * cr - cy * sp * sr,  # y
+      cy * cp * sr - sy * sp * cr,  # z
+      cy * cp * cr + sy * sp * sr   # w
+    }
+  end
+
+  @doc """
   Identity quaternion constant.
 
   ## Examples

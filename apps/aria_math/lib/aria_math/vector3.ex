@@ -393,6 +393,41 @@ defmodule AriaMath.Vector3 do
     {x / 0.0, y / 0.0, z / 0.0}
   end
 
+  @doc """
+  Calculate distance between two 3D points.
+
+  ## Examples
+
+      iex> AriaMath.Vector3.distance({0.0, 0.0, 0.0}, {3.0, 4.0, 0.0})
+      5.0
+
+      iex> AriaMath.Vector3.distance({1.0, 1.0, 1.0}, {1.0, 1.0, 1.0})
+      0.0
+  """
+  @spec distance(t(), t()) :: float()
+  def distance(point1, point2) do
+    diff = sub(point2, point1)
+    length(diff)
+  end
+
+  @doc """
+  Linear interpolation between two vectors.
+
+  This is an alias for `mix/3` to provide compatibility with common naming conventions.
+
+  ## Examples
+
+      iex> AriaMath.Vector3.lerp({0.0, 0.0, 0.0}, {1.0, 1.0, 1.0}, 0.5)
+      {0.5, 0.5, 0.5}
+
+      iex> AriaMath.Vector3.lerp({1.0, 2.0, 3.0}, {4.0, 5.0, 6.0}, 0.25)
+      {1.75, 2.75, 3.75}
+  """
+  @spec lerp(t(), t(), float()) :: t()
+  def lerp(v1, v2, t) do
+    mix(v1, v2, t)
+  end
+
   # Helper functions
 
   defp is_nan(x) do

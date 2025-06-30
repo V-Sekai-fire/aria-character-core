@@ -492,14 +492,14 @@ defmodule AriaMath do
   defdelegate transform_point(matrix, point), to: Matrix4, as: :transform_point
 
   @doc """
-  Transform a 3D vector by a 4x4 matrix (ignores translation).
+  Transform a 3D direction by a 4x4 matrix (ignores translation).
 
   ## Examples
 
       matrix = AriaMath.matrix4_scaling({2.0, 2.0, 2.0})
-      transformed = AriaMath.matrix4_transform_vector(matrix, {1.0, 1.0, 1.0})
+      transformed = AriaMath.matrix4_transform_direction(matrix, {1.0, 1.0, 1.0})
   """
-  defdelegate matrix4_transform_vector(matrix, vector), to: Matrix4, as: :transform_vector
+  defdelegate matrix4_transform_direction(matrix, vector), to: Matrix4, as: :transform_direction
 
   @doc """
   Compute the inverse of a 4x4 matrix.
