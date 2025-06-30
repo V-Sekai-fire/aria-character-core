@@ -1,3 +1,6 @@
+# Copyright (c) 2025-present K. S. Ernest (iFire) Lee
+# SPDX-License-Identifier: MIT
+
 defmodule AriaQcp do
   @moduledoc """
   Quaternion-Based Characteristic Polynomial (QCP) algorithm for optimal superposition.

@@ -136,6 +136,7 @@ mix test apps/aria_qcp
 ```
 
 The test suite includes:
+
 - Basic functionality tests
 - Edge case handling
 - Numerical stability tests

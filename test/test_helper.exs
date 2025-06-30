@@ -1,6 +1,4 @@
 # Copyright (c) 2025-present K. S. Ernest (iFire) Lee
-# Cross-app dependency analysis: No violations found
-# Cross-app dependency analysis: No violations found
 # SPDX-License-Identifier: MIT
 
 ExUnit.start()
