@@ -39,6 +39,7 @@ defmodule AriaJoint.HierarchyManager do
   """
 
   alias AriaJoint.{Joint, NestedSet}
+  alias AriaJoint.HierarchyManager.{Calculator, Builder}
   alias AriaMath.Matrix4
 
   @type t() :: %__MODULE__{
@@ -139,14 +140,7 @@ defmodule AriaJoint.HierarchyManager do
   """
   @spec add_joint(t(), Joint.t()) :: t()
   def add_joint(manager, joint) do
-    # Check if this is a root node (no parent)
-    updated_manager = if joint.parent == nil do
-      %{manager | root_nodes: [joint.id | manager.root_nodes]}
-    else
-      manager
-    end
-
-    rebuild_nested_set(updated_manager)
+    Builder.add_joint_and_rebuild(manager, joint)
   end
 
   @doc """
@@ -165,12 +159,7 @@ defmodule AriaJoint.HierarchyManager do
   """
   @spec remove_joint(t(), Joint.node_id()) :: t()
   def remove_joint(manager, joint_id) do
-    updated_manager = %{manager |
-      root_nodes: List.delete(manager.root_nodes, joint_id),
-      global_transforms: Map.delete(manager.global_transforms, joint_id)
-    }
-
-    rebuild_nested_set(updated_manager)
+    Builder.remove_joint_and_rebuild(manager, joint_id)
   end
 
   @doc """
@@ -214,7 +203,7 @@ defmodule AriaJoint.HierarchyManager do
 
             joint ->
               # Calculate global transform functionally
-              global_transform = calculate_global_transform_functional(joint, transforms_acc, node_lookup)
+              global_transform = Calculator.calculate_functional(joint, transforms_acc, node_lookup)
 
               # Update transforms cache
               updated_transforms = Map.put(transforms_acc, node_id, global_transform)
@@ -269,7 +258,7 @@ defmodule AriaJoint.HierarchyManager do
 
             joint ->
               # Calculate global transform for this joint
-              global_transform = calculate_global_transform_optimized(joint, transforms_acc)
+              global_transform = Calculator.calculate_optimized(joint, transforms_acc)
 
               # Update transforms cache
               updated_transforms = Map.put(transforms_acc, node_id, global_transform)
@@ -314,13 +303,13 @@ defmodule AriaJoint.HierarchyManager do
       case Map.get(manager.global_transforms, joint_id) do
         nil ->
           # Not cached, need to calculate
-          calculate_and_cache_global_transform(manager, joint_id)
+          Calculator.calculate_and_cache(joint_id, manager.global_transforms)
         cached_transform ->
           cached_transform
       end
     else
       # Dirty, need to recalculate
-      calculate_and_cache_global_transform(manager, joint_id)
+      Calculator.calculate_and_cache(joint_id, manager.global_transforms)
     end
   end
 
@@ -419,83 +408,6 @@ defmodule AriaJoint.HierarchyManager do
     :ok
   end
 
-  @spec calculate_global_transform_functional(Joint.t(), %{Joint.node_id() => Matrix4.t()}, %{Joint.node_id() => Joint.t()}) :: Matrix4.t()
-  defp calculate_global_transform_functional(joint, transforms_cache, node_lookup) do
-    case joint.parent do
-      nil ->
-        # Root node - global transform is same as local transform
-        joint.local_transform
-
-      parent_id ->
-        # Child node - multiply parent global * local transform
-        case Map.get(transforms_cache, parent_id) do
-          nil ->
-            # Parent not cached, calculate using node lookup (functional approach)
-            case Map.get(node_lookup, parent_id) do
-              nil -> joint.local_transform
-              parent_joint ->
-                parent_global = calculate_global_transform_functional(parent_joint, transforms_cache, node_lookup)
-                Matrix4.multiply(parent_global, joint.local_transform)
-            end
-
-          parent_global ->
-            # Use cached parent global transform
-            result = Matrix4.multiply(parent_global, joint.local_transform)
-
-            # Apply orthogonalization if scale is disabled
-            if joint.disable_scale do
-              Matrix4.orthogonalize(result)
-            else
-              result
-            end
-        end
-    end
-  end
-
-  @spec calculate_global_transform_optimized(Joint.t(), %{Joint.node_id() => Matrix4.t()}) :: Matrix4.t()
-  defp calculate_global_transform_optimized(joint, transforms_cache) do
-    case joint.parent do
-      nil ->
-        # Root node - global transform is same as local transform
-        joint.local_transform
-
-      parent_id ->
-        # Child node - multiply parent global * local transform
-        case Map.get(transforms_cache, parent_id) do
-          nil ->
-            # Parent not cached, calculate from registry (fallback)
-            case get_joint_by_id(parent_id) do
-              nil -> joint.local_transform
-              parent_joint ->
-                parent_global = Joint.get_global_transform(parent_joint)
-                Matrix4.multiply(parent_global, joint.local_transform)
-            end
-
-          parent_global ->
-            # Use cached parent global transform
-            result = Matrix4.multiply(parent_global, joint.local_transform)
-
-            # Apply orthogonalization if scale is disabled
-            if joint.disable_scale do
-              Matrix4.orthogonalize(result)
-            else
-              result
-            end
-        end
-    end
-  end
-
-  @spec calculate_and_cache_global_transform(t(), Joint.node_id()) :: Matrix4.t()
-  defp calculate_and_cache_global_transform(manager, joint_id) do
-    case get_joint_by_id(joint_id) do
-      nil -> Matrix4.identity()
-      joint ->
-        global_transform = calculate_global_transform_optimized(joint, manager.global_transforms)
-
-        # Cache the result (this would need to be done outside this function in practice)
-        global_transform
-    end
-  end
 
   @spec get_joint_by_id(Joint.node_id()) :: Joint.t() | nil
   defp get_joint_by_id(joint_id) do
