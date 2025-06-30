@@ -5,7 +5,7 @@ defmodule Membrane.MiniZincTemplateFilter do
   @moduledoc "Membrane filter that processes MiniZinc problems using EEx templates and Porcelain execution.\n\nThis filter:\n1. Takes structured problem data as input\n2. Renders appropriate MiniZinc template with problem variables\n3. Executes MiniZinc using Porcelain for robust process management\n4. Parses and formats the solution output\n5. Handles errors and timeouts gracefully\n"
   use Membrane.Filter
   require Logger
-  alias AriaMinizincGoal.Executor
+  # Use AriaMinizincExecutor external API instead of internal modules
   def_input_pad(:input, accepted_format: %Membrane.RemoteStream{})
   def_output_pad(:output, accepted_format: %Membrane.RemoteStream{})
 
@@ -30,7 +30,7 @@ defmodule Membrane.MiniZincTemplateFilter do
   @impl true
   def handle_init(_ctx, opts) do
     Logger.info("🔧 Initializing MiniZinc Template Filter")
-    minizinc_available = Executor.check_availability()
+    minizinc_available = AriaMinizincExecutor.check_availability()
     Logger.info("🔧 MiniZinc available: #{minizinc_available}")
 
     state = %{
@@ -137,9 +137,9 @@ defmodule Membrane.MiniZincTemplateFilter do
 
   defp execute_minizinc_template(template_name, template_vars, state) do
     Logger.info("🔧 Executing template: #{template_name}")
-    opts = [template_vars: template_vars, solver: state.solver, timeout: state.timeout]
+    opts = [solver: state.solver, timeout: state.timeout]
 
-    case Executor.exec(template_name, opts) do
+    case AriaMinizincExecutor.exec(template_name, template_vars, opts) do
       {:ok, result} ->
         Logger.info("✅ MiniZinc template execution successful")
         result
