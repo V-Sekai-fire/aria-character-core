@@ -469,6 +469,25 @@ defmodule AriaMath.Quaternion do
   def identity, do: {0.0, 0.0, 0.0, 1.0}
 
   @doc """
+  Check if a quaternion is the identity quaternion (or very close to it).
+
+  ## Examples
+
+      iex> AriaMath.Quaternion.is_identity?({0.0, 0.0, 0.0, 1.0})
+      true
+
+      iex> AriaMath.Quaternion.is_identity?({0.1, 0.0, 0.0, 0.995})
+      false
+
+      iex> AriaMath.Quaternion.is_identity?({5.0e-8, 5.0e-8, 5.0e-8, 0.99999995})
+      true
+  """
+  @spec is_identity?(t()) :: boolean()
+  def is_identity?({x, y, z, w}, tolerance \\ 1.0e-6) do
+    abs(x) <= tolerance and abs(y) <= tolerance and abs(z) <= tolerance and abs(w - 1.0) <= tolerance
+  end
+
+  @doc """
   Check if two quaternions are approximately equal within a tolerance.
 
   ## Examples

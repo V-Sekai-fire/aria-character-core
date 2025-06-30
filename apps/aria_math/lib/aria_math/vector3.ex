@@ -183,6 +183,21 @@ defmodule AriaMath.Vector3 do
   end
 
   @doc """
+  Component-wise multiplication.
+
+  Implements `math/mul` operation from KHR Interactivity spec.
+
+  ## Examples
+
+      iex> AriaMath.Vector3.mul({2.0, 3.0, 4.0}, {5.0, 6.0, 7.0})
+      {10.0, 18.0, 28.0}
+  """
+  @spec mul(t(), t()) :: t()
+  def mul({ax, ay, az}, {bx, by, bz}) do
+    {ax * bx, ay * by, az * bz}
+  end
+
+  @doc """
   Check if two vectors are approximately equal within a tolerance.
 
   ## Examples
@@ -259,23 +274,36 @@ defmodule AriaMath.Vector3 do
   end
 
   @doc """
-  Component-wise clamp operation.
-
-  Implements `math/clamp` operation from KHR Interactivity spec.
-  Clamps each component of vector a between the corresponding components of vectors b and c.
+  Divide a vector by a scalar.
 
   ## Examples
 
-      iex> AriaMath.Vector3.clamp({-1.0, 5.0, 10.0}, {0.0, 0.0, 0.0}, {3.0, 3.0, 3.0})
-      {0.0, 3.0, 3.0}
+      iex> AriaMath.Vector3.div_scalar({6.0, 8.0, 10.0}, 2.0)
+      {3.0, 4.0, 5.0}
+
+      iex> AriaMath.Vector3.div_scalar({1.0, 2.0, 3.0}, 0.0)
+      {:positive_infinity, :positive_infinity, :positive_infinity}
   """
-  @spec clamp(t(), t(), t()) :: t()
-  def clamp({ax, ay, az}, {bx, by, bz}, {cx, cy, cz}) do
-    {
-      math_min(math_max(ax, math_min(bx, cx)), math_max(bx, cx)),
-      math_min(math_max(ay, math_min(by, cy)), math_max(by, cy)),
-      math_min(math_max(az, math_min(bz, cz)), math_max(bz, cz))
-    }
+  @spec div_scalar(t(), float()) :: t()
+  def div_scalar({x, y, z}, scalar) when is_number(scalar) do
+    case scalar do
+      +0.0 -> {:positive_infinity, :positive_infinity, :positive_infinity}
+      -0.0 -> {:negative_infinity, :negative_infinity, :negative_infinity}
+      _ -> {x / scalar, y / scalar, z / scalar}
+    end
+  end
+
+  @doc """
+  Component-wise multiplication of two vectors.
+
+  ## Examples
+
+      iex> AriaMath.Vector3.mul({2.0, 3.0, 4.0}, {5.0, 6.0, 7.0})
+      {10.0, 18.0, 28.0}
+  """
+  @spec mul(t(), t()) :: t()
+  def mul({x1, y1, z1}, {x2, y2, z2}) do
+    {x1 * x2, y1 * y2, z1 * z2}
   end
 
   @doc """

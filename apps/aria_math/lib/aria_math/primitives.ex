@@ -402,4 +402,27 @@ defmodule AriaMath.Primitives do
   def rad_to_deg(radians) when is_number(radians) do
     radians * 180.0 / :math.pi()
   end
+
+  @doc """
+  IEEE-754 positive infinity constant.
+  """
+  @spec inf() :: float()
+  def inf do
+    try do
+      1.0 / 0.0
+    rescue
+      ArithmeticError -> :positive_infinity
+    end
+  end
+
+  @doc """
+  Check if a float value is infinite (positive or negative).
+  """
+  @spec isinf_float(float()) :: boolean()
+  def isinf_float(value) when is_number(value) do
+    value == :positive_infinity or value == :negative_infinity or
+    value == 1.0 / 0.0 or value == -1.0 / 0.0
+  rescue
+    ArithmeticError -> false
+  end
 end
