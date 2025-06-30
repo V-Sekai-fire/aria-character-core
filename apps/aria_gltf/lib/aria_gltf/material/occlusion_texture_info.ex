@@ -3,17 +3,20 @@
 
 defmodule AriaGltf.Material.OcclusionTextureInfo do
   @moduledoc """
-  Reference to a texture with occlusion texture specific properties.
+  Reference to an occlusion texture with additional strength parameter.
   """
+
+  alias AriaGltf.TextureInfo
 
   @type t :: %__MODULE__{
           index: non_neg_integer(),
           tex_coord: non_neg_integer(),
-          strength: float(),
+          strength: number(),
           extensions: map() | nil,
           extras: any() | nil
         }
 
+  @enforce_keys [:index]
   defstruct [
     :index,
     :extensions,
@@ -25,10 +28,10 @@ defmodule AriaGltf.Material.OcclusionTextureInfo do
   @doc """
   Creates a new OcclusionTextureInfo struct.
   """
-  @spec new(keyword()) :: t()
-  def new(opts \\ []) do
+  @spec new(non_neg_integer(), keyword()) :: t()
+  def new(index, opts \\ []) when is_integer(index) and index >= 0 do
     %__MODULE__{
-      index: Keyword.fetch!(opts, :index),
+      index: index,
       tex_coord: Keyword.get(opts, :tex_coord, 0),
       strength: Keyword.get(opts, :strength, 1.0),
       extensions: Keyword.get(opts, :extensions),
@@ -40,10 +43,10 @@ defmodule AriaGltf.Material.OcclusionTextureInfo do
   Validates an OcclusionTextureInfo struct.
   """
   @spec validate(t()) :: :ok | {:error, String.t()}
-  def validate(%__MODULE__{} = texture_info) do
-    with :ok <- validate_index(texture_info.index),
-         :ok <- validate_tex_coord(texture_info.tex_coord),
-         :ok <- validate_strength(texture_info.strength) do
+  def validate(%__MODULE__{} = texture) do
+    with :ok <- validate_index(texture.index),
+         :ok <- validate_tex_coord(texture.tex_coord),
+         :ok <- validate_strength(texture.strength) do
       :ok
     end
   end
@@ -52,13 +55,13 @@ defmodule AriaGltf.Material.OcclusionTextureInfo do
   Converts an OcclusionTextureInfo struct to a map.
   """
   @spec to_map(t()) :: map()
-  def to_map(%__MODULE__{} = texture_info) do
+  def to_map(%__MODULE__{} = texture) do
     %{}
-    |> put_if_present("index", texture_info.index)
-    |> put_if_present("texCoord", texture_info.tex_coord, 0)
-    |> put_if_present("strength", texture_info.strength, 1.0)
-    |> put_if_present("extensions", texture_info.extensions)
-    |> put_if_present("extras", texture_info.extras)
+    |> Map.put("index", texture.index)
+    |> put_if_present("texCoord", texture.tex_coord, 0)
+    |> put_if_present("strength", texture.strength, 1.0)
+    |> put_if_present("extensions", texture.extensions)
+    |> put_if_present("extras", texture.extras)
   end
 
   @doc """
@@ -66,39 +69,32 @@ defmodule AriaGltf.Material.OcclusionTextureInfo do
   """
   @spec from_map(map()) :: {:ok, t()} | {:error, String.t()}
   def from_map(map) when is_map(map) do
-    case Map.get(map, "index") do
-      nil ->
-        {:error, "index is required"}
+    with {:ok, index} <- get_required_field(map, "index") do
+      texture = %__MODULE__{
+        index: index,
+        tex_coord: Map.get(map, "texCoord", 0),
+        strength: Map.get(map, "strength", 1.0),
+        extensions: Map.get(map, "extensions"),
+        extras: Map.get(map, "extras")
+      }
 
-      index when is_integer(index) and index >= 0 ->
-        texture_info = %__MODULE__{
-          index: index,
-          tex_coord: Map.get(map, "texCoord", 0),
-          strength: Map.get(map, "strength", 1.0),
-          extensions: Map.get(map, "extensions"),
-          extras: Map.get(map, "extras")
-        }
-
-        case validate(texture_info) do
-          :ok -> {:ok, texture_info}
-          {:error, reason} -> {:error, reason}
-        end
-
-      _ ->
-        {:error, "index must be a non-negative integer"}
+      case validate(texture) do
+        :ok -> {:ok, texture}
+        {:error, reason} -> {:error, reason}
+      end
     end
   end
 
   # Private validation functions
 
   defp validate_index(index) when is_integer(index) and index >= 0, do: :ok
-  defp validate_index(_), do: {:error, "index must be a non-negative integer"}
+  defp validate_index(_), do: {:error, "index must be non-negative integer"}
 
   defp validate_tex_coord(tex_coord) when is_integer(tex_coord) and tex_coord >= 0, do: :ok
-  defp validate_tex_coord(_), do: {:error, "tex_coord must be a non-negative integer"}
+  defp validate_tex_coord(_), do: {:error, "tex_coord must be non-negative integer"}
 
   defp validate_strength(strength) when is_number(strength) and strength >= 0.0 and strength <= 1.0, do: :ok
-  defp validate_strength(_), do: {:error, "strength must be a number between 0.0 and 1.0"}
+  defp validate_strength(_), do: {:error, "strength must be between 0.0 and 1.0"}
 
   # Helper functions
 
@@ -106,4 +102,11 @@ defmodule AriaGltf.Material.OcclusionTextureInfo do
   defp put_if_present(map, key, value), do: Map.put(map, key, value)
   defp put_if_present(map, _key, value, default) when value == default, do: map
   defp put_if_present(map, key, value, _default), do: Map.put(map, key, value)
+
+  defp get_required_field(map, key) do
+    case Map.get(map, key) do
+      nil -> {:error, "Missing required field: #{key}"}
+      value -> {:ok, value}
+    end
+  end
 end
