@@ -27,68 +27,35 @@
 
 ### 2. ~~Missing AriaEngineCore.Domain Module~~ **TOMBSTONED ✅**
 
-**Status:** PARTIALLY SOLVED - Mixed delegation pattern identified
+**Status:** SOLVED - Architectural violation, fix by flattening module hierarchy
 
-**Problem:** `AriaEngineCore` was delegating to non-existent `AriaEngineCore.Domain` module
+**Problem:** `AriaEngineCore` was delegating to modules that violate umbrella app architecture (3-level depth violates INST-041)
 
-**Current Delegation Analysis:** Examining `lib/aria_engine_core.ex` and `apps/aria_core/lib/aria_core.ex`:
+**Solution Found:** Functions exist but are in architecturally non-compliant locations:
+- `get_task_methods/2` in `AriaEngineCore.Domain.Methods` (3 levels - VIOLATION)
+- `get_multigoal_methods/1` in `AriaEngineCore.Domain.Methods` (3 levels - VIOLATION)  
+- `get_multitodo_methods/1` in `AriaEngineCore.Domain.Methods` (3 levels - VIOLATION)
+- `get_action_metadata/2` in `AriaEngineCore.Domain.Actions` (3 levels - VIOLATION)
+- `execute_action/4` in `AriaEngineCore.Domain.Actions` (3 levels - VIOLATION)
+- `get_durative_action/2` in `AriaEngineCore.Domain.Core` (3 levels - VIOLATION)
 
-**✅ Functions available in AriaCore external API:**
+**Fix Required:** Flatten module hierarchy to comply with umbrella app standards:
+
 ```elixir
-# Currently missing, should be added to AriaEngineCore:
-defdelegate new_domain(), to: AriaCore
-defdelegate new_domain(name), to: AriaCore
-defdelegate add_action(domain, action_name, action_spec), to: AriaCore
-defdelegate add_method(domain, method_name, method_spec), to: AriaCore
-defdelegate add_unigoal_method(domain, method_name, unigoal_spec), to: AriaCore
-defdelegate set_entity_registry(domain, registry), to: AriaCore
-defdelegate set_temporal_specifications(domain, specifications), to: AriaCore
+# BEFORE (3 levels - VIOLATION):
+AriaEngineCore.Domain.Methods → AriaEngineCore.Methods
+AriaEngineCore.Domain.Actions → AriaEngineCore.Actions  
+AriaEngineCore.Domain.Core → AriaEngineCore.Core
+
+# File moves required:
+lib/aria_engine_core/domain/methods.ex → lib/aria_engine_core/methods.ex
+lib/aria_engine_core/domain/actions.ex → lib/aria_engine_core/actions.ex
+lib/aria_engine_core/domain/core.ex → lib/aria_engine_core/core.ex
+
+# Update external API delegation in lib/aria_engine_core.ex to point to flattened modules
 ```
 
-**🔄 Functions needing signature mapping:**
-```elixir
-# Current: get_unigoal_methods(domain, predicate)
-# AriaCore: get_unigoal_methods_for_predicate(domain, predicate)
-defdelegate get_unigoal_methods(domain, predicate), to: AriaCore, as: :get_unigoal_methods_for_predicate
-```
-
-**❌ Functions missing from AriaCore external API (with current implementation locations):**
-```elixir
-# These functions exist but need proper delegation path:
-
-# Currently in AriaEngineCore.Domain.Methods - should delegate through AriaCore
-defdelegate get_task_methods(domain, task_name), to: AriaCore
-defdelegate get_multigoal_methods(domain), to: AriaCore  
-defdelegate get_multitodo_methods(domain), to: AriaCore
-
-# Currently in AriaEngineCore.Domain.Actions - should delegate through AriaCore  
-defdelegate get_action_metadata(domain, action_name), to: AriaCore
-defdelegate execute_action(domain, state, action_name, args), to: AriaCore
-
-# Currently in AriaCore.Domain (internal) - needs external API exposure
-defdelegate get_entity_registry(domain), to: AriaCore
-
-# Need to locate implementation
-defdelegate get_durative_action(domain, action_name), to: AriaCore
-```
-
-**Current Implementation Status:**
-- `get_task_methods/2`: ✅ Implemented in `AriaEngineCore.Domain.Methods` 
-- `get_multigoal_methods/1`: ✅ Implemented in `AriaEngineCore.Domain.Methods`
-- `get_multitodo_methods/1`: ✅ Implemented in `AriaEngineCore.Domain.Methods`
-- `get_action_metadata/2`: ✅ Implemented in `AriaEngineCore.Domain.Actions`
-- `execute_action/4`: ✅ Implemented in `AriaEngineCore.Domain.Actions`
-- `get_entity_registry/1`: ✅ Implemented in `AriaCore.Domain` (internal)
-- `get_durative_action/2`: ✅ Implemented in `AriaEngineCore.Domain.Core`
-
-**All functions have implementations - delegation architecture fix required**
-
-**Implementation Strategy:**
-1. **Phase 1:** Add missing functions to AriaCore external API with proper internal delegation
-2. **Phase 2:** Update AriaEngineCore to delegate to AriaCore instead of internal modules
-3. **Phase 3:** Verify all cross-app calls use external APIs only
-
-**Note:** Clean architecture requires complete external API coverage before delegation fixes can be applied.
+**Note:** This is an architectural compliance issue per INST-041, not a missing implementation issue. The `Domain` abstraction layer violates umbrella app structure requirements.
 
 ### 3. Missing AriaHybridPlanner.Core Module
 
