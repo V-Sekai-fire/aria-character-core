@@ -4,6 +4,38 @@
 
 **ADR Reference:** R25W1513883 - Comprehensive glTF 2.0 Implementation with SimpleSkin/SimpleMorph Animation Support
 
+## Infrastructure Update (June 30, 2025)
+
+**NEW APPS AVAILABLE - Updated Integration Strategy:**
+
+### AriaJoint App ✅ AVAILABLE
+**Key functionality for glTF parent-child transforms now implemented in `aria_joint`:**
+- Local and global transform caching with dirty state optimization
+- Parent-child bone hierarchy management
+- Coordinate space conversions (local ↔ global)
+- Transform propagation throughout hierarchy
+- Scale management (can disable scale for pure rotational joints)
+- Efficient updates only when transforms are dirty
+
+**Impact on glTF implementation:** The complex joint hierarchy and transform chain management required for glTF skeletal animation is now available as a dedicated app. This significantly reduces the complexity of implementing the `AriaGltf.Skin` module and joint-based animations.
+
+### AriaMath App ✅ AVAILABLE
+**Mathematical foundation now provided by `aria_math`:**
+- Matrix4 operations for 4x4 transformation matrices
+- Vector3 operations for 3D points and directions
+- Quaternion operations for rotations
+- Mathematical primitives and utilities
+
+**Impact on glTF implementation:** Core mathematical operations required for mesh transformations, joint calculations, and animation interpolation are now available as a dedicated app.
+
+### AriaQCP App ✅ AVAILABLE  
+**Quaternion-based Characteristic Polynomial operations for advanced motion processing:**
+- Motion validation and optimization
+- Quaternion-based transformations
+- Advanced geometric computations
+
+**Impact on glTF implementation:** Advanced motion processing capabilities available for sophisticated animation and transform validation.
+
 ## Completed ✅
 
 ### Basic Export Functionality (Current aria_gltf app)
@@ -88,10 +120,13 @@ The ADR originally proposed six separate apps for single responsibility separati
   - [ ] Orthographic camera support
   - [ ] JSON parsing and serialization
 
-- [ ] **AriaGltf.Skin Module** - Skeletal animation support
-  - [ ] Joint hierarchy definitions
-  - [ ] Inverse bind matrices
+- [ ] **AriaGltf.Skin Module** - Skeletal animation support (**PRIORITY UPGRADED** ⬆️)
+  - [ ] **INTEGRATION**: Leverage `aria_joint` for joint hierarchy management
+  - [ ] **INTEGRATION**: Use `aria_math.Matrix4` for inverse bind matrices
+  - [ ] Joint index references and hierarchy definitions
+  - [ ] Inverse bind matrix storage and access
   - [ ] JSON parsing and serialization
+  - [ ] **NEW**: AriaJoint bridge for real-time transform calculations
 
 ### Phase 2: Enhanced Validation and Quality Assurance
 
@@ -209,12 +244,14 @@ The ADR originally proposed six separate apps for single responsibility separati
 
 **Priority: HIGH - Mandatory validation per ADR R25W1513883**
 
-- [ ] **SimpleSkin.gltf Validation Requirements**
-  - [ ] Parse joint hierarchy and inverse bind matrices
-  - [ ] Implement 4x4 joint transformation matrix calculation
+- [ ] **SimpleSkin.gltf Validation Requirements** (**PRIORITY UPGRADED** ⬆️)
+  - [ ] **INTEGRATION**: Use `aria_joint` for joint hierarchy management and parent-child relationships
+  - [ ] **INTEGRATION**: Use `aria_math.Matrix4` for 4x4 joint transformation matrix calculation
+  - [ ] Parse joint hierarchy and inverse bind matrices via AriaGltf.Skin
+  - [ ] Bridge AriaGltf.Skin data with AriaJoint.Joint instances for real-time calculations
   - [ ] Handle multi-joint vertex influences with weight blending
-  - [ ] Validate joint parent-child relationships
-  - [ ] Test frame-accurate joint matrix interpolation
+  - [ ] Validate joint parent-child relationships using AriaJoint transform propagation
+  - [ ] Test frame-accurate joint matrix interpolation via AriaJoint global transform caching
   - [ ] Validate against: https://github.com/KhronosGroup/glTF-Sample-Assets/blob/main/Models/SimpleSkin/glTF-Embedded/SimpleSkin.gltf
 
 - [ ] **SimpleMorph.gltf Validation Requirements**
@@ -225,13 +262,16 @@ The ADR originally proposed six separate apps for single responsibility separati
   - [ ] Test frame-accurate morph weight interpolation
   - [ ] Validate against: https://github.com/KhronosGroup/glTF-Sample-Assets/blob/main/Models/SimpleMorph/glTF-Embedded/SimpleMorph.gltf
 
-- [ ] **Frame-Accurate Processing Pipeline**
-  - [ ] Precise joint matrix calculation at any timestamp
+- [ ] **Frame-Accurate Processing Pipeline** (**PRIORITY UPGRADED** ⬆️)
+  - [ ] **INTEGRATION**: Use `aria_joint.get_global_transform/1` for precise joint matrix calculation at any timestamp
+  - [ ] **INTEGRATION**: Use `aria_joint` dirty state tracking for efficient transform updates
+  - [ ] **INTEGRATION**: Use `aria_math` for vertex position calculations and matrix operations
   - [ ] Multi-joint vertex skinning with correct weight blending
-  - [ ] Sub-frame interpolation with temporal precision
+  - [ ] Sub-frame interpolation with temporal precision using AriaJoint caching
   - [ ] Precise morph weight interpolation at any timestamp
   - [ ] Vertex position blending between base mesh and morph targets
   - [ ] Multi-target support with weight normalization
+  - [ ] **NEW**: AriaJoint coordinate space conversions for local ↔ global transform workflows
 
 - [ ] **Export and Validation Pipeline**
   - [ ] Frame extraction: Export mesh states as images at arbitrary timestamps
@@ -259,6 +299,24 @@ The ADR originally proposed six separate apps for single responsibility separati
 ### Phase 10: Integration Requirements (ADR REQUIREMENT)
 
 **Priority: HIGH - Required for system integration**
+
+- [ ] **AriaJoint Integration** (**NEW - HIGH PRIORITY**)
+  - [ ] Bridge AriaGltf.Skin with AriaJoint.Joint for real-time skeletal animation
+  - [ ] Use AriaJoint parent-child hierarchy for glTF joint relationships
+  - [ ] Leverage AriaJoint global transform caching for frame-accurate calculations
+  - [ ] Coordinate space conversion support for bone-to-mesh transformations
+  - [ ] Dirty state optimization for efficient animation updates
+
+- [ ] **AriaMath Integration** (**NEW - HIGH PRIORITY**)
+  - [ ] Use AriaMath.Matrix4 for all 4x4 transformation matrix operations
+  - [ ] Use AriaMath.Vector3 for vertex position calculations and transformations
+  - [ ] Use AriaMath.Quaternion for rotation interpolation and skeletal animation
+  - [ ] Mathematical primitive support for geometric calculations
+
+- [ ] **AriaQCP Integration** (**NEW - MEDIUM PRIORITY**)
+  - [ ] Advanced motion validation for complex skeletal animations
+  - [ ] Quaternion-based optimization for smooth animation transitions
+  - [ ] Motion constraint validation for realistic character movement
 
 - [ ] **R25W1398085 Integration**
   - [ ] Temporal planning system integration API
@@ -308,6 +366,14 @@ The ADR originally proposed six separate apps for single responsibility separati
   - [ ] Custom format adapters
 
 ## Implementation Summary
+
+**Infrastructure Update (June 30, 2025)**
+
+- **AriaJoint App Available**: Complex joint hierarchy and transform management now provided as dedicated app
+- **AriaMath App Available**: Core mathematical operations (Matrix4, Vector3, Quaternion) now provided as dedicated app  
+- **AriaQCP App Available**: Advanced motion processing and optimization capabilities now available
+- **Updated Integration Strategy**: glTF skeletal animation implementation complexity significantly reduced due to available infrastructure
+- **Priority Adjustments**: AriaGltf.Skin module and SimpleSkin validation upgraded to high priority due to supporting infrastructure
 
 **Basic Export Functionality (June 27, 2025)**
 
@@ -403,6 +469,12 @@ The ADR originally proposed six separate apps for single responsibility separati
 
 **Technical Dependencies:**
 
+**UMBRELLA APPS (Internal Dependencies):**
+- **`aria_joint`** ✅ - Transform hierarchy management, parent-child relationships, coordinate space conversions
+- **`aria_math`** ✅ - Matrix4, Vector3, Quaternion operations for all mathematical computations
+- **`aria_qcp`** ✅ - Advanced motion processing and quaternion-based optimizations
+
+**EXTERNAL PACKAGES:**
 - [Nx Package](https://hex.pm/packages/nx) - Numerical computing for Elixir
 - [TorchX Package](https://hex.pm/packages/torchx) - GPU-accelerated tensor operations
 - [Image Package](https://hex.pm/packages/image) - JPG/PNG read/write operations
