@@ -9,24 +9,28 @@ AriaEwbik provides sophisticated multi-effector inverse kinematics solving with 
 ## Features
 
 ### Core EWBIK Capabilities
+
 - **Multi-Effector IK Solving**: Coordinate multiple effectors simultaneously with priority weighting
 - **Skeleton Segmentation**: Intelligent bone chain analysis and processing order determination
 - **Motion Propagation**: Hierarchical effector influence calculation and weight distribution
 - **Iterative Solving**: Convergence-based solving with performance budget management
 
 ### Advanced Constraint Systems
+
 - **Kusudama Constraints**: Cone-based joint orientation limits with continuous boundary handling
 - **VRM1 Collision Detection**: Sphere, capsule, and plane collider support following VRM 1.0 specification
 - **Anatomical Constraints**: Godot SkeletonProfileHumanoid integration for realistic joint limits
 - **Twist Limits**: Joint rotation constraints with nearest valid orientation calculation
 
 ### Anti-Uncanny Valley Features
+
 - **VRM1 Self-Collision Prevention**: Comprehensive body part intersection avoidance
 - **Anatomical Limit Enforcement**: Human-realistic joint movement constraints
 - **Temporal Smoothing**: Frame-to-frame solution stability with previous pose bias
 - **Motion Quality Validation**: RMSD-based solution scoring with constraint penalty terms
 
 ### Mathematical Foundation
+
 - **AriaJoint Integration**: Production-ready joint hierarchy management (48/48 tests passing)
 - **AriaQCP Algorithm**: Quaternion Characteristic Polynomial solver (69/69 tests passing)
 - **AriaMath Operations**: IEEE-754 compliant mathematical primitives

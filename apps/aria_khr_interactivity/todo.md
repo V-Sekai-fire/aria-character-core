@@ -181,6 +181,7 @@ end
 ## License and Attribution
 
 **Standards Compliance:**
+
 - glTF 2.0 specification compliance for KHR Interactivity
 - IEEE-754 standard compliance for numerical precision
 - All mathematical algorithms implement published standards with proper attribution

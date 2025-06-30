@@ -5,12 +5,14 @@ Perfect! Let me create a detailed implementation plan for optimizing `aria_joint
 ### Phase 1: Foundation Setup (1-2 days)
 
 **Add Nx Dependency**
+
 ```elixir
 # In apps/aria_joint/mix.exs
 {:nx, "~> 0.7"}
 ```
 
 **Create Nx-based Matrix Module**
+
 ```elixir
 # apps/aria_joint/lib/aria_joint/nx_matrix.ex
 defmodule AriaJoint.NxMatrix do
@@ -23,6 +25,7 @@ end
 ### Phase 2: Tensor-Based Hierarchy Storage (2-3 days)
 
 **New Hierarchy Manager**
+
 ```elixir
 defmodule AriaJoint.TensorHierarchy do
   # Store bone data as tensors instead of individual structs
@@ -33,6 +36,7 @@ end
 ```
 
 **Key Data Structures:**
+
 - `local_transforms`: `{N, 4, 4}` tensor of local transforms
 - `global_transforms`: `{N, 4, 4}` tensor of computed globals  
 - `parent_indices`: `{N}` tensor mapping child→parent
@@ -41,6 +45,7 @@ end
 ### Phase 3: Batch Transform Computation (2-3 days)
 
 **Vectorized Global Transform Calculation**
+
 ```elixir
 def compute_global_transforms(hierarchy) do
   # Use Nx.indexed_add and cumulative operations
@@ -50,6 +55,7 @@ end
 ```
 
 **Optimized Dirty Propagation**
+
 ```elixir
 def propagate_dirty_flags(hierarchy, changed_indices) do
   # Vectorized flag propagation through hierarchy
@@ -60,11 +66,13 @@ end
 ### Phase 4: Registry Optimization (1-2 days)
 
 **Hybrid Storage Strategy**
+
 - Keep Nx tensors for bulk operations
 - Maintain Registry for individual node access
 - Batch sync between tensor and registry states
 
 **Reduced Registry Pressure**
+
 - Cache frequently accessed nodes
 - Batch registry updates
 - Lazy synchronization
@@ -72,6 +80,7 @@ end
 ### Phase 5: API Compatibility Layer (1-2 days)
 
 **Maintain Existing API**
+
 ```elixir
 # Existing Joint.set_transform/2 still works
 # But internally uses tensor operations
@@ -79,6 +88,7 @@ end
 ```
 
 **Performance Monitoring**
+
 - Benchmark comparisons
 - Memory usage tracking
 - Automatic fallback for small hierarchies
@@ -86,14 +96,17 @@ end
 ## Expected Performance Improvements
 
 ### Small Hierarchies (< 20 bones)
+
 - **Registry optimization**: 20-30% improvement
 - **Reduced allocations**: 15-25% improvement
 
 ### Medium Hierarchies (20-100 bones)  
+
 - **Nx batch operations**: 2-3x improvement
 - **Vectorized propagation**: 3-5x improvement
 
 ### Large Hierarchies (100+ bones)
+
 - **SIMD acceleration**: 5-10x improvement
 - **Memory locality**: 2-3x improvement
 - **Combined effect**: 10-20x improvement

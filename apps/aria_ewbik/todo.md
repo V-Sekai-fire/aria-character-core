@@ -11,12 +11,14 @@ AriaEwbik implements Entirely Wahba's-problem Based Inverse Kinematics (EWBIK) w
 ## Current Status
 
 **App Creation:** ✅ Complete (June 30, 2025)
+
 - ✅ External API module created with comprehensive documentation
 - ✅ Dependencies configured (aria_joint, aria_qcp, aria_math, aria_state)
 - ✅ Project structure and documentation complete
 - ✅ Ready for implementation phases
 
 **Mathematical Foundation:** ✅ Available
+
 - ✅ **AriaJoint**: 48/48 tests passing, 160K+ poses/second performance
 - ✅ **AriaQCP**: 69/69 tests passing, production-ready QCP algorithm
 - ✅ **AriaMath**: IEEE-754 compliant mathematical primitives
@@ -64,6 +66,7 @@ AriaEwbik implements Entirely Wahba's-problem Based Inverse Kinematics (EWBIK) w
   - [ ] Ultimate vs intermediary target handling
 
 **AriaJoint Integration Benefits:**
+
 - ✅ **Production Ready Foundation**: 48/48 tests passing with excellent performance
 - ✅ **Registry-Based Efficiency**: Built-in joint lookup and state management
 - ✅ **Transform Management**: Local/global coordinate handling ready for EWBIK
@@ -272,12 +275,14 @@ AriaEwbik implements Entirely Wahba's-problem Based Inverse Kinematics (EWBIK) w
 ## Dependencies
 
 **Tier 3 App Dependencies:**
+
 - **aria_math** (Tier 1): Mathematical primitives and IEEE-754 operations
 - **aria_joint** (Tier 2): Joint hierarchy management and transform operations
 - **aria_qcp** (Tier 2): Quaternion Characteristic Polynomial algorithm
 - **aria_state** (Tier 3): Configuration storage for VRM1 and constraint parameters
 
 **Testing Dependencies:**
+
 - All mathematical foundation apps must be tested and functional
 - AriaJoint Registry system must be operational
 - AriaQCP algorithm must be production-ready
@@ -412,6 +417,7 @@ AriaEwbik implements Entirely Wahba's-problem Based Inverse Kinematics (EWBIK) w
 ## License and Attribution
 
 **Third-party Code Attribution:**
+
 - Many Bone IK implementation ported with attribution to original authors
 - Godot Engine reference implementations used under MIT license
 - VRM specification implementation follows VRM Consortium guidelines

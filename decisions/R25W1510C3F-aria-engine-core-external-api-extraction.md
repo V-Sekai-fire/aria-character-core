@@ -43,12 +43,14 @@ Extract all implementation code from `aria_engine_core` and move it to appropria
 **Target App:** `aria_core`
 
 **Files to migrate:**
+
 - [ ] `lib/aria_engine_core/domain/core.ex` → `apps/aria_core/lib/aria_core/domain/planning.ex`
 - [ ] `lib/aria_engine_core/domain/actions.ex` → `apps/aria_core/lib/aria_core/domain/actions.ex`
 - [ ] `lib/aria_engine_core/domain/methods.ex` → `apps/aria_core/lib/aria_core/domain/methods.ex`
 - [ ] `lib/aria_engine_core/domain/utils.ex` → `apps/aria_core/lib/aria_core/domain/utils.ex`
 
 **Implementation Required:**
+
 - [ ] Update `AriaCore` external API to include missing domain planning functions
 - [ ] Migrate domain planning types and structs to `aria_core`
 - [ ] Update `lib/aria_engine_core/domain.ex` to delegate to `AriaCore` instead of internal modules
@@ -58,12 +60,14 @@ Extract all implementation code from `aria_engine_core` and move it to appropria
 **Target App:** `aria_hybrid_planner`
 
 **Files to migrate:**
+
 - [ ] `lib/aria_engine_core/planner.ex` implementation → `apps/aria_hybrid_planner/lib/aria_hybrid_planner/engine_integration.ex`
 - [ ] `lib/aria_engine_core/plan/` directory → `apps/aria_hybrid_planner/lib/aria_hybrid_planner/plan/`
 - [ ] `lib/aria_engine_core/adapters/` directory → `apps/aria_hybrid_planner/lib/aria_hybrid_planner/adapters/`
 - [ ] `lib/aria_engine_core/behaviours/` directory → `apps/aria_hybrid_planner/lib/aria_hybrid_planner/behaviours/`
 
 **Implementation Required:**
+
 - [ ] Add planning integration functions to `AriaHybridPlanner` external API
 - [ ] Update `lib/aria_engine_core/planner.ex` to delegate to `AriaHybridPlanner`
 - [ ] Ensure solution tree and plan types are available through external APIs
@@ -73,6 +77,7 @@ Extract all implementation code from `aria_engine_core` and move it to appropria
 **Target:** Simplify `lib/aria_engine_core/core.ex`
 
 **Implementation Required:**
+
 - [ ] Remove implementation structs from `core.ex`
 - [ ] Keep only type aliases that reference external app types
 - [ ] Ensure all types delegate to appropriate external apps
@@ -80,6 +85,7 @@ Extract all implementation code from `aria_engine_core` and move it to appropria
 ### Phase 4: External API Validation (PRIORITY: MEDIUM)
 
 **Validation Requirements:**
+
 - [ ] `AriaEngineCore` external API functions only delegate to other apps
 - [ ] No internal implementation modules remain in `aria_engine_core/lib/aria_engine_core/`
 - [ ] All cross-app dependencies use external APIs only
@@ -126,17 +132,20 @@ Extract all implementation code from `aria_engine_core` and move it to appropria
 ## Success Criteria
 
 ### External API Compliance
+
 - [ ] `AriaEngineCore` contains no implementation modules in `lib/aria_engine_core/` subdirectories
 - [ ] All `AriaEngineCore` functions delegate to external APIs of other apps
 - [ ] No cross-app imports of internal modules (e.g., `AriaEngineCore.Domain.Core`)
 
 ### Functional Preservation
+
 - [ ] All existing `AriaEngineCore` API functions continue to work
 - [ ] Planning and execution functionality preserved
 - [ ] Domain management functionality preserved
 - [ ] All tests pass
 
 ### Architectural Compliance
+
 - [ ] Clear separation between external API and implementation
 - [ ] Domain implementation properly encapsulated in `aria_core`
 - [ ] Planner implementation properly encapsulated in `aria_hybrid_planner`
@@ -145,12 +154,14 @@ Extract all implementation code from `aria_engine_core` and move it to appropria
 ## Consequences
 
 ### Benefits
+
 - **Clean architectural boundaries:** External API separated from implementation
 - **Proper encapsulation:** Implementation details hidden in appropriate apps
 - **Maintainable structure:** Changes to implementation don't affect external API consumers
 - **Compliance with umbrella patterns:** Each app has focused responsibility
 
 ### Risks
+
 - **Complex migration:** Multiple files and cross-app dependencies must be updated
 - **Temporary instability:** Compilation may break during migration process
 - **API surface changes:** External apps may need to provide new delegation functions
@@ -165,6 +176,7 @@ Extract all implementation code from `aria_engine_core` and move it to appropria
 **Current Focus:** Phase 1 - Domain implementation migration to `aria_core`
 
 **Next Steps:**
+
 1. Examine current `AriaCore` external API to identify missing functions
 2. Migrate domain implementation modules from `aria_engine_core` to `aria_core`
 3. Update delegations in `AriaEngineCore.Domain`
