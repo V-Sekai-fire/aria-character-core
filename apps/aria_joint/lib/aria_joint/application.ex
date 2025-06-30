@@ -8,8 +8,8 @@ defmodule AriaJoint.Application do
   @impl true
   def start(_type, _args) do
     children = [
-      # Starts a worker by calling: AriaJoint.Worker.start_link(arg)
-      # {AriaJoint.Worker, arg}
+      # Joint registry for hierarchy management
+      {Registry, keys: :unique, name: :joint_registry}
     ]
 
     # See https://hexdocs.pm/elixir/Supervisor.html
