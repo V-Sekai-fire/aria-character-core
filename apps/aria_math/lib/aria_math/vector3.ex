@@ -183,20 +183,33 @@ defmodule AriaMath.Vector3 do
   end
 
   @doc """
-  Component-wise multiplication.
-
-  Implements `math/mul` operation from KHR Interactivity spec.
-  For vector arguments, this performs per-element multiplication.
+  Check if two vectors are approximately equal within a tolerance.
 
   ## Examples
 
-      iex> AriaMath.Vector3.mul({2.0, 3.0, 4.0}, {5.0, 6.0, 7.0})
-      {10.0, 18.0, 28.0}
+      iex> Vector3.approx_equal?({1.0, 2.0, 3.0}, {1.000001, 2.000001, 3.000001}, 0.001)
+      true
+
+      iex> Vector3.approx_equal?({1.0, 2.0, 3.0}, {1.1, 2.0, 3.0}, 0.001)
+      false
   """
-  @spec mul(t(), t()) :: t()
-  def mul({ax, ay, az}, {bx, by, bz}) do
-    {ax * bx, ay * by, az * bz}
+  @spec approx_equal?(t(), t(), float()) :: boolean()
+  def approx_equal?({x1, y1, z1}, {x2, y2, z2}, tolerance \\ 1.0e-6) do
+    abs(x1 - x2) <= tolerance and abs(y1 - y2) <= tolerance and abs(z1 - z2) <= tolerance
   end
+
+  @doc """
+  Check if two vectors are equal within a tolerance.
+
+  This is an alias for `approx_equal?/3` for consistency with other modules.
+
+  ## Examples
+
+      iex> Vector3.equal?({1.0, 2.0, 3.0}, {1.000001, 2.000001, 3.000001}, 0.001)
+      true
+  """
+  @spec equal?(t(), t(), float()) :: boolean()
+  def equal?(v1, v2, tolerance \\ 1.0e-6), do: approx_equal?(v1, v2, tolerance)
 
   @doc """
   Scalar multiplication.
@@ -293,11 +306,11 @@ defmodule AriaMath.Vector3 do
 
   ## Examples
 
-      iex> AriaMath.Vector3.abs({-1.0, 2.0, -3.0})
+      iex> AriaMath.Vector3.component_abs({-1.0, 2.0, -3.0})
       {1.0, 2.0, 3.0}
   """
-  @spec abs(t()) :: t()
-  def abs({x, y, z}) do
+  @spec component_abs(t()) :: t()
+  def component_abs({x, y, z}) do
     {math_abs(x), math_abs(y), math_abs(z)}
   end
 

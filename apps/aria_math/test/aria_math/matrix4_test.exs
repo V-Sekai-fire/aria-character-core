@@ -1,11 +1,11 @@
 # Copyright (c) 2025-present K. S. Ernest (iFire) Lee
 # SPDX-License-Identifier: MIT
 
-defmodule AriaEngineCore.Math.Matrix4Test do
+defmodule AriaMath.Matrix4Test do
   use ExUnit.Case
-  doctest AriaEngineCore.Math.Matrix4
+  doctest AriaMath.Matrix4
 
-  alias AriaEngineCore.Math.{Matrix4, Vector3, Quaternion}
+  alias AriaMath.{Matrix4, Vector3, Quaternion}
 
   describe "Matrix4.new/16" do
     test "creates matrix from 16 floats" do

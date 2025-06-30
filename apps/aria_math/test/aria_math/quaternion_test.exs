@@ -1,11 +1,11 @@
 # Copyright (c) 2025-present K. S. Ernest (iFire) Lee
 # SPDX-License-Identifier: MIT
 
-defmodule AriaEngineCore.Math.QuaternionTest do
+defmodule AriaMath.QuaternionTest do
   use ExUnit.Case
-  doctest AriaEngineCore.Math.Quaternion
+  doctest AriaMath.Quaternion
 
-  alias AriaEngineCore.Math.Quaternion
+  alias AriaMath.Quaternion
 
   describe "Quaternion.new/4" do
     test "creates quaternion from four floats" do

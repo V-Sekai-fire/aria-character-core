@@ -418,21 +418,34 @@ defmodule AriaMath.Quaternion do
   def identity, do: {0.0, 0.0, 0.0, 1.0}
 
   @doc """
-  Check if quaternion is approximately identity.
+  Check if two quaternions are approximately equal within a tolerance.
 
   ## Examples
 
-      iex> AriaMath.Quaternion.is_identity?({0.0, 0.0, 0.0, 1.0})
+      iex> Quaternion.approx_equal?({0.0, 0.0, 0.0, 1.0}, {0.000001, 0.000001, 0.000001, 1.000001}, 0.001)
       true
 
-      iex> AriaMath.Quaternion.is_identity?({0.1, 0.0, 0.0, 0.995})
+      iex> Quaternion.approx_equal?({0.0, 0.0, 0.0, 1.0}, {0.1, 0.0, 0.0, 1.0}, 0.001)
       false
   """
-  @spec is_identity?(t()) :: boolean()
-  def is_identity?({x, y, z, w}) do
-    epsilon = 1.0e-6
-    abs(x) < epsilon and abs(y) < epsilon and abs(z) < epsilon and abs(w - 1.0) < epsilon
+  @spec approx_equal?(t(), t(), float()) :: boolean()
+  def approx_equal?({x1, y1, z1, w1}, {x2, y2, z2, w2}, tolerance \\ 1.0e-6) do
+    abs(x1 - x2) <= tolerance and abs(y1 - y2) <= tolerance and
+    abs(z1 - z2) <= tolerance and abs(w1 - w2) <= tolerance
   end
+
+  @doc """
+  Check if two quaternions are equal within a tolerance.
+
+  This is an alias for `approx_equal?/3` for consistency with other modules.
+
+  ## Examples
+
+      iex> Quaternion.equal?({0.0, 0.0, 0.0, 1.0}, {0.000001, 0.000001, 0.000001, 1.000001}, 0.001)
+      true
+  """
+  @spec equal?(t(), t(), float()) :: boolean()
+  def equal?(q1, q2, tolerance \\ 1.0e-6), do: approx_equal?(q1, q2, tolerance)
 
   # Helper functions
 

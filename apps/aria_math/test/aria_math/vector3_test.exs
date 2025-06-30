@@ -1,11 +1,11 @@
 # Copyright (c) 2025-present K. S. Ernest (iFire) Lee
 # SPDX-License-Identifier: MIT
 
-defmodule AriaEngineCore.Math.Vector3Test do
+defmodule AriaMath.Vector3Test do
   use ExUnit.Case
-  doctest AriaEngineCore.Math.Vector3
+  doctest AriaMath.Vector3
 
-  alias AriaEngineCore.Math.{Vector3, Primitives}
+  alias AriaMath.{Vector3, Primitives}
 
   describe "Vector3.new/3" do
     test "creates vector from three floats" do

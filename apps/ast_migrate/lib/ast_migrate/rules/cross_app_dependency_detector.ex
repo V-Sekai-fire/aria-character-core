@@ -38,7 +38,7 @@ defmodule AstMigrate.Rules.CrossAppDependencyDetector do
 
   @impl true
   def file_patterns do
-    ["../../apps/aria_*/lib/**/*.ex"]
+    ["apps/aria_*/lib/**/*.ex"]
   end
 
   @impl true
