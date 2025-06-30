@@ -25,7 +25,35 @@
 
 ## High Priority Issues
 
-### 2. ~~Missing AriaEngineCore.Domain Module~~ **TOMBSTONED ✅**
+### 2. ~~AriaEngineCore.Math Cross-App Dependency Violation~~ **TOMBSTONED ✅**
+
+**Status:** SOLVED - Fixed architectural boundary violation using external API
+
+**Problem:** `AriaEngineCore.Math` was directly importing internal modules from `AriaMath`:
+
+```elixir
+alias AriaMath.{Vector3, Quaternion, Matrix4, Joint}
+```
+
+This violates INST-045 umbrella app architectural boundaries requiring external API usage.
+
+**Solution Found:** Required functionality exists in `AriaMath` external API:
+
+- **Vector operations:** Available through `AriaMath.vector3()`, `AriaMath.cross_product()`, `AriaMath.dot_product()`, etc.
+- **Quaternion operations:** Available through `AriaMath.quaternion()`, `AriaMath.multiply_quaternions()`, `AriaMath.normalize_quaternion()`, etc.
+- **Matrix operations:** Available through `AriaMath.identity_matrix()`, `AriaMath.multiply_matrices()`, `AriaMath.transform_point()`, etc.
+- **Mathematical primitives:** Available through `AriaMath.clamp_float()`, `AriaMath.abs_float()`, etc.
+
+**Fix Applied:** Updated `AriaEngineCore.Math` to:
+
+1. **Use external API:** Changed `alias AriaMath.{Vector3, Quaternion, Matrix4, Joint}` to `alias AriaMath`
+2. **Delegate through external API:** All function delegations now use `AriaMath` external functions
+3. **Implement basic operations:** For functions not yet in external API, provided basic implementations using available external functions
+4. **Maintain functional compatibility:** All `khr_operations()` continue to work with proper external API calls
+
+**Result:** ✅ Compilation successful, architectural compliance achieved, no functionality lost
+
+### 3. ~~Missing AriaEngineCore.Domain Module~~ **TOMBSTONED ✅**
 
 **Status:** SOLVED - Architectural violation, fix by cross-app migration
 
