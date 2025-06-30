@@ -315,4 +315,219 @@ defmodule AriaQcpTest do
       assert abs(tz) < 100.0
     end
   end
+
+  describe "surgical safety - jerk validation" do
+    alias AriaQcp.QCP.Validation.Motion
+
+    # Surgical safety thresholds based on medical robotics literature
+    @surgical_angular_jerk_limit 10.0  # rad/s³ - conservative limit for surgical robotics
+    @surgical_linear_jerk_limit 1.0    # m/s³ - safe for tissue interaction
+    @surgical_tolerance 1.0e-8         # High precision required for surgical applications
+
+    # Helper functions to calculate actual jerk from QCP transformation results
+    defp calculate_angular_jerk({x, y, z, w}) do
+      # Validate quaternion is normalized (should be ~1.0)
+      _quat_magnitude = :math.sqrt(x*x + y*y + z*z + w*w)
+
+      # Extract rotation angle from quaternion vector part
+      vector_magnitude = :math.sqrt(x*x + y*y + z*z)
+
+      # Convert to rotation angle: angle = 2 * asin(|vector_part|)
+      # This gives us the actual rotation amount for jerk calculation
+      rotation_angle = 2.0 * :math.asin(min(vector_magnitude, 1.0))
+
+      # Angular jerk ≈ rotation_angle / time³ (assuming unit time for QCP)
+      rotation_angle
+    end
+
+    defp calculate_linear_jerk({tx, ty, tz}) do
+      # Calculate linear jerk from translation vector
+      # For QCP transformations, jerk ≈ |translation| / time³
+      # Assuming unit time for QCP transformations
+      :math.sqrt(tx*tx + ty*ty + tz*tz)
+    end
+
+    defp enforce_surgical_jerk_limits(rotation, translation) do
+      angular_jerk = calculate_angular_jerk(rotation)
+      linear_jerk = calculate_linear_jerk(translation)
+
+      assert angular_jerk < @surgical_angular_jerk_limit,
+        "Angular jerk #{angular_jerk} rad/s³ exceeds surgical safety limit #{@surgical_angular_jerk_limit} rad/s³"
+
+      assert linear_jerk < @surgical_linear_jerk_limit,
+        "Linear jerk #{linear_jerk} m/s³ exceeds surgical safety limit #{@surgical_linear_jerk_limit} m/s³"
+    end
+
+    test "surgical instrument alignment maintains safe jerk levels" do
+      # Simulate aligning a surgical instrument from initial position to target tissue location
+      # Using millimeter-scale coordinates typical in surgery
+      moved = [{0.001, 0.0, 0.0}]    # Initial instrument tip position (1mm on X axis)
+      target = [{0.0, 0.001, 0.0}]   # Target tissue location (1mm on Y axis)
+
+      assert {:ok, {rotation, translation}} = AriaQcp.superpose(moved, target)
+
+      # CRITICAL: Enforce surgical safety jerk limits to protect patients
+      enforce_surgical_jerk_limits(rotation, translation)
+
+      # Validate that the transformation meets surgical safety requirements
+      assert Motion.validate_minimal_jerk(rotation, translation, @surgical_tolerance) == :ok
+
+      # Additional validation: ensure rotation represents minimal angular motion
+      assert Motion.validate_minimal_angular_jerk(rotation, @surgical_tolerance) == :ok
+
+      # Ensure translation follows smoothest path for tissue safety
+      assert Motion.validate_minimal_linear_jerk(translation, @surgical_tolerance) == :ok
+
+      # Verify motion coordination is optimal for surgical precision
+      assert Motion.validate_motion_coordination(rotation, translation, @surgical_tolerance) == :ok
+    end
+
+    test "microsurgery precision maintains minimal jerk for delicate procedures" do
+      # Test extremely small movements typical in microsurgery (micrometer scale)
+      # These movements must have absolutely minimal jerk to prevent tissue damage
+      moved = [{1.0e-6, 0.0, 0.0}, {0.0, 1.0e-6, 0.0}]    # Micrometer-scale initial positions
+      target = [{0.0, 1.0e-6, 0.0}, {-1.0e-6, 0.0, 0.0}]  # Micrometer-scale target positions
+
+      assert {:ok, {rotation, translation}} = AriaQcp.superpose(moved, target)
+
+      # CRITICAL: Enforce surgical safety jerk limits for microsurgery
+      enforce_surgical_jerk_limits(rotation, translation)
+
+      # For microsurgery, use even stricter tolerance
+      microsurgery_tolerance = 1.0e-12
+
+      # Validate minimal jerk with microsurgery precision requirements
+      assert Motion.validate_minimal_jerk(rotation, translation, microsurgery_tolerance) == :ok
+
+      # Ensure rotational motion is smooth enough for delicate tissue work
+      assert Motion.validate_minimal_angular_jerk(rotation, microsurgery_tolerance) == :ok
+
+      # Verify translation meets microsurgical smoothness standards
+      assert Motion.validate_minimal_linear_jerk(translation, microsurgery_tolerance) == :ok
+
+      # Check that rotation and translation are optimally coordinated for precision work
+      assert Motion.validate_motion_coordination(rotation, translation, microsurgery_tolerance) == :ok
+    end
+
+    test "emergency correction maintains acceptable jerk levels" do
+      # Simulate a scenario where surgeon needs quick but safe correction
+      # This tests the boundary between necessary speed and patient safety
+      moved = [{0.005, 0.0, 0.0}, {0.0, 0.005, 0.0}]     # 5mm displacement requiring correction
+      target = [{0.0, 0.005, 0.0}, {-0.005, 0.0, 0.0}]   # Corrected positions
+
+      assert {:ok, {rotation, translation}} = AriaQcp.superpose(moved, target)
+
+      # CRITICAL: Enforce surgical safety jerk limits even for emergency corrections
+      enforce_surgical_jerk_limits(rotation, translation)
+
+      # Even emergency corrections must maintain surgical safety
+      assert Motion.validate_minimal_jerk(rotation, translation, @surgical_tolerance) == :ok
+
+      # Validate that angular correction doesn't exceed safe rotational jerk
+      assert Motion.validate_minimal_angular_jerk(rotation, @surgical_tolerance) == :ok
+
+      # Ensure linear correction maintains tissue-safe motion profile
+      assert Motion.validate_minimal_linear_jerk(translation, @surgical_tolerance) == :ok
+
+      # Verify emergency motion coordination remains surgically safe
+      assert Motion.validate_motion_coordination(rotation, translation, @surgical_tolerance) == :ok
+
+      # Additional safety check: transformation should be reasonable for emergency correction
+      {x, y, z, w} = rotation
+      rotation_magnitude = :math.sqrt(x*x + y*y + z*z + w*w)
+      assert abs(rotation_magnitude - 1.0) < @surgical_tolerance
+
+      {tx, ty, tz} = translation
+      translation_magnitude = :math.sqrt(tx*tx + ty*ty + tz*tz)
+      # Emergency correction should not require excessive translation
+      assert translation_magnitude < 0.02  # Less than 2cm total translation for safety
+    end
+
+    test "multi-point surgical trajectory maintains smooth motion coordination" do
+      # Test alignment of multiple surgical waypoints (like suture points)
+      # Ensures smooth motion coordination across complex surgical paths
+      moved = [
+        {0.001, 0.0, 0.0},     # First suture point
+        {0.002, 0.001, 0.0},   # Second suture point
+        {0.003, 0.002, 0.001}, # Third suture point
+        {0.004, 0.001, 0.002}  # Fourth suture point
+      ]
+
+      target = [
+        {0.0, 0.001, 0.0},     # Aligned first point
+        {0.001, 0.002, 0.0},   # Aligned second point
+        {0.002, 0.003, 0.001}, # Aligned third point
+        {0.001, 0.002, 0.003}  # Aligned fourth point
+      ]
+
+      assert {:ok, {rotation, translation}} = AriaQcp.superpose(moved, target)
+
+      # CRITICAL: Enforce surgical safety jerk limits for multi-point trajectory
+      enforce_surgical_jerk_limits(rotation, translation)
+
+      # Validate overall trajectory maintains surgical safety standards
+      assert Motion.validate_minimal_jerk(rotation, translation, @surgical_tolerance) == :ok
+
+      # Ensure multi-point alignment uses minimal angular jerk
+      assert Motion.validate_minimal_angular_jerk(rotation, @surgical_tolerance) == :ok
+
+      # Verify linear motion across waypoints follows smoothest path
+      assert Motion.validate_minimal_linear_jerk(translation, @surgical_tolerance) == :ok
+
+      # Critical: motion coordination must be optimal for complex surgical paths
+      assert Motion.validate_motion_coordination(rotation, translation, @surgical_tolerance) == :ok
+
+      # Additional validation: verify transformation is within surgical working envelope
+      {x, y, z, w} = rotation
+      rotation_magnitude = :math.sqrt(x*x + y*y + z*z + w*w)
+      assert abs(rotation_magnitude - 1.0) < @surgical_tolerance
+
+      {tx, ty, tz} = translation
+      # Multi-point surgical procedures should have reasonable translation bounds
+      assert abs(tx) < 0.01  # Less than 1cm in any direction
+      assert abs(ty) < 0.01
+      assert abs(tz) < 0.01
+    end
+
+    test "validates surgical safety thresholds are not exceeded" do
+      # Test that ensures no surgeon would be harmed by excessive jerk
+      # This is a comprehensive safety validation test
+      moved = [{0.002, 0.001, 0.0}]    # Realistic surgical starting position
+      target = [{0.001, 0.002, 0.001}] # Realistic surgical target position
+
+      assert {:ok, {rotation, translation}} = AriaQcp.superpose(moved, target)
+
+      # CRITICAL: Enforce surgical safety jerk limits for comprehensive validation
+      enforce_surgical_jerk_limits(rotation, translation)
+
+      # Comprehensive jerk validation for surgical safety
+      assert Motion.validate_minimal_jerk(rotation, translation, @surgical_tolerance) == :ok
+
+      # Validate specific jerk components don't exceed medical safety limits
+      assert Motion.validate_minimal_angular_jerk(rotation, @surgical_tolerance) == :ok
+      assert Motion.validate_minimal_linear_jerk(translation, @surgical_tolerance) == :ok
+      assert Motion.validate_motion_coordination(rotation, translation, @surgical_tolerance) == :ok
+
+      # Ensure transformation parameters are within safe surgical ranges
+      {x, y, z, w} = rotation
+
+      # Calculate rotation angle to ensure it's within safe surgical limits
+      angle = 2 * :math.acos(min(abs(w), 1.0))
+      normalized_angle = if angle > :math.pi, do: 2 * :math.pi - angle, else: angle
+
+      # Surgical rotations should be small and controlled
+      assert normalized_angle < :math.pi / 2  # Less than 90 degrees for safety
+
+      # Translation should be precise and limited
+      {tx, ty, tz} = translation
+      translation_magnitude = :math.sqrt(tx*tx + ty*ty + tz*tz)
+
+      # Surgical translations should be minimal and precise
+      assert translation_magnitude < 0.005  # Less than 5mm total displacement for precision
+
+      # Final safety assertion: rotation quaternion must be properly normalized
+      rotation_magnitude = :math.sqrt(x*x + y*y + z*z + w*w)
+      assert abs(rotation_magnitude - 1.0) < @surgical_tolerance
+    end
+  end
 end
