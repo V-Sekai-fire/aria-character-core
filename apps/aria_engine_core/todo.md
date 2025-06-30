@@ -82,6 +82,7 @@ AriaEngineCore provides the foundational temporal planning and execution capabil
 - **Tier 1 Prerequisites:** aria_state, aria_math, aria_gltf, aria_security, aria_timeline_intervals, ast_migrate - ⏳ Pending
 - **Tier 2 Prerequisites:** aria_joint, aria_qcp, aria_minizinc_stn, aria_minizinc_goal, aria_minizinc_executor, aria_minizinc_multiply - ⏳ Pending
 - **Tier 3 Prerequisites:** aria_timeline (timeline layer) - ⏳ Pending  
+- **Optional Integration:** aria_ewbik (character IK solving - independent app available for future integration)
 
 **Known Integration Issues:**
 
@@ -131,49 +132,39 @@ mix test apps/aria_engine_core    # ⏳ Blocked until prerequisites complete
 
 ## Completed ✅
 
-### Phase 1: EWBIK Math Solver Ports - COMPLETION REPORT ✅ (June 30, 2025)
+### EWBIK Foundation Extraction ✅ (June 30, 2025)
 
-**🎯 PHASE 1 SUCCESSFULLY COMPLETED**
+**🎯 EWBIK SUCCESSFULLY EXTRACTED TO DEDICATED APP**
 
-**Completion Verification:**
+**Extraction Completion:**
 
-- ✅ **AriaJoint Tests:** 20/20 passing (0 failures)
-- ✅ **AriaQCP Tests:** 69/69 passing (0 failures)  
-- ✅ **AriaEngineCore Tests:** 39/39 passing (0 failures)
-- ✅ **Registry System:** Fully operational and tested
-- ✅ **EWBIK Foundation:** Production-ready mathematical infrastructure
+- ✅ **AriaEwbik App Created:** Independent app with comprehensive external API
+- ✅ **Mathematical Foundation Available:** AriaJoint (48/48 tests), AriaQCP (69/69 tests), AriaMath ready
+- ✅ **Dependencies Configured:** AriaEwbik depends on aria_joint, aria_qcp, aria_math, aria_state
+- ✅ **Implementation Plan:** Comprehensive todo.md with detailed EWBIK implementation phases
+- ✅ **Documentation Complete:** README.md with usage examples and architecture overview
 
-**Key Achievements:**
+**Key Architectural Benefits:**
 
-1. **QCP Algorithm (Wahba's Problem Solver)**
-   - Production-ready quaternion characteristic polynomial implementation
-   - IEEE-754 numerical stability and comprehensive error handling
-   - Full test coverage with 69/69 tests passing
-   - Ready for multi-effector EWBIK coordination
+1. **Clean Separation of Concerns**
+   - EWBIK algorithms isolated in dedicated app
+   - AriaEngineCore focuses on planning and execution
+   - Clear dependency hierarchy maintained
 
-2. **Joint Hierarchy Management System**
-   - Complete bone hierarchy with parent-child relationships
-   - Registry-based state management fully functional
-   - Transform propagation and dirty state tracking operational
-   - All 20 tests passing after Registry system resolution
+2. **Reusable EWBIK Foundation**
+   - AriaEwbik can be used by other apps beyond AriaEngineCore
+   - Modular architecture supports different IK use cases
+   - External API provides clean integration interface
 
-3. **Mathematical Foundation Integration**
-   - Modular architecture with dedicated aria_math, aria_joint, aria_qcp apps
-   - IEEE-754 compliance throughout mathematical operations
-   - Production-ready performance characteristics
-   - Comprehensive API documentation and type specifications
+3. **Proper Umbrella Architecture**
+   - Follows standard Elixir app patterns
+   - External API delegation pattern maintained
+   - Cross-app communication through external APIs only
 
-**Critical Issue Resolution:**
-
-- ✅ **Registry System Fix:** Resolved `:noproc` errors blocking Joint hierarchy functionality
-- ✅ **Transform Management:** Global/local coordinate space conversions working correctly
-- ✅ **Error Handling:** Comprehensive edge case management across all modules
-
-**Phase 1 Impact:**
-
-- **Unblocks Phase 2:** EWBIK algorithm implementation can now proceed
-- **Enables Multi-Effector IK:** QCP + Joint system provides foundation for complex IK solving
-- **Production Ready:** Mathematical foundation suitable for real-time character animation
+**Next Steps:**
+- AriaEngineCore integration with AriaEwbik external API
+- Domain method updates to use EWBIK solving capabilities
+- Test scenarios leveraging EWBIK for character IK validation
 
 ### Core API Implementation (Current State)
 
@@ -430,278 +421,69 @@ mix test apps/aria_engine_core # Result: 39 tests, 0 failures ✅
 - Elimination of potential confusion from dead code
 - Professional codebase appearance for production readiness
 
-### Phase 2: EWBIK Algorithm Implementation (READY TO BEGIN - HIGH PRIORITY)
+### Phase 2: AriaEwbik Integration (HIGH PRIORITY)
 
-**Priority: HIGH - Core EWBIK solver for multi-effector coordination**
+**Priority: HIGH - Integrate AriaEwbik external API for character IK solving**
 
-**Dependencies:** ✅ **Phase 1 Complete** - Joint hierarchy management and QCP algorithm operational
-
-**✅ Blockers Resolved:** Joint Registry system now fully functional, enabling EWBIK implementation.
+**Dependencies:** ✅ **EWBIK Foundation Available** - AriaEwbik app created with comprehensive external API
 
 **✅ Prerequisites Met:**
 
-- ✅ Joint Registry initialization working in `AriaEngineCore.Math.Joint.ensure_registry_with_timeout/0`
-- ✅ All Joint test suite passing (20/20 tests)
-- ✅ Registry process starts correctly for bone hierarchy management
+- ✅ AriaEwbik app created with external API module
+- ✅ Mathematical foundation available (AriaJoint 48/48 tests, AriaQCP 69/69 tests)
+- ✅ Dependencies configured (aria_ewbik depends on aria_joint, aria_qcp, aria_math, aria_state)
+- ✅ Comprehensive implementation plan available in AriaEwbik todo.md
 
-**Phase 2 Implementation Plan (Ready to Begin):**
+**Phase 2 Integration Plan:**
 
-- [ ] **Skeleton Segmentation System**
-  - [ ] Create `lib/aria_engine_core/ewbik/segmentation.ex`
-  - [ ] Implement bone chain dependency analysis using Phase 1 Joint hierarchy
-  - [ ] Create processing order determination
-  - [ ] Handle multiple effector hierarchies
-  - [ ] Segment validation and error handling
+- [ ] **Add AriaEwbik Dependency to AriaEngineCore (When Ready)**
+  - [ ] Update `apps/aria_engine_core/mix.exs` to include `{:aria_ewbik, in_umbrella: true}`
+  - [ ] Verify dependency tier structure (AriaEngineCore Tier 4, AriaEwbik Tier 3)
+  - [ ] Update testing dependencies documentation
 
-- [ ] **Multi-Effector EWBIK Solver**
-  - [ ] Create `lib/aria_engine_core/ewbik/solver.ex`
-  - [ ] Implement core EWBIK algorithm with QCP integration from Phase 1
-  - [ ] Multi-effector coordination with priority weighting
-  - [ ] Iterative solving with convergence criteria
-  - [ ] Dampening and stabilization pass implementation
-  - [ ] Performance budget management and early termination
+- [ ] **Domain Method Integration with EWBIK**
+  - [ ] Update `lib/aria_engine_core/domain.ex` to integrate AriaEwbik API calls
+  - [ ] Add character IK solving methods using `AriaEwbik.solve_ik/3`
+  - [ ] Add multi-effector coordination using `AriaEwbik.solve_multi_effector/3`
+  - [ ] Add VRM1 collision-aware solving using `AriaEwbik.solve_with_collision_avoidance/3`
 
-- [ ] **Kusudama Constraint System**
-  - [ ] Create `lib/aria_engine_core/ewbik/kusudama.ex`
-  - [ ] Implement cone-based joint orientation constraints using Phase 0 quaternion operations
-  - [ ] Continuous constraint boundary handling
-  - [ ] Sequence cone and tangent cone validation
-  - [ ] Twist limit enforcement
-  - [ ] Nearest valid orientation calculation
+- [ ] **EWBIK Entity Support in AriaEngineCore**
+  - [ ] Add character skeleton entity management
+  - [ ] Add IK effector target entity support
+  - [ ] Add constraint configuration entity support
+  - [ ] Integration with AriaState for EWBIK configuration storage
 
-- [ ] **Motion Propagation Management**
-  - [ ] Create `lib/aria_engine_core/ewbik/propagation.ex`
-  - [ ] Implement hierarchical effector influence calculation
-  - [ ] Motion propagation factor application using Phase 0 transform operations
-  - [ ] Ancestor-descendant weight distribution
-  - [ ] Ultimate vs intermediary target handling
+- [ ] **Test Domain Integration**
+  - [ ] Create test scenarios using AriaEwbik for character animation
+  - [ ] Add EWBIK-based multigoal test cases (conservative usage per R25W1398085)
+  - [ ] Add temporal IK solving test patterns
+  - [ ] Integration with KHR Interactivity test domain
 
-### Phase 2.5: Anti-Uncanny Valley Solutions (HIGH PRIORITY)
+### Phase 2.5: Advanced EWBIK Integration (MEDIUM PRIORITY)
 
-**Priority: HIGH - Comprehensive uncanny valley prevention for realistic character animation**
+**Priority: MEDIUM - Leverage AriaEwbik's advanced features for realistic character animation**
 
-**Dependencies:** Requires Phase 0-2 EWBIK foundation for sophisticated constraint integration
+**Dependencies:** Phase 2 AriaEwbik basic integration complete
 
-#### 🪦 TOMBSTONED APPROACHES
+**Note:** All advanced EWBIK features (VRM1 collision detection, Godot anatomical constraints, anti-uncanny valley solutions) are now implemented in the dedicated AriaEwbik app. See `apps/aria_ewbik/todo.md` for detailed implementation plans.
 
-- [x] ~~**Flip to Other Side Constraint Resolution**~~ ❌ DEPRECATED (June 29, 2025)
-  - ~~When Kusudama constraint becomes unsolvable, flip joint to opposite side~~
-  - **REASON FOR DEPRECATION:** Creates jarring visual artifacts and unnatural motion
-  - **REPLACED BY:** VRM1 collision detection + Godot anatomical constraints + RMSD validation
-  - **STATUS:** This approach is permanently retired in favor of comprehensive collision-aware solutions
+- [ ] **Advanced IK Solving Integration**
+  - [ ] Integrate `AriaEwbik.solve_with_collision_avoidance/3` for VRM1 collision-aware solving
+  - [ ] Integrate `AriaEwbik.apply_godot_anatomical_limits/1` for realistic joint constraints
+  - [ ] Add constraint validation using `AriaEwbik.validate_constraints/1`
+  - [ ] Integration with temporal smoothing for frame-to-frame stability
 
-#### VRM1 Collision Detection System
+- [ ] **Character Configuration Management**
+  - [ ] Add VRM1 collider configuration entities in AriaState
+  - [ ] Add Kusudama constraint configuration entities
+  - [ ] Add anatomical constraint profile entities
+  - [ ] Integration with character asset management
 
-- [ ] **VRM1 Collider System Integration**
-  - [ ] Create `lib/aria_engine_core/ewbik/vrm1_colliders.ex`
-  - [ ] Implement VRM1 sphere collider detection (`shape.sphere`)
-    - [ ] Sphere-to-sphere collision detection with joint hit radius
-    - [ ] Local coordinate offset transformation to world space
-    - [ ] Distance calculation and penetration resolution per VRM1 spec:
-
-      ```
-      transformedOffset = collider.offset * collider.worldMatrix
-      delta = nextTail - transformedOffset
-      distance = delta.magnitude - collider.radius - jointRadius
-      direction = delta.normalized
-      ```
-
-  - [ ] Implement VRM1 capsule collider detection (`shape.capsule`)
-    - [ ] Capsule-to-sphere collision detection algorithm per VRM1 spec
-    - [ ] Head/tail/middle region collision handling
-    - [ ] Offset and tail position transformation to world space
-  - [ ] Implement VRM1 plane colliders for ground contact
-    - [ ] Infinite plane collision detection for foot pinning
-    - [ ] Ground contact preservation during upper body IK
-    - [ ] Balance constraint integration with center of mass
-  - [ ] Collider group management system
-    - [ ] ColliderGroup organization and indexing per VRM1 spec
-    - [ ] Per-spring collider group assignment
-    - [ ] Efficient collision checking against relevant groups only
-
-- [ ] **VRM1-Compliant Collision-Aware EWBIK Solver**
-  - [ ] Create `lib/aria_engine_core/ewbik/vrm1_collision_solver.ex`
-  - [ ] Integration of VRM1 colliders with EWBIK iteration loop
-  - [ ] Joint hit radius integration with EWBIK bone transforms
-  - [ ] Collision resolution during IK solving iterations per VRM1 spec:
-
-    ```
-    if (distance < 0.0) {
-        // push
-        nextTail = nextTail - direction * distance;
-        // constrain the length
-        nextTail = worldPosition + (nextTail - worldPosition).normalized * boneLength;
-    }
-    ```
-
-  - [ ] Performance optimization for real-time collision checking
-  - [ ] VRM1 center space evaluation for collision detection
-
-#### Godot Anatomical Constraint System
-
-- [ ] **Godot SkeletonProfileHumanoid Integration for Anatomical Limits**
-  - [ ] Create `lib/aria_engine_core/ewbik/godot_skeleton_profile.ex`
-  - [ ] Port Godot's SkeletonProfileHumanoid bone definitions and reference poses
-  - [ ] Extract anatomical joint limits from Godot's humanoid profile:
-    - [ ] Elbow: 0-150° (from reference poses)
-    - [ ] Knee: 0-135° (from reference poses)  
-    - [ ] Shoulder: complex 3DOF limits (from reference poses)
-    - [ ] Spine: limited flexion/extension (from reference poses)
-  - [ ] Convert Godot Transform3D reference poses to Kusudama constraint cones
-  - [ ] Integration with VRM1 colliders for additional anatomical boundaries
-  - [ ] Automatic anatomical constraint generation from skeleton profile
-
-- [ ] **Godot to glTF Coordinate System Conversion**
-  - [ ] Create `lib/aria_engine_core/ewbik/coordinate_conversion.ex`
-  - [ ] Implement Godot → glTF coordinate system transformation matrices
-  - [ ] Convert Godot SkeletonProfileHumanoid reference poses to glTF space:
-
-    ```elixir
-    # Godot reference pose (Transform3D)
-    godot_pose = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.1, 0)
-    
-    # Convert to glTF native coordinate space
-    gltf_pose = CoordinateConversion.godot_to_gltf_transform(godot_pose)
-    
-    # Extract joint rules in glTF space
-    gltf_joint_rules = CoordinateConversion.extract_gltf_joint_rules(gltf_pose)
-    ```
-
-  - [ ] Convert Godot joint rule (+Y roll, +X inside bend) to glTF equivalent
-  - [ ] Validate conversion with known test cases (elbow, knee, shoulder)
-
-- [ ] **Godot Joint Rules for Scale-Invariant IK**
-  - [ ] Implement Godot's joint rule: "+Y axis pointed from parent to child as roll axis"
-  - [ ] Implement Godot's joint rule: "+X rotation bends joints to inside of body"
-  - [ ] Scale-aware constraint generation based on bone length ratios
-  - [ ] Proportional EWBIK solving using Godot's SkeletonProfileHumanoid proportions
-  - [ ] Character proportion analysis using Godot's reference poses
-  - [ ] Integration with realtime retarget concepts for cross-character compatibility
-
-#### Temporal Smoothing and Motion Quality
-
-- [ ] **Temporal Smoothing Integration with AriaTimeline**
-  - [ ] Previous pose bias in EWBIK solving (prefer solutions close to current pose)
-  - [ ] Integration with AriaTimeline temporal constraints for smooth motion
-  - [ ] Frame-to-frame solution stability validation using timeline continuity
-  - [ ] Motion prediction using temporal planning capabilities
-
-- [ ] **Enhanced RMSD Solution Validation**
-  - [ ] RMSD calculation includes VRM1 collision penalty terms
-  - [ ] Solution rejection for poses that violate VRM1 collider constraints
-  - [ ] Weighted RMSD: target achievement vs VRM1 collision avoidance vs anatomical realism
-  - [ ] Integration with VRM1 collider group priorities
-  - [ ] Performance optimization for real-time VRM1 collision validation
-
-#### VRM1 Configuration in AriaState
-
-- [ ] **VRM1 Collider Configuration System**
-
-  ```elixir
-  # VRM1 collider configuration stored in planner state
-  AriaState.set_fact(state, "character_rig", "vrm1_colliders", [
-    # Sphere collider for head
-    %{
-      node: 4,  # glTF node index for head
-      shape: %{
-        sphere: %{
-          offset: [0, 0, 0],
-          radius: 0.12  # 12cm head radius
-        }
-      }
-    },
-    # Capsule collider for torso
-    %{
-      node: 1,  # glTF node index for spine
-      shape: %{
-        capsule: %{
-          offset: [0, 0, 0],
-          radius: 0.15,  # 15cm torso radius
-          tail: [0, 0.4, 0]  # 40cm torso height
-        }
-      }
-    },
-    # Plane collider for ground
-    %{
-      node: 0,  # World origin
-      shape: %{
-        plane: %{
-          normal: [0, 1, 0],  # Y-up ground plane
-          distance: 0.0
-        }
-      }
-    }
-  ])
-
-  # VRM1 collider groups for organized collision detection
-  AriaState.set_fact(state, "character_rig", "vrm1_collider_groups", [
-    %{
-      name: "body_core",
-      colliders: [0, 1]  # head and torso colliders
-    },
-    %{
-      name: "ground_contact",
-      colliders: [2]  # ground plane collider
-    }
-  ])
-
-  # EWBIK configuration with VRM1 collision integration
-  AriaState.set_fact(state, "left_arm_chain", "ewbik_collision_config", %{
-    collider_groups: [0],  # Use "body_core" group for left arm collision
-    hit_radius: 0.05,  # 5cm hit radius for arm joints
-    collision_enabled: true
-  })
-  ```
-
-#### Anti-Uncanny Valley Test Scenarios
-
-- [ ] **VRM1 Collision Avoidance Test Cases**
-
-  ```elixir
-  # Scenario 1: VRM1 collision avoidance with body core
-  multigoal = %AriaEngine.Multigoal{
-    goals: [
-      {"effector_target_position", 8, target_near_head},  # Hand target near head
-      {"vrm1_collision_avoidance", "character_rig", "body_core"},  # Avoid head/torso
-      {"kusudama_constraints_satisfied", "character_rig", "all_joints"}
-    ],
-    optimization: :minimize_joint_movement_with_vrm1_collision_avoidance
-  }
-
-  # Scenario 2: VRM1 self-collision prevention
-  goals = [
-    {"effector_target_position", 12, target_across_body},  # Right hand across body
-    {"vrm1_self_collision_prevention", "character_rig", "limbs"},  # Avoid limb intersections
-    {"vrm1_collider_group_validation", "character_rig", ["body_core", "limbs"]}
-  ]
-
-  # Scenario 3: Ground contact preservation
-  goals = [
-    {"effector_target_position", 4, upper_body_target},  # Head/spine target
-    {"vrm1_ground_contact_maintained", "character_rig", "feet"},  # Feet stay on ground
-    {"balance_constraint_satisfied", "character_rig", "center_of_mass"}
-  ]
-  ```
-
-- [ ] **Anatomical Constraint Test Cases**
-
-  ```elixir
-  # Scenario 4: Godot anatomical limit enforcement
-  multigoal = %AriaEngine.Multigoal{
-    goals: [
-      {"effector_target_position", 8, extreme_reach_target},  # Challenging reach
-      {"godot_anatomical_limits_enforced", "character_rig", "humanoid_profile"},
-      {"joint_hyperextension_prevented", "character_rig", ["elbow", "knee"]}
-    ]
-  }
-
-  # Scenario 5: Scale-invariant behavior validation
-  goals = [
-    {"effector_target_position", 12, proportional_target},  # Target scaled to character
-    {"godot_joint_rules_applied", "character_rig", "gltf_space"},
-    {"scale_invariant_constraints", "character_rig", "bone_length_ratios"}
-  ]
-  ```
+- [ ] **Test Scenarios for Advanced Features**
+  - [ ] Character reaching with collision avoidance test cases
+  - [ ] Multi-character interaction scenarios with VRM1 collision detection
+  - [ ] Anatomical constraint enforcement validation scenarios
+  - [ ] Performance testing with complex constraint combinations
 
 ### Phase 3: Kusudama Constraint Visualization (HIGH PRIORITY)
 

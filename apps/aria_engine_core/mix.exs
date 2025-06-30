@@ -35,6 +35,7 @@ defmodule AriaEngineCore.MixProject do
       {:aria_math, in_umbrella: true},
       {:aria_state, in_umbrella: true},
       {:aria_timeline, in_umbrella: true},
+      {:aria_ewbik, in_umbrella: true},
       {:aria_minizinc_stn, in_umbrella: true},
       {:aria_minizinc_goal, in_umbrella: true},
       {:aria_minizinc_executor, in_umbrella: true},
