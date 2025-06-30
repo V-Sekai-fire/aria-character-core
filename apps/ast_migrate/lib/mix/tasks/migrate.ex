@@ -92,6 +92,8 @@ defmodule Mix.Tasks.Migrate do
     else
       Enum.each(rules, fn rule_name ->
         case AstMigrate.rule_info(rule_name) do
+          {:ok, _module} ->
+            Mix.shell().info("  #{rule_name} - Available transformation rule")
           {:error, _} ->
             Mix.shell().info("  #{rule_name} - No description available")
         end

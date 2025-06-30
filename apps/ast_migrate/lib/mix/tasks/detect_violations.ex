@@ -1,143 +1,78 @@
 # Copyright (c) 2025-present K. S. Ernest (iFire) Lee
 # SPDX-License-Identifier: MIT
 
-defmodule AstMigrate.Rules.CrossAppDependencyDetector do
+defmodule Mix.Tasks.DetectViolations do
   @moduledoc """
-  AST-based detection of cross-app dependency violations in umbrella projects.
-
-  This rule systematically detects violations of the external API boundary pattern
-  where apps directly import internal modules from other apps instead of using
-  external APIs.
-
-  ## Violation Types Detected
-
-  - **Legacy namespace violations**: `AriaEngine.*`, `AriaCore.*` patterns
-  - **Internal module imports**: Direct `alias App.Internal.Module` across apps
-  - **Timeline violations**: `AriaTimeline.TimelineCore.*` usage
-  - **Engine core violations**: `AriaEngineCore.*` direct usage
-
-  ## Usage
-
-      # Detect all violations across the codebase
-      AstMigrate.apply_rule(:cross_app_dependency_detector, dry_run: true)
-
-      # Generate violation report
-      AstMigrate.apply_rule(:cross_app_dependency_detector,
-        files: ["apps/**/*.ex"],
-        dry_run: true)
+  Debug tool to detect cross-app dependency violations with verbose output.
   """
 
-  @behaviour AstMigrate.Rules.Behaviour
+  use Mix.Task
 
-  require Logger
+  @impl Mix.Task
+  def run(args) do
+    {opts, _, _} = OptionParser.parse(args, switches: [verbose: :boolean])
 
-  @impl true
-  def description do
-    "Detects cross-app dependency violations where apps import internal modules from other apps"
-  end
+    IO.puts("=== Cross-App Dependency Violation Detection ===")
 
-  @impl true
-  def file_patterns do
-    [
+    file_patterns = [
       "apps/*/lib/**/*.ex",
       "apps/*/test/**/*.ex",
       "apps/*/test/**/*.exs",
       "apps/*/**/*.exs"
     ]
-  end
 
-  @impl true
-  def preconditions do
-    [
-      &file_exists?/1,
-      &is_elixir_file?/1
-    ]
-  end
+    files =
+      file_patterns
+      |> Enum.flat_map(&Path.wildcard/1)
+      |> Enum.filter(&File.exists?/1)
+      |> Enum.filter(&is_elixir_file?/1)
 
-  @impl true
-  def postconditions do
-    [
-      &file_exists?/1,
-      &is_valid_elixir?/1
-    ]
-  end
+    IO.puts("Scanning #{length(files)} files...")
 
-  @impl true
-  def validate_preconditions(files) do
-    invalid_files =
+    total_violations =
       files
-      |> Enum.reject(fn file ->
-        Enum.all?(preconditions(), fn condition -> condition.(file) end)
+      |> Enum.map(fn file ->
+        violations = detect_violations_in_file(file)
+        if not Enum.empty?(violations) do
+          IO.puts("\n📁 #{file}")
+          Enum.each(violations, fn violation ->
+            IO.puts("  ❌ #{violation.type}: #{violation.alias}")
+            IO.puts("     #{violation.description}")
+            IO.puts("     💡 #{violation.suggested_fix}")
+          end)
+        end
+        length(violations)
       end)
+      |> Enum.sum()
 
-    case invalid_files do
-      [] -> :ok
-      files -> {:error, "Invalid files: #{inspect(files)}"}
-    end
-  end
-
-  @impl true
-  def transform_file(file_path) do
-    try do
-      content = File.read!(file_path)
-
-      case Code.string_to_quoted(content) do
-        {:ok, ast} ->
-          violations = detect_violations(ast, file_path)
-          report = generate_violation_report(violations, file_path)
-
-          Logger.info("Cross-app dependency analysis completed",
-            file: file_path,
-            violations_found: length(violations)
-          )
-
-          # Return original content with violation report in comments
-          enhanced_content = add_violation_report_to_content(content, report)
-          {:ok, enhanced_content}
-
-        {:error, reason} ->
-          {:error, "Failed to parse #{file_path}: #{inspect(reason)}"}
-      end
-    rescue
-      error ->
-        {:error, "Error processing #{file_path}: #{inspect(error)}"}
-    end
-  end
-
-  # Private functions
-
-  defp file_exists?(file_path) do
-    File.exists?(file_path)
+    IO.puts("\n=== Summary ===")
+    IO.puts("Total violations found: #{total_violations}")
   end
 
   defp is_elixir_file?(file_path) do
     String.ends_with?(file_path, ".ex") or String.ends_with?(file_path, ".exs")
   end
 
-  defp not_in_ast_migrate_app?(file_path) do
-    not String.contains?(file_path, "apps/ast_migrate/")
-  end
-
-  defp is_valid_elixir?(file_path) do
+  defp detect_violations_in_file(file_path) do
     try do
       content = File.read!(file_path)
+
       case Code.string_to_quoted(content) do
-        {:ok, _} -> true
-        {:error, _} -> false
+        {:ok, ast} ->
+          app_name = extract_app_name(file_path)
+          aliases = extract_aliases(ast)
+
+          aliases
+          |> Enum.flat_map(fn alias_node ->
+            analyze_alias_violation(alias_node, app_name, file_path)
+          end)
+
+        {:error, _reason} ->
+          []
       end
     rescue
-      _ -> false
+      _ -> []
     end
-  end
-
-  defp detect_violations(ast, file_path) do
-    app_name = extract_app_name(file_path)
-
-    ast
-    |> extract_aliases()
-    |> Enum.flat_map(fn alias_node ->
-      analyze_alias_violation(alias_node, app_name, file_path)
-    end)
   end
 
   defp extract_app_name(file_path) do
@@ -296,46 +231,6 @@ defmodule AstMigrate.Rules.CrossAppDependencyDetector do
 
       true ->
         "Replace with external API calls"
-    end
-  end
-
-  defp generate_violation_report(violations, file_path) do
-    if Enum.empty?(violations) do
-      "# Cross-app dependency analysis: No violations found"
-    else
-      violation_summary =
-        violations
-        |> Enum.group_by(& &1.type)
-        |> Enum.map(fn {type, type_violations} ->
-          "# #{type}: #{length(type_violations)} violations"
-        end)
-        |> Enum.join("\n")
-
-      violation_details =
-        violations
-        |> Enum.map(fn violation ->
-          "# - #{violation.alias}: #{violation.description} (#{violation.suggested_fix})"
-        end)
-        |> Enum.join("\n")
-
-      """
-      # Cross-app dependency violations found in #{file_path}
-      #{violation_summary}
-
-      # Details:
-      #{violation_details}
-      """
-    end
-  end
-
-  defp add_violation_report_to_content(content, report) do
-    # Add report as comments at the top of the file
-    case String.split(content, "\n", parts: 2) do
-      [first_line, rest] ->
-        first_line <> "\n" <> report <> "\n" <> rest
-
-      [single_line] ->
-        single_line <> "\n" <> report
     end
   end
 end

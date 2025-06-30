@@ -6,13 +6,13 @@ defmodule TimelineGraphTest do
   doctest TimelineGraph
   alias TimelineGraph
   alias Timeline.AgentEntity
-  alias AriaEngine.State
+  alias AriaState
 
   describe("new/0") do
     test "creates empty timeline graph with StateV2" do
       timeline_graph = TimelineGraph.new()
       assert timeline_graph.entities == %{}
-      assert timeline_graph.state == %State{}
+      assert timeline_graph.state == %AriaState{}
       assert timeline_graph.bridge_strength == %{}
       assert timeline_graph.lod_promotion_queue == []
       assert timeline_graph.growth_triggers == %{}

@@ -179,6 +179,14 @@ defmodule AriaEngineCore do
   defdelegate get_subjects_with_fact(state, predicate, value), to: AriaEngineCore.State
 
   # Domain Management API - Delegate to internal Domain module
+  defdelegate new(module), to: AriaEngineCore.Domain, as: :new
+  defdelegate add_action(domain, name, spec), to: AriaEngineCore.Domain
+  defdelegate add_method(domain, name, spec), to: AriaEngineCore.Domain
+  defdelegate add_unigoal_method(domain, name, spec), to: AriaEngineCore.Domain
+  defdelegate add_multigoal_method(domain, name, function), to: AriaEngineCore.Domain
+  defdelegate add_multitodo_method(domain, name, function), to: AriaEngineCore.Domain
+  defdelegate set_entity_registry(domain, registry), to: AriaEngineCore.Domain
+  defdelegate set_temporal_specifications(domain, specs), to: AriaEngineCore.Domain
   defdelegate get_task_methods(domain, task_name), to: AriaEngineCore.Domain
   defdelegate get_unigoal_methods(domain, predicate), to: AriaEngineCore.Domain
   defdelegate get_multigoal_methods(domain), to: AriaEngineCore.Domain

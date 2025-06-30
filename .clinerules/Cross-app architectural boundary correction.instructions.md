@@ -23,17 +23,20 @@ Architectural violations in umbrella projects often indicate incorrect app bound
 **Phase 2: Determine correction approach**
 
 **Extract to new app when:**
+
 - **Distinct domain:** Functionality represents a separate logical domain (math, auth, storage)
 - **Cross-app reuse:** Multiple apps need the same functionality
 - **Specialized expertise:** Functionality requires domain-specific knowledge
 - **Independent evolution:** Logic changes independently from current app
 
 **Migrate to existing app when:**
+
 - **Natural fit:** Functionality logically belongs in existing app's domain
 - **Single consumer:** Only one app currently uses the functionality
 - **Tightly coupled:** Functionality is closely related to existing app's core purpose
 
 **Flatten within app when:**
+
 - **Simple nesting issue:** Only module depth violation, proper app boundary
 - **App-specific logic:** Functionality is unique to current app's domain
 - **No separation benefit:** Extraction would not improve architecture
@@ -150,11 +153,13 @@ AriaEngineCore.Domain.Methods → AriaCore.Methods
 ## Integration with existing instructions
 
 **Builds on:**
+
 - **INST-041:** Apps todo file management - provides umbrella app structure requirements
 - **INST-042:** Systematic cross-app dependency migration - handles dependency fixing
 - **INST-044:** Investigate before implementing tombstone pattern - provides investigation methodology
 
 **Complements:**
+
 - **INST-017:** Targeted solutions over generalized systems - each app serves focused purpose
 - **INST-019:** Local solutions over core modifications - keeps functionality in appropriate apps
 

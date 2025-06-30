@@ -62,6 +62,7 @@ This violates INST-045 umbrella app architectural boundaries requiring external 
 **Solution Found:** Functions exist but need proper app separation:
 
 **Domain Functions → AriaCore:**
+
 - `get_task_methods/2` in `AriaEngineCore.Domain.Methods` → `AriaCore.Methods`
 - `get_multigoal_methods/1` in `AriaEngineCore.Domain.Methods` → `AriaCore.Methods`
 - `get_multitodo_methods/1` in `AriaEngineCore.Domain.Methods` → `AriaCore.Methods`
@@ -70,6 +71,7 @@ This violates INST-045 umbrella app architectural boundaries requiring external 
 - `get_durative_action/2` in `AriaEngineCore.Domain.Core` → `AriaCore.Core`
 
 **Math Functions → New AriaMath App:**
+
 - `AriaEngineCore.Math.Quaternion` → `AriaMath.Quaternion`
 - `AriaEngineCore.Math.Matrix4` → `AriaMath.Matrix4`
 - `AriaEngineCore.Math.Vector3` → `AriaMath.Vector3`
