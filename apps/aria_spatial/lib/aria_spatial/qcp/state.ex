@@ -1,7 +1,7 @@
 # Copyright (c) 2025-present K. S. Ernest (iFire) Lee
 # SPDX-License-Identifier: MIT
 
-defmodule AriaMath.QCP.State do
+defmodule AriaSpatial.QCP.State do
   @moduledoc false
 
   alias AriaMath.{Vector3, Quaternion}

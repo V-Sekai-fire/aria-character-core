@@ -1,7 +1,7 @@
 # Copyright (c) 2025-present K. S. Ernest (iFire) Lee
 # SPDX-License-Identifier: MIT
 
-defmodule AriaMath.QCP.Validation do
+defmodule AriaSpatial.QCP.Validation do
   @moduledoc false
 
   alias AriaMath.Vector3

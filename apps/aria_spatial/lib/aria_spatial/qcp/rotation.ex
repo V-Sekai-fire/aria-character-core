@@ -1,11 +1,11 @@
 # Copyright (c) 2025-present K. S. Ernest (iFire) Lee
 # SPDX-License-Identifier: MIT
 
-defmodule AriaMath.QCP.Rotation do
+defmodule AriaSpatial.QCP.Rotation do
   @moduledoc false
 
   alias AriaMath.{Vector3, Quaternion}
-  alias AriaMath.QCP.Validation
+  alias AriaSpatial.QCP.Validation
 
   @doc false
   @spec calculate(map()) :: {:ok, Quaternion.t()} | {:error, term()}

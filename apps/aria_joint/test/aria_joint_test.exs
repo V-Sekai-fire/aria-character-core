@@ -1,10 +1,11 @@
 # Copyright (c) 2025-present K. S. Ernest (iFire) Lee
 # SPDX-License-Identifier: MIT
 
-defmodule AriaMath.JointTest do
+defmodule AriaJointTest do
   use ExUnit.Case, async: true
 
-  alias AriaMath.{Joint, Matrix4, Vector3, Quaternion}
+  alias AriaJoint.Joint
+  alias AriaMath.{Matrix4, Vector3, Quaternion}
 
   describe "new/1" do
     test "creates root node" do

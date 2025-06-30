@@ -3,486 +3,407 @@
 
 defmodule AriaMath do
   @moduledoc """
-  AriaMath provides mathematical operations and data structures for the Aria project.
+  Mathematical operations and data structures for 3D graphics and spatial computing.
 
-  This module serves as the main entry point for mathematical functionality, including:
+  AriaMath provides essential mathematical primitives for 3D graphics, spatial
+  computing, and coordinate transformations. This library includes optimized
+  implementations of vectors, quaternions, matrices, and geometric primitives.
 
-  - Vector and quaternion operations (`AriaMath.Vector3`, `AriaMath.Quaternion`)
-  - Matrix operations (`AriaMath.Matrix4`)
-  - Mathematical primitives following KHR Interactivity spec (`AriaMath.Primitives`)
-  - Transform hierarchy management (`AriaMath.Joint`)
-  - Optimal superposition calculations (`AriaMath.QCP`)
+  ## Core Components
 
-  ## External API Functions
+  - **Vector3**: 3D vector operations (addition, scaling, cross/dot products)
+  - **Quaternion**: Rotation representation with efficient composition
+  - **Matrix4**: 4x4 transformation matrices for 3D graphics
+  - **Primitives**: Basic geometric primitives and calculations
 
-  This module provides a clean external API for common mathematical operations while
-  delegating to internal modules for implementation details.
-
-  ## Examples
+  ## Usage
 
       # Vector operations
-      v1 = {1.0, 0.0, 0.0}
-      v2 = {0.0, 1.0, 0.0}
-      result = AriaMath.cross_product(v1, v2)
+      v1 = {1.0, 2.0, 3.0}
+      v2 = {4.0, 5.0, 6.0}
+      result = AriaMath.add(v1, v2)
 
-      # Matrix operations
-      matrix = AriaMath.identity_matrix()
-      transformed = AriaMath.multiply_matrices(matrix, matrix)
+      # Quaternion rotations
+      q = AriaMath.quaternion_from_axis_angle({0.0, 0.0, 1.0}, :math.pi / 2)
+      rotated = AriaMath.quaternion_rotate(q, {1.0, 0.0, 0.0})
 
-      # Quaternion operations
-      q = AriaMath.identity_quaternion()
-      normalized = AriaMath.normalize_quaternion(q)
+      # Matrix transformations
+      matrix = AriaMath.matrix4_translation({1.0, 2.0, 3.0})
+      point = AriaMath.matrix4_transform_point(matrix, {0.0, 0.0, 0.0})
 
+  ## Design Principles
+
+  - **Performance**: Optimized for real-time 3D graphics applications
+  - **Precision**: Careful handling of floating-point precision issues
+  - **Interoperability**: Standard tuple-based representations for compatibility
+  - **Safety**: Input validation and robust error handling
   """
 
-  alias AriaMath.{Vector3, Quaternion, Matrix4, Primitives, Joint, QCP}
-
-  ## Vector Operations
+  # Vector3 operations
+  alias AriaMath.Vector3
 
   @doc """
-  Create a new 3D vector.
+  Add two 3D vectors component-wise.
 
   ## Examples
 
-      iex> AriaMath.vector3(1.0, 2.0, 3.0)
-      {1.0, 2.0, 3.0}
-  """
-  @spec vector3(float(), float(), float()) :: Vector3.t()
-  def vector3(x, y, z), do: Vector3.new(x, y, z)
-
-  @doc """
-  Calculate vector cross product.
-
-  ## Examples
-
-      iex> AriaMath.cross_product({1.0, 0.0, 0.0}, {0.0, 1.0, 0.0})
-      {0.0, 0.0, 1.0}
-  """
-  @spec cross_product(Vector3.t(), Vector3.t()) :: Vector3.t()
-  def cross_product(v1, v2), do: Vector3.cross(v1, v2)
-
-  @doc """
-  Calculate vector dot product.
-
-  ## Examples
-
-      iex> AriaMath.dot_product({1.0, 0.0, 0.0}, {1.0, 0.0, 0.0})
-      1.0
-  """
-  @spec dot_product(Vector3.t(), Vector3.t()) :: float()
-  def dot_product(v1, v2), do: Vector3.dot(v1, v2)
-
-  @doc """
-  Calculate vector length.
-
-  ## Examples
-
-      iex> AriaMath.vector_length({3.0, 4.0, 0.0})
-      5.0
-  """
-  @spec vector_length(Vector3.t()) :: float()
-  def vector_length(v), do: Vector3.length(v)
-
-  @doc """
-  Normalize a vector.
-
-  ## Examples
-
-      iex> {normalized, true} = AriaMath.normalize_vector({3.0, 4.0, 0.0})
-      iex> AriaMath.vector_length(normalized)
-      1.0
-  """
-  @spec normalize_vector(Vector3.t()) :: {Vector3.t(), boolean()}
-  def normalize_vector(v), do: Vector3.normalize(v)
-
-  @doc """
-  Add two vectors.
-
-  ## Examples
-
-      iex> AriaMath.add_vectors({1.0, 2.0, 3.0}, {4.0, 5.0, 6.0})
+      iex> AriaMath.add({1.0, 2.0, 3.0}, {4.0, 5.0, 6.0})
       {5.0, 7.0, 9.0}
   """
-  @spec add_vectors(Vector3.t(), Vector3.t()) :: Vector3.t()
-  def add_vectors(v1, v2), do: Vector3.add(v1, v2)
+  defdelegate add(v1, v2), to: Vector3
 
   @doc """
-  Subtract two vectors.
+  Subtract two 3D vectors component-wise.
 
   ## Examples
 
-      iex> AriaMath.subtract_vectors({4.0, 5.0, 6.0}, {1.0, 2.0, 3.0})
+      iex> AriaMath.subtract({4.0, 5.0, 6.0}, {1.0, 2.0, 3.0})
       {3.0, 3.0, 3.0}
   """
-  @spec subtract_vectors(Vector3.t(), Vector3.t()) :: Vector3.t()
-  def subtract_vectors(v1, v2), do: Vector3.sub(v1, v2)
+  defdelegate subtract(v1, v2), to: Vector3
 
   @doc """
-  Scale a vector by a scalar.
+  Scale a 3D vector by a scalar value.
 
   ## Examples
 
-      iex> AriaMath.scale_vector({1.0, 2.0, 3.0}, 2.0)
+      iex> AriaMath.scale({1.0, 2.0, 3.0}, 2.0)
       {2.0, 4.0, 6.0}
   """
-  @spec scale_vector(Vector3.t(), float()) :: Vector3.t()
-  def scale_vector(v, scalar), do: Vector3.mul_scalar(v, scalar)
-
-  ## Quaternion Operations
+  defdelegate scale(vector, scalar), to: Vector3
 
   @doc """
-  Create a new quaternion.
+  Compute the dot product of two 3D vectors.
 
   ## Examples
 
-      iex> AriaMath.quaternion(0.0, 0.0, 0.0, 1.0)
-      {0.0, 0.0, 0.0, 1.0}
+      iex> AriaMath.dot({1.0, 2.0, 3.0}, {4.0, 5.0, 6.0})
+      32.0
   """
-  @spec quaternion(float(), float(), float(), float()) :: Quaternion.t()
-  def quaternion(x, y, z, w), do: Quaternion.new(x, y, z, w)
+  defdelegate dot(v1, v2), to: Vector3
 
   @doc """
-  Create identity quaternion.
+  Compute the cross product of two 3D vectors.
 
   ## Examples
 
-      iex> AriaMath.identity_quaternion()
-      {0.0, 0.0, 0.0, 1.0}
+      iex> AriaMath.cross({1.0, 0.0, 0.0}, {0.0, 1.0, 0.0})
+      {0.0, 0.0, 1.0}
   """
-  @spec identity_quaternion() :: Quaternion.t()
-  def identity_quaternion(), do: Quaternion.identity()
+  defdelegate cross(v1, v2), to: Vector3
 
   @doc """
-  Normalize a quaternion.
+  Compute the length (magnitude) of a 3D vector.
 
   ## Examples
 
-      iex> {normalized, true} = AriaMath.normalize_quaternion({0.0, 0.0, 0.0, 2.0})
-      iex> {_, _, _, w} = normalized
-      iex> abs(w - 1.0) < 1.0e-10
-      true
+      iex> AriaMath.length({3.0, 4.0, 0.0})
+      5.0
   """
-  @spec normalize_quaternion(Quaternion.t()) :: {Quaternion.t(), boolean()}
-  def normalize_quaternion(q), do: Quaternion.normalize(q)
+  defdelegate length(vector), to: Vector3
 
   @doc """
-  Multiply two quaternions.
+  Normalize a 3D vector to unit length.
 
   ## Examples
 
-      iex> q1 = AriaMath.identity_quaternion()
-      iex> q2 = AriaMath.identity_quaternion()
-      iex> AriaMath.multiply_quaternions(q1, q2)
-      {0.0, 0.0, 0.0, 1.0}
+      iex> AriaMath.normalize({3.0, 4.0, 0.0})
+      {0.6, 0.8, 0.0}
   """
-  @spec multiply_quaternions(Quaternion.t(), Quaternion.t()) :: Quaternion.t()
-  def multiply_quaternions(q1, q2), do: Quaternion.multiply(q1, q2)
+  defdelegate normalize(vector), to: Vector3
 
   @doc """
-  Create quaternion from axis and angle.
+  Compute distance between two 3D points.
 
   ## Examples
 
-      iex> axis = {0.0, 0.0, 1.0}
-      iex> angle = :math.pi() / 2.0
-      iex> q = AriaMath.quaternion_from_axis_angle(axis, angle)
-      iex> {_, _, z, w} = q
-      iex> abs(z - :math.sin(:math.pi() / 4.0)) < 1.0e-10
-      true
+      iex> AriaMath.distance({0.0, 0.0, 0.0}, {3.0, 4.0, 0.0})
+      5.0
   """
-  @spec quaternion_from_axis_angle(Vector3.t(), float()) :: Quaternion.t()
-  def quaternion_from_axis_angle(axis, angle), do: Quaternion.from_axis_angle(axis, angle)
+  defdelegate distance(point1, point2), to: Vector3
 
   @doc """
-  Rotate a vector by a quaternion.
+  Linear interpolation between two 3D vectors.
 
   ## Examples
 
-      iex> vector = {1.0, 0.0, 0.0}
-      iex> rotation = AriaMath.identity_quaternion()
-      iex> AriaMath.rotate_vector(rotation, vector)
-      {1.0, 0.0, 0.0}
+      iex> AriaMath.lerp({0.0, 0.0, 0.0}, {1.0, 1.0, 1.0}, 0.5)
+      {0.5, 0.5, 0.5}
   """
-  @spec rotate_vector(Quaternion.t(), Vector3.t()) :: Vector3.t()
-  def rotate_vector(q, v), do: Quaternion.rotate_vector(q, v)
+  defdelegate lerp(v1, v2, t), to: Vector3
 
-  ## Matrix Operations
+  # Quaternion operations
+  alias AriaMath.Quaternion
 
   @doc """
-  Create identity matrix.
+  Create a quaternion from axis-angle representation.
 
   ## Examples
 
-      iex> matrix = AriaMath.identity_matrix()
-      iex> {m0, m1, m2, m3, m4, m5, m6, m7, m8, m9, m10, m11, m12, m13, m14, m15} = matrix
-      iex> m0 == 1.0 and m5 == 1.0 and m10 == 1.0 and m15 == 1.0
-      true
+      iex> AriaMath.quaternion_from_axis_angle({0.0, 0.0, 1.0}, :math.pi / 2)
+      {0.0, 0.0, 0.7071067811865476, 0.7071067811865475}
   """
-  @spec identity_matrix() :: Matrix4.t()
-  def identity_matrix(), do: Matrix4.identity()
+  defdelegate quaternion_from_axis_angle(axis, angle), to: Quaternion, as: :from_axis_angle
 
   @doc """
-  Multiply two matrices.
+  Create a quaternion from Euler angles (yaw, pitch, roll).
 
   ## Examples
 
-      iex> m1 = AriaMath.identity_matrix()
-      iex> m2 = AriaMath.identity_matrix()
-      iex> AriaMath.multiply_matrices(m1, m2)
+      iex> AriaMath.quaternion_from_euler(0.0, 0.0, :math.pi / 2)
+      {0.0, 0.0, 0.7071067811865476, 0.7071067811865475}
+  """
+  defdelegate quaternion_from_euler(yaw, pitch, roll), to: Quaternion, as: :from_euler
+
+  @doc """
+  Multiply two quaternions (compose rotations).
+
+  ## Examples
+
+      q1 = AriaMath.quaternion_from_axis_angle({0.0, 0.0, 1.0}, :math.pi / 4)
+      q2 = AriaMath.quaternion_from_axis_angle({0.0, 0.0, 1.0}, :math.pi / 4)
+      result = AriaMath.quaternion_multiply(q1, q2)
+  """
+  defdelegate quaternion_multiply(q1, q2), to: Quaternion, as: :multiply
+
+  @doc """
+  Normalize a quaternion to unit length.
+
+  ## Examples
+
+      q = {0.0, 0.0, 1.0, 1.0}
+      normalized = AriaMath.quaternion_normalize(q)
+  """
+  defdelegate quaternion_normalize(quaternion), to: Quaternion, as: :normalize
+
+  @doc """
+  Rotate a 3D vector by a quaternion.
+
+  ## Examples
+
+      q = AriaMath.quaternion_from_axis_angle({0.0, 0.0, 1.0}, :math.pi / 2)
+      rotated = AriaMath.quaternion_rotate(q, {1.0, 0.0, 0.0})
+  """
+  defdelegate quaternion_rotate(quaternion, vector), to: Quaternion, as: :rotate
+
+  @doc """
+  Compute the conjugate of a quaternion.
+
+  ## Examples
+
+      q = {1.0, 2.0, 3.0, 4.0}
+      conjugate = AriaMath.quaternion_conjugate(q)
+  """
+  defdelegate quaternion_conjugate(quaternion), to: Quaternion, as: :conjugate
+
+  @doc """
+  Spherical linear interpolation between two quaternions.
+
+  ## Examples
+
+      q1 = AriaMath.quaternion_from_axis_angle({0.0, 0.0, 1.0}, 0.0)
+      q2 = AriaMath.quaternion_from_axis_angle({0.0, 0.0, 1.0}, :math.pi / 2)
+      result = AriaMath.quaternion_slerp(q1, q2, 0.5)
+  """
+  defdelegate quaternion_slerp(q1, q2, t), to: Quaternion, as: :slerp
+
+  # Matrix4 operations
+  alias AriaMath.Matrix4
+
+  @doc """
+  Create a 4x4 identity matrix.
+
+  ## Examples
+
+      iex> AriaMath.matrix4_identity()
       {1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0}
   """
-  @spec multiply_matrices(Matrix4.t(), Matrix4.t()) :: Matrix4.t()
-  def multiply_matrices(m1, m2), do: Matrix4.multiply(m1, m2)
+  defdelegate matrix4_identity(), to: Matrix4, as: :identity
 
   @doc """
-  Create translation matrix.
+  Create a translation matrix.
 
   ## Examples
 
-      iex> translation = {1.0, 2.0, 3.0}
-      iex> matrix = AriaMath.translation_matrix(translation)
-      iex> {_, _, _, _, _, _, _, _, _, _, _, _, tx, ty, tz, _} = matrix
-      iex> {tx, ty, tz} == translation
+      iex> AriaMath.matrix4_translation({1.0, 2.0, 3.0})
+      {1.0, 0.0, 0.0, 1.0, 0.0, 1.0, 0.0, 2.0, 0.0, 0.0, 1.0, 3.0, 0.0, 0.0, 0.0, 1.0}
+  """
+  defdelegate matrix4_translation(translation), to: Matrix4, as: :translation
+
+  @doc """
+  Create a scaling matrix.
+
+  ## Examples
+
+      iex> AriaMath.matrix4_scaling({2.0, 3.0, 4.0})
+      {2.0, 0.0, 0.0, 0.0, 0.0, 3.0, 0.0, 0.0, 0.0, 0.0, 4.0, 0.0, 0.0, 0.0, 0.0, 1.0}
+  """
+  defdelegate matrix4_scaling(scale), to: Matrix4, as: :scaling
+
+  @doc """
+  Create a rotation matrix from a quaternion.
+
+  ## Examples
+
+      q = AriaMath.quaternion_from_axis_angle({0.0, 0.0, 1.0}, :math.pi / 2)
+      matrix = AriaMath.matrix4_rotation(q)
+  """
+  defdelegate matrix4_rotation(quaternion), to: Matrix4, as: :rotation
+
+  @doc """
+  Multiply two 4x4 matrices.
+
+  ## Examples
+
+      m1 = AriaMath.matrix4_translation({1.0, 0.0, 0.0})
+      m2 = AriaMath.matrix4_scaling({2.0, 2.0, 2.0})
+      result = AriaMath.matrix4_multiply(m1, m2)
+  """
+  defdelegate matrix4_multiply(m1, m2), to: Matrix4, as: :multiply
+
+  @doc """
+  Transform a 3D point by a 4x4 matrix.
+
+  ## Examples
+
+      matrix = AriaMath.matrix4_translation({1.0, 2.0, 3.0})
+      transformed = AriaMath.matrix4_transform_point(matrix, {0.0, 0.0, 0.0})
+  """
+  defdelegate matrix4_transform_point(matrix, point), to: Matrix4, as: :transform_point
+
+  @doc """
+  Transform a 3D vector by a 4x4 matrix (ignores translation).
+
+  ## Examples
+
+      matrix = AriaMath.matrix4_scaling({2.0, 2.0, 2.0})
+      transformed = AriaMath.matrix4_transform_vector(matrix, {1.0, 1.0, 1.0})
+  """
+  defdelegate matrix4_transform_vector(matrix, vector), to: Matrix4, as: :transform_vector
+
+  @doc """
+  Compute the inverse of a 4x4 matrix.
+
+  ## Examples
+
+      matrix = AriaMath.matrix4_translation({1.0, 2.0, 3.0})
+      {inverse, valid} = AriaMath.matrix4_inverse(matrix)
+  """
+  defdelegate matrix4_inverse(matrix), to: Matrix4, as: :inverse
+
+  @doc """
+  Compute the transpose of a 4x4 matrix.
+
+  ## Examples
+
+      matrix = AriaMath.matrix4_translation({1.0, 2.0, 3.0})
+      transposed = AriaMath.matrix4_transpose(matrix)
+  """
+  defdelegate matrix4_transpose(matrix), to: Matrix4, as: :transpose
+
+  @doc """
+  Decompose a 4x4 transformation matrix into translation, rotation, and scale.
+
+  ## Examples
+
+      matrix = AriaMath.matrix4_translation({1.0, 2.0, 3.0})
+      {translation, rotation, scale} = AriaMath.matrix4_decompose(matrix)
+  """
+  defdelegate matrix4_decompose(matrix), to: Matrix4, as: :decompose
+
+  @doc """
+  Compose a 4x4 transformation matrix from translation, rotation, and scale.
+
+  ## Examples
+
+      translation = {1.0, 2.0, 3.0}
+      rotation = AriaMath.quaternion_from_axis_angle({0.0, 0.0, 1.0}, :math.pi / 4)
+      scale = {2.0, 2.0, 2.0}
+      matrix = AriaMath.matrix4_compose(translation, rotation, scale)
+  """
+  defdelegate matrix4_compose(translation, rotation, scale), to: Matrix4, as: :compose
+
+  # Primitives operations
+  alias AriaMath.Primitives
+
+  @doc """
+  Check if two floating-point numbers are approximately equal.
+
+  ## Examples
+
+      iex> AriaMath.approximately_equal(1.0, 1.0000001)
       true
+
+      iex> AriaMath.approximately_equal(1.0, 1.1)
+      false
   """
-  @spec translation_matrix(Vector3.t()) :: Matrix4.t()
-  def translation_matrix(translation), do: Matrix4.translation(translation)
+  defdelegate approximately_equal(a, b), to: Primitives
 
   @doc """
-  Create scaling matrix.
+  Check if two floating-point numbers are approximately equal with custom tolerance.
 
   ## Examples
 
-      iex> scale = {2.0, 3.0, 4.0}
-      iex> matrix = AriaMath.scaling_matrix(scale)
-      iex> {sx, _, _, _, _, sy, _, _, _, _, sz, _, _, _, _, _} = matrix
-      iex> {sx, sy, sz} == scale
+      iex> AriaMath.approximately_equal(1.0, 1.01, 0.1)
       true
+
+      iex> AriaMath.approximately_equal(1.0, 1.01, 0.001)
+      false
   """
-  @spec scaling_matrix(Vector3.t()) :: Matrix4.t()
-  def scaling_matrix(scale), do: Matrix4.scaling(scale)
+  defdelegate approximately_equal(a, b, tolerance), to: Primitives
 
   @doc """
-  Create rotation matrix from quaternion.
+  Clamp a value between minimum and maximum bounds.
 
   ## Examples
 
-      iex> q = AriaMath.identity_quaternion()
-      iex> matrix = AriaMath.rotation_matrix(q)
-      iex> matrix == AriaMath.identity_matrix()
-      true
+      iex> AriaMath.clamp(5.0, 0.0, 10.0)
+      5.0
+
+      iex> AriaMath.clamp(-1.0, 0.0, 10.0)
+      0.0
+
+      iex> AriaMath.clamp(15.0, 0.0, 10.0)
+      10.0
   """
-  @spec rotation_matrix(Quaternion.t()) :: Matrix4.t()
-  def rotation_matrix(q), do: Matrix4.rotation(q)
+  defdelegate clamp(value, min, max), to: Primitives
 
   @doc """
-  Transform a point with a matrix.
+  Linear interpolation between two values.
 
   ## Examples
 
-      iex> point = {1.0, 2.0, 3.0}
-      iex> matrix = AriaMath.identity_matrix()
-      iex> AriaMath.transform_point(matrix, point)
-      {1.0, 2.0, 3.0}
+      iex> AriaMath.lerp_scalar(0.0, 10.0, 0.5)
+      5.0
+
+      iex> AriaMath.lerp_scalar(0.0, 10.0, 0.25)
+      2.5
   """
-  @spec transform_point(Matrix4.t(), Vector3.t()) :: Vector3.t()
-  def transform_point(matrix, point), do: Matrix4.transform_point(matrix, point)
+  defdelegate lerp_scalar(a, b, t), to: Primitives, as: :lerp
 
   @doc """
-  Calculate matrix determinant.
+  Convert degrees to radians.
 
   ## Examples
 
-      iex> matrix = AriaMath.identity_matrix()
-      iex> AriaMath.matrix_determinant(matrix)
-      1.0
-  """
-  @spec matrix_determinant(Matrix4.t()) :: float()
-  def matrix_determinant(matrix), do: Matrix4.determinant(matrix)
+      iex> AriaMath.deg_to_rad(180.0)
+      3.141592653589793
 
-  ## Mathematical Primitives
+      iex> AriaMath.deg_to_rad(90.0)
+      1.5707963267948966
+  """
+  defdelegate deg_to_rad(degrees), to: Primitives
 
   @doc """
-  Calculate absolute value of a float.
+  Convert radians to degrees.
 
   ## Examples
 
-      iex> AriaMath.abs_float(-5.5)
-      5.5
+      iex> AriaMath.rad_to_deg(:math.pi)
+      180.0
+
+      iex> AriaMath.rad_to_deg(:math.pi / 2)
+      90.0
   """
-  @spec abs_float(float()) :: float()
-  def abs_float(x), do: Primitives.abs_float(x)
-
-  @doc """
-  Calculate sine of an angle in radians.
-
-  ## Examples
-
-      iex> result = AriaMath.sin_float(:math.pi() / 2.0)
-      iex> abs(result - 1.0) < 1.0e-10
-      true
-  """
-  @spec sin_float(float()) :: float()
-  def sin_float(x), do: Primitives.sin_float(x)
-
-  @doc """
-  Calculate cosine of an angle in radians.
-
-  ## Examples
-
-      iex> result = AriaMath.cos_float(0.0)
-      iex> abs(result - 1.0) < 1.0e-10
-      true
-  """
-  @spec cos_float(float()) :: float()
-  def cos_float(x), do: Primitives.cos_float(x)
-
-  @doc """
-  Calculate square root.
-
-  ## Examples
-
-      iex> AriaMath.sqrt_float(4.0)
-      2.0
-  """
-  @spec sqrt_float(float()) :: float()
-  def sqrt_float(x), do: Primitives.sqrt_float(x)
-
-  @doc """
-  Clamp a value between minimum and maximum.
-
-  ## Examples
-
-      iex> AriaMath.clamp_float(5.0, 0.0, 3.0)
-      3.0
-  """
-  @spec clamp_float(float(), float(), float()) :: float()
-  def clamp_float(value, min_val, max_val), do: Primitives.clamp_float(value, min_val, max_val)
-
-  ## Transform Hierarchy (Joint Operations)
-
-  @doc """
-  Create a new joint for transform hierarchy.
-
-  ## Examples
-
-      iex> {:ok, joint} = AriaMath.create_joint()
-      iex> is_map(joint)
-      true
-  """
-  @spec create_joint(keyword()) :: {:ok, Joint.t()} | {:error, term()}
-  def create_joint(opts \\ []), do: Joint.new(opts)
-
-  @doc """
-  Set transform of a joint.
-
-  ## Examples
-
-      iex> {:ok, joint} = AriaMath.create_joint()
-      iex> transform = AriaMath.identity_matrix()
-      iex> updated_joint = AriaMath.set_joint_transform(joint, transform)
-      iex> is_map(updated_joint)
-      true
-  """
-  @spec set_joint_transform(Joint.t(), Matrix4.t()) :: Joint.t() | {:error, term()}
-  def set_joint_transform(joint, transform), do: Joint.set_transform(joint, transform)
-
-  @doc """
-  Get global transform of a joint.
-
-  ## Examples
-
-      iex> {:ok, joint} = AriaMath.create_joint()
-      iex> transform = AriaMath.get_joint_global_transform(joint)
-      iex> transform == AriaMath.identity_matrix()
-      true
-  """
-  @spec get_joint_global_transform(Joint.t()) :: Matrix4.t()
-  def get_joint_global_transform(joint), do: Joint.get_global_transform(joint)
-
-  ## Optimal Superposition (QCP Operations)
-
-  @doc """
-  Calculate optimal rotation and translation to align two point sets.
-
-  ## Examples
-
-      iex> moved = [{1.0, 0.0, 0.0}]
-      iex> target = [{0.0, 1.0, 0.0}]
-      iex> {:ok, {rotation, translation}} = AriaMath.superpose_points(moved, target)
-      iex> is_tuple(rotation) and is_tuple(translation)
-      true
-  """
-  @spec superpose_points([Vector3.t()], [Vector3.t()], [float()], boolean()) ::
-          {:ok, {Quaternion.t(), Vector3.t()}} | {:error, term()}
-  def superpose_points(moved, target, weights \\ [], translate \\ true) do
-    QCP.weighted_superpose(moved, target, weights, translate)
-  end
-
-  ## Constants
-
-  @doc """
-  Mathematical constant π (pi).
-
-  ## Examples
-
-      iex> pi = AriaMath.pi()
-      iex> abs(pi - 3.141592653589793) < 1.0e-10
-      true
-  """
-  @spec pi() :: float()
-  def pi(), do: Primitives.pi()
-
-  @doc """
-  Mathematical constant e (Euler's number).
-
-  ## Examples
-
-      iex> e = AriaMath.e()
-      iex> abs(e - 2.718281828459045) < 1.0e-10
-      true
-  """
-  @spec e() :: float()
-  def e(), do: Primitives.e()
-
-  ## Utility Functions
-
-  @doc """
-  Check if two vectors are approximately equal within tolerance.
-
-  ## Examples
-
-      iex> v1 = {1.0, 2.0, 3.0}
-      iex> v2 = {1.0000001, 2.0000001, 3.0000001}
-      iex> AriaMath.vectors_equal?(v1, v2, 1.0e-5)
-      true
-  """
-  @spec vectors_equal?(Vector3.t(), Vector3.t(), float()) :: boolean()
-  def vectors_equal?(v1, v2, tolerance \\ 1.0e-6), do: Vector3.equal?(v1, v2, tolerance)
-
-  @doc """
-  Check if two quaternions are approximately equal within tolerance.
-
-  ## Examples
-
-      iex> q1 = {0.0, 0.0, 0.0, 1.0}
-      iex> q2 = {0.0000001, 0.0000001, 0.0000001, 1.0000001}
-      iex> AriaMath.quaternions_equal?(q1, q2, 1.0e-5)
-      true
-  """
-  @spec quaternions_equal?(Quaternion.t(), Quaternion.t(), float()) :: boolean()
-  def quaternions_equal?(q1, q2, tolerance \\ 1.0e-6), do: Quaternion.equal?(q1, q2, tolerance)
-
-  @doc """
-  Check if two matrices are approximately equal within tolerance.
-
-  ## Examples
-
-      iex> m1 = AriaMath.identity_matrix()
-      iex> m2 = AriaMath.identity_matrix()
-      iex> AriaMath.matrices_equal?(m1, m2)
-      true
-  """
-  @spec matrices_equal?(Matrix4.t(), Matrix4.t()) :: boolean()
-  def matrices_equal?(m1, m2), do: Matrix4.equal?(m1, m2)
+  defdelegate rad_to_deg(radians), to: Primitives
 end
