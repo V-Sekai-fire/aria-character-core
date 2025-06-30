@@ -25,34 +25,42 @@
 
 ## High Priority Issues
 
-### 2. Missing AriaEngineCore.Domain Module
+### 2. ~~Missing AriaEngineCore.Domain Module~~ **TOMBSTONED ✅**
 
-**Priority:** HIGH - Breaks external API delegation
+**Status:** SOLVED - Functions exist in internal modules, fix delegation
 
-**Undefined Functions:**
+**Problem:** `AriaEngineCore` was delegating to non-existent `AriaEngineCore.Domain` module
 
-- `AriaEngineCore.Domain.get_task_methods/2`
-- `AriaEngineCore.Domain.get_unigoal_methods/2`
-- `AriaEngineCore.Domain.get_multigoal_methods/1`
-- `AriaEngineCore.Domain.get_multitodo_methods/1`
-- `AriaEngineCore.Domain.get_action_metadata/2`
-- `AriaEngineCore.Domain.get_entity_registry/1`
-- `AriaEngineCore.Domain.get_durative_action/2`
-- `AriaEngineCore.Domain.execute_action/4`
-- `AriaEngineCore.Domain.new/1`
-- `AriaEngineCore.Domain.add_action/3`
-- `AriaEngineCore.Domain.add_method/3`
-- `AriaEngineCore.Domain.add_multigoal_method/3`
-- `AriaEngineCore.Domain.add_multitodo_method/3`
-- `AriaEngineCore.Domain.add_unigoal_method/3`
-- `AriaEngineCore.Domain.set_entity_registry/2`
-- `AriaEngineCore.Domain.set_temporal_specifications/2`
+**Solution Found:** All functions exist in appropriate internal modules:
+- Core functions in `AriaEngineCore.Domain.Core`
+- Method functions in `AriaEngineCore.Domain.Methods`  
+- Action functions in `AriaEngineCore.Domain.Actions`
 
-**Affected Files:**
+**Fix Required:** Update delegation lines in `lib/aria_engine_core.ex`:
 
-- `lib/aria_engine_core.ex` (external API delegation)
-- `lib/aria_engine_core/plan.ex`
-- `lib/aria_engine_core/plan/utils.ex`
+```elixir
+# Change from:
+defdelegate get_task_methods(domain, task_name), to: AriaEngineCore.Domain
+defdelegate get_unigoal_methods(domain, predicate), to: AriaEngineCore.Domain
+defdelegate get_multigoal_methods(domain), to: AriaEngineCore.Domain
+defdelegate get_multitodo_methods(domain), to: AriaEngineCore.Domain
+defdelegate get_action_metadata(domain, action_name), to: AriaEngineCore.Domain
+defdelegate get_entity_registry(domain), to: AriaEngineCore.Domain
+defdelegate get_durative_action(domain, action_name), to: AriaEngineCore.Domain
+defdelegate execute_action(domain, state, action_name, args), to: AriaEngineCore.Domain
+
+# Change to:
+defdelegate get_task_methods(domain, task_name), to: AriaEngineCore.Domain.Methods
+defdelegate get_unigoal_methods(domain, predicate), to: AriaEngineCore.Domain.Methods
+defdelegate get_multigoal_methods(domain), to: AriaEngineCore.Domain.Methods
+defdelegate get_multitodo_methods(domain), to: AriaEngineCore.Domain.Methods
+defdelegate get_action_metadata(domain, action_name), to: AriaEngineCore.Domain.Actions
+defdelegate get_entity_registry(domain), to: AriaEngineCore.Domain.Core
+defdelegate get_durative_action(domain, action_name), to: AriaEngineCore.Domain.Core
+defdelegate execute_action(domain, state, action_name, args), to: AriaEngineCore.Domain.Actions
+```
+
+**Note:** Creating a new `AriaEngineCore.Domain` module would violate clean architecture by accessing internal APIs.
 
 ### 3. Missing AriaHybridPlanner.Core Module
 
