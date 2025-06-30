@@ -35,6 +35,11 @@ defmodule AriaHybridPlanner do
   defdelegate replan(coordinator, domain, state, plan, fail_node_id, opts \\ []), to: AriaHybridPlanner.Core
   defdelegate plan_and_execute(coordinator, domain, state, goals, opts \\ []), to: AriaHybridPlanner.Core
 
+  # Engine integration functions for AriaEngineCore compatibility
+  defdelegate plan_only(domain, state, goals), to: AriaHybridPlanner.EngineIntegration, as: :plan
+  defdelegate run_lazy(domain, state, goals), to: AriaHybridPlanner.EngineIntegration
+  defdelegate run_lazy_tree(domain, state, solution_tree), to: AriaHybridPlanner.EngineIntegration
+
   @spec version() :: String.t()
   @doc """
   Returns the version of the AriaHybridPlanner application.
