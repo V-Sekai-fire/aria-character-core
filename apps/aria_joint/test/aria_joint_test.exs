@@ -5,7 +5,7 @@ defmodule AriaJointTest do
   use ExUnit.Case, async: true
 
   alias AriaJoint.Joint
-  alias AriaMath.{Matrix4, Vector3, Quaternion}
+  alias AriaMath.{Matrix4, Quaternion}
 
   describe "new/1" do
     test "creates root node" do
