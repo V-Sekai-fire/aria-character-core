@@ -325,7 +325,7 @@ defmodule AriaQcpTest do
     @surgical_tolerance 1.0e-8         # High precision required for surgical applications
 
     # Helper functions to calculate actual jerk from QCP transformation results
-    defp calculate_angular_jerk({x, y, z, w}) do
+    defp calculate_angular_jerk({x, y, z, _w}) do
       # Extract rotation angle from quaternion vector part
       vector_magnitude = :math.sqrt(x*x + y*y + z*z)
 
