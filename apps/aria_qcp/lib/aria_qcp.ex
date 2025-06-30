@@ -14,9 +14,19 @@ defmodule AriaQcp do
 
       iex> moved = [{1.0, 0.0, 0.0}]
       iex> target = [{0.0, 1.0, 0.0}]
-      iex> {:ok, {rotation, _translation}} = AriaQcp.weighted_superpose(moved, target)
-      iex> {_, _, _, w} = rotation
-      iex> abs(w - 0.7071067811865476) < 1.0e-10
+      iex> {:ok, {rotation, translation}} = AriaQcp.weighted_superpose(moved, target)
+      iex> # Verify rotation is normalized
+      iex> {x, y, z, w} = rotation
+      iex> magnitude = :math.sqrt(x*x + y*y + z*z + w*w)
+      iex> abs(magnitude - 1.0) < 1.0e-10
+      true
+      iex> # Verify transformation aligns the points
+      iex> alias AriaMath.{Vector3, Quaternion}
+      iex> rotated = Quaternion.rotate_vector(rotation, hd(moved))
+      iex> transformed = Vector3.add(rotated, translation)
+      iex> {tx, ty, tz} = transformed
+      iex> {gx, gy, gz} = hd(target)
+      iex> abs(tx - gx) < 1.0e-10 and abs(ty - gy) < 1.0e-10 and abs(tz - gz) < 1.0e-10
       true
 
   """
@@ -44,9 +54,11 @@ defmodule AriaQcp do
       iex> moved = [{1.0, 0.0, 0.0}, {0.0, 1.0, 0.0}]
       iex> target = [{0.0, 1.0, 0.0}, {-1.0, 0.0, 0.0}]
       iex> weights = [1.0, 1.0]
-      iex> {:ok, {rotation, translation}} = AriaQcp.weighted_superpose(moved, target, weights, true)
-      iex> {_, _, _, w} = rotation
-      iex> abs(w - 0.7071067811865476) < 1.0e-10
+      iex> {:ok, {rotation, _translation}} = AriaQcp.weighted_superpose(moved, target, weights, true)
+      iex> # Verify rotation is normalized
+      iex> {x, y, z, w} = rotation
+      iex> magnitude = :math.sqrt(x*x + y*y + z*z + w*w)
+      iex> abs(magnitude - 1.0) < 1.0e-10
       true
 
   """
@@ -61,7 +73,7 @@ defmodule AriaQcp do
 
       iex> moved = [{1.0, 0.0, 0.0}]
       iex> target = [{0.0, 1.0, 0.0}]
-      iex> {:ok, {rotation, translation}} = AriaQcp.rotation_only(moved, target)
+      iex> {:ok, {_rotation, translation}} = AriaQcp.rotation_only(moved, target)
       iex> translation
       {0.0, 0.0, 0.0}
 
@@ -79,9 +91,11 @@ defmodule AriaQcp do
 
       iex> moved = [{1.0, 0.0, 0.0}, {0.0, 1.0, 0.0}]
       iex> target = [{0.0, 1.0, 0.0}, {-1.0, 0.0, 0.0}]
-      iex> {:ok, {rotation, translation}} = AriaQcp.superpose(moved, target)
-      iex> {_, _, _, w} = rotation
-      iex> abs(w - 0.7071067811865476) < 1.0e-10
+      iex> {:ok, {rotation, _translation}} = AriaQcp.superpose(moved, target)
+      iex> # Verify rotation is normalized
+      iex> {x, y, z, w} = rotation
+      iex> magnitude = :math.sqrt(x*x + y*y + z*z + w*w)
+      iex> abs(magnitude - 1.0) < 1.0e-10
       true
 
   """

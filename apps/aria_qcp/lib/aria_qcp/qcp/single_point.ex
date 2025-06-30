@@ -9,6 +9,7 @@ defmodule AriaQcp.QCP.SinglePoint do
   """
 
   alias AriaMath.{Vector3, Quaternion}
+  alias AriaQcp.QCP.Utils
 
   @doc """
   Calculates rotation quaternion for aligning two single points.
@@ -90,13 +91,8 @@ defmodule AriaQcp.QCP.SinglePoint do
           end
       end
 
-      # Ensure canonical representation (w >= 0)
-      {x, y, z, w} = quaternion
-      final_quaternion = if w >= 0.0 do
-        {x, y, z, w}
-      else
-        {-x, -y, -z, -w}
-      end
+      # Apply RMD check to ensure pure rotation
+      final_quaternion = Utils.apply_rmd_flipping_check(quaternion)
 
       {:ok, final_quaternion}
     end

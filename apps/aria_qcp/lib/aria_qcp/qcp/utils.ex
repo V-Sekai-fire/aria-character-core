@@ -33,43 +33,19 @@ defmodule AriaQcp.QCP.Utils do
   end
 
   @doc """
-  Applies RMD (Rotation Matrix Determinant) flipping check to quaternion.
+  Ensures canonical quaternion representation with w >= 0.
 
-  The QCP algorithm produces quaternions in a different convention than expected by tests.
-  This function converts from the QCP internal convention to the expected test convention.
+  This provides a consistent quaternion representation without the complex
+  RMD flipping logic that was causing sign issues.
   """
   @spec apply_rmd_flipping_check(Quaternion.t()) :: Quaternion.t()
   def apply_rmd_flipping_check({x, y, z, w}) do
-    # The QCP algorithm produces quaternions in a different convention than expected by tests
-    # We need to apply a conjugate (negate x, y, z) to flip the rotation direction
-    # This converts from the QCP internal convention to the expected test convention
-
-    # First, ensure w >= 0 for canonical quaternion representation
-    {canonical_x, canonical_y, canonical_z, canonical_w} =
-      if w < 0.0 do
-        {-x, -y, -z, -w}
-      else
-        {x, y, z, w}
-      end
-
-    # Apply quaternion conjugate to flip rotation direction
-    # This effectively inverts the rotation to match expected test behavior
-    conjugate_quaternion = {-canonical_x, -canonical_y, -canonical_z, canonical_w}
-
-    # Verify the quaternion is still normalized after the conversion
-    {cx, cy, cz, cw} = conjugate_quaternion
-    magnitude_squared = cx * cx + cy * cy + cz * cz + cw * cw
-
-    if abs(magnitude_squared - 1.0) > 1.0e-12 do
-      # Re-normalize if needed
-      magnitude = :math.sqrt(magnitude_squared)
-      if magnitude > 1.0e-15 do
-        {cx / magnitude, cy / magnitude, cz / magnitude, cw / magnitude}
-      else
-        {0.0, 0.0, 0.0, 1.0}  # Identity quaternion fallback
-      end
+    # Simply ensure canonical representation (w >= 0)
+    # This is the standard way to resolve quaternion dual representation
+    if w >= 0.0 do
+      {x, y, z, w}
     else
-      conjugate_quaternion
+      {-x, -y, -z, -w}
     end
   end
 

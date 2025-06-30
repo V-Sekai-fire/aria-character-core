@@ -182,8 +182,11 @@ defmodule AriaQcp.QCP.State do
                new_sums
              end)
 
-    # Calculate initial eigenvalue and derived sums
-    initial_eigenvalue = (sums.sum_of_squares1 + sums.sum_of_squares2) * 0.5
+    # Calculate maximum eigenvalue exactly as in C reference
+    # From C: mxEigenV = E0 = (G1 + G2) * 0.5
+    # where G1 = sum of squares of moved points (weighted)
+    # and G2 = sum of squares of target points (weighted)
+    max_eigenvalue = (sums.sum_of_squares1 + sums.sum_of_squares2) * 0.5
 
     updated_state = %{qcp_state |
       sum_xx: sums.sum_xx, sum_xy: sums.sum_xy, sum_xz: sums.sum_xz,
@@ -197,7 +200,7 @@ defmodule AriaQcp.QCP.State do
       sum_xz_minus_zx: sums.sum_xz - sums.sum_zx,
       sum_yz_plus_zy: sums.sum_yz + sums.sum_zy,
       sum_yz_minus_zy: sums.sum_yz - sums.sum_zy,
-      max_eigenvalue: initial_eigenvalue
+      max_eigenvalue: max_eigenvalue
     }
 
     {:ok, updated_state}

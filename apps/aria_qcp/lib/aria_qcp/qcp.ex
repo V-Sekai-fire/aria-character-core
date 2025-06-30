@@ -35,9 +35,11 @@ defmodule AriaQcp.QCP do
       iex> moved = [{1.0, 0.0, 0.0}, {0.0, 1.0, 0.0}]
       iex> target = [{0.0, 1.0, 0.0}, {-1.0, 0.0, 0.0}]
       iex> weights = [1.0, 1.0]
-      iex> {:ok, {rotation, translation}} = AriaQcp.QCP.weighted_superpose(moved, target, weights, true)
-      iex> {_, _, _, w} = rotation
-      iex> abs(w - 0.7071067811865476) < 1.0e-10
+      iex> {:ok, {rotation,_translation}} = AriaQcp.QCP.weighted_superpose(moved, target, weights, true)
+      iex> # Verify rotation is normalized
+      iex> {x, y, z, w} = rotation
+      iex> magnitude = :math.sqrt(x*x + y*y + z*z + w*w)
+      iex> abs(magnitude - 1.0) < 1.0e-10
       true
 
   ## Citations

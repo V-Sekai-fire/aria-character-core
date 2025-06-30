@@ -10,6 +10,7 @@ defmodule AriaQcp.QCP.MultiPoint do
   """
 
   alias AriaMath.Quaternion
+  alias AriaQcp.QCP.Utils
 
   @doc """
   Calculates rotation quaternion for aligning multiple points using QCP algorithm.
@@ -19,9 +20,8 @@ defmodule AriaQcp.QCP.MultiPoint do
     try do
       # Check for numerical stability before proceeding
       with :ok <- check_matrix_stability(qcp_state),
-           {:ok, quaternion_components} <- calculate_quaternion_components(qcp_state),
-           {:ok, normalized_quaternion} <- finalize_quaternion(quaternion_components, qcp_state.precision) do
-        {:ok, normalized_quaternion}
+           {:ok, quaternion_components} <- calculate_quaternion_components(qcp_state) do
+        {:ok, quaternion_components}
       end
     rescue
       error -> {:error, {:quaternion_calculation_failed, error}}
@@ -43,7 +43,8 @@ defmodule AriaQcp.QCP.MultiPoint do
       abs(max_eigenvalue) > 1.0e12 ->
         {:error, :eigenvalue_too_large}
 
-      abs(max_eigenvalue) < precision * 1000 ->
+      # More lenient threshold for extreme weights - allow very small eigenvalues
+      abs(max_eigenvalue) < precision * 1.0e-6 ->
         {:error, :eigenvalue_too_small}
 
       true ->
@@ -53,56 +54,134 @@ defmodule AriaQcp.QCP.MultiPoint do
 
   @doc """
   Calculates quaternion components using the characteristic polynomial method.
+  Direct translation from the C reference implementation.
   """
   @spec calculate_quaternion_components(map()) :: {:ok, {float(), float(), float(), float()}} | {:error, term()}
   def calculate_quaternion_components(qcp_state) do
     %{
-      sum_xz_minus_zx: sum_xz_minus_zx, sum_xy_minus_yx: sum_xy_minus_yx,
-      sum_yz_minus_zy: sum_yz_minus_zy, sum_xx_minus_yy: sum_xx_minus_yy,
-      sum_xy_plus_yx: sum_xy_plus_yx, sum_xz_plus_zx: sum_xz_plus_zx,
-      sum_yy: sum_yy, sum_xx: sum_xx, sum_yz_plus_zy: sum_yz_plus_zy,
-      sum_zz: sum_zz, sum_xx_plus_yy: sum_xx_plus_yy, max_eigenvalue: max_eigenvalue
+      sum_xx: sxx, sum_xy: sxy, sum_xz: sxz,
+      sum_yx: syx, sum_yy: syy, sum_yz: syz,
+      sum_zx: szx, sum_zy: szy, sum_zz: szz,
+      max_eigenvalue: mx_eigenvalue
     } = qcp_state
 
-    # Build the 4x4 characteristic polynomial matrix elements
-    a13 = -sum_xz_minus_zx
-    a14 = sum_xy_minus_yx
-    a21 = sum_yz_minus_zy
-    a22 = sum_xx_minus_yy - sum_zz - max_eigenvalue
-    a23 = sum_xy_plus_yx
-    a24 = sum_xz_plus_zx
+    # Direct translation from C code - build 4x4 matrix elements
+    # From C: SxzpSzx = Sxz + Szx; etc.
+    sxz_p_szx = sxz + szx
+    syz_p_szy = syz + szy
+    sxy_p_syx = sxy + syx
+    syz_m_szy = syz - szy
+    sxz_m_szx = sxz - szx
+    sxy_m_syx = sxy - syx
+    sxx_p_syy = sxx + syy
+    sxx_m_syy = sxx - syy
+
+    # Build the 4x4 characteristic matrix elements exactly as in C
+    a11 = sxx_p_syy + szz - mx_eigenvalue
+    a12 = syz_m_szy
+    a13 = -sxz_m_szx
+    a14 = sxy_m_syx
+    a21 = syz_m_szy
+    a22 = sxx_m_syy - szz - mx_eigenvalue
+    a23 = sxy_p_syx
+    a24 = sxz_p_szx
     a31 = a13
     a32 = a23
-    a33 = sum_yy - sum_xx - sum_zz - max_eigenvalue
-    a34 = sum_yz_plus_zy
+    a33 = syy - sxx - szz - mx_eigenvalue
+    a34 = syz_p_szy
     a41 = a14
     a42 = a24
     a43 = a34
-    a44 = sum_zz - sum_xx_plus_yy - max_eigenvalue
+    a44 = szz - sxx_p_syy - mx_eigenvalue
 
-    # Calculate 3x3 determinants for quaternion components with overflow checking
-    determinants = [
-      a33 * a44 - a43 * a34,  # a3344_4334
-      a32 * a44 - a42 * a34,  # a3244_4234
-      a32 * a43 - a42 * a33,  # a3243_4233
-      a31 * a43 - a41 * a33,  # a3143_4133
-      a31 * a44 - a41 * a34,  # a3144_4134
-      a31 * a42 - a41 * a32   # a3142_4132
-    ]
+    # Calculate cofactor determinants exactly as in C
+    a3344_4334 = a33 * a44 - a43 * a34
+    a3244_4234 = a32 * a44 - a42 * a34
+    a3243_4233 = a32 * a43 - a42 * a33
+    a3143_4133 = a31 * a43 - a41 * a33
+    a3144_4134 = a31 * a44 - a41 * a34
+    a3142_4132 = a31 * a42 - a41 * a32
 
-    # Check for numerical overflow in determinants
-    if Enum.any?(determinants, fn d -> not is_finite_number?(d) end) do
-      {:error, :determinant_overflow}
+    # Calculate quaternion components exactly as in C
+    q1 = a22 * a3344_4334 - a23 * a3244_4234 + a24 * a3243_4233
+    q2 = -a21 * a3344_4334 + a23 * a3144_4134 - a24 * a3143_4133
+    q3 = a21 * a3244_4234 - a22 * a3144_4134 + a24 * a3142_4132
+    q4 = -a21 * a3243_4233 + a22 * a3143_4133 - a23 * a3142_4132
+
+    qsqr = q1 * q1 + q2 * q2 + q3 * q3 + q4 * q4
+
+    # Handle small qsqr case exactly as in C
+    evecprec = 1.0e-6
+    {final_q1, final_q2, final_q3, final_q4, final_qsqr} =
+      if qsqr < evecprec do
+        handle_small_qsqr(a11, a12, a13, a14, a21, a22, a23, a24,
+                          a31, a32, a33, a34, a41, a42, a43, a44, evecprec)
+      else
+        {q1, q2, q3, q4, qsqr}
+      end
+
+    if final_qsqr < evecprec do
+      # Return identity quaternion as in C
+      {:ok, {0.0, 0.0, 0.0, 1.0}}
     else
-      [a3344_4334, a3244_4234, a3243_4233, a3143_4133, a3144_4134, a3142_4132] = determinants
+      # Normalize quaternion
+      normq = :math.sqrt(final_qsqr)
+      normalized_q1 = final_q1 / normq
+      normalized_q2 = final_q2 / normq
+      normalized_q3 = final_q3 / normq
+      normalized_q4 = final_q4 / normq
 
-      # Calculate quaternion components with robust arithmetic
-      quaternion_w = safe_multiply_add([{a22, a3344_4334}, {-a23, a3244_4234}, {a24, a3243_4233}])
-      quaternion_x = safe_multiply_add([{a21, a3344_4334}, {-a23, a3144_4134}, {a24, a3143_4133}])
-      quaternion_y = safe_multiply_add([{-a21, a3244_4234}, {a22, a3144_4134}, {-a24, a3142_4132}])
-      quaternion_z = safe_multiply_add([{a21, a3243_4233}, {-a22, a3143_4133}, {a23, a3142_4132}])
+      # Return in (x,y,z,w) order for our API (C uses q1=w, q2=x, q3=y, q4=z)
+      {:ok, {normalized_q2, normalized_q3, normalized_q4, normalized_q1}}
+    end
+  end
 
-      {:ok, {quaternion_w, quaternion_x, quaternion_y, quaternion_z}}
+  # Handle small qsqr case exactly as in C reference
+  defp handle_small_qsqr(a11, a12, a13, a14, a21, a22, a23, a24,
+                        a31, a32, a33, a34, a41, a42, a43, a44, evecprec) do
+    # Try second column of adjoint matrix
+    a3344_4334 = a33 * a44 - a43 * a34
+    a3244_4234 = a32 * a44 - a42 * a34
+    a3243_4233 = a32 * a43 - a42 * a33
+    a3143_4133 = a31 * a43 - a41 * a33
+    a3144_4134 = a31 * a44 - a41 * a34
+    a3142_4132 = a31 * a42 - a41 * a32
+
+    q1 = a12 * a3344_4334 - a13 * a3244_4234 + a14 * a3243_4233
+    q2 = -a11 * a3344_4334 + a13 * a3144_4134 - a14 * a3143_4133
+    q3 = a11 * a3244_4234 - a12 * a3144_4134 + a14 * a3142_4132
+    q4 = -a11 * a3243_4233 + a12 * a3143_4133 - a13 * a3142_4132
+    qsqr = q1 * q1 + q2 * q2 + q3 * q3 + q4 * q4
+
+    if qsqr < evecprec do
+      # Try third column
+      a1324_1423 = a13 * a24 - a14 * a23
+      a1224_1422 = a12 * a24 - a14 * a22
+      a1223_1322 = a12 * a23 - a13 * a22
+      a1124_1421 = a11 * a24 - a14 * a21
+      a1123_1321 = a11 * a23 - a13 * a21
+      a1122_1221 = a11 * a22 - a12 * a21
+
+      q1 = a42 * a1324_1423 - a43 * a1224_1422 + a44 * a1223_1322
+      q2 = -a41 * a1324_1423 + a43 * a1124_1421 - a44 * a1123_1321
+      q3 = a41 * a1224_1422 - a42 * a1124_1421 + a44 * a1122_1221
+      q4 = -a41 * a1223_1322 + a42 * a1123_1321 - a43 * a1122_1221
+      qsqr = q1 * q1 + q2 * q2 + q3 * q3 + q4 * q4
+
+      if qsqr < evecprec do
+        # Try fourth column
+        q1 = a32 * a1324_1423 - a33 * a1224_1422 + a34 * a1223_1322
+        q2 = -a31 * a1324_1423 + a33 * a1124_1421 - a34 * a1123_1321
+        q3 = a31 * a1224_1422 - a32 * a1124_1421 + a34 * a1122_1221
+        q4 = -a31 * a1223_1322 + a32 * a1123_1321 - a33 * a1122_1221
+        qsqr = q1 * q1 + q2 * q2 + q3 * q3 + q4 * q4
+
+        {q1, q2, q3, q4, qsqr}
+      else
+        {q1, q2, q3, q4, qsqr}
+      end
+    else
+      {q1, q2, q3, q4, qsqr}
     end
   end
 
@@ -151,13 +230,9 @@ defmodule AriaQcp.QCP.MultiPoint do
         rotation = {norm_x, norm_y, norm_z, norm_w}
         case Quaternion.normalize(rotation) do
           {normalized_rotation, true} ->
-            # Ensure canonical representation (w >= 0) without RMD flipping for multi-point
-            {x, y, z, w} = normalized_rotation
-            if w >= 0.0 do
-              {:ok, {x, y, z, w}}
-            else
-              {:ok, {-x, -y, -z, -w}}
-            end
+            # Apply RMD check to ensure pure rotation
+            final_quaternion = Utils.apply_rmd_flipping_check(normalized_rotation)
+            {:ok, final_quaternion}
           {_, false} -> {:error, :quaternion_normalization_failed}
         end
       end

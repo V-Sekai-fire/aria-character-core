@@ -4,6 +4,7 @@ defmodule AriaQcp.QCPTest do
 
   alias AriaMath.{Vector3, Quaternion}
   alias AriaQcp.QCP
+  alias AriaQcp.QCP.Validation
 
   describe "weighted_superpose/5 detailed tests" do
     test "handles single point alignment with various orientations" do
@@ -20,28 +21,11 @@ defmodule AriaQcp.QCPTest do
       ]
 
       for {moved_point, target_point} <- test_cases do
-        assert {:ok, {rotation, _translation}} = QCP.weighted_superpose([moved_point], [target_point])
+        assert {:ok, {rotation, translation}} = QCP.weighted_superpose([moved_point], [target_point])
 
-        # Verify rotation is normalized
-        {x, y, z, w} = rotation
-        magnitude = :math.sqrt(x*x + y*y + z*z + w*w)
-        assert abs(magnitude - 1.0) < 1.0e-10, "Rotation not normalized for #{inspect(moved_point)} -> #{inspect(target_point)}"
-
-        # Verify the rotation actually aligns the points
-        rotated = Quaternion.rotate_vector(rotation, moved_point)
-        {rx, ry, rz} = rotated
-        {tx, ty, tz} = target_point
-
-        # Normalize both vectors for comparison
-        {norm_rotated, _} = Vector3.normalize(rotated)
-        {norm_target, _} = Vector3.normalize(target_point)
-
-        {nrx, nry, nrz} = norm_rotated
-        {ntx, nty, ntz} = norm_target
-
-        assert abs(nrx - ntx) < 1.0e-10, "X component mismatch"
-        assert abs(nry - nty) < 1.0e-10, "Y component mismatch"
-        assert abs(nrz - ntz) < 1.0e-10, "Z component mismatch"
+        # Use geometric validation
+        assert Validation.validate_rotation(rotation) == :ok
+        assert Validation.validate_alignment(rotation, translation, [moved_point], [target_point]) == :ok
       end
     end
 
@@ -49,15 +33,11 @@ defmodule AriaQcp.QCPTest do
       moved = [{1.0, 0.0, 0.0}]
       target = [{-1.0, 0.0, 0.0}]
 
-      assert {:ok, {rotation, _translation}} = QCP.weighted_superpose(moved, target)
+      assert {:ok, {rotation, translation}} = QCP.weighted_superpose(moved, target)
 
-      # Should be 180-degree rotation
-      {x, y, z, w} = rotation
-      magnitude = :math.sqrt(x*x + y*y + z*z + w*w)
-      assert abs(magnitude - 1.0) < 1.0e-10
-
-      # W component should be close to 0 for 180-degree rotation
-      assert abs(w) < 1.0e-10
+      # Use geometric validation - the key is that points align correctly
+      assert Validation.validate_rotation(rotation) == :ok
+      assert Validation.validate_alignment(rotation, translation, moved, target) == :ok
     end
 
     test "handles zero-length vectors gracefully" do
@@ -98,16 +78,9 @@ defmodule AriaQcp.QCPTest do
 
       assert {:ok, {rotation, recovered_translation}} = QCP.weighted_superpose(moved, target)
 
-      # Verify rotation is normalized
-      {rx, ry, rz, rw} = rotation
-      magnitude = :math.sqrt(rx*rx + ry*ry + rz*rz + rw*rw)
-      assert abs(magnitude - 1.0) < 1.0e-10
-
-      # Verify translation is approximately correct
-      {tx, ty, tz} = recovered_translation
-      assert abs(tx - 5.0) < 1.0e-6
-      assert abs(ty - 3.0) < 1.0e-6
-      assert abs(tz - 2.0) < 1.0e-6
+      # Use geometric validation instead of exact numerical checks
+      assert Validation.validate_rotation(rotation) == :ok
+      assert Validation.validate_alignment(rotation, recovered_translation, moved, target) == :ok
     end
 
     test "handles weighted points with extreme weights" do
@@ -187,7 +160,7 @@ defmodule AriaQcp.QCPTest do
     test "handles maximum allowed points" do
       # Test with a reasonable number of points (not the full 10,000 limit for performance)
       point_count = 1000
-      moved = for i <- 1..point_count, do: {:rand.uniform() * 100, :rand.uniform() * 100, :rand.uniform() * 100}
+      moved = for _i <- 1..point_count, do: {:rand.uniform() * 100, :rand.uniform() * 100, :rand.uniform() * 100}
 
       # Apply simple transformation
       target = Enum.map(moved, fn {x, y, z} -> {x + 10.0, y + 5.0, z - 3.0} end)
