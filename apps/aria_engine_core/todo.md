@@ -55,7 +55,7 @@ If umbrella gets broken by incorrect workflow:
 
 ## Overview
 
-AriaEngineCore provides the foundational temporal planning and execution capabilities for the Aria system. This todo covers implementation of a comprehensive test domain that validates the R25W1398085 unified durative action specification using EWBIK (Entirely Wahba's-problem Based Inverse Kinematics) integrated with KHR Interactivity behavior graphs as a realistic testing scenario.
+AriaEngineCore provides the foundational temporal planning and execution capabilities for the Aria system. This todo covers implementation of a comprehensive test domain that validates the R25W1398085 unified durative action specification using forward kinematics with glTF animation data integrated with KHR Interactivity behavior graphs as a realistic testing scenario.
 
 ## Current Umbrella Context
 
@@ -421,142 +421,104 @@ mix test apps/aria_engine_core # Result: 39 tests, 0 failures ✅
 - Elimination of potential confusion from dead code
 - Professional codebase appearance for production readiness
 
-### Phase 2: AriaEwbik Integration (HIGH PRIORITY)
+### Phase 2: Forward Kinematics with glTF Animation Data (HIGH PRIORITY)
 
-**Priority: HIGH - Integrate AriaEwbik external API for character IK solving**
+**Priority: HIGH - Implement forward kinematics using glTF animation data for character animation**
 
-**Dependencies:** ✅ **EWBIK Foundation Available** - AriaEwbik app created with comprehensive external API
+**Dependencies:** ✅ **Mathematical Foundation Available** - AriaJoint, AriaMath, AriaGltf apps provide necessary components
 
 **✅ Prerequisites Met:**
 
-- ✅ AriaEwbik app created with external API module
-- ✅ Mathematical foundation available (AriaJoint 48/48 tests, AriaQCP 69/69 tests)
-- ✅ Dependencies configured (aria_ewbik depends on aria_joint, aria_qcp, aria_math, aria_state)
-- ✅ Comprehensive implementation plan available in AriaEwbik todo.md
+- ✅ AriaJoint app (48/48 tests passing, 160K+ poses/second performance)
+- ✅ AriaMath app (IEEE-754 compliant mathematical primitives)
+- ✅ AriaGltf app (glTF processing and material handling)
+- ✅ Joint hierarchy management with registry-based tracking
 
-**Phase 2 Integration Plan:**
+**Phase 2 Implementation Plan:**
 
-- [ ] **Add AriaEwbik Dependency to AriaEngineCore (When Ready)**
-  - [ ] Update `apps/aria_engine_core/mix.exs` to include `{:aria_ewbik, in_umbrella: true}`
-  - [ ] Verify dependency tier structure (AriaEngineCore Tier 4, AriaEwbik Tier 3)
-  - [ ] Update testing dependencies documentation
+- [ ] **glTF Animation Data Processing**
+  - [ ] Create `lib/aria_engine_core/animation/gltf_loader.ex`
+  - [ ] Parse glTF animation channels (translation, rotation, scale)
+  - [ ] Parse glTF animation samplers (input/output, interpolation methods)
+  - [ ] Handle LINEAR, STEP, and CUBICSPLINE interpolation
+  - [ ] Integration with AriaGltf for asset loading
 
-- [ ] **Domain Method Integration with EWBIK**
-  - [ ] Update `lib/aria_engine_core/domain.ex` to integrate AriaEwbik API calls
-  - [ ] Add character IK solving methods using `AriaEwbik.solve_ik/3`
-  - [ ] Add multi-effector coordination using `AriaEwbik.solve_multi_effector/3`
-  - [ ] Add VRM1 collision-aware solving using `AriaEwbik.solve_with_collision_avoidance/3`
+- [ ] **Forward Transform Calculation System**
+  - [ ] Create `lib/aria_engine_core/animation/forward_kinematics.ex`
+  - [ ] Apply animation transforms through AriaJoint hierarchy
+  - [ ] Use AriaJoint Registry system for efficient joint lookups
+  - [ ] Leverage AriaJoint's `to_global/2` for forward transform calculation
+  - [ ] Handle parent-child transform propagation using AriaJoint API
 
-- [ ] **EWBIK Entity Support in AriaEngineCore**
+- [ ] **Animation Timeline Integration**
+  - [ ] Create `lib/aria_engine_core/animation/timeline_player.ex`
+  - [ ] Integrate with AriaTimeline for temporal coordination
+  - [ ] Support multiple animation layers and blending
+  - [ ] Handle animation looping and timing controls
+  - [ ] Timeline-based animation sequencing
+
+- [ ] **KHR Interactivity Integration**
+  - [ ] Create `lib/aria_engine_core/animation/interactivity_bridge.ex`
+  - [ ] Use KHR Interactivity behavior graphs to control animation playback
+  - [ ] Animation state management through behavior graph events
+  - [ ] Integration with KHR mathematical primitives for animation blending
+
+### Phase 3: Temporal Animation Coordination (HIGH PRIORITY)
+
+**Priority: HIGH - Coordinate multiple animations with temporal planner**
+
+**Dependencies:** Phase 2 forward kinematics implementation complete
+
+- [ ] **Multi-Animation Sequencing**
+  - [ ] Create `lib/aria_engine_core/animation/sequence_coordinator.ex`
+  - [ ] Temporal planning for animation transitions
+  - [ ] Animation priority and overlap handling
+  - [ ] Smooth blending between animation sequences
+
+- [ ] **Domain Method Integration for Animations**
+  - [ ] Update `lib/aria_engine_core/domain.ex` to include animation methods
+  - [ ] Add character animation methods using forward kinematics
+  - [ ] Add temporal animation sequencing capabilities
+  - [ ] Integration with AriaState for animation configuration storage
+
+- [ ] **Animation Entity Support**
   - [ ] Add character skeleton entity management
-  - [ ] Add IK effector target entity support
-  - [ ] Add constraint configuration entity support
-  - [ ] Integration with AriaState for EWBIK configuration storage
+  - [ ] Add animation clip entity support
+  - [ ] Add animation state configuration entities
+  - [ ] Integration with AriaState for animation data storage
 
-- [ ] **Test Domain Integration**
-  - [ ] Create test scenarios using AriaEwbik for character animation
-  - [ ] Add EWBIK-based multigoal test cases (conservative usage per R25W1398085)
-  - [ ] Add temporal IK solving test patterns
-  - [ ] Integration with KHR Interactivity test domain
+### Phase 4: KHR Interactivity Test Domain (HIGH PRIORITY)
 
-### Phase 2.5: Advanced EWBIK Integration (MEDIUM PRIORITY)
+**Priority: HIGH - Create comprehensive test domain using forward kinematics and glTF animations**
 
-**Priority: MEDIUM - Leverage AriaEwbik's advanced features for realistic character animation**
+**Dependencies:** Requires Phase 2 forward kinematics and Phase 3 temporal coordination
 
-**Dependencies:** Phase 2 AriaEwbik basic integration complete
-
-**Note:** All advanced EWBIK features (VRM1 collision detection, Godot anatomical constraints, anti-uncanny valley solutions) are now implemented in the dedicated AriaEwbik app. See `apps/aria_ewbik/todo.md` for detailed implementation plans.
-
-- [ ] **Advanced IK Solving Integration**
-  - [ ] Integrate `AriaEwbik.solve_with_collision_avoidance/3` for VRM1 collision-aware solving
-  - [ ] Integrate `AriaEwbik.apply_godot_anatomical_limits/1` for realistic joint constraints
-  - [ ] Add constraint validation using `AriaEwbik.validate_constraints/1`
-  - [ ] Integration with temporal smoothing for frame-to-frame stability
-
-- [ ] **Character Configuration Management**
-  - [ ] Add VRM1 collider configuration entities in AriaState
-  - [ ] Add Kusudama constraint configuration entities
-  - [ ] Add anatomical constraint profile entities
-  - [ ] Integration with character asset management
-
-- [ ] **Test Scenarios for Advanced Features**
-  - [ ] Character reaching with collision avoidance test cases
-  - [ ] Multi-character interaction scenarios with VRM1 collision detection
-  - [ ] Anatomical constraint enforcement validation scenarios
-  - [ ] Performance testing with complex constraint combinations
-
-### Phase 3: Kusudama Constraint Visualization (HIGH PRIORITY)
-
-**Priority: HIGH - Visual debugging and constraint validation for EWBIK**
-
-- [ ] **Hybrid Skin + Morph Constraint Visualization**
-  - [ ] Create `lib/aria_engine_core/ewbik/constraint_visualization.ex`
-  - [ ] Implement constraint shell geometry generation for Kusudama cones
-  - [ ] Design constraint bone hierarchy for skinning constraint shells
-  - [ ] Create joint state morph targets for immediate visual feedback
-  - [ ] Real-time coordination between EWBIK solver and visualization system
-
-- [ ] **Constraint Shell Geometry System**
-  - [ ] Cone geometry generation algorithm for sequence cones
-  - [ ] Tangent cone connection mesh generation between sequence cones
-  - [ ] Twist limit cylindrical band visualization
-  - [ ] Dynamic mesh deformation based on constraint parameters
-  - [ ] Performance optimization for real-time constraint updates
-
-- [ ] **Joint State Morph Target System**
-  - [ ] Automated generation of constraint state morphs for character joints
-  - [ ] Morph weight calculation based on constraint proximity
-  - [ ] Temporal smoothing to avoid jarring visual transitions
-  - [ ] Integration with existing character mesh morph targets
-
-- [ ] **glTF Integration for Constraint Visualization**
-  - [ ] Constraint visualization node hierarchy within glTF scene structure
-  - [ ] KHR_animation_pointer usage for real-time constraint updates
-  - [ ] KHR_materials_variants for constraint state material switching
-  - [ ] Integration with KHR_interactivity behavior graphs for constraint control
-
-- [ ] **Visualization Coordination Pipeline**
-  - [ ] Data flow between Kusudama constraint evaluation and visualization
-  - [ ] Synchronization of constraint updates with visual feedback
-  - [ ] LOD system for constraint visualization (detailed vs simplified)
-  - [ ] Error handling when constraint evaluation fails
-
-### Phase 4: EWBIK-Enhanced KHR Interactivity Test Domain (HIGH PRIORITY)
-
-**Priority: HIGH - Realistic IK testing with sophisticated constraint validation**
-
-**Dependencies:** Requires Phase 0 mathematical primitives, Phase 1 EWBIK math solvers, Phase 2 EWBIK algorithms, and Phase 2.5 anti-uncanny valley solutions
-
-- [ ] **EWBIK Entity Types for KHR Interactivity**
-  - [ ] Create `test/support/ewbik_khr_domain.ex`
-  - [ ] EWBIK skeleton entities with multi-effector support
-  - [ ] IK effector entities with motion propagation factors
-  - [ ] Kusudama constraint entities with cone definitions
-  - [ ] Bone hierarchy entities with transform management
-  - [ ] VRM1 collider entities with sphere/capsule/plane definitions
+- [ ] **Animation Entity Types for KHR Interactivity**
+  - [ ] Create `test/support/animation_khr_domain.ex`
+  - [ ] Character skeleton entities with animation support
+  - [ ] Animation clip entities with glTF data
+  - [ ] Animation state entities for playback control
+  - [ ] Bone hierarchy entities with forward kinematics
   - [ ] Integration with KHR Interactivity node system
 
-- [ ] **Enhanced Temporal Action Patterns with EWBIK**
-  - [ ] **Pattern 1**: Instant IK solving (`solve_ik_instant`)
-  - [ ] **Pattern 2**: Floating duration IK solving (`solve_ik_over_time`)
-  - [ ] **Pattern 3**: Fixed duration pose transitions (`transition_pose`)
-  - [ ] **Pattern 4**: Deadline-constrained reaching (`reach_target_by_deadline`)
-  - [ ] **Pattern 5**: Coordinated multi-effector starts (`begin_coordination_by`)
-  - [ ] **Pattern 6**: Timed pose sequences (`execute_pose_sequence_until`)
-  - [ ] **Pattern 7**: Constraint monitoring windows (`monitor_constraints_during`)
-  - [ ] **Pattern 8**: Continuous constraint validation (`validate_constraints_continuously`)
-  - [ ] **Pattern 9**: VRM1 collision-aware solving (`solve_with_vrm1_collision_avoidance`)
-  - [ ] **Pattern 10**: Anatomical constraint enforcement (`solve_with_godot_anatomical_limits`)
+- [ ] **Temporal Action Patterns for Animations**
+  - [ ] **Pattern 1**: Instant animation start (`play_animation_instant`)
+  - [ ] **Pattern 2**: Timed animation playback (`play_animation_for_duration`)
+  - [ ] **Pattern 3**: Animation transitions (`transition_to_animation`)
+  - [ ] **Pattern 4**: Deadline-based animation completion (`complete_animation_by`)
+  - [ ] **Pattern 5**: Coordinated multi-character starts (`begin_group_animation_by`)
+  - [ ] **Pattern 6**: Animation sequence scheduling (`play_sequence_until`)
+  - [ ] **Pattern 7**: Animation monitoring (`monitor_animation_during`)
+  - [ ] **Pattern 8**: Continuous animation validation (`validate_animation_continuously`)
 
-- [ ] **EWBIK-Specific Method Types**
-  - [ ] `@action` - EWBIK state updates (set effector targets, constraint parameters, VRM1 colliders)
-  - [ ] `@command` - Real IK solving execution with convergence handling and collision avoidance
-  - [ ] `@task_method` - Complex multi-effector coordination workflows with anti-uncanny valley features
-  - [ ] `@unigoal_method` - Single effector target achievement with constraint enforcement
-  - [ ] `@multigoal_method` - EWBIK-specific multi-effector optimization with VRM1 collision coordination ONLY
-  - [ ] Conservative multigoal usage following R25W1398085 guidelines
+- [ ] **Animation-Specific Method Types**
+  - [ ] `@action` - Animation state updates (play, pause, stop, seek)
+  - [ ] `@command` - Animation execution with forward kinematics calculation
+  - [ ] `@task_method` - Complex multi-animation coordination workflows
+  - [ ] `@unigoal_method` - Single animation goal achievement
+  - [ ] `@multigoal_method` - Multi-character animation coordination (conservative usage per R25W1398085)
 
-### Phase 5: EWBIK Test Scenarios
+### Phase 5: Animation Test Scenarios
 
 #### Project-Specific ADR References
 

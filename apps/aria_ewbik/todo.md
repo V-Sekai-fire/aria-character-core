@@ -290,6 +290,118 @@ AriaEwbik implements Entirely Wahba's-problem Based Inverse Kinematics (EWBIK) w
 - **Memory Usage**: Efficient registry-based joint state management
 - **Scalability**: Support for complex character rigs (100+ joints)
 
+### Phase 6: AriaEngineCore Integration (WHEN READY)
+
+**Priority: MEDIUM - Integration with AriaEngineCore for temporal planning coordination**
+
+**Note:** This phase moves AriaEngineCore integration details to AriaEwbik for proper ownership
+
+- [ ] **AriaEngineCore Dependency Integration**
+  - [ ] AriaEngineCore can add AriaEwbik dependency when ready: `{:aria_ewbik, in_umbrella: true}`
+  - [ ] Verify dependency tier structure (AriaEngineCore Tier 4, AriaEwbik Tier 3)
+  - [ ] Integration with AriaEngineCore external API
+
+- [ ] **Domain Method Integration with AriaEngineCore**
+  - [ ] Provide integration guidance for AriaEngineCore.Domain module
+  - [ ] Character IK solving methods using `AriaEwbik.solve_ik/3`
+  - [ ] Multi-effector coordination using `AriaEwbik.solve_multi_effector/3`
+  - [ ] VRM1 collision-aware solving using `AriaEwbik.solve_with_collision_avoidance/3`
+
+- [ ] **EWBIK Entity Support for AriaEngineCore Integration**
+  - [ ] Character skeleton entity management examples
+  - [ ] IK effector target entity support patterns
+  - [ ] Constraint configuration entity support examples
+  - [ ] Integration patterns with AriaState for EWBIK configuration storage
+
+- [ ] **Test Domain Integration Examples**
+  - [ ] Test scenarios using AriaEwbik for character animation
+  - [ ] EWBIK-based multigoal test cases (conservative usage per R25W1398085)
+  - [ ] Temporal IK solving test patterns
+  - [ ] Integration examples with KHR Interactivity test domain
+
+### Phase 7: Enhanced KHR Interactivity Test Domain (HIGH PRIORITY)
+
+**Priority: HIGH - Realistic IK testing with sophisticated constraint validation**
+
+**Dependencies:** Requires Phase 1 EWBIK foundation, Phase 2 anti-uncanny valley solutions
+
+- [ ] **EWBIK Entity Types for KHR Interactivity**
+  - [ ] Create `test/support/ewbik_khr_domain.ex`
+  - [ ] EWBIK skeleton entities with multi-effector support
+  - [ ] IK effector entities with motion propagation factors
+  - [ ] Kusudama constraint entities with cone definitions
+  - [ ] Bone hierarchy entities with transform management
+  - [ ] VRM1 collider entities with sphere/capsule/plane definitions
+  - [ ] Integration with KHR Interactivity node system
+
+- [ ] **Enhanced Temporal Action Patterns with EWBIK**
+  - [ ] **Pattern 1**: Instant IK solving (`solve_ik_instant`)
+  - [ ] **Pattern 2**: Floating duration IK solving (`solve_ik_over_time`)
+  - [ ] **Pattern 3**: Fixed duration pose transitions (`transition_pose`)
+  - [ ] **Pattern 4**: Deadline-constrained reaching (`reach_target_by_deadline`)
+  - [ ] **Pattern 5**: Coordinated multi-effector starts (`begin_coordination_by`)
+  - [ ] **Pattern 6**: Timed pose sequences (`execute_pose_sequence_until`)
+  - [ ] **Pattern 7**: Constraint monitoring windows (`monitor_constraints_during`)
+  - [ ] **Pattern 8**: Continuous constraint validation (`validate_constraints_continuously`)
+  - [ ] **Pattern 9**: VRM1 collision-aware solving (`solve_with_vrm1_collision_avoidance`)
+  - [ ] **Pattern 10**: Anatomical constraint enforcement (`solve_with_godot_anatomical_limits`)
+
+- [ ] **EWBIK-Specific Method Types**
+  - [ ] `@action` - EWBIK state updates (set effector targets, constraint parameters, VRM1 colliders)
+  - [ ] `@command` - Real IK solving execution with convergence handling and collision avoidance
+  - [ ] `@task_method` - Complex multi-effector coordination workflows with anti-uncanny valley features
+  - [ ] `@unigoal_method` - Single effector target achievement with constraint enforcement
+  - [ ] `@multigoal_method` - EWBIK-specific multi-effector optimization with VRM1 collision coordination ONLY
+  - [ ] Conservative multigoal usage following R25W1398085 guidelines
+
+### Phase 8: EWBIK Test Scenarios
+
+**Comprehensive test scenarios validating all EWBIK functionality**
+
+- [ ] **Single Effector Test Scenarios**
+  - [ ] Hand reaching to target with elbow constraints
+  - [ ] Foot placement with ground collision and anatomical limits
+  - [ ] Head tracking with spine flexibility constraints
+  - [ ] Finger pointing with wrist and knuckle limitations
+
+- [ ] **Multi-Effector Coordination Scenarios**
+  - [ ] Dual-hand manipulation tasks with priority weighting
+  - [ ] Walking animation with foot placement and balance
+  - [ ] Object grasping with hand positioning and torso adjustment
+  - [ ] Complex dance moves with full-body coordination
+
+- [ ] **VRM1 Collision Avoidance Scenarios**
+  - [ ] Character interaction with environment objects
+  - [ ] Self-collision avoidance during complex poses
+  - [ ] Multi-character scenarios with collision awareness
+  - [ ] Dynamic obstacle avoidance during animation
+
+- [ ] **Anatomical Constraint Validation Scenarios**
+  - [ ] Extreme pose validation against Godot skeletal limits
+  - [ ] Natural motion validation using SkeletonProfileHumanoid
+  - [ ] Proportion-aware IK for different character sizes
+  - [ ] Anti-uncanny valley validation with realistic constraints
+
+## Implementation Notes
+
+**Coordinate System Conversions:**
+
+- All mathematical operations follow the glTF 2.0 coordinate system (Y-up, right-handed)
+- Godot Transform3D to glTF matrix conversion preserves anatomical constraints
+- IEEE-754 compliance ensures numerical stability across all mathematical operations
+
+**Performance Considerations:**
+
+- QCP algorithm complexity: O(n) for point set alignment where n is number of points
+- EWBIK iteration complexity: O(k×j) where k is iterations and j is number of joints
+- VRM1 collision detection: O(c×j) where c is colliders and j is joints per frame
+
+**Testing and Validation:**
+
+- All mathematical operations validated against KHR Interactivity specification test cases
+- Cross-validation with Godot SkeletonProfileHumanoid reference poses
+- IEEE-754 edge case handling verified through comprehensive test suite
+
 ## Standards Compliance
 
 - **glTF 2.0**: Full compliance for 3D asset interoperability
