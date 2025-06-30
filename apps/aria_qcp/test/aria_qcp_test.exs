@@ -326,9 +326,6 @@ defmodule AriaQcpTest do
 
     # Helper functions to calculate actual jerk from QCP transformation results
     defp calculate_angular_jerk({x, y, z, w}) do
-      # Validate quaternion is normalized (should be ~1.0)
-      _quat_magnitude = :math.sqrt(x*x + y*y + z*z + w*w)
-
       # Extract rotation angle from quaternion vector part
       vector_magnitude = :math.sqrt(x*x + y*y + z*z)
 
