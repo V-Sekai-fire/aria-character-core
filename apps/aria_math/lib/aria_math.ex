@@ -11,7 +11,6 @@ defmodule AriaMath do
   - Matrix operations (`AriaMath.Matrix4`)
   - Mathematical primitives following KHR Interactivity spec (`AriaMath.Primitives`)
   - Transform hierarchy management (`AriaMath.Joint`)
-  - Optimal superposition calculations (`AriaMath.QCP`)
 
   ## External API Functions
 
@@ -35,7 +34,7 @@ defmodule AriaMath do
 
   """
 
-  alias AriaMath.{Vector3, Quaternion, Matrix4, Primitives, Joint, QCP}
+  alias AriaMath.{Vector3, Quaternion, Matrix4, Primitives, Joint}
 
   ## Vector Operations
 
@@ -399,25 +398,6 @@ defmodule AriaMath do
   """
   @spec get_joint_global_transform(Joint.t()) :: Matrix4.t()
   def get_joint_global_transform(joint), do: Joint.get_global_transform(joint)
-
-  ## Optimal Superposition (QCP Operations)
-
-  @doc """
-  Calculate optimal rotation and translation to align two point sets.
-
-  ## Examples
-
-      iex> moved = [{1.0, 0.0, 0.0}]
-      iex> target = [{0.0, 1.0, 0.0}]
-      iex> {:ok, {rotation, translation}} = AriaMath.superpose_points(moved, target)
-      iex> is_tuple(rotation) and is_tuple(translation)
-      true
-  """
-  @spec superpose_points([Vector3.t()], [Vector3.t()], [float()], boolean()) ::
-          {:ok, {Quaternion.t(), Vector3.t()}} | {:error, term()}
-  def superpose_points(moved, target, weights \\ [], translate \\ true) do
-    QCP.weighted_superpose(moved, target, weights, translate)
-  end
 
   ## Constants
 
