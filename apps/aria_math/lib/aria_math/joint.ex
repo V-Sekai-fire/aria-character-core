@@ -676,17 +676,13 @@ defmodule AriaMath.Joint do
 
   @spec ensure_registry_with_timeout() :: {:ok, pid()} | {:error, joint_error()}
   defp ensure_registry_with_timeout do
-    task = Task.async(fn ->
-      case Registry.start_link(keys: :unique, name: @registry_name) do
-        {:ok, pid} -> {:ok, pid}
-        {:error, {:already_started, pid}} -> {:ok, pid}
-        error -> error
+    try do
+      case Process.whereis(@registry_name) do
+        nil -> {:error, :registry_unavailable}
+        pid when is_pid(pid) -> {:ok, pid}
       end
-    end)
-
-    case Task.yield(task, @registry_timeout) || Task.shutdown(task) do
-      {:ok, result} -> result
-      nil -> {:error, :registry_timeout}
+    rescue
+      _error -> {:error, :registry_unavailable}
     end
   end
 
