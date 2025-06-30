@@ -257,7 +257,7 @@ defmodule AriaJoint.Joint do
       else
         updated_node = %{node |
           local_transform: transform,
-          dirty: add_dirty_flag(node.dirty, @dirty_vectors)
+          dirty: add_dirty_flag(node.dirty, @dirty_global)
         }
 
         case safe_update_registry(updated_node) do
@@ -265,8 +265,9 @@ defmodule AriaJoint.Joint do
             safe_propagate_transform_changed(updated_node)
             updated_node
 
-          {:error, reason} ->
-            {:error, reason}
+          {:error, _reason} ->
+            # Return updated node even if registry update fails
+            updated_node
         end
       end
     end
@@ -318,14 +319,15 @@ defmodule AriaJoint.Joint do
         Matrix4.multiply(parent_inverse, global_transform)
     end
 
-        updated_node = %{node |
-          local_transform: local_transform,
-          dirty: add_dirty_flag(node.dirty, @dirty_vectors)
-        }
+    updated_node = %{node |
+      local_transform: local_transform,
+      global_transform: global_transform,
+      dirty: remove_dirty_flag(node.dirty, @dirty_global)
+    }
 
-        safe_update_registry(updated_node)
-        safe_propagate_transform_changed(updated_node)
-        updated_node
+    safe_update_registry(updated_node)
+    safe_propagate_transform_changed(updated_node)
+    updated_node
   end
 
   @doc """
@@ -361,11 +363,17 @@ defmodule AriaJoint.Joint do
   """
   @spec get_global_transform(t()) :: transform()
   def get_global_transform(node) do
-    if has_dirty_flag?(node.dirty, @dirty_global) do
-      updated_node = if has_dirty_flag?(node.dirty, @dirty_local) do
-        update_local_transform(node)
+    # Always get the latest node from registry to ensure we have current state
+    current_node = case get_node_by_id(node.id) do
+      nil -> node
+      registry_node -> registry_node
+    end
+
+    if has_dirty_flag?(current_node.dirty, @dirty_global) do
+      updated_node = if has_dirty_flag?(current_node.dirty, @dirty_local) do
+        update_local_transform(current_node)
       else
-        node
+        current_node
       end
 
       global_transform = case get_parent_node(updated_node) do
@@ -391,7 +399,7 @@ defmodule AriaJoint.Joint do
       safe_update_registry(final_node)
       final_node.global_transform
     else
-      node.global_transform
+      current_node.global_transform
     end
   end
 
@@ -526,7 +534,11 @@ defmodule AriaJoint.Joint do
   """
   @spec get_parent(t()) :: t() | nil
   def get_parent(node) do
-    get_parent_node(node)
+    # First check if the node is still in the registry
+    case get_node_by_id(node.id) do
+      nil -> nil  # Node was cleaned up, no parent
+      current_node -> get_parent_node(current_node)
+    end
   end
 
   @doc """
@@ -655,21 +667,36 @@ defmodule AriaJoint.Joint do
   @spec cleanup(t()) :: :ok
   def cleanup(node) do
     # Remove from parent
-    set_parent(node, nil)
+    case set_parent(node, nil) do
+      %__MODULE__{} = updated_node ->
+        # Remove all children
+        for child_id <- updated_node.children do
+          case Registry.lookup(@registry_name, child_id) do
+            [{_pid, child_node}] ->
+              set_parent(child_node, nil)
+            [] ->
+              :ok
+          end
+        end
 
-    # Remove all children
-    for child_id <- node.children do
-      case Registry.lookup(@registry_name, child_id) do
-        [{_pid, child_node}] ->
-          set_parent(child_node, nil)
-        [] ->
-          :ok
-      end
+        # Unregister from registry
+        Registry.unregister(@registry_name, updated_node.id)
+        :ok
+
+      {:error, _reason} ->
+        # Still try to clean up children and unregister
+        for child_id <- node.children do
+          case Registry.lookup(@registry_name, child_id) do
+            [{_pid, child_node}] ->
+              set_parent(child_node, nil)
+            [] ->
+              :ok
+          end
+        end
+
+        Registry.unregister(@registry_name, node.id)
+        :ok
     end
-
-    # Unregister from registry
-    Registry.unregister(@registry_name, node.id)
-    :ok
   end
 
   # Private helper functions

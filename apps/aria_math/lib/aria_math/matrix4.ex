@@ -202,15 +202,22 @@ defmodule AriaMath.Matrix4 do
   end
 
   @doc """
-  Create rotation matrix from quaternion.
+  Create rotation matrix from quaternion or extract rotation from matrix.
+
+  Supports both quaternion and matrix inputs:
+  - Quaternion input: Converts quaternion to rotation matrix
+  - Matrix input: Extracts rotation component and returns as rotation matrix
 
   ## Examples
 
       iex> AriaMath.Matrix4.rotation(AriaMath.Quaternion.identity())
       {1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0}
+
+      iex> AriaMath.Matrix4.rotation(AriaMath.Matrix4.identity())
+      {1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0}
   """
-  @spec rotation(Quaternion.t()) :: t()
-  def rotation({x, y, z, w}) do
+  @spec rotation(Quaternion.t() | t()) :: t()
+  def rotation({x, y, z, w}) when is_float(x) and is_float(y) and is_float(z) and is_float(w) do
     # Convert unit quaternion to rotation matrix
     xx = x * x
     yy = y * y
@@ -228,6 +235,13 @@ defmodule AriaMath.Matrix4 do
       2.0 * (xz + wy), 2.0 * (yz - wx), 1.0 - 2.0 * (xx + yy), 0.0,
       0.0, 0.0, 0.0, 1.0
     }
+  end
+
+  def rotation({m0, m1, m2, m3, m4, m5, m6, m7, m8, m9, m10, m11, m12, m13, m14, m15}) do
+    # Extract rotation component from 4x4 matrix (remove translation and normalize)
+    # Extract the upper-left 3x3 rotation matrix and ensure it's orthonormal
+    rotation_3x3 = extract_basis({m0, m1, m2, m3, m4, m5, m6, m7, m8, m9, m10, m11, m12, m13, m14, m15})
+    orthogonalize(rotation_3x3)
   end
 
   @doc """

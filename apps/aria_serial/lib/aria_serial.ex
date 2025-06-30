@@ -75,6 +75,28 @@ defmodule AriaSerial do
   defdelegate store_registry(storage_path, registry_data), to: AriaSerial.JsonStorage
 
   @doc """
+  Generate a serial number for a specific year and week.
+
+  ## Parameters
+
+  - `year`: Year (e.g., 2025)
+  - `week`: Week number (1-53)
+  - `factory`: Factory code (e.g., "R" for Aria)
+  - `tool_code`: 4-character tool identifier
+  - `file_info`: Metadata about the associated file
+
+  ## Examples
+
+      iex> file_info = %{file: "my_tool.ex", purpose: "Code generation"}
+      iex> {:ok, serial} = AriaSerial.generate_serial(2025, 25, "R", "MYTL", file_info)
+      iex> String.starts_with?(serial, "R25")
+      true
+  """
+  def generate_serial(year, week, factory, tool_code, file_info) do
+    generate_and_register_serial(year, week, factory, tool_code, file_info)
+  end
+
+  @doc """
   Convenience function to generate a serial number for current year and week.
 
   ## Parameters
@@ -93,7 +115,7 @@ defmodule AriaSerial do
   def generate_serial(factory, tool_code, file_info) do
     current_date = Date.utc_today()
     year = current_date.year
-    {_, week} = Date.to_iso_week(current_date)
+    week = (Date.day_of_year(current_date) |> div(7)) + 1
 
     generate_and_register_serial(year, week, factory, tool_code, file_info)
   end
