@@ -275,4 +275,166 @@ defmodule AriaQcp.QCPTest do
       assert abs(det - 1.0) < 1.0e-10
     end
   end
+
+  describe "minimal transformation validation" do
+    test "validates minimal RMSD for perfect alignment" do
+      moved = [{1.0, 0.0, 0.0}, {0.0, 1.0, 0.0}]
+      target = [{0.0, 1.0, 0.0}, {-1.0, 0.0, 0.0}]
+
+      assert {:ok, {rotation, translation}} = QCP.weighted_superpose(moved, target)
+
+      # Should achieve minimal RMSD (near zero for exact alignment)
+      assert Validation.validate_minimal_rmsd(rotation, translation, moved, target) == :ok
+    end
+
+    test "validates minimal rotation angle for 90-degree case" do
+      moved = [{1.0, 0.0, 0.0}]
+      target = [{0.0, 1.0, 0.0}]
+
+      assert {:ok, {rotation, _translation}} = QCP.weighted_superpose(moved, target)
+
+      # Should use minimal rotation (≤ 90 degrees)
+      assert Validation.validate_minimal_rotation_angle(rotation, :math.pi / 2) == :ok
+    end
+
+    test "validates transformation efficiency for pure translation" do
+      moved = [{0.0, 0.0, 0.0}, {1.0, 0.0, 0.0}]
+      target = [{5.0, 0.0, 0.0}, {6.0, 0.0, 0.0}]
+
+      assert {:ok, {rotation, translation}} = QCP.weighted_superpose(moved, target)
+
+      # Should use identity rotation for pure translation
+      assert Validation.validate_transformation_efficiency(rotation, translation, :translation_only) == :ok
+    end
+
+    test "validates transformation efficiency for rotation only" do
+      moved = [{1.0, 0.0, 0.0}, {0.0, 1.0, 0.0}]
+      target = [{0.0, 1.0, 0.0}, {-1.0, 0.0, 0.0}]
+
+      assert {:ok, {rotation, translation}} = QCP.weighted_superpose(moved, target, [], false)
+
+      # Should have zero translation for rotation-only case
+      assert Validation.validate_transformation_efficiency(rotation, translation, :rotation_only) == :ok
+    end
+
+    test "validates against known optimal transformations" do
+      # Test X to Y axis rotation (should be 90 degrees around Z)
+      moved = [{1.0, 0.0, 0.0}]
+      target = [{0.0, 1.0, 0.0}]
+
+      assert {:ok, {rotation, translation}} = QCP.weighted_superpose(moved, target)
+      assert Validation.validate_against_known_optimal(rotation, translation, :x_to_y_axis) == :ok
+
+      # Test opposite vectors (should be 180 degrees)
+      moved = [{1.0, 0.0, 0.0}]
+      target = [{-1.0, 0.0, 0.0}]
+
+      assert {:ok, {rotation, translation}} = QCP.weighted_superpose(moved, target)
+      assert Validation.validate_against_known_optimal(rotation, translation, :opposite_vectors) == :ok
+    end
+
+    test "validates globally optimal solution" do
+      # Complex transformation that should still be globally optimal
+      moved = [{1.0, 0.0, 0.0}, {0.0, 1.0, 0.0}, {0.0, 0.0, 1.0}]
+      target = [{0.0, 1.0, 0.0}, {-1.0, 0.0, 0.0}, {0.0, 0.0, 1.0}]
+
+      assert {:ok, {rotation, translation}} = QCP.weighted_superpose(moved, target)
+
+      # Should pass all optimality checks
+      assert Validation.validate_globally_optimal(rotation, translation, moved, target) == :ok
+    end
+
+    test "validates identity transformation efficiency" do
+      points = [{1.0, 0.0, 0.0}, {0.0, 1.0, 0.0}, {0.0, 0.0, 1.0}]
+
+      assert {:ok, {rotation, translation}} = QCP.weighted_superpose(points, points)
+
+      # Should be pure identity transformation
+      assert Validation.validate_transformation_efficiency(rotation, translation, :identity) == :ok
+    end
+
+    test "validates minimal transformation for unit translation" do
+      moved = [{0.0, 0.0, 0.0}]
+      target = [{1.0, 0.0, 0.0}]
+
+      assert {:ok, {rotation, translation}} = QCP.weighted_superpose(moved, target)
+
+      # Should use identity rotation for unit translation
+      assert Validation.validate_against_known_optimal(rotation, translation, :unit_translation) == :ok
+    end
+  end
+
+  describe "minimal jerk validation" do
+    test "validates minimal jerk for identity transformation" do
+      points = [{1.0, 0.0, 0.0}, {0.0, 1.0, 0.0}]
+
+      assert {:ok, {rotation, translation}} = QCP.weighted_superpose(points, points)
+
+      # Identity transformation should have minimal jerk
+      assert Validation.validate_minimal_jerk(rotation, translation) == :ok
+    end
+
+    test "validates minimal angular jerk for simple rotations" do
+      moved = [{1.0, 0.0, 0.0}]
+      target = [{0.0, 1.0, 0.0}]
+
+      assert {:ok, {rotation, _translation}} = QCP.weighted_superpose(moved, target)
+
+      # Single-axis rotation should have minimal angular jerk
+      assert Validation.validate_minimal_angular_jerk(rotation) == :ok
+    end
+
+    test "validates minimal linear jerk for pure translation" do
+      moved = [{0.0, 0.0, 0.0}, {1.0, 0.0, 0.0}]
+      target = [{5.0, 0.0, 0.0}, {6.0, 0.0, 0.0}]
+
+      assert {:ok, {_rotation, translation}} = QCP.weighted_superpose(moved, target)
+
+      # Straight-line translation should have minimal linear jerk
+      assert Validation.validate_minimal_linear_jerk(translation) == :ok
+    end
+
+    test "validates motion coordination for combined transformations" do
+      moved = [{1.0, 0.0, 0.0}, {0.0, 1.0, 0.0}]
+      target = [{5.0, 6.0, 0.0}, {4.0, 5.0, 0.0}]
+
+      assert {:ok, {rotation, translation}} = QCP.weighted_superpose(moved, target)
+
+      # Combined rotation and translation should be well-coordinated
+      assert Validation.validate_motion_coordination(rotation, translation) == :ok
+    end
+
+    test "validates minimal jerk for opposite vector alignment" do
+      moved = [{1.0, 0.0, 0.0}]
+      target = [{-1.0, 0.0, 0.0}]
+
+      assert {:ok, {rotation, translation}} = QCP.weighted_superpose(moved, target)
+
+      # 180-degree rotation should still have minimal jerk (shortest angular path)
+      assert Validation.validate_minimal_jerk(rotation, translation) == :ok
+    end
+
+    test "validates minimal jerk for complex multi-point transformations" do
+      # Create a triangle
+      moved = [{0.0, 0.0, 0.0}, {1.0, 0.0, 0.0}, {0.5, 0.866, 0.0}]
+
+      # Rotate 60 degrees around Z and translate
+      angle = :math.pi / 3
+      cos_a = :math.cos(angle)
+      sin_a = :math.sin(angle)
+      translation_offset = {2.0, 3.0, 1.0}
+
+      target = Enum.map(moved, fn {x, y, z} ->
+        new_x = x * cos_a - y * sin_a
+        new_y = x * sin_a + y * cos_a
+        new_z = z
+        {new_x + elem(translation_offset, 0), new_y + elem(translation_offset, 1), new_z + elem(translation_offset, 2)}
+      end)
+
+      assert {:ok, {rotation, translation}} = QCP.weighted_superpose(moved, target)
+
+      # Complex transformation should still achieve minimal jerk
+      assert Validation.validate_minimal_jerk(rotation, translation) == :ok
+    end
+  end
 end
