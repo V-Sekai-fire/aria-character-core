@@ -12,8 +12,6 @@ defmodule AriaMath.Vector3 do
   """
 
   import Kernel, except: [length: 1]
-  alias __MODULE__
-
   @type t :: {float(), float(), float()}
 
   @doc """
@@ -401,16 +399,6 @@ defmodule AriaMath.Vector3 do
     scale(vector, scalar)
   end
 
-  @doc """
-  Scalar division.
-
-  Divides vector by scalar value.
-
-  ## Examples
-
-      iex> AriaMath.Vector3.div_scalar({2.0, 4.0, 6.0}, 2.0)
-      {1.0, 2.0, 3.0}
-  """
   @spec div_scalar(t(), float()) :: t()
   def div_scalar({x, y, z}, scalar) when is_number(scalar) and scalar != 0.0 do
     {x / scalar, y / scalar, z / scalar}

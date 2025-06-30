@@ -57,7 +57,7 @@ defmodule AriaJoint.Joint do
   - Parent-child relationship management for complex bone chains
   """
 
-  alias AriaMath.{Vector3, Quaternion, Matrix4}
+  alias AriaMath.{Vector3, Matrix4}
 
   @type transform() :: Matrix4.t()
   @type basis() :: Matrix4.t()
@@ -795,7 +795,7 @@ defmodule AriaJoint.Joint do
     # local_transform.basis = rotation.scaled(scale)
     rotation_matrix = node.rotation
     {sx, sy, sz} = node.scale
-    scale_matrix = Matrix4.scale({sx, sy, sz})
+    scale_matrix = Matrix4.scaling({sx, sy, sz})
     new_basis = Matrix4.multiply(rotation_matrix, scale_matrix)
 
     {translation, _old_rotation, _old_scale} = Matrix4.decompose(node.local_transform)
