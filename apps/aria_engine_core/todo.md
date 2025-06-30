@@ -147,6 +147,7 @@ mix test apps/aria_engine_core    # ⏳ Blocked until prerequisites complete
 **Root Cause:** `AriaEngineCore.Math.Joint.ensure_registry_with_timeout/0` failing to start Registry process
 
 **Required Fix:**
+
 ```elixir
 # Current failing approach in Joint module:
 Registry.start_link(keys: :unique, name: @registry_name)
@@ -155,6 +156,7 @@ Registry.start_link(keys: :unique, name: @registry_name)
 ```
 
 **Test Evidence:** 20/20 Joint tests failing with identical error pattern:
+
 ```
 ** (MatchError) no match of right hand side value: {:error, {:joint_creation_failed, %ErlangError{original: :noproc, reason: nil}}}
 ```
@@ -166,6 +168,7 @@ Registry.start_link(keys: :unique, name: @registry_name)
 **Impact:** External API delegation broken, affects umbrella integration
 
 **Missing Functions:**
+
 - `get_task_methods/2`, `get_unigoal_methods/2`, `get_multigoal_methods/1`
 - `get_multitodo_methods/1`, `get_action_metadata/2`, `get_entity_registry/1`
 - `get_durative_action/2`, `execute_action/4`
@@ -177,6 +180,7 @@ Registry.start_link(keys: :unique, name: @registry_name)
 **Problem:** 3 failing doctests due to floating-point precision differences
 
 **Examples:**
+
 - Matrix4 inverse: `-0.0` vs `0.0` differences
 - Quaternion rotation: `2.220446049250313e-16` vs `0.0`
 - Matrix4 transpose: Integer vs float type mismatches
@@ -324,7 +328,7 @@ All subsequent phases depend on these fundamental mathematical operations. These
 **⚠️ Phase 1 Partial Completion Status:**
 
 - ✅ QCP Module: Production-ready Wahba's problem solver with comprehensive error handling and numerical stability
-- ⚠️ **Joint Module: Implementation complete but Registry system failing** 
+- ⚠️ **Joint Module: Implementation complete but Registry system failing**
   - ✅ Complete bone hierarchy management with transform validation
   - ✅ Parent-child relationships and coordinate space conversions
   - ✅ Dirty state tracking and transform propagation
@@ -343,6 +347,7 @@ All subsequent phases depend on these fundamental mathematical operations. These
 **Current Blocker:** Joint Registry system failing to start, preventing bone hierarchy management needed for EWBIK algorithms.
 
 **Required Resolution Before Phase 2:**
+
 - ❌ Fix Joint Registry initialization in `AriaEngineCore.Math.Joint.ensure_registry_with_timeout/0`
 - ❌ Resolve `:noproc` errors in Joint test suite (20 failing tests)
 - ❌ Ensure Registry process starts correctly for bone hierarchy management
