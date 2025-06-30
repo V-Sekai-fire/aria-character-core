@@ -77,11 +77,18 @@ AriaEngineCore provides the foundational temporal planning and execution capabil
 7. **`aria_minizinc_multiply`** - MiniZinc multiplication operations (Tier 2 - depends on aria_minizinc_executor)
 8. **`ast_migrate`** - AST migration tooling (Tier 1 - leaf app)
 
+**Work Distribution Apps Created (June 30, 2025):**
+
+9. **`aria_khr_interactivity`** - KHR Interactivity domain implementation (Tier 2 - depends on aria_math, aria_joint, aria_state)
+10. **`aria_animation_demo`** - Temporal Animation Coordination demonstration (Tier 5 - depends on aria_engine_core, aria_khr_interactivity, aria_gltf, others)
+
 **Updated Testing Dependencies for aria_engine_core:**
 
 - **Tier 1 Prerequisites:** aria_state, aria_math, aria_gltf, aria_security, aria_timeline_intervals, ast_migrate - ⏳ Pending
-- **Tier 2 Prerequisites:** aria_joint, aria_qcp, aria_minizinc_stn, aria_minizinc_goal, aria_minizinc_executor, aria_minizinc_multiply - ⏳ Pending
+- **Tier 2 Prerequisites:** aria_joint, aria_qcp, aria_khr_interactivity, aria_minizinc_stn, aria_minizinc_goal, aria_minizinc_executor, aria_minizinc_multiply - ⏳ Pending
 - **Tier 3 Prerequisites:** aria_timeline (timeline layer) - ⏳ Pending  
+- **Tier 4 Prerequisites:** aria_engine_core (core planning capabilities) - ⏳ Pending
+- **Tier 5 Integration:** aria_animation_demo (temporal animation demonstration - depends on aria_engine_core)
 - **Optional Integration:** aria_ewbik (character IK solving - independent app available for future integration)
 
 **Known Integration Issues:**
@@ -108,9 +115,10 @@ mix test apps/ast_migrate         # ⏳ Pending - AST migration tooling (NEW)
 mix test apps/aria_serial         # ⏳ Pending
 mix test apps/aria_storage        # ⏳ Pending
 
-# Tier 2: Single-dependency apps - 5 apps including EWBIK foundation
+# Tier 2: Single-dependency apps - 6 apps including EWBIK foundation and KHR
 mix test apps/aria_joint          # ✅ Required for EWBIK joint hierarchy (NEW - extracted from aria_math)
 mix test apps/aria_qcp            # ✅ Required for EWBIK QCP algorithm (NEW)
+mix test apps/aria_khr_interactivity  # ⏳ Pending - KHR Interactivity domain (NEW)
 mix test apps/aria_minizinc_stn        # ✅ Required for aria_engine_core  
 mix test apps/aria_minizinc_goal       # ✅ Required for aria_engine_core
 mix test apps/aria_minizinc_executor   # ✅ Required for aria_engine_core
@@ -121,6 +129,9 @@ mix test apps/aria_timeline       # ✅ Required for aria_engine_core
 
 # Tier 4: FINALLY can test aria_engine_core
 mix test apps/aria_engine_core    # ⏳ Blocked until prerequisites complete
+
+# Tier 5: High-level integration and demonstration apps
+mix test apps/aria_animation_demo # ⏳ Pending - Temporal animation demonstration (depends on aria_engine_core)
 ```
 
 **Systematic Testing Approach:**
@@ -244,84 +255,52 @@ mix test apps/aria_engine_core    # ⏳ Blocked until prerequisites complete
 
 **Required:** Either implement missing module or update adapter to handle missing dependency gracefully
 
+## Work Distribution and App Separation (June 30, 2025)
+
+### ✅ KHR Interactivity Domain Extracted to Dedicated App
+
+**→ MOVED TO:** `aria_khr_interactivity` app (see `apps/aria_khr_interactivity/todo.md`)
+
+**Extraction Benefits:**
+- **Clean Separation:** KHR Interactivity domain isolated in dedicated app
+- **Reusable Components:** KHR functionality can be used by multiple apps
+- **Focused Responsibility:** AriaEngineCore focuses on core temporal planning
+- **Modular Architecture:** Follows umbrella app best practices
+
+**What was moved:**
+- KHR Interactivity mathematical primitives (Phase 0)
+- Behavior graph processing infrastructure
+- Node library standardized interface
+- Integration bridge capabilities
+
+### ✅ Animation Demo Domain Extracted to Dedicated App
+
+**→ MOVED TO:** `aria_animation_demo` app (see `apps/aria_animation_demo/todo.md`)
+
+**Extraction Benefits:**
+- **Demo Separation:** Demonstration code separated from core engine
+- **Clear Examples:** Provides reference implementation for animation planning
+- **Testing Domain:** Comprehensive test scenarios for validation
+- **Integration Showcase:** Real-world usage patterns for other apps
+
+**What was moved:**
+- Forward kinematics with glTF animation data (Phase 2)
+- Temporal animation coordination (Phase 3)
+- KHR Interactivity test domain (Phase 4)
+- Animation test scenarios (Phase 5)
+
 ## Implementation Plan
 
-### Phase 0: KHR Interactivity Mathematical Primitives Foundation ✅ COMPLETED (June 29, 2025)
+### ~~Phase 0: KHR Interactivity Mathematical Primitives Foundation~~ **→ Moved to `aria_khr_interactivity`**
 
-**Priority: CRITICAL FOUNDATION - Mathematical bedrock for all EWBIK algorithms and test domain**
+**Status:** ✅ COMPLETED and EXTRACTED (June 29-30, 2025)
 
-All subsequent phases depend on these fundamental mathematical operations. These are pure mathematical functions that enable both EWBIK algorithms and the test domain to function properly.
+**Current Location:** `apps/aria_khr_interactivity/todo.md`
 
-- [x] **KHR Interactivity Mathematical Primitives (Standards-Based)** ✅ COMPLETE (June 29, 2025)
-  - [x] **IMPLEMENTATION COMPLETE:** Enhanced QCP algorithm with full numerical robustness and error handling
-  - [x] **IMPLEMENTATION COMPLETE:** Production-ready Joint hierarchy management with registry-based tracking
-  - [x] **INTEGRATION COMPLETE:** Mathematical primitives integration with comprehensive IEEE-754 compliance
-  - [x] **ROBUSTNESS COMPLETE:** Enhanced error handling and edge case management throughout math modules
-  - [x] **VALIDATION COMPLETE:** Standards-based implementation following thirdparty/Specification.adoc requirements
-  - [x] **COMPREHENSIVE IMPLEMENTATION:** All mathematical operations from KHR Interactivity specification implemented following IEEE-754 standard
-  - [x] Complete `primitives.ex` module with ALL KHR Interactivity mathematical nodes covering every category:
-    - [x] **Constants:** `math/e`, `math/pi`, `math/inf`, `math/nan`
-    - [x] **Float Arithmetic:** `math/abs`, `math/sign`, `math/trunc`, `math/floor`, `math/ceil`, `math/round`, `math/fract`, `math/neg`, `math/add`, `math/sub`, `math/mul`, `math/div`, `math/rem`, `math/min`, `math/max`, `math/clamp`, `math/saturate`, `math/mix`
-    - [x] **Float Comparison:** `math/eq`, `math/lt`, `math/le`, `math/gt`, `math/ge`
-    - [x] **Special Operations:** `math/isnan`, `math/isinf`, `math/select`, `math/random`
-    - [x] **Trigonometric:** `math/rad`, `math/deg`, `math/sin`, `math/cos`, `math/tan`, `math/asin`, `math/acos`, `math/atan`, `math/atan2`
-    - [x] **Hyperbolic:** `math/sinh`, `math/cosh`, `math/tanh`, `math/asinh`, `math/acosh`, `math/atanh`
-    - [x] **Exponential:** `math/exp`, `math/log`, `math/log2`, `math/log10`, `math/sqrt`, `math/cbrt`, `math/pow`
-    - [x] **Integer Arithmetic:** `math/abs`, `math/sign`, `math/neg`, `math/add`, `math/sub`, `math/mul`, `math/div`, `math/rem`, `math/min`, `math/max`, `math/clamp` (with proper overflow handling)
-    - [x] **Integer Comparison:** `math/eq`, `math/lt`, `math/le`, `math/gt`, `math/ge`
-    - [x] **Integer Bitwise:** `math/not`, `math/and`, `math/or`, `math/xor`, `math/asr`, `math/lsl`, `math/clz`, `math/ctz`, `math/popcnt`
-    - [x] **Boolean Logic:** `math/and`, `math/or`, `math/not`, `math/xor`
-    - [x] **Type Conversion:** `type/boolToInt`, `type/boolToFloat`, `type/intToBool`, `type/intToFloat`, `type/floatToBool`, `type/floatToInt`
-    - [x] **Swizzle Operations:** `math/combine2`, `math/combine3`, `math/combine4`, `math/extract2`, `math/extract3`, `math/extract4`
-    - [x] **Matrix Combinations:** `math/combine2x2`, `math/combine3x3`, `math/combine4x4`, `math/extract2x2`, `math/extract3x3`, `math/extract4x4`
-  - [x] Create `lib/aria_engine_core/math/vector3.ex` - Implements glTF KHR Interactivity `float3` operations
-    - [x] Port `math/length` - Vector length using IEEE-754 hypot for numerical stability
-    - [x] Port `math/normalize` - Vector normalization with validity checking  
-    - [x] Port `math/dot` - Component-wise dot product with NaN/infinity handling
-    - [x] Port `math/cross` - 3D cross product following KHR spec
-    - [x] Port `math/add`, `math/sub`, `math/mul` - Component-wise arithmetic
-    - [x] Port `math/min`, `math/max`, `math/clamp` - Component-wise comparison operations
-  - [x] Create `lib/aria_engine_core/math/quaternion.ex` - Implements glTF KHR Interactivity `float4` quaternion operations
-    - [x] Port `math/quatConjugate` - Quaternion conjugation with sign handling
-    - [x] Port `math/quatMul` - Quaternion multiplication following Hamilton product
-    - [x] Port `math/quatAngleBetween` - Angle between quaternions (assumes unit quaternions)
-    - [x] Port `math/quatFromAxisAngle` - Create quaternion from axis and angle (assumes unit axis)
-    - [x] Port `math/quatToAxisAngle` - Decompose quaternion to axis and angle with threshold handling
-    - [x] Port `math/quatFromDirections` - Create quaternion from two direction vectors (assumes unit vectors)
-    - [x] Port `math/normalize` - Quaternion normalization with validity checking for unit quaternions
-  - [x] Create `lib/aria_engine_core/math/matrix4.ex` - Implements glTF KHR Interactivity `float4x4` matrix operations
-    - [x] Port `math/matmul` - Matrix multiplication following column-major order
-    - [x] Port `math/transpose` - Matrix transpose operation
-    - [x] Port `math/determinant` - Matrix determinant calculation with NaN/infinity handling
-    - [x] Port `math/inverse` - Matrix inverse with validity checking and error handling
-    - [x] Port `math/matCompose` - Compose 4x4 transform from TRS (translation, rotation, scale)
-    - [x] Port `math/matDecompose` - Decompose 4x4 transform to TRS with validation
-    - [x] Port `math/transform` - Vector transformation (float3/float4 by matrix)
-  - [x] **Standards Compliance and Testing**
-    - [x] Ensure exact compliance with glTF KHR Interactivity mathematical specification
-    - [x] Implement IEEE-754 numerical precision and stability requirements
-    - [x] Performance optimizations while maintaining specification compliance
-    - [x] Comprehensive test suite validating against KHR Interactivity test cases (24 doctests passing, fixed IEEE-754 infinity handling)
-
-**✅ Phase 0 Completion Status (Modular Architecture):**
-
-- ✅ **aria_math app:** Complete KHR Interactivity mathematical primitives (constants, arithmetic, trigonometry, etc.)
-  - ✅ Vector3 module: IEEE-754 compliant length, normalize, dot, cross, arithmetic operations
-  - ✅ Quaternion module: Hamilton product, axis-angle conversions, slerp, direction-based creation
-  - ✅ Matrix4 module: Column-major multiplication, TRS composition/decomposition, transform operations
-  - ✅ Primitives module: All KHR Interactivity mathematical operations
-  - ⚠️ **Doctest precision issues:** 3 failing doctests due to floating-point precision (-0.0 vs 0.0, minor numerical differences)
-- ✅ **aria_joint app:** Production-ready joint hierarchy management (extracted from aria_math)
-  - ✅ Transform hierarchy with parent-child relationships
-  - ✅ Local/global coordinate space conversions
-  - ✅ Registry-based state management
-  - ⚠️ **Registry startup issues:** Joint tests partially failing due to process initialization
-- ✅ **aria_qcp app:** Quaternion Characteristic Polynomial algorithm implementation
-  - ✅ Wahba's problem solver with comprehensive error handling
-  - ✅ Numerical stability and IEEE-754 compliance
-  - ✅ Production-ready performance characteristics
-- ✅ **Architectural benefit:** Mathematical foundation properly modularized for reuse across umbrella apps
-- ✅ **IEEE-754 compliance:** Implemented throughout all mathematical apps
+- ✅ **Mathematical Foundation Available:** aria_math, aria_joint, aria_qcp apps provide complete KHR mathematical infrastructure
+- ✅ **Modular Architecture:** Mathematical primitives properly separated into focused apps
+- ✅ **IEEE-754 Compliance:** All mathematical operations follow standards
+- ✅ **Production Ready:** Performance characteristics validated across all mathematical apps
 
 ### Phase 1: EWBIK Math Solver Ports ✅ FULLY COMPLETE (June 30, 2025)
 
@@ -421,133 +400,91 @@ mix test apps/aria_engine_core # Result: 39 tests, 0 failures ✅
 - Elimination of potential confusion from dead code
 - Professional codebase appearance for production readiness
 
-### Phase 2: Forward Kinematics with glTF Animation Data (HIGH PRIORITY)
+### ~~Phase 2-5: Animation and KHR Interactivity Implementation~~ **→ Moved to `aria_animation_demo` and `aria_khr_interactivity`**
 
-**Priority: HIGH - Implement forward kinematics using glTF animation data for character animation**
+**Status:** ⏳ PENDING - Extracted to dedicated apps (June 30, 2025)
 
-**Dependencies:** ✅ **Mathematical Foundation Available** - AriaJoint, AriaMath, AriaGltf apps provide necessary components
+**Current Locations:**
+- **Animation Implementation:** `apps/aria_animation_demo/todo.md`
+- **KHR Interactivity:** `apps/aria_khr_interactivity/todo.md`
 
-**✅ Prerequisites Met:**
+**Benefits of Extraction:**
+- **AriaEngineCore Focus:** Core engine focuses on temporal planning infrastructure
+- **Modular Development:** Animation and KHR work can proceed independently
+- **Reusable Components:** Animation and KHR apps can be used by other projects
+- **Clear Testing:** Each domain has focused test suites
 
-- ✅ AriaJoint app (48/48 tests passing, 160K+ poses/second performance)
-- ✅ AriaMath app (IEEE-754 compliant mathematical primitives)
-- ✅ AriaGltf app (glTF processing and material handling)
-- ✅ Joint hierarchy management with registry-based tracking
+### Phase 2: Core Engine Infrastructure (HIGH PRIORITY)
 
-**Phase 2 Implementation Plan:**
+**Priority: HIGH - Focus AriaEngineCore on core temporal planning capabilities**
 
-- [ ] **glTF Animation Data Processing**
-  - [ ] Create `lib/aria_engine_core/animation/gltf_loader.ex`
-  - [ ] Parse glTF animation channels (translation, rotation, scale)
-  - [ ] Parse glTF animation samplers (input/output, interpolation methods)
-  - [ ] Handle LINEAR, STEP, and CUBICSPLINE interpolation
-  - [ ] Integration with AriaGltf for asset loading
+**Current Focus:** Core temporal planning and execution without animation-specific implementations
 
-- [ ] **Forward Transform Calculation System**
-  - [ ] Create `lib/aria_engine_core/animation/forward_kinematics.ex`
-  - [ ] Apply animation transforms through AriaJoint hierarchy
-  - [ ] Use AriaJoint Registry system for efficient joint lookups
-  - [ ] Leverage AriaJoint's `to_global/2` for forward transform calculation
-  - [ ] Handle parent-child transform propagation using AriaJoint API
+- [ ] **Core Domain Methods Enhancement**
+  - [ ] Implement `AriaEngineCore.Domain` module completely
+  - [ ] Fix missing domain method functions
+  - [ ] Core entity management without animation specifics
+  - [ ] Integration with AriaState for general entity storage
 
-- [ ] **Animation Timeline Integration**
-  - [ ] Create `lib/aria_engine_core/animation/timeline_player.ex`
-  - [ ] Integrate with AriaTimeline for temporal coordination
-  - [ ] Support multiple animation layers and blending
-  - [ ] Handle animation looping and timing controls
-  - [ ] Timeline-based animation sequencing
+- [ ] **External API Integration**
+  - [ ] Add integration with `aria_khr_interactivity` external API
+  - [ ] Add integration capabilities for `aria_animation_demo`
+  - [ ] Maintain clean separation between core and domain-specific functionality
+  - [ ] Ensure proper umbrella app communication patterns
 
-- [ ] **KHR Interactivity Integration**
-  - [ ] Create `lib/aria_engine_core/animation/interactivity_bridge.ex`
-  - [ ] Use KHR Interactivity behavior graphs to control animation playback
-  - [ ] Animation state management through behavior graph events
-  - [ ] Integration with KHR mathematical primitives for animation blending
+- [ ] **Planner Infrastructure**
+  - [ ] Core temporal planning algorithms
+  - [ ] State space exploration
+  - [ ] Solution tree management
+  - [ ] Integration with timeline and constraint solving apps
 
-### Phase 3: Temporal Animation Coordination (HIGH PRIORITY)
+## Related Apps and Integration
 
-**Priority: HIGH - Coordinate multiple animations with temporal planner**
+**Dependent Apps:**
+- **AriaAnimationDemo:** Uses AriaEngineCore for temporal planning infrastructure
+- **AriaKhrInteractivity:** Provides KHR functionality that AriaEngineCore can integrate with
+- **AriaHybridPlanner:** Uses AriaEngineCore for high-level planning coordination
 
-**Dependencies:** Phase 2 forward kinematics implementation complete
+**Foundation Apps:**
+- **AriaState:** State management and entity storage
+- **AriaTimeline:** Temporal coordination and timeline management
+- **AriaMath, AriaJoint, AriaQcp:** Mathematical foundation for any mathematical operations
+- **AriaGltf:** Asset processing capabilities
 
-- [ ] **Multi-Animation Sequencing**
-  - [ ] Create `lib/aria_engine_core/animation/sequence_coordinator.ex`
-  - [ ] Temporal planning for animation transitions
-  - [ ] Animation priority and overlap handling
-  - [ ] Smooth blending between animation sequences
-
-- [ ] **Domain Method Integration for Animations**
-  - [ ] Update `lib/aria_engine_core/domain.ex` to include animation methods
-  - [ ] Add character animation methods using forward kinematics
-  - [ ] Add temporal animation sequencing capabilities
-  - [ ] Integration with AriaState for animation configuration storage
-
-- [ ] **Animation Entity Support**
-  - [ ] Add character skeleton entity management
-  - [ ] Add animation clip entity support
-  - [ ] Add animation state configuration entities
-  - [ ] Integration with AriaState for animation data storage
-
-### Phase 4: KHR Interactivity Test Domain (HIGH PRIORITY)
-
-**Priority: HIGH - Create comprehensive test domain using forward kinematics and glTF animations**
-
-**Dependencies:** Requires Phase 2 forward kinematics and Phase 3 temporal coordination
-
-- [ ] **Animation Entity Types for KHR Interactivity**
-  - [ ] Create `test/support/animation_khr_domain.ex`
-  - [ ] Character skeleton entities with animation support
-  - [ ] Animation clip entities with glTF data
-  - [ ] Animation state entities for playback control
-  - [ ] Bone hierarchy entities with forward kinematics
-  - [ ] Integration with KHR Interactivity node system
-
-- [ ] **Temporal Action Patterns for Animations**
-  - [ ] **Pattern 1**: Instant animation start (`play_animation_instant`)
-  - [ ] **Pattern 2**: Timed animation playback (`play_animation_for_duration`)
-  - [ ] **Pattern 3**: Animation transitions (`transition_to_animation`)
-  - [ ] **Pattern 4**: Deadline-based animation completion (`complete_animation_by`)
-  - [ ] **Pattern 5**: Coordinated multi-character starts (`begin_group_animation_by`)
-  - [ ] **Pattern 6**: Animation sequence scheduling (`play_sequence_until`)
-  - [ ] **Pattern 7**: Animation monitoring (`monitor_animation_during`)
-  - [ ] **Pattern 8**: Continuous animation validation (`validate_animation_continuously`)
-
-- [ ] **Animation-Specific Method Types**
-  - [ ] `@action` - Animation state updates (play, pause, stop, seek)
-  - [ ] `@command` - Animation execution with forward kinematics calculation
-  - [ ] `@task_method` - Complex multi-animation coordination workflows
-  - [ ] `@unigoal_method` - Single animation goal achievement
-  - [ ] `@multigoal_method` - Multi-character animation coordination (conservative usage per R25W1398085)
-
-### Phase 5: Animation Test Scenarios
-
-#### Project-Specific ADR References
-
-**Internal Architecture Decision Records:**
+**Project-Specific ADR References:**
 
 - **R25W1398085**: Unified Durative Action Specification and Planner Standardization
 - **R25W158CORE**: AriaEngineCore Implementation Plan (this document)
+- **R25W159KHRI**: AriaKhrInteractivity Implementation Plan
+- **R25W160DEMO**: AriaAnimationDemo Implementation Plan
 - **R25W087E1AE**: Aria Engine Plans glTF KHR Interactivity Implementation
 - **R25W064B8E2**: KHR Interactivity Node Library Standardized Interface
 
-### Implementation Notes
+## Success Criteria
 
-**Coordinate System Conversions:**
+- [ ] Complete core temporal planning infrastructure
+- [ ] Clean external API following umbrella standards
+- [ ] Integration capabilities with specialized domain apps
+- [ ] Comprehensive test suite for core planning functionality
+- [ ] Clear separation between core infrastructure and domain-specific implementations
 
-- All mathematical operations follow the glTF 2.0 coordinate system (Y-up, right-handed)
-- Godot Transform3D to glTF matrix conversion preserves anatomical constraints
-- IEEE-754 compliance ensures numerical stability across all mathematical operations
+## Implementation Notes
+
+**Architecture Focus:**
+- Core temporal planning and execution capabilities
+- State space exploration and solution management
+- Integration points for domain-specific apps
+- Clean umbrella app communication patterns
 
 **Performance Considerations:**
-
-- QCP algorithm complexity: O(n) for point set alignment where n is number of points
-- EWBIK iteration complexity: O(k×j) where k is iterations and j is number of joints
-- VRM1 collision detection: O(c×j) where c is colliders and j is joints per frame
+- Core planning algorithm complexity optimization
+- Memory management for large state spaces
+- Efficient integration with timeline and constraint solving
 
 **Testing and Validation:**
-
-- All mathematical operations validated against KHR Interactivity specification test cases
-- Cross-validation with Godot SkeletonProfileHumanoid reference poses
-- IEEE-754 edge case handling verified through comprehensive test suite
+- Core planning functionality tests
+- Integration tests with dependent apps
+- Performance benchmarks for planning algorithms
 
 ### License and Attribution
 

@@ -60,10 +60,13 @@ If umbrella gets broken by incorrect workflow:
 - ✅ Regenerated dependencies with `mix deps.get && mix compile`
 - ✅ All apps compile successfully (warnings only, no errors)
 
-**Latest Progress: Joint Functionality Extraction Complete ✅**
+**Latest Progress: Work Distribution and App Separation Complete ✅**
 
 - ✅ **NEW APP:** Created `aria_joint` with complete external API (`lib/aria_joint.ex`)
 - ✅ **EXTRACTION:** Moved Joint implementation from `aria_math` to dedicated `aria_joint` app
+- ✅ **NEW APP:** Created `aria_khr_interactivity` for KHR Interactivity domain implementation
+- ✅ **NEW APP:** Created `aria_animation_demo` for temporal animation coordination demonstration
+- ✅ **WORK DISTRIBUTION:** Properly separated responsibilities from `aria_engine_core` to focused apps
 - ✅ **HIERARCHY:** Proper transform hierarchy management for EWBIK bone chains
 - ✅ **DEPENDENCY:** Added aria_math dependency to aria_joint for Matrix4/Vector3 operations
 - ✅ **EXTERNAL API:** Created complete aria_math external API (`lib/aria_math.ex`)
@@ -92,28 +95,30 @@ If umbrella gets broken by incorrect workflow:
 9. ⏳ `mix test apps/aria_minizinc_executor`
 10. ⏳ `mix test apps/ast_migrate`
 
-### Tier 2: Single-dependency apps - 3 apps
+### Tier 2: Single-dependency apps - 5 apps
 
 11. ⏳ `mix test apps/aria_minizinc_stn` (→ aria_minizinc_executor)
 12. ⏳ `mix test apps/aria_minizinc_goal` (→ aria_minizinc_executor)
 13. ⏳ `mix test apps/aria_minizinc_multiply` (→ aria_minizinc_executor)
+14. ⏳ `mix test apps/aria_khr_interactivity` (→ aria_math, aria_joint, aria_state)
 
 ### Tier 3: Timeline layer - 1 app
 
-14. ⏳ `mix test apps/aria_timeline` (→ aria_minizinc_stn)
+15. ⏳ `mix test apps/aria_timeline` (→ aria_minizinc_stn)
 
 ### Tier 4: Engine core - 1 app
 
-15. ⏳ `mix test apps/aria_engine_core` (→ aria_state, aria_timeline, aria_minizinc_stn, aria_minizinc_goal, aria_minizinc_executor)
+16. ⏳ `mix test apps/aria_engine_core` (→ aria_state, aria_timeline, aria_minizinc_stn, aria_minizinc_goal, aria_minizinc_executor, aria_khr_interactivity)
 
-### Tier 5: Higher-level integration - 2 apps
+### Tier 5: Higher-level integration - 3 apps
 
-16. ⏳ `mix test apps/aria_core` (→ aria_engine_core, aria_state)
-17. ⏳ `mix test apps/aria_hybrid_planner` (→ aria_state, aria_timeline, aria_minizinc_stn, aria_engine_core)
+17. ⏳ `mix test apps/aria_core` (→ aria_engine_core, aria_state)
+18. ⏳ `mix test apps/aria_hybrid_planner` (→ aria_state, aria_timeline, aria_minizinc_stn, aria_engine_core)
+19. ⏳ `mix test apps/aria_animation_demo` (→ aria_engine_core, aria_khr_interactivity, aria_gltf, aria_timeline, aria_joint, aria_math, aria_state)
 
 ### Tier 6: Top-level apps - 1 app
 
-18. ⏳ `mix test apps/aria_membrane_pipeline` (→ aria_engine_core, aria_hybrid_planner, aria_minizinc_goal)
+20. ⏳ `mix test apps/aria_membrane_pipeline` (→ aria_engine_core, aria_hybrid_planner, aria_minizinc_goal)
 
 ## Known Issues to Address
 
