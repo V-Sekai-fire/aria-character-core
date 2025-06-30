@@ -9,7 +9,9 @@
 **NEW APPS AVAILABLE - Updated Integration Strategy:**
 
 ### AriaJoint App ✅ AVAILABLE
+
 **Key functionality for glTF parent-child transforms now implemented in `aria_joint`:**
+
 - Local and global transform caching with dirty state optimization
 - Parent-child bone hierarchy management
 - Coordinate space conversions (local ↔ global)
@@ -20,7 +22,9 @@
 **Impact on glTF implementation:** The complex joint hierarchy and transform chain management required for glTF skeletal animation is now available as a dedicated app. This significantly reduces the complexity of implementing the `AriaGltf.Skin` module and joint-based animations.
 
 ### AriaMath App ✅ AVAILABLE
+
 **Mathematical foundation now provided by `aria_math`:**
+
 - Matrix4 operations for 4x4 transformation matrices
 - Vector3 operations for 3D points and directions
 - Quaternion operations for rotations
@@ -29,7 +33,9 @@
 **Impact on glTF implementation:** Core mathematical operations required for mesh transformations, joint calculations, and animation interpolation are now available as a dedicated app.
 
 ### AriaQCP App ✅ AVAILABLE  
+
 **Quaternion-based Characteristic Polynomial operations for advanced motion processing:**
+
 - Motion validation and optimization
 - Quaternion-based transformations
 - Advanced geometric computations
@@ -470,11 +476,13 @@ The ADR originally proposed six separate apps for single responsibility separati
 **Technical Dependencies:**
 
 **UMBRELLA APPS (Internal Dependencies):**
+
 - **`aria_joint`** ✅ - Transform hierarchy management, parent-child relationships, coordinate space conversions
 - **`aria_math`** ✅ - Matrix4, Vector3, Quaternion operations for all mathematical computations
 - **`aria_qcp`** ✅ - Advanced motion processing and quaternion-based optimizations
 
 **EXTERNAL PACKAGES:**
+
 - [Nx Package](https://hex.pm/packages/nx) - Numerical computing for Elixir
 - [TorchX Package](https://hex.pm/packages/torchx) - GPU-accelerated tensor operations
 - [Image Package](https://hex.pm/packages/image) - JPG/PNG read/write operations
