@@ -27,35 +27,35 @@
 
 ### 2. ~~Missing AriaEngineCore.Domain Module~~ **TOMBSTONED ✅**
 
-**Status:** SOLVED - Architectural violation, fix by flattening module hierarchy
+**Status:** SOLVED - Architectural violation, fix by cross-app migration
 
-**Problem:** `AriaEngineCore` was delegating to modules that violate umbrella app architecture (3-level depth violates INST-041)
+**Problem:** `AriaEngineCore` contained modules that violate umbrella app architecture (3-level depth) and mixed concerns (domain + math + execution)
 
-**Solution Found:** Functions exist but are in architecturally non-compliant locations:
-- `get_task_methods/2` in `AriaEngineCore.Domain.Methods` (3 levels - VIOLATION)
-- `get_multigoal_methods/1` in `AriaEngineCore.Domain.Methods` (3 levels - VIOLATION)  
-- `get_multitodo_methods/1` in `AriaEngineCore.Domain.Methods` (3 levels - VIOLATION)
-- `get_action_metadata/2` in `AriaEngineCore.Domain.Actions` (3 levels - VIOLATION)
-- `execute_action/4` in `AriaEngineCore.Domain.Actions` (3 levels - VIOLATION)
-- `get_durative_action/2` in `AriaEngineCore.Domain.Core` (3 levels - VIOLATION)
+**Solution Found:** Functions exist but need proper app separation:
 
-**Fix Required:** Flatten module hierarchy to comply with umbrella app standards:
+**Domain Functions → AriaCore:**
+- `get_task_methods/2` in `AriaEngineCore.Domain.Methods` → `AriaCore.Methods`
+- `get_multigoal_methods/1` in `AriaEngineCore.Domain.Methods` → `AriaCore.Methods`
+- `get_multitodo_methods/1` in `AriaEngineCore.Domain.Methods` → `AriaCore.Methods`
+- `get_action_metadata/2` in `AriaEngineCore.Domain.Actions` → `AriaCore.Actions`
+- `execute_action/4` in `AriaEngineCore.Domain.Actions` → `AriaCore.Actions`
+- `get_durative_action/2` in `AriaEngineCore.Domain.Core` → `AriaCore.Core`
 
-```elixir
-# BEFORE (3 levels - VIOLATION):
-AriaEngineCore.Domain.Methods → AriaEngineCore.Methods
-AriaEngineCore.Domain.Actions → AriaEngineCore.Actions  
-AriaEngineCore.Domain.Core → AriaEngineCore.Core
+**Math Functions → New AriaMath App:**
+- `AriaEngineCore.Math.Quaternion` → `AriaMath.Quaternion`
+- `AriaEngineCore.Math.Matrix4` → `AriaMath.Matrix4`
+- `AriaEngineCore.Math.Vector3` → `AriaMath.Vector3`
+- `AriaEngineCore.Math.Joint` → `AriaMath.Joint`
+- `AriaEngineCore.Math.Primitives` → `AriaMath.Primitives`
 
-# File moves required:
-lib/aria_engine_core/domain/methods.ex → lib/aria_engine_core/methods.ex
-lib/aria_engine_core/domain/actions.ex → lib/aria_engine_core/actions.ex
-lib/aria_engine_core/domain/core.ex → lib/aria_engine_core/core.ex
+**Fix Required:** Complete cross-app migration for proper separation of concerns:
 
-# Update external API delegation in lib/aria_engine_core.ex to point to flattened modules
-```
+1. **Create `aria_math` app** for all mathematical operations
+2. **Move domain functions to `aria_core`** for domain management  
+3. **AriaEngineCore becomes pure execution coordinator** with external API delegation
+4. **Update all cross-app references** to use external APIs
 
-**Note:** This is an architectural compliance issue per INST-041, not a missing implementation issue. The `Domain` abstraction layer violates umbrella app structure requirements.
+**Note:** This achieves complete INST-041 compliance and proper separation of concerns: AriaCore (domain), AriaMath (mathematics), AriaEngineCore (execution coordination).
 
 ### 3. Missing AriaHybridPlanner.Core Module
 
