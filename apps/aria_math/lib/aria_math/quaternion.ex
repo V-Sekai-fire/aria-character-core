@@ -407,7 +407,7 @@ defmodule AriaMath.Quaternion do
   end
 
   @doc """
-  Returns the identity quaternion (0, 0, 0, 1).
+  Identity quaternion constant.
 
   ## Examples
 
@@ -416,22 +416,6 @@ defmodule AriaMath.Quaternion do
   """
   @spec identity() :: t()
   def identity, do: {0.0, 0.0, 0.0, 1.0}
-
-  @doc """
-  Checks if a quaternion is the identity quaternion.
-
-  ## Examples
-
-      iex> AriaMath.Quaternion.is_identity?({0.0, 0.0, 0.0, 1.0})
-      true
-
-      iex> AriaMath.Quaternion.is_identity?({1.0, 0.0, 0.0, 0.0})
-      false
-  """
-  @spec is_identity?(t()) :: boolean()
-  def is_identity?({x, y, z, w}) do
-    abs(x) < 1.0e-10 and abs(y) < 1.0e-10 and abs(z) < 1.0e-10 and abs(w - 1.0) < 1.0e-10
-  end
 
   @doc """
   Check if two quaternions are approximately equal within a tolerance.

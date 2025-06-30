@@ -561,27 +561,22 @@ defmodule AriaMath.Joint do
   end
 
   @doc """
-  Rotate node locally using global rotation.
+  Rotate node locally using global basis.
 
   ## Parameters
 
   - `node` - The node to rotate
-  - `rotation` - Global rotation to apply (quaternion or matrix basis)
+  - `basis` - Global rotation basis to apply
   - `propagate` - Whether to propagate changes to children (default: false)
 
   ## Examples
 
-      # Using quaternion
-      rotation_quat = Quaternion.from_axis_angle({0.0, 1.0, 0.0}, Math.pi / 4)
-      node = Joint.rotate_local_with_global(node, rotation_quat, true)
-
-      # Using matrix basis
-      rotation_matrix = Matrix4.rotation(Quaternion.from_axis_angle({0.0, 1.0, 0.0}, Math.pi / 4))
-      node = Joint.rotate_local_with_global(node, rotation_matrix, true)
+      rotation_basis = Matrix4.rotation_y(Math.pi / 4)
+      node = Joint.rotate_local_with_global(node, rotation_basis, true)
 
   """
-  @spec rotate_local_with_global(t(), Quaternion.t() | basis(), boolean()) :: t()
-  def rotate_local_with_global(node, rotation, propagate \\ false) do
+  @spec rotate_local_with_global(t(), basis(), boolean()) :: t()
+  def rotate_local_with_global(node, basis, propagate \\ false) do
     case get_parent_node(node) do
       nil -> node
 
@@ -590,25 +585,16 @@ defmodule AriaMath.Joint do
         parent_basis = Matrix4.extract_basis(parent_global)
         parent_inverse = Matrix4.transpose(parent_basis)
 
-        # Convert rotation input to matrix basis if it's a quaternion
-        rotation_basis = case rotation do
-          {_, _, _, _} = quat -> Matrix4.rotation(quat)  # It's a quaternion
-          rotation_matrix -> rotation_matrix              # It's already a matrix
-        end
-
-        # new_rot = parent_inverse * rotation_basis * parent_basis * local_basis
+        # new_rot = parent_inverse * basis * parent_basis * local_basis
         local_basis = Matrix4.extract_basis(node.local_transform)
         new_local_basis = parent_inverse
-                         |> Matrix4.multiply(rotation_basis)
+                         |> Matrix4.multiply(basis)
                          |> Matrix4.multiply(parent_basis)
                          |> Matrix4.multiply(local_basis)
 
         # Update local transform with new basis
-        {translation, _old_rotation, scale} = Matrix4.decompose(node.local_transform)
-
-        # Convert matrix basis to quaternion for compose function
-        new_local_quaternion = matrix_basis_to_quaternion(new_local_basis)
-        new_local_transform = Matrix4.compose(translation, new_local_quaternion, scale)
+        {translation, _rotation, scale} = Matrix4.decompose(node.local_transform)
+        new_local_transform = Matrix4.compose(translation, new_local_basis, scale)
 
         updated_node = %{node |
           local_transform: new_local_transform,
@@ -841,48 +827,5 @@ defmodule AriaMath.Joint do
   end
   defp has_dirty_flag?(current_flag, flag) when is_atom(current_flag) do
     current_flag == flag
-  end
-
-  @spec matrix_basis_to_quaternion(Matrix4.t()) :: Quaternion.t()
-  defp matrix_basis_to_quaternion(matrix) do
-    # Extract the 3x3 rotation part from the 4x4 matrix and convert to quaternion
-    {m0, m1, m2, _, m4, m5, m6, _, m8, m9, m10, _, _, _, _, _} = matrix
-
-    # Convert 3x3 rotation matrix to quaternion using Shepperd's method
-    trace = m0 + m5 + m10
-
-    cond do
-      trace > 0.0 ->
-        s = :math.sqrt(trace + 1.0) * 2.0  # s = 4 * qw
-        w = 0.25 * s
-        x = (m6 - m9) / s
-        y = (m8 - m2) / s
-        z = (m1 - m4) / s
-        {x, y, z, w}
-
-      m0 > m5 and m0 > m10 ->
-        s = :math.sqrt(1.0 + m0 - m5 - m10) * 2.0  # s = 4 * qx
-        w = (m6 - m9) / s
-        x = 0.25 * s
-        y = (m4 + m1) / s
-        z = (m8 + m2) / s
-        {x, y, z, w}
-
-      m5 > m10 ->
-        s = :math.sqrt(1.0 + m5 - m0 - m10) * 2.0  # s = 4 * qy
-        w = (m8 - m2) / s
-        x = (m4 + m1) / s
-        y = 0.25 * s
-        z = (m9 + m6) / s
-        {x, y, z, w}
-
-      true ->
-        s = :math.sqrt(1.0 + m10 - m0 - m5) * 2.0  # s = 4 * qz
-        w = (m1 - m4) / s
-        x = (m8 + m2) / s
-        y = (m9 + m6) / s
-        z = 0.25 * s
-        {x, y, z, w}
-    end
   end
 end
