@@ -58,17 +58,12 @@ defmodule AriaJoint.Joint do
   """
 
   alias AriaMath.{Vector3, Matrix4}
+  alias AriaJoint.{Registry, Validation, DirtyState, Hierarchy, Transform}
 
   @type transform() :: Matrix4.t()
   @type basis() :: Matrix4.t()
   @type node_id() :: reference()
-
-  @type dirty_state() ::
-    :dirty_none |
-    :dirty_vectors |
-    :dirty_local |
-    :dirty_global |
-    [:dirty_vectors | :dirty_local | :dirty_global]
+  @type dirty_state() :: DirtyState.dirty_state()
 
   @type t() :: %__MODULE__{
     id: node_id(),
@@ -97,21 +92,6 @@ defmodule AriaJoint.Joint do
     nested_set_offset: nil,
     nested_set_span: nil
   ]
-
-  # Global registry for node hierarchy management
-  @registry_name :joint_registry
-
-  # Robustness constants
-  @max_hierarchy_depth 100
-  @max_children_per_node 1000
-  @transform_validation_tolerance 1.0e-6
-  @registry_timeout 5000
-
-  # Dirty state constants
-  @dirty_none :dirty_none
-  @dirty_vectors :dirty_vectors
-  @dirty_local :dirty_local
-  @dirty_global :dirty_global
 
   @type joint_error ::
     :registry_unavailable |
@@ -149,7 +129,7 @@ defmodule AriaJoint.Joint do
   @spec new(keyword()) :: {:ok, t()} | {:error, joint_error() | term()}
   def new(opts \\ []) do
     # Ensure registry exists
-    case ensure_registry() do
+    case Registry.ensure_registry() do
       {:error, reason} -> {:error, reason}
       :ok ->
         node = %__MODULE__{
@@ -160,163 +140,37 @@ defmodule AriaJoint.Joint do
         case Keyword.get(opts, :parent) do
           nil ->
             # Register node and return
-            case Registry.register(@registry_name, node.id, node) do
+            case Registry.register_node(node) do
               {:ok, _pid} -> {:ok, node}
               {:error, reason} -> {:error, reason}
             end
 
           parent_node ->
             # Use establish_parent_child for consistent bidirectional relationships
-            {updated_parent, updated_child} = establish_parent_child(parent_node, node)
+            {updated_parent, updated_child} = Hierarchy.establish_parent_child(parent_node, node)
 
             # Register child first
-            case Registry.register(@registry_name, updated_child.id, updated_child) do
+            case Registry.register_node(updated_child) do
               {:ok, _pid} ->
                 # Update parent in registry with proper synchronization
-                case Registry.update_value(@registry_name, parent_node.id, fn _old -> updated_parent end) do
-                  {_old_parent, _new_parent} ->
+                case Registry.update_node(updated_parent) do
+                  :ok ->
                     # Verify the update worked by checking registry
-                    case Registry.lookup(@registry_name, parent_node.id) do
-                      [{_pid, final_parent}] ->
+                    case Registry.get_node_by_id(parent_node.id) do
+                      nil ->
+                        {:error, :parent_not_found}
+                      final_parent ->
                         if updated_child.id in final_parent.children do
                           {:ok, updated_child}
                         else
                           {:error, :registry_sync_failed}
                         end
-                      [] ->
-                        {:error, :parent_not_found}
                     end
                   {:error, reason} -> {:error, reason}
                 end
               {:error, reason} -> {:error, reason}
             end
         end
-    end
-  end
-
-  @spec ensure_registry() :: :ok | {:error, joint_error()}
-  defp ensure_registry do
-    case Process.whereis(@registry_name) do
-      nil ->
-        # Try to start registry
-        case Registry.start_link(keys: :unique, name: @registry_name) do
-          {:ok, _pid} -> :ok
-          {:error, {:already_started, _pid}} -> :ok
-          {:error, reason} -> {:error, reason}
-        end
-      _pid -> :ok
-    end
-  end
-
-  @doc """
-  Establish proper bidirectional parent-child relationship.
-
-  This creates both the parent->child and child->parent links needed for
-  hierarchy traversal. Gets the latest parent state from registry to ensure
-  all existing children are preserved.
-
-  ## Examples
-
-      {:ok, root} = Joint.new()
-      {:ok, child} = Joint.new()
-      {updated_parent, updated_child} = Joint.establish_parent_child(root, child)
-
-  ## Returns
-
-  `{parent_with_child, child_with_parent}` tuple with updated nodes.
-  """
-  @spec establish_parent_child(t(), t()) :: {t(), t()}
-  def establish_parent_child(parent_node, child_node) do
-    # Get the latest parent state from registry to preserve existing children
-    current_parent = case get_node_by_id(parent_node.id) do
-      nil -> parent_node  # Fallback to passed parent if not in registry
-      registry_parent -> registry_parent
-    end
-
-    # Add new child to existing children list
-    updated_parent = %{current_parent | children: [child_node.id | current_parent.children]}
-    updated_child = %{child_node | parent: parent_node.id}
-    {updated_parent, updated_child}
-  end
-
-  @spec validate_creation_options(keyword()) :: {:ok, keyword()} | {:error, joint_error()}
-  defp validate_creation_options(opts) do
-    case Keyword.get(opts, :parent) do
-      nil ->
-        {:ok, opts}
-
-      parent_node ->
-        with :ok <- validate_node_struct(parent_node),
-             :ok <- validate_hierarchy_constraints(parent_node) do
-          {:ok, opts}
-        end
-    end
-  end
-
-  @spec validate_node_struct(t()) :: :ok | {:error, joint_error()}
-  defp validate_node_struct(%__MODULE__{} = node) do
-    cond do
-      not is_reference(node.id) ->
-        {:error, :invalid_transform}
-
-      not is_valid_transform?(node.local_transform) ->
-        {:error, :invalid_transform}
-
-      not is_valid_transform?(node.global_transform) ->
-        {:error, :invalid_transform}
-
-      true ->
-        :ok
-    end
-  end
-  defp validate_node_struct(_), do: {:error, :invalid_transform}
-
-  @spec validate_hierarchy_constraints(t()) :: :ok | {:error, joint_error()}
-  defp validate_hierarchy_constraints(parent_node) do
-    cond do
-      calculate_hierarchy_depth(parent_node) >= @max_hierarchy_depth ->
-        {:error, :hierarchy_too_deep}
-
-      length(parent_node.children) >= @max_children_per_node ->
-        {:error, :too_many_children}
-
-      true ->
-        :ok
-    end
-  end
-
-  @spec create_and_register_node(keyword()) :: {:ok, t()} | {:error, joint_error()}
-  defp create_and_register_node(opts) do
-    node = %__MODULE__{
-      id: make_ref(),
-      disable_scale: Keyword.get(opts, :disable_scale, false)
-    }
-
-    case safe_registry_register(node) do
-      {:ok, _pid} ->
-        case Keyword.get(opts, :parent) do
-          nil -> {:ok, node}
-          parent_node -> safe_set_parent(node, parent_node)
-        end
-
-      {:error, reason} -> {:error, reason}
-    end
-  end
-
-  @spec safe_registry_register(t()) :: {:ok, pid()} | {:error, joint_error()}
-  defp safe_registry_register(node) do
-    case Registry.register(@registry_name, node.id, node) do
-      {:ok, pid} -> {:ok, pid}
-      {:error, {:already_registered, _pid}} -> {:error, :node_not_found}
-      {:error, reason} -> {:error, reason}
-    end
-  end
-
-  @spec safe_set_parent(t(), t()) :: {:ok, t()} | {:error, joint_error()}
-  defp safe_set_parent(node, parent_node) do
-    case set_parent_with_validation(node, parent_node) do
-      %__MODULE__{} = updated_node -> {:ok, updated_node}
-      {:error, reason} -> {:error, reason}
     end
   end
 
@@ -334,57 +188,11 @@ defmodule AriaJoint.Joint do
   """
   @spec set_transform(t(), transform()) :: t() | {:error, joint_error()}
   def set_transform(node, transform) do
-    with :ok <- validate_node_struct(node),
-         :ok <- validate_transform_input(transform) do
-      # Get the latest node state from registry to ensure we have current children list
-      current_node = case get_node_by_id(node.id) do
-        nil -> node
-        registry_node -> registry_node
-      end
-
-      if Matrix4.equal?(current_node.local_transform, transform) do
-        current_node
-      else
-        updated_node = %{current_node |
-          local_transform: transform,
-          dirty: add_dirty_flag(current_node.dirty, @dirty_global)
-        }
-
-        case safe_update_registry(updated_node) do
-          :ok ->
-            safe_propagate_transform_changed(updated_node)
-            updated_node
-
-          {:error, _reason} ->
-            # Return updated node even if registry update fails
-            updated_node
-        end
-      end
+    with :ok <- Validation.validate_node_struct(node),
+         :ok <- Validation.validate_transform_input(transform) do
+      Transform.set_local(node, transform)
     end
   end
-
-  @spec validate_transform_input(transform()) :: :ok | {:error, joint_error()}
-  defp validate_transform_input(transform) do
-    if is_valid_transform?(transform) do
-      :ok
-    else
-      {:error, :invalid_transform}
-    end
-  end
-
-  @spec is_valid_transform?(transform()) :: boolean()
-  defp is_valid_transform?(transform) when is_tuple(transform) and tuple_size(transform) == 16 do
-    transform
-    |> Tuple.to_list()
-    |> Enum.all?(fn element ->
-      is_number(element) and
-      element != :nan and
-      element != :infinity and
-      element != :neg_infinity and
-      abs(element) < 1.0e12
-    end)
-  end
-  defp is_valid_transform?(_), do: false
 
   @doc """
   Set the global transform of a node.
@@ -399,25 +207,7 @@ defmodule AriaJoint.Joint do
   """
   @spec set_global_transform(t(), transform()) :: t()
   def set_global_transform(node, global_transform) do
-    local_transform = case get_parent_node(node) do
-      nil ->
-        global_transform
-
-      parent_node ->
-        parent_global = get_global_transform(parent_node)
-        {parent_inverse, _valid} = Matrix4.inverse(parent_global)
-        Matrix4.multiply(parent_inverse, global_transform)
-    end
-
-    updated_node = %{node |
-      local_transform: local_transform,
-      global_transform: global_transform,
-      dirty: remove_dirty_flag(node.dirty, @dirty_global)
-    }
-
-    safe_update_registry(updated_node)
-    safe_propagate_transform_changed(updated_node)
-    updated_node
+    Transform.set_global(node, global_transform)
   end
 
   @doc """
@@ -432,13 +222,7 @@ defmodule AriaJoint.Joint do
   """
   @spec get_transform(t()) :: transform()
   def get_transform(node) do
-    node = if has_dirty_flag?(node.dirty, @dirty_local) do
-      update_local_transform(node)
-    else
-      node
-    end
-
-    node.local_transform
+    Transform.get_local(node)
   end
 
   @doc """
@@ -453,44 +237,7 @@ defmodule AriaJoint.Joint do
   """
   @spec get_global_transform(t()) :: transform()
   def get_global_transform(node) do
-    # Always get the latest node from registry to ensure we have current state
-    current_node = case get_node_by_id(node.id) do
-      nil -> node
-      registry_node -> registry_node
-    end
-
-    if has_dirty_flag?(current_node.dirty, @dirty_global) do
-      updated_node = if has_dirty_flag?(current_node.dirty, @dirty_local) do
-        update_local_transform(current_node)
-      else
-        current_node
-      end
-
-      global_transform = case get_parent_node(updated_node) do
-        nil ->
-          updated_node.local_transform
-
-        parent_node ->
-          parent_global = get_global_transform(parent_node)
-          Matrix4.multiply(parent_global, updated_node.local_transform)
-      end
-
-      global_transform = if updated_node.disable_scale do
-        Matrix4.orthogonalize(global_transform)
-      else
-        global_transform
-      end
-
-      final_node = %{updated_node |
-        global_transform: global_transform,
-        dirty: remove_dirty_flag(updated_node.dirty, @dirty_global)
-      }
-
-      safe_update_registry(final_node)
-      final_node.global_transform
-    else
-      current_node.global_transform
-    end
+    Transform.get_global(node)
   end
 
   @doc """
@@ -506,110 +253,25 @@ defmodule AriaJoint.Joint do
   """
   @spec set_parent(t(), t() | nil) :: t() | {:error, joint_error()}
   def set_parent(node, nil) do
-    with :ok <- validate_node_struct(node) do
-      safe_remove_from_parent(node)
+    with :ok <- Validation.validate_node_struct(node) do
+      Hierarchy.remove_from_parent(node)
     end
   end
 
   def set_parent(node, parent_node) do
-    set_parent_with_validation(node, parent_node)
-  end
-
-  @spec set_parent_with_validation(t(), t()) :: t() | {:error, joint_error()}
-  defp set_parent_with_validation(node, parent_node) do
-    with :ok <- validate_node_struct(node),
-         :ok <- validate_node_struct(parent_node),
-         :ok <- validate_no_circular_dependency(node, parent_node),
-         :ok <- validate_hierarchy_constraints(parent_node) do
+    with :ok <- Validation.validate_node_struct(node),
+         :ok <- Validation.validate_node_struct(parent_node),
+         :ok <- Validation.validate_no_circular_dependency(node, parent_node),
+         :ok <- Validation.validate_hierarchy_constraints(parent_node) do
 
       # Remove from current parent if exists
-      node_without_parent = case safe_remove_from_parent(node) do
+      node_without_parent = case Hierarchy.remove_from_parent(node) do
         %__MODULE__{} = updated_node -> updated_node
         {:error, _reason} -> node  # Continue despite cleanup failure
       end
 
       # Add to new parent
-      case safe_add_to_parent(node_without_parent, parent_node) do
-        %__MODULE__{} = final_node -> final_node
-        {:error, reason} -> {:error, reason}
-      end
-    end
-  end
-
-  @spec validate_no_circular_dependency(t(), t()) :: :ok | {:error, joint_error()}
-  defp validate_no_circular_dependency(child_node, potential_parent) do
-    if would_create_cycle?(child_node, potential_parent) do
-      {:error, :circular_dependency}
-    else
-      :ok
-    end
-  end
-
-  @spec would_create_cycle?(t(), t()) :: boolean()
-  defp would_create_cycle?(child_node, potential_parent, visited \\ MapSet.new()) do
-    cond do
-      child_node.id == potential_parent.id ->
-        true
-
-      MapSet.member?(visited, potential_parent.id) ->
-        false  # Already visited, no cycle through this path
-
-      true ->
-        new_visited = MapSet.put(visited, potential_parent.id)
-        case get_parent_node(potential_parent) do
-          nil -> false
-          ancestor -> would_create_cycle?(child_node, ancestor, new_visited)
-        end
-    end
-  end
-
-  @spec safe_remove_from_parent(t()) :: t() | {:error, joint_error()}
-  defp safe_remove_from_parent(node) do
-    case get_parent_node(node) do
-      nil ->
-        node
-
-      current_parent ->
-        updated_parent = %{current_parent |
-          children: List.delete(current_parent.children, node.id)
-        }
-
-        case safe_update_registry(updated_parent) do
-          :ok ->
-            updated_node = %{node | parent: nil}
-            case safe_update_registry(updated_node) do
-              :ok ->
-                safe_propagate_transform_changed(updated_node)
-                updated_node
-              {:error, reason} ->
-                {:error, reason}
-            end
-
-          {:error, reason} ->
-            {:error, reason}
-        end
-    end
-  end
-
-  @spec safe_add_to_parent(t(), t()) :: t() | {:error, joint_error()}
-  defp safe_add_to_parent(node, parent_node) do
-    updated_parent = %{parent_node |
-      children: [node.id | parent_node.children]
-    }
-
-    case safe_update_registry(updated_parent) do
-      :ok ->
-        updated_node = %{node | parent: parent_node.id}
-        case safe_update_registry(updated_node) do
-          :ok ->
-            safe_propagate_transform_changed(updated_node)
-            updated_node
-          {:error, reason} ->
-            {:error, reason}
-        end
-
-      {:error, reason} ->
-        {:error, reason}
+      Hierarchy.add_to_parent(node_without_parent, parent_node)
     end
   end
 
@@ -625,9 +287,9 @@ defmodule AriaJoint.Joint do
   @spec get_parent(t()) :: t() | nil
   def get_parent(node) do
     # First check if the node is still in the registry
-    case get_node_by_id(node.id) do
+    case Registry.get_node_by_id(node.id) do
       nil -> nil  # Node was cleaned up, no parent
-      current_node -> get_parent_node(current_node)
+      current_node -> Hierarchy.get_parent_node(current_node)
     end
   end
 
@@ -642,9 +304,7 @@ defmodule AriaJoint.Joint do
   """
   @spec to_local(t(), Vector3.t()) :: Vector3.t()
   def to_local(node, global_point) do
-    global_transform = get_global_transform(node)
-    {inverse_transform, _valid} = Matrix4.inverse(global_transform)
-    Matrix4.transform_point(inverse_transform, global_point)
+    Transform.to_local(node, global_point)
   end
 
   @doc """
@@ -658,8 +318,7 @@ defmodule AriaJoint.Joint do
   """
   @spec to_global(t(), Vector3.t()) :: Vector3.t()
   def to_global(node, local_point) do
-    global_transform = get_global_transform(node)
-    Matrix4.transform_point(global_transform, local_point)
+    Transform.to_global(node, local_point)
   end
 
   @doc """
@@ -679,38 +338,7 @@ defmodule AriaJoint.Joint do
   """
   @spec rotate_local_with_global(t(), basis(), boolean()) :: t()
   def rotate_local_with_global(node, basis, propagate \\ false) do
-    case get_parent_node(node) do
-      nil -> node
-
-      parent_node ->
-        parent_global = get_global_transform(parent_node)
-        parent_basis = Matrix4.extract_basis(parent_global)
-        parent_inverse = Matrix4.transpose(parent_basis)
-
-        # new_rot = parent_inverse * basis * parent_basis * local_basis
-        local_basis = Matrix4.extract_basis(node.local_transform)
-        new_local_basis = parent_inverse
-                         |> Matrix4.multiply(basis)
-                         |> Matrix4.multiply(parent_basis)
-                         |> Matrix4.multiply(local_basis)
-
-        # Update local transform with new basis
-        {translation, _rotation, scale} = Matrix4.decompose(node.local_transform)
-        new_local_transform = Matrix4.compose(translation, new_local_basis, scale)
-
-        updated_node = %{node |
-          local_transform: new_local_transform,
-          dirty: add_dirty_flag(node.dirty, @dirty_global)
-        }
-
-        safe_update_registry(updated_node)
-
-        if propagate do
-          safe_propagate_transform_changed(updated_node)
-        end
-
-        updated_node
-    end
+    Transform.rotate_local_with_global(node, basis, propagate)
   end
 
   @doc """
@@ -727,7 +355,7 @@ defmodule AriaJoint.Joint do
   @spec set_disable_scale(t(), boolean()) :: t()
   def set_disable_scale(node, disable_scale) do
     updated_node = %{node | disable_scale: disable_scale}
-    safe_update_registry(updated_node)
+    Registry.update_node(updated_node)
     updated_node
   end
 
@@ -769,9 +397,7 @@ defmodule AriaJoint.Joint do
   """
   @spec collect_hierarchy([t()]) :: [t()]
   def collect_hierarchy(root_nodes) when is_list(root_nodes) do
-    root_nodes
-    |> Enum.flat_map(&collect_subtree/1)
-    |> Enum.uniq_by(& &1.id)
+    Hierarchy.collect_hierarchy(root_nodes)
   end
 
   @doc """
@@ -791,232 +417,28 @@ defmodule AriaJoint.Joint do
       %__MODULE__{} = updated_node ->
         # Remove all children
         for child_id <- updated_node.children do
-          case Registry.lookup(@registry_name, child_id) do
-            [{_pid, child_node}] ->
-              set_parent(child_node, nil)
-            [] ->
-              :ok
+          case Registry.get_node_by_id(child_id) do
+            nil -> :ok
+            child_node -> set_parent(child_node, nil)
           end
         end
 
         # Unregister from registry
-        Registry.unregister(@registry_name, updated_node.id)
+        Registry.unregister_node(updated_node.id)
         :ok
 
       {:error, _reason} ->
         # Still try to clean up children and unregister
         for child_id <- node.children do
-          case Registry.lookup(@registry_name, child_id) do
-            [{_pid, child_node}] ->
-              set_parent(child_node, nil)
-            [] ->
-              :ok
+          case Registry.get_node_by_id(child_id) do
+            nil -> :ok
+            child_node -> set_parent(child_node, nil)
           end
         end
 
-        Registry.unregister(@registry_name, node.id)
+        Registry.unregister_node(node.id)
         :ok
     end
   end
 
-  # Private helper functions
-
-  @spec collect_subtree(t()) :: [t()]
-  defp collect_subtree(node) do
-    # Get current node from registry to ensure we have latest state
-    current_node = case get_node_by_id(node.id) do
-      nil -> node  # Fallback to passed node if not in registry
-      registry_node -> registry_node
-    end
-
-    # Get all children from registry with retry logic
-    children = collect_children_with_retry(current_node, 3)
-
-    # Recursively collect children and their descendants
-    child_nodes = Enum.flat_map(children, &collect_subtree/1)
-
-    # Return current node plus all descendants
-    [current_node | child_nodes]
-  end
-
-  @spec collect_children_with_retry(t(), non_neg_integer()) :: [t()]
-  defp collect_children_with_retry(node, retries_left) do
-    children = for child_id <- node.children do
-      case get_node_by_id(child_id) do
-        nil -> nil  # Skip missing children
-        child_node -> child_node
-      end
-    end |> Enum.reject(&is_nil/1)
-
-    # If we're missing children and have retries left, try again
-    missing_count = length(node.children) - length(children)
-    if missing_count > 0 and retries_left > 0 do
-      # Small delay to allow registry updates to complete
-      Process.sleep(1)
-      collect_children_with_retry(node, retries_left - 1)
-    else
-      children
-    end
-  end
-
-  @spec ensure_registry_with_timeout() :: {:ok, pid()} | {:error, joint_error()}
-  defp ensure_registry_with_timeout do
-    try do
-      case Process.whereis(@registry_name) do
-        nil -> {:error, :registry_unavailable}
-        pid when is_pid(pid) -> {:ok, pid}
-      end
-    rescue
-      _error -> {:error, :registry_unavailable}
-    end
-  end
-
-  @spec safe_update_registry(t()) :: :ok | {:error, joint_error()}
-  defp safe_update_registry(node) do
-    try do
-      case Registry.lookup(@registry_name, node.id) do
-        [{_pid, _old_node}] ->
-          case Registry.update_value(@registry_name, node.id, fn _old_node -> node end) do
-            {_old_value, _new_value} -> :ok
-            {:error, reason} -> {:error, reason}
-          end
-
-        [] ->
-          {:error, :node_not_found}
-      end
-    rescue
-      _error -> {:error, :registry_unavailable}
-    end
-  end
-
-  @spec calculate_hierarchy_depth(t(), non_neg_integer()) :: non_neg_integer()
-  defp calculate_hierarchy_depth(node, current_depth \\ 0) do
-    if current_depth >= @max_hierarchy_depth do
-      @max_hierarchy_depth
-    else
-      case get_parent_node(node) do
-        nil -> current_depth
-        parent -> calculate_hierarchy_depth(parent, current_depth + 1)
-      end
-    end
-  end
-
-  @spec safe_propagate_transform_changed(t()) :: :ok
-  defp safe_propagate_transform_changed(node) do
-    try do
-      propagate_transform_changed(node)
-    rescue
-      _error -> :ok  # Continue despite propagation failure
-    end
-  end
-
-  @spec get_node_by_id(node_id()) :: t() | nil
-  defp get_node_by_id(node_id) do
-    case Registry.lookup(@registry_name, node_id) do
-      [{_pid, node}] -> node
-      [] -> nil
-    end
-  end
-
-  @spec get_parent_node(t()) :: t() | nil
-  defp get_parent_node(node) do
-    case node.parent do
-      nil -> nil
-      parent_id -> get_node_by_id(parent_id)
-    end
-  end
-
-  @spec propagate_transform_changed(t()) :: :ok
-  defp propagate_transform_changed(node) do
-    # Remove any null references and propagate to valid children
-    valid_children = for child_id <- node.children do
-      case get_node_by_id(child_id) do
-        nil -> nil
-        child_node ->
-          # Mark child as dirty and propagate to its children
-          dirty_child = %{child_node | dirty: add_dirty_flag(child_node.dirty, @dirty_global)}
-          safe_update_registry(dirty_child)
-          safe_propagate_transform_changed(dirty_child)
-          child_id
-      end
-    end |> Enum.reject(&is_nil/1)
-
-    # Update node with cleaned children list if needed
-    updated_node = if length(valid_children) != length(node.children) do
-      %{node | children: valid_children}
-    else
-      node
-    end
-
-    # Mark this node as globally dirty and update in registry
-    final_node = %{updated_node | dirty: add_dirty_flag(updated_node.dirty, @dirty_global)}
-    safe_update_registry(final_node)
-    :ok
-  end
-
-  @spec update_local_transform(t()) :: t()
-  defp update_local_transform(node) do
-    # local_transform.basis = rotation.scaled(scale)
-    rotation_matrix = node.rotation
-    {sx, sy, sz} = node.scale
-    scale_matrix = Matrix4.scaling({sx, sy, sz})
-    new_basis = Matrix4.multiply(rotation_matrix, scale_matrix)
-
-    {translation, _old_rotation, _old_scale} = Matrix4.decompose(node.local_transform)
-    new_local_transform = Matrix4.compose(translation, new_basis, {sx, sy, sz})
-
-    updated_node = %{node |
-      local_transform: new_local_transform,
-      dirty: remove_dirty_flag(node.dirty, @dirty_local)
-    }
-
-    safe_update_registry(updated_node)
-    updated_node
-  end
-
-  # Dirty state flag management
-
-  @spec add_dirty_flag(dirty_state(), atom()) :: dirty_state()
-  defp add_dirty_flag(@dirty_none, flag), do: flag
-  defp add_dirty_flag(current_flags, flag) when is_list(current_flags) do
-    if flag in current_flags do
-      current_flags
-    else
-      [flag | current_flags]
-    end
-  end
-  defp add_dirty_flag(current_flag, flag) when is_atom(current_flag) do
-    if current_flag == flag do
-      current_flag
-    else
-      [flag, current_flag]
-    end
-  end
-
-  @spec remove_dirty_flag(dirty_state(), atom()) :: dirty_state()
-  defp remove_dirty_flag(@dirty_none, _flag), do: @dirty_none
-  defp remove_dirty_flag(current_flags, flag) when is_list(current_flags) do
-    remaining = List.delete(current_flags, flag)
-    case remaining do
-      [] -> @dirty_none
-      [single_flag] -> single_flag
-      multiple -> multiple
-    end
-  end
-  defp remove_dirty_flag(current_flag, flag) when is_atom(current_flag) do
-    if current_flag == flag do
-      @dirty_none
-    else
-      current_flag
-    end
-  end
-
-  @spec has_dirty_flag?(dirty_state(), atom()) :: boolean()
-  defp has_dirty_flag?(@dirty_none, _flag), do: false
-  defp has_dirty_flag?(current_flags, flag) when is_list(current_flags) do
-    flag in current_flags
-  end
-  defp has_dirty_flag?(current_flag, flag) when is_atom(current_flag) do
-    current_flag == flag
-  end
 end
