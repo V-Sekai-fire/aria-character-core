@@ -118,7 +118,7 @@ defmodule AstMigrate do
   """
   @spec list_rules() :: [atom()]
   def list_rules do
-    [:cross_app_dependency_detector]
+    [:cross_app_dependency_detector, :fix_timeline_legacy_namespace]
   end
 
   @doc """
@@ -137,6 +137,9 @@ defmodule AstMigrate do
     case rule_name do
       :cross_app_dependency_detector ->
         {:ok, AstMigrate.Rules.CrossAppDependencyDetector}
+
+      :fix_timeline_legacy_namespace ->
+        {:ok, AstMigrate.Rules.FixTimelineLegacyNamespace}
 
       _ ->
         {:error, "Unknown rule: #{rule_name}"}

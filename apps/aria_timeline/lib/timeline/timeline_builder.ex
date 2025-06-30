@@ -1,7 +1,4 @@
-# Copyright (c) 2025-present K. S. Ernest (iFire) Lee
-# SPDX-License-Identifier: MIT
-
-defmodule AriaEngine.Timeline.TimelineBuilder do
+defmodule Timeline.TimelineBuilder do
   @moduledoc "Bridge builder pattern and fluent API for Timeline construction.\n\nThis module provides:\n- Bridge builder pattern functions\n- Auto-insertion logic and rules\n- Fluent API for timeline construction\n- Phase management and workflow helpers\n\nThe builder pattern allows for easy construction of complex timelines\nwith automatic bridge placement and validation.\n"
   alias Timeline.Bridge
   alias Timeline.Interval
