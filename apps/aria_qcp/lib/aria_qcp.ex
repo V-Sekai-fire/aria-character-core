@@ -74,11 +74,44 @@ defmodule AriaQcp do
 
   ## Examples
 
+  ### Basic Rotation-Only Alignment
+
       iex> moved = [{1.0, 0.0, 0.0}]
       iex> target = [{0.0, 1.0, 0.0}]
       iex> {:ok, {_rotation, translation}} = AriaQcp.rotation_only(moved, target)
       iex> translation
       {0.0, 0.0, 0.0}
+
+  ### Medical Robotics: Tool Orientation Without Position Change
+
+      iex> # Rotate surgical tool orientation while keeping position fixed
+      iex> tool_tip = [{0.0, 0.0, 5.0}]  # 5cm tool length
+      iex> desired_orientation = [{3.536, 0.0, 3.536}]  # 45° rotation
+      iex> {:ok, {rotation, translation}} = AriaQcp.rotation_only(tool_tip, desired_orientation)
+      iex> # Verify no translation applied
+      iex> {tx, ty, tz} = translation
+      iex> abs(tx) < 1.0e-10 and abs(ty) < 1.0e-10 and abs(tz) < 1.0e-10
+      true
+      iex> # Verify rotation is normalized
+      iex> {x, y, z, w} = rotation
+      iex> magnitude = :math.sqrt(x*x + y*y + z*z + w*w)
+      iex> abs(magnitude - 1.0) < 1.0e-10
+      true
+
+  ### Molecular Biology: Backbone Orientation Alignment
+
+      iex> # Align protein backbone direction without changing center of mass
+      iex> backbone_vector = [{0.0, 1.0, 0.0}]
+      iex> target_direction = [{0.707, 0.707, 0.0}]  # 45° rotation in XY plane
+      iex> {:ok, {rotation, translation}} = AriaQcp.rotation_only(backbone_vector, target_direction)
+      iex> # Translation should be zero for rotation-only
+      iex> translation
+      {0.0, 0.0, 0.0}
+      iex> # Verify rotation magnitude
+      iex> {rx, ry, rz, rw} = rotation
+      iex> magnitude = :math.sqrt(rx*rx + ry*ry + rz*rz + rw*rw)
+      iex> abs(magnitude - 1.0) < 1.0e-10
+      true
 
   """
   def rotation_only(moved, target, weights \\ [], precision \\ 1.0e-6) do

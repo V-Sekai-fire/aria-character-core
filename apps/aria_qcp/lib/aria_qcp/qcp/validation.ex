@@ -12,6 +12,93 @@ defmodule AriaQcp.QCP.Validation do
   - `Geometric`: Rotation and geometric property validation
   - `Optimization`: RMSD minimization and optimality checks
   - `Motion`: Minimal jerk, torque, and motion coordination
+
+  ## Examples
+
+  ### Medical Robotics: Surgical Safety Validation
+
+      iex> # Validate surgical instrument alignment meets safety requirements
+      iex> instrument_points = [{0.0, 0.0, 10.0}, {0.0, 0.0, 0.0}]
+      iex> target_points = [{0.0, 10.0, 0.0}, {0.0, 0.0, 0.0}]
+      iex> weights = [1.0, 1.0]
+      iex> AriaQcp.QCP.Validation.validate_inputs(instrument_points, target_points, weights)
+      :ok
+      iex> # Verify points are valid for surgical precision work
+      iex> AriaQcp.QCP.Validation.all_valid_vectors?(instrument_points)
+      true
+
+  ### Protein Structure: Input Validation for Molecular Alignment
+
+      iex> # Validate protein atom coordinates
+      iex> protein_atoms = [{1.234, 2.567, 3.890}, {4.123, 5.678, 6.234}]
+      iex> reference_atoms = [{1.100, 2.500, 3.800}, {4.200, 5.700, 6.300}]
+      iex> atom_weights = [12.01, 14.007]  # Carbon and Nitrogen atomic masses
+      iex> AriaQcp.QCP.Validation.validate_point_sets(protein_atoms, reference_atoms)
+      :ok
+      iex> AriaQcp.QCP.Validation.validate_weights(atom_weights, 2)
+      :ok
+
+  ### Rotation Validation: Quaternion Normalization
+
+      iex> # Validate that a quaternion represents a proper rotation
+      iex> valid_rotation = {0.0, 0.0, 0.707107, 0.707107}  # 90° rotation around Z
+      iex> AriaQcp.QCP.Validation.validate_rotation(valid_rotation)
+      :ok
+      iex> # Test with unnormalized quaternion (should fail)
+      iex> invalid_rotation = {1.0, 1.0, 1.0, 1.0}  # Not normalized
+      iex> case AriaQcp.QCP.Validation.validate_rotation(invalid_rotation) do
+      ...>   {:error, _} -> true
+      ...>   :ok -> false
+      ...> end
+      true
+
+  ### Geometric Validation: Transformation Alignment
+
+      iex> # Verify that a transformation properly aligns point sets
+      iex> moved = [{1.0, 0.0, 0.0}]
+      iex> target = [{0.0, 1.0, 0.0}]
+      iex> rotation = {0.0, 0.0, 0.707107, 0.707107}  # 90° around Z
+      iex> translation = {0.0, 0.0, 0.0}
+      iex> AriaQcp.QCP.Validation.validate_alignment(rotation, translation, moved, target)
+      :ok
+
+  ### Motion Safety: Surgical Jerk Limits
+
+      iex> # Validate that motion meets surgical safety requirements
+      iex> smooth_rotation = {0.0, 0.0, 0.1, 0.995}  # Small rotation angle
+      iex> minimal_translation = {0.1, 0.1, 0.1}     # Small translation
+      iex> AriaQcp.QCP.Validation.validate_minimal_jerk(smooth_rotation, minimal_translation)
+      :ok
+
+  ### Comprehensive Validation: Complete QCP Result Check
+
+      iex> # Full validation of QCP algorithm results
+      iex> moved_points = [{1.0, 0.0, 0.0}, {0.0, 1.0, 0.0}]
+      iex> target_points = [{0.0, 1.0, 0.0}, {-1.0, 0.0, 0.0}]
+      iex> weights = []
+      iex> {:ok, {rotation, translation}} = AriaQcp.QCP.weighted_superpose(moved_points, target_points, weights)
+      iex> # Basic validation should pass
+      iex> AriaQcp.QCP.Validation.validate_basic(rotation, translation, moved_points, target_points, weights)
+      :ok
+
+  ### Numerical Stability: Large Coordinate Values
+
+      iex> # Test validation with large coordinate values (aerospace applications)
+      iex> satellite_points = [{1000000.0, 2000000.0, 3000000.0}]
+      iex> ground_points = [{1000001.0, 2000001.0, 3000001.0}]
+      iex> AriaQcp.QCP.Validation.validate_numerical_stability(satellite_points, ground_points)
+      :ok
+
+  ### Error Detection: Invalid Inputs
+
+      iex> # Test detection of infinite values (sensor errors)
+      iex> invalid_points = [{1.0, :infinity, 3.0}]
+      iex> AriaQcp.QCP.Validation.all_valid_vectors?(invalid_points)
+      false
+      iex> # Test detection of NaN values
+      iex> nan_points = [{1.0, 2.0, :nan}]
+      iex> AriaQcp.QCP.Validation.all_valid_vectors?(nan_points)
+      false
   """
 
   alias AriaQcp.QCP.Validation.{Core, Geometric, Optimization, Motion}
