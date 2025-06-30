@@ -239,18 +239,18 @@ defmodule AriaEngineCore.Plan do
 
   `{:ok, final_state}` if validation succeeds, `{:error, reason}` otherwise.
   """
-  @spec validate_plan(AriaEngineCore.Domain.Core.t(), State.t(), [plan_step()] | solution_tree()) ::
+  @spec validate_plan(map(), State.t(), [plan_step()] | solution_tree()) ::
           {:ok, State.t()} | {:error, String.t()}
   def validate_plan(
-        %AriaEngineCore.Domain.Core{} = domain,
+        domain,
         initial_state,
         %{root_id: _} = solution_tree
-      ) do
+      ) when is_map(domain) do
     actions = get_primitive_actions_dfs(solution_tree)
     validate_plan(domain, initial_state, actions)
   end
 
-  def validate_plan(%AriaEngineCore.Domain.Core{} = domain, initial_state, plan) when is_list(plan) do
+  def validate_plan(domain, initial_state, plan) when is_map(domain) and is_list(plan) do
     Enum.reduce_while(plan, {:ok, initial_state}, fn {action_name, args}, {:ok, state} ->
       action_atom =
         if is_binary(action_name) do

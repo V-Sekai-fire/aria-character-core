@@ -31,35 +31,35 @@ defmodule AriaEngineCore.Domain do
       methods = AriaEngineCore.Domain.get_unigoal_methods(domain, "location")
   """
 
-  # Domain Creation and Management
-  defdelegate new(), to: AriaEngineCore.Domain.Core
-  defdelegate new(name), to: AriaEngineCore.Domain.Core
-  defdelegate validate(domain), to: AriaEngineCore.Domain.Core
-  defdelegate add_action(domain, action_name, action), to: AriaEngineCore.Domain.Core
-  defdelegate get_durative_action(domain, action_name), to: AriaEngineCore.Domain.Core
-  defdelegate set_entity_registry(domain, registry), to: AriaEngineCore.Domain.Core
-  defdelegate get_entity_registry(domain), to: AriaEngineCore.Domain.Core
-  defdelegate set_temporal_specifications(domain, specs), to: AriaEngineCore.Domain.Core
-  defdelegate get_temporal_specifications(domain), to: AriaEngineCore.Domain.Core
+  # Domain Creation and Management - Delegate to AriaCore
+  defdelegate new(), to: AriaCore, as: :new_legacy_domain
+  defdelegate new(name), to: AriaCore, as: :new_legacy_domain
+  defdelegate validate(domain), to: AriaCore, as: :validate_legacy_domain
+  defdelegate add_action(domain, action_name, action), to: AriaCore, as: :add_action_to_legacy_domain
+  defdelegate get_durative_action(domain, action_name), to: AriaCore, as: :get_durative_action_from_legacy_domain
+  defdelegate set_entity_registry(domain, registry), to: AriaCore, as: :set_entity_registry
+  defdelegate get_entity_registry(domain), to: AriaCore, as: :get_entity_registry
+  defdelegate set_temporal_specifications(domain, specs), to: AriaCore, as: :set_temporal_specifications
+  defdelegate get_temporal_specifications(domain), to: AriaCore, as: :get_temporal_specifications
 
-  # Method Management - Delegate to Methods module
-  defdelegate add_task_method(domain, task_name, method_name, method_fn), to: AriaEngineCore.Domain.Methods
-  defdelegate add_unigoal_method(domain, predicate, method_name, method_fn), to: AriaEngineCore.Domain.Methods
-  defdelegate add_unigoal_method(domain, predicate, method_fn), to: AriaEngineCore.Domain.Methods
-  defdelegate add_multigoal_method(domain, method_name, method_fn), to: AriaEngineCore.Domain.Methods
-  defdelegate add_multitodo_method(domain, method_name, method_fn), to: AriaEngineCore.Domain.Methods
-  defdelegate get_task_methods(domain, task_name), to: AriaEngineCore.Domain.Methods
-  defdelegate get_unigoal_methods(domain, predicate), to: AriaEngineCore.Domain.Methods
-  defdelegate get_multigoal_methods(domain), to: AriaEngineCore.Domain.Methods
-  defdelegate get_multitodo_methods(domain), to: AriaEngineCore.Domain.Methods
+  # Method Management - Delegate to AriaCore
+  defdelegate add_task_method(domain, task_name, method_name, method_fn), to: AriaCore, as: :add_task_method_to_domain
+  defdelegate add_unigoal_method(domain, predicate, method_name, method_fn), to: AriaCore, as: :add_unigoal_method_to_domain
+  defdelegate add_unigoal_method(domain, predicate, method_fn), to: AriaCore, as: :add_unigoal_method_to_domain
+  defdelegate add_multigoal_method(domain, method_name, method_fn), to: AriaCore, as: :add_multigoal_method_to_domain
+  defdelegate add_multitodo_method(domain, method_name, method_fn), to: AriaCore, as: :add_multitodo_method_to_domain
+  defdelegate get_task_methods(domain, task_name), to: AriaCore, as: :get_task_methods_from_domain
+  defdelegate get_unigoal_methods(domain, predicate), to: AriaCore, as: :get_unigoal_methods_from_domain
+  defdelegate get_multigoal_methods(domain), to: AriaCore, as: :get_multigoal_methods_from_domain
+  defdelegate get_multitodo_methods(domain), to: AriaCore, as: :get_multitodo_methods_from_domain
 
-  # Action Management - Delegate to Actions module
-  defdelegate execute_action(domain, state, action_name, args), to: AriaEngineCore.Domain.Actions
-  defdelegate get_action_metadata(domain, action_name), to: AriaEngineCore.Domain.Actions
+  # Action Management - Delegate to AriaCore
+  defdelegate execute_action(domain, state, action_name, args), to: AriaCore, as: :execute_action_in_domain
+  defdelegate get_action_metadata(domain, action_name), to: AriaCore, as: :get_action_metadata_from_domain
 
   # Method wrapper for different method types
   def add_method(domain, method_name, method_spec) do
-    AriaEngineCore.Domain.Methods.add_method(domain, method_name, method_spec)
+    AriaCore.add_method_to_domain(domain, method_name, method_spec)
   end
 
   # Type definitions for external API compatibility

@@ -38,22 +38,25 @@ Extract all implementation code from `aria_engine_core` and move it to appropria
 
 ## Implementation Plan
 
-### Phase 1: Domain Implementation Migration (PRIORITY: HIGH)
+### Phase 1: Domain Implementation Migration (PRIORITY: HIGH) ✅ COMPLETED
 
 **Target App:** `aria_core`
 
-**Files to migrate:**
+**Files migrated:**
 
-- [ ] `lib/aria_engine_core/domain/core.ex` → `apps/aria_core/lib/aria_core/domain/planning.ex`
-- [ ] `lib/aria_engine_core/domain/actions.ex` → `apps/aria_core/lib/aria_core/domain/actions.ex`
-- [ ] `lib/aria_engine_core/domain/methods.ex` → `apps/aria_core/lib/aria_core/domain/methods.ex`
-- [ ] `lib/aria_engine_core/domain/utils.ex` → `apps/aria_core/lib/aria_core/domain/utils.ex`
+- [x] `lib/aria_engine_core/domain/core.ex` → Migrated to `apps/aria_core/lib/aria_core/domain_planning.ex`
+- [x] `lib/aria_engine_core/domain/actions.ex` → Migrated to `apps/aria_core/lib/aria_core/action_execution.ex`
+- [x] `lib/aria_engine_core/domain/methods.ex` → Migrated to `apps/aria_core/lib/aria_core/method_management.ex`
+- [x] `lib/aria_engine_core/domain/utils.ex` → Migrated to `apps/aria_core/lib/aria_core/domain_utils.ex`
 
-**Implementation Required:**
+**Implementation Completed:**
 
-- [ ] Update `AriaCore` external API to include missing domain planning functions
-- [ ] Migrate domain planning types and structs to `aria_core`
-- [ ] Update `lib/aria_engine_core/domain.ex` to delegate to `AriaCore` instead of internal modules
+- [x] Updated `AriaCore` external API to include domain planning functions
+- [x] Migrated domain planning types and structs to `aria_core`
+- [x] Updated `lib/aria_engine_core/domain.ex` to delegate to `AriaCore` instead of internal modules
+- [x] Disabled old implementation files with `.disabled` extensions
+- [x] Updated references to old `AriaEngineCore.Domain.Core` struct to use generic maps
+- [x] Verified compilation succeeds across all apps
 
 ### Phase 2: Planner Implementation Migration (PRIORITY: HIGH)
 

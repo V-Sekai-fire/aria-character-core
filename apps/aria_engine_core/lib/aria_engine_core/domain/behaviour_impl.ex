@@ -3,10 +3,10 @@
 
 defmodule AriaEngineCore.Domain.BehaviourImpl do
   @moduledoc """
-  Mock implementation of AriaEngineCore.Domain.BehaviourImpl for compilation.
+  Behaviour implementation for AriaEngineCore.Domain that delegates to AriaCore.
 
-  This module provides behaviour implementation for domain operations.
-  Currently mocked with basic functionality to enable compilation.
+  This module provides behaviour implementation for domain operations,
+  delegating to the migrated functionality in AriaCore.
   """
 
   @doc """
@@ -14,7 +14,7 @@ defmodule AriaEngineCore.Domain.BehaviourImpl do
   """
   @spec actions(map()) :: map()
   def actions(domain) do
-    Map.get(domain, :actions, %{})
+    AriaCore.get_all_actions_with_metadata_from_domain(domain)
   end
 
   @doc """
@@ -38,7 +38,7 @@ defmodule AriaEngineCore.Domain.BehaviourImpl do
   """
   @spec multigoal_methods(map()) :: map()
   def multigoal_methods(domain) do
-    Map.get(domain, :multigoal_methods, %{})
+    AriaCore.get_multigoal_methods_from_domain(domain)
   end
 
   @doc """

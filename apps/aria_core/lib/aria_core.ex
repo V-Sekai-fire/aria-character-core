@@ -75,6 +75,57 @@ defmodule AriaCore do
   defdelegate set_entity_registry(domain, registry), to: AriaCore.Domain
   defdelegate set_temporal_specifications(domain, specifications), to: AriaCore.Domain
 
+  # Legacy Domain Planning API (migrated from AriaEngineCore.Domain.Core)
+  defdelegate new_legacy_domain(), to: AriaCore.DomainPlanning
+  defdelegate new_legacy_domain(name), to: AriaCore.DomainPlanning
+  defdelegate validate_legacy_domain(domain), to: AriaCore.DomainPlanning
+  defdelegate add_action_to_legacy_domain(domain, name, action), to: AriaCore.DomainPlanning
+  defdelegate get_durative_action_from_legacy_domain(domain, name), to: AriaCore.DomainPlanning
+  defdelegate convert_to_legacy_domain(domain), to: AriaCore.DomainPlanning
+  defdelegate convert_from_legacy_domain(legacy_domain), to: AriaCore.DomainPlanning
+
+  # Action Execution API (migrated from AriaEngineCore.Domain.Actions)
+  defdelegate add_action_to_domain(domain, name, action_fn, metadata \\ %{}), to: AriaCore.ActionExecution, as: :add_action
+  defdelegate add_actions_to_domain(domain, new_actions), to: AriaCore.ActionExecution, as: :add_actions
+  defdelegate get_action_from_domain(domain, name), to: AriaCore.ActionExecution, as: :get_action
+  defdelegate get_action_metadata_from_domain(domain, name), to: AriaCore.ActionExecution, as: :get_action_metadata
+  defdelegate has_action_in_domain?(domain, name), to: AriaCore.ActionExecution, as: :has_action?
+  defdelegate execute_action_in_domain(domain, state, action_name, args), to: AriaCore.ActionExecution, as: :execute_action
+  defdelegate list_actions_in_domain(domain), to: AriaCore.ActionExecution, as: :list_actions
+  defdelegate remove_action_from_domain(domain, name), to: AriaCore.ActionExecution, as: :remove_action
+  defdelegate update_action_metadata_in_domain(domain, name, new_metadata), to: AriaCore.ActionExecution, as: :update_action_metadata
+  defdelegate get_all_actions_with_metadata_from_domain(domain), to: AriaCore.ActionExecution, as: :get_all_actions_with_metadata
+  defdelegate validate_actions_in_domain(domain), to: AriaCore.ActionExecution, as: :validate_actions
+
+  # Method Management API (migrated from AriaEngineCore.Domain.Methods)
+  defdelegate add_task_methods_to_domain(domain, task_name, method_tuples_or_functions), to: AriaCore.MethodManagement, as: :add_task_methods
+  defdelegate add_task_method_to_domain(domain, task_name, method_name, method_fn), to: AriaCore.MethodManagement, as: :add_task_method
+  defdelegate add_task_method_to_domain(domain, task_name, method_fn), to: AriaCore.MethodManagement, as: :add_task_method
+  defdelegate add_unigoal_method_to_domain(domain, goal_type, method_name, method_fn), to: AriaCore.MethodManagement, as: :add_unigoal_method
+  defdelegate add_unigoal_method_to_domain(domain, goal_type, method_fn), to: AriaCore.MethodManagement, as: :add_unigoal_method
+  defdelegate add_unigoal_methods_to_domain(domain, goal_type, method_tuples), to: AriaCore.MethodManagement, as: :add_unigoal_methods
+  defdelegate add_multigoal_method_to_domain(domain, method_name, method_fn), to: AriaCore.MethodManagement, as: :add_multigoal_method
+  defdelegate add_multigoal_method_to_domain(domain, method_fn), to: AriaCore.MethodManagement, as: :add_multigoal_method
+  defdelegate add_multitodo_method_to_domain(domain, method_name, method_fn), to: AriaCore.MethodManagement, as: :add_multitodo_method
+  defdelegate add_multitodo_method_to_domain(domain, method_fn), to: AriaCore.MethodManagement, as: :add_multitodo_method
+  defdelegate get_task_methods_from_domain(domain, task_name), to: AriaCore.MethodManagement, as: :get_task_methods
+  defdelegate get_unigoal_methods_from_domain(domain, goal_type), to: AriaCore.MethodManagement, as: :get_unigoal_methods
+  defdelegate get_multigoal_methods_from_domain(domain), to: AriaCore.MethodManagement, as: :get_multigoal_methods
+  defdelegate get_multitodo_methods_from_domain(domain), to: AriaCore.MethodManagement, as: :get_multitodo_methods
+  defdelegate get_goal_methods_from_domain(domain, predicate), to: AriaCore.MethodManagement, as: :get_goal_methods
+  defdelegate get_method_from_domain(domain, method_name), to: AriaCore.MethodManagement, as: :get_method
+  defdelegate add_method_to_domain(domain, method_name, method_spec), to: AriaCore.MethodManagement, as: :add_method
+  defdelegate has_task_methods_in_domain?(domain, task_name), to: AriaCore.MethodManagement, as: :has_task_methods?
+  defdelegate has_unigoal_methods_in_domain?(domain, goal_type), to: AriaCore.MethodManagement, as: :has_unigoal_methods?
+  defdelegate get_method_counts_from_domain(domain), to: AriaCore.MethodManagement, as: :get_method_counts
+
+  # Domain Utilities API (migrated from AriaEngineCore.Domain.Utils)
+  defdelegate infer_method_name(fun), to: AriaCore.DomainUtils
+  defdelegate verify_goal(state, method_name, state_var, args, desired_values, depth, verbose), to: AriaCore.DomainUtils
+  defdelegate domain_summary(domain), to: AriaCore.DomainUtils, as: :summary
+  defdelegate add_porcelain_actions_to_domain(domain), to: AriaCore.DomainUtils, as: :add_porcelain_actions
+  defdelegate create_complete_domain(name \\ "complete"), to: AriaCore.DomainUtils
+
   # Planning and Execution API
   defdelegate plan(domain, state, goals), to: AriaEngineCore, as: :plan
   defdelegate run_lazy(domain, state, goals), to: AriaEngineCore, as: :run_lazy

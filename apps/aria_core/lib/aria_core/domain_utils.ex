@@ -1,12 +1,12 @@
 # Copyright (c) 2025-present K. S. Ernest (iFire) Lee
 # SPDX-License-Identifier: MIT
 
-defmodule AriaEngineCore.Domain.Utils do
+defmodule AriaCore.DomainUtils do
   @moduledoc """
-  Mock implementation of AriaEngineCore.Domain.Utils for compilation.
+  Domain utilities implementation migrated from AriaEngineCore.Domain.Utils.
 
-  This module provides utility functions for domain operations.
-  Currently mocked with basic functionality to enable compilation.
+  This module provides utility functions for domain operations,
+  now properly located in AriaCore following umbrella app architectural boundaries.
   """
 
   @doc """

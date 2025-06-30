@@ -1,12 +1,12 @@
 # Copyright (c) 2025-present K. S. Ernest (iFire) Lee
 # SPDX-License-Identifier: MIT
 
-defmodule AriaEngineCore.Domain.Methods do
+defmodule AriaCore.MethodManagement do
   @moduledoc """
-  Mock implementation of AriaEngineCore.Domain.Methods for compilation.
+  Method management implementation migrated from AriaEngineCore.Domain.Methods.
 
-  This module provides method management functionality for domains.
-  Currently mocked with basic functionality to enable compilation.
+  This module provides method management functionality for domains,
+  now properly located in AriaCore following umbrella app architectural boundaries.
   """
 
   require Logger
@@ -240,5 +240,54 @@ defmodule AriaEngineCore.Domain.Methods do
     domain
     |> Map.get(:unigoal_methods, %{})
     |> Map.has_key?(goal_type)
+  end
+
+  @doc """
+  Remove task methods for a specific task.
+  """
+  @spec remove_task_methods(map(), String.t()) :: map()
+  def remove_task_methods(domain, task_name) do
+    methods = Map.get(domain, :task_methods, %{})
+    updated_methods = Map.delete(methods, task_name)
+    Map.put(domain, :task_methods, updated_methods)
+  end
+
+  @doc """
+  Remove unigoal methods for a specific goal type.
+  """
+  @spec remove_unigoal_methods(map(), String.t()) :: map()
+  def remove_unigoal_methods(domain, goal_type) do
+    methods = Map.get(domain, :unigoal_methods, %{})
+    updated_methods = Map.delete(methods, goal_type)
+    Map.put(domain, :unigoal_methods, updated_methods)
+  end
+
+  @doc """
+  Clear all multigoal methods.
+  """
+  @spec clear_multigoal_methods(map()) :: map()
+  def clear_multigoal_methods(domain) do
+    Map.put(domain, :multigoal_methods, [])
+  end
+
+  @doc """
+  Clear all multitodo methods.
+  """
+  @spec clear_multitodo_methods(map()) :: map()
+  def clear_multitodo_methods(domain) do
+    Map.put(domain, :multitodo_methods, [])
+  end
+
+  @doc """
+  Get method counts by type.
+  """
+  @spec get_method_counts(map()) :: map()
+  def get_method_counts(domain) do
+    %{
+      task_methods: domain |> Map.get(:task_methods, %{}) |> map_size(),
+      unigoal_methods: domain |> Map.get(:unigoal_methods, %{}) |> map_size(),
+      multigoal_methods: domain |> Map.get(:multigoal_methods, []) |> length(),
+      multitodo_methods: domain |> Map.get(:multitodo_methods, []) |> length()
+    }
   end
 end
