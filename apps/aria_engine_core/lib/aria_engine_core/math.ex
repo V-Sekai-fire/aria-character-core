@@ -9,23 +9,27 @@ defmodule AriaEngineCore.Math do
   that follow the glTF KHR Interactivity specification for mathematical nodes.
 
   All operations implement IEEE-754 standard for NaN, infinity, and special case handling.
+
+  **Note:** This module now delegates to AriaMath for all mathematical operations.
   """
 
+  alias AriaMath.{Vector3, Quaternion, Matrix4, Joint}
+
   # Re-export all mathematical types and operations
-  defdelegate new_vector3(x, y, z), to: AriaEngineCore.Math.Vector3, as: :new
-  defdelegate new_quaternion(x, y, z, w), to: AriaEngineCore.Math.Quaternion, as: :new
-  defdelegate new_matrix4(m0, m1, m2, m3, m4, m5, m6, m7, m8, m9, m10, m11, m12, m13, m14, m15), to: AriaEngineCore.Math.Matrix4, as: :new
-  defdelegate new_joint(opts), to: AriaEngineCore.Math.Joint, as: :new
+  defdelegate new_vector3(x, y, z), to: Vector3, as: :new
+  defdelegate new_quaternion(x, y, z, w), to: Quaternion, as: :new
+  defdelegate new_matrix4(m0, m1, m2, m3, m4, m5, m6, m7, m8, m9, m10, m11, m12, m13, m14, m15), to: Matrix4, as: :new
+  defdelegate new_joint(opts), to: Joint, as: :new
 
   # Commonly used constants
-  defdelegate vector3_zero(), to: AriaEngineCore.Math.Vector3, as: :zero
-  defdelegate vector3_unit_x(), to: AriaEngineCore.Math.Vector3, as: :unit_x
-  defdelegate vector3_unit_y(), to: AriaEngineCore.Math.Vector3, as: :unit_y
-  defdelegate vector3_unit_z(), to: AriaEngineCore.Math.Vector3, as: :unit_z
+  defdelegate vector3_zero(), to: Vector3, as: :zero
+  defdelegate vector3_unit_x(), to: Vector3, as: :unit_x
+  defdelegate vector3_unit_y(), to: Vector3, as: :unit_y
+  defdelegate vector3_unit_z(), to: Vector3, as: :unit_z
 
-  defdelegate quaternion_identity(), to: AriaEngineCore.Math.Quaternion, as: :identity
-  defdelegate matrix4_identity(), to: AriaEngineCore.Math.Matrix4, as: :identity
-  defdelegate matrix4_zero(), to: AriaEngineCore.Math.Matrix4, as: :zero
+  defdelegate quaternion_identity(), to: Quaternion, as: :identity
+  defdelegate matrix4_identity(), to: Matrix4, as: :identity
+  defdelegate matrix4_zero(), to: Matrix4, as: :zero
 
   @doc """
   Returns a map of all available KHR Interactivity mathematical operations.
@@ -49,43 +53,43 @@ defmodule AriaEngineCore.Math do
   def khr_operations do
     %{
       # Vector3 operations
-      vector_length: &AriaEngineCore.Math.Vector3.length/1,
-      vector_normalize: &AriaEngineCore.Math.Vector3.normalize/1,
-      vector_dot: &AriaEngineCore.Math.Vector3.dot/2,
-      vector_cross: &AriaEngineCore.Math.Vector3.cross/2,
-      vector_add: &AriaEngineCore.Math.Vector3.add/2,
-      vector_sub: &AriaEngineCore.Math.Vector3.sub/2,
-      vector_mul: &AriaEngineCore.Math.Vector3.mul/2,
-      vector_min: &AriaEngineCore.Math.Vector3.min/2,
-      vector_max: &AriaEngineCore.Math.Vector3.max/2,
-      vector_clamp: &AriaEngineCore.Math.Vector3.clamp/3,
-      vector_mix: &AriaEngineCore.Math.Vector3.mix/3,
-      vector_abs: &AriaEngineCore.Math.Vector3.abs/1,
+      vector_length: &Vector3.length/1,
+      vector_normalize: &Vector3.normalize/1,
+      vector_dot: &Vector3.dot/2,
+      vector_cross: &Vector3.cross/2,
+      vector_add: &Vector3.add/2,
+      vector_sub: &Vector3.sub/2,
+      vector_mul: &Vector3.mul/2,
+      vector_min: &Vector3.min/2,
+      vector_max: &Vector3.max/2,
+      vector_clamp: &Vector3.clamp/3,
+      vector_mix: &Vector3.mix/3,
+      vector_abs: &Vector3.abs/1,
 
       # Quaternion operations
-      quat_conjugate: &AriaEngineCore.Math.Quaternion.conjugate/1,
-      quat_mul: &AriaEngineCore.Math.Quaternion.multiply/2,
-      quat_angle_between: &AriaEngineCore.Math.Quaternion.angle_between/2,
-      quat_from_axis_angle: &AriaEngineCore.Math.Quaternion.from_axis_angle/2,
-      quat_to_axis_angle: &AriaEngineCore.Math.Quaternion.to_axis_angle/1,
-      quat_from_directions: &AriaEngineCore.Math.Quaternion.from_directions/2,
-      quat_normalize: &AriaEngineCore.Math.Quaternion.normalize/1,
-      quat_slerp: &AriaEngineCore.Math.Quaternion.slerp/3,
+      quat_conjugate: &Quaternion.conjugate/1,
+      quat_mul: &Quaternion.multiply/2,
+      quat_angle_between: &Quaternion.angle_between/2,
+      quat_from_axis_angle: &Quaternion.from_axis_angle/2,
+      quat_to_axis_angle: &Quaternion.to_axis_angle/1,
+      quat_from_directions: &Quaternion.from_directions/2,
+      quat_normalize: &Quaternion.normalize/1,
+      quat_slerp: &Quaternion.slerp/3,
 
       # Matrix4 operations
-      mat_mul: &AriaEngineCore.Math.Matrix4.multiply/2,
-      mat_determinant: &AriaEngineCore.Math.Matrix4.determinant/1,
-      mat_inverse: &AriaEngineCore.Math.Matrix4.inverse/1,
-      mat_transpose: &AriaEngineCore.Math.Matrix4.transpose/1,
-      mat_transform_point: &AriaEngineCore.Math.Matrix4.transform_point/2,
-      mat_transform_direction: &AriaEngineCore.Math.Matrix4.transform_direction/2,
+      mat_mul: &Matrix4.multiply/2,
+      mat_determinant: &Matrix4.determinant/1,
+      mat_inverse: &Matrix4.inverse/1,
+      mat_transpose: &Matrix4.transpose/1,
+      mat_transform_point: &Matrix4.transform_point/2,
+      mat_transform_direction: &Matrix4.transform_direction/2,
 
       # Transformation operations
-      mat_translation: &AriaEngineCore.Math.Matrix4.translation/1,
-      mat_rotation: &AriaEngineCore.Math.Matrix4.rotation/1,
-      mat_scaling: &AriaEngineCore.Math.Matrix4.scaling/1,
-      mat_compose: &AriaEngineCore.Math.Matrix4.compose/3,
-      mat_decompose: &AriaEngineCore.Math.Matrix4.decompose/1
+      mat_translation: &Matrix4.translation/1,
+      mat_rotation: &Matrix4.rotation/1,
+      mat_scaling: &Matrix4.scaling/1,
+      mat_compose: &Matrix4.compose/3,
+      mat_decompose: &Matrix4.decompose/1
     }
   end
 
