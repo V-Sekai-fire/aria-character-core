@@ -157,7 +157,7 @@ defmodule AriaMath.Matrix4 do
   """
   @spec transpose(t()) :: t()
   def transpose({m0, m1, m2, m3, m4, m5, m6, m7, m8, m9, m10, m11, m12, m13, m14, m15}) do
-    {m0, m4, m8, m12, m1, m5, m9, m13, m2, m6, m10, m14, m3, m7, m11, m15}
+    {m0/1, m4/1, m8/1, m12/1, m1/1, m5/1, m9/1, m13/1, m2/1, m6/1, m10/1, m14/1, m3/1, m7/1, m11/1, m15/1}
   end
 
   @doc """
@@ -245,52 +245,55 @@ defmodule AriaMath.Matrix4 do
   end
 
   @doc """
-  Create rotation matrix from Euler angles (yaw, pitch, roll).
+  Create rotation matrix from Euler angles.
 
-  Creates a rotation matrix from Euler angles in radians using ZYX rotation order.
-  This is equivalent to rotating around Z axis (yaw), then Y axis (pitch), then X axis (roll).
+  Creates a rotation matrix from Euler angles in radians. Supports all 6 Tait-Bryan rotation orders.
+  Default order is XYZ (roll around X, pitch around Y, yaw around Z).
+
+  ## Rotation Orders
+
+  - `:xyz` - Roll (X), Pitch (Y), Yaw (Z) - Default
+  - `:xzy` - Roll (X), Yaw (Z), Pitch (Y)
+  - `:yxz` - Pitch (Y), Roll (X), Yaw (Z)
+  - `:yzx` - Pitch (Y), Yaw (Z), Roll (X)
+  - `:zxy` - Yaw (Z), Roll (X), Pitch (Y)
+  - `:zyx` - Yaw (Z), Pitch (Y), Roll (X)
 
   ## Examples
+
+      iex> AriaMath.Matrix4.from_euler(:math.pi / 2, 0.0, 0.0)
+      {1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, -1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0}
 
       iex> AriaMath.Matrix4.from_euler(0.0, 0.0, :math.pi / 2)
       {0.0, 1.0, 0.0, 0.0, -1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0}
 
-      iex> AriaMath.Matrix4.from_euler(:math.pi / 2, 0.0, 0.0)
-      {0.0, 0.0, -1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0}
+      iex> AriaMath.Matrix4.from_euler(0.0, 0.0, :math.pi / 2, :zyx)
+      {0.0, 1.0, 0.0, 0.0, -1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0}
   """
   @spec from_euler(float(), float(), float()) :: t()
-  def from_euler(yaw, pitch, roll) when is_number(yaw) and is_number(pitch) and is_number(roll) do
-    # Calculate trigonometric values
-    cy = :math.cos(yaw)
-    sy = :math.sin(yaw)
-    cp = :math.cos(pitch)
-    sp = :math.sin(pitch)
-    cr = :math.cos(roll)
-    sr = :math.sin(roll)
+  def from_euler(x, y, z) when is_number(x) and is_number(y) and is_number(z) do
+    from_euler(x, y, z, :xyz)
+  end
 
-    # ZYX rotation order: R = Rz(yaw) * Ry(pitch) * Rx(roll)
-    {
-      # Column 0
-      cy * cp,
-      sy * cp,
-      -sp,
-      0.0,
-      # Column 1
-      cy * sp * sr - sy * cr,
-      sy * sp * sr + cy * cr,
-      cp * sr,
-      0.0,
-      # Column 2
-      cy * sp * cr + sy * sr,
-      sy * sp * cr - cy * sr,
-      cp * cr,
-      0.0,
-      # Column 3
-      0.0,
-      0.0,
-      0.0,
-      1.0
-    }
+  @spec from_euler(float(), float(), float(), atom()) :: t()
+  def from_euler(x, y, z, order) when is_number(x) and is_number(y) and is_number(z) and is_atom(order) do
+    # Calculate trigonometric values with epsilon cleanup
+    cx = clean_float(:math.cos(x))
+    sx = clean_float(:math.sin(x))
+    cy = clean_float(:math.cos(y))
+    sy = clean_float(:math.sin(y))
+    cz = clean_float(:math.cos(z))
+    sz = clean_float(:math.sin(z))
+
+    case order do
+      :xyz -> from_euler_xyz(cx, sx, cy, sy, cz, sz)
+      :xzy -> from_euler_xzy(cx, sx, cy, sy, cz, sz)
+      :yxz -> from_euler_yxz(cx, sx, cy, sy, cz, sz)
+      :yzx -> from_euler_yzx(cx, sx, cy, sy, cz, sz)
+      :zxy -> from_euler_zxy(cx, sx, cy, sy, cz, sz)
+      :zyx -> from_euler_zyx(cx, sx, cy, sy, cz, sz)
+      _ -> raise ArgumentError, "Invalid rotation order: #{order}. Valid orders are: :xyz, :xzy, :yxz, :yzx, :zxy, :zyx"
+    end
   end
 
   @doc """
@@ -544,30 +547,102 @@ defmodule AriaMath.Matrix4 do
     value == :positive_infinity or value == :negative_infinity
   end
 
+  # Clean up floating-point precision errors
+  defp clean_float(value) when is_float(value) do
+    epsilon = 1.0e-15
+    cond do
+      abs(value) < epsilon -> 0.0
+      abs(value - 1.0) < epsilon -> 1.0
+      abs(value + 1.0) < epsilon -> -1.0
+      value == -0.0 -> 0.0  # Convert -0.0 to 0.0
+      true -> value
+    end
+  end
+
+  # XYZ rotation order: R = Rz(z) * Ry(y) * Rx(x)
+  defp from_euler_xyz(cx, sx, cy, sy, cz, sz) do
+    {
+      clean_float(cy * cz), clean_float(sx * sy * cz + cx * sz), clean_float(-cx * sy * cz + sx * sz), 0.0,
+      clean_float(-cy * sz), clean_float(-sx * sy * sz + cx * cz), clean_float(cx * sy * sz + sx * cz), 0.0,
+      clean_float(sy), clean_float(-sx * cy), clean_float(cx * cy), 0.0,
+      0.0, 0.0, 0.0, 1.0
+    }
+  end
+
+  # XZY rotation order: R = Ry(y) * Rz(z) * Rx(x)
+  defp from_euler_xzy(cx, sx, cy, sy, cz, sz) do
+    {
+      cy * cz, sx * sy + cx * cy * sz, cx * sy - sx * cy * sz, 0.0,
+      -sz, cx * cz, sx * cz, 0.0,
+      sy * cz, sx * cy - cx * sy * sz, cx * cy + sx * sy * sz, 0.0,
+      0.0, 0.0, 0.0, 1.0
+    }
+  end
+
+  # YXZ rotation order: R = Rz(z) * Rx(x) * Ry(y)
+  defp from_euler_yxz(cx, sx, cy, sy, cz, sz) do
+    {
+      cy * cz + sy * sx * sz, cx * sz, -sy * cz + cy * sx * sz, 0.0,
+      -cy * sz + sy * sx * cz, cx * cz, sy * sz + cy * sx * cz, 0.0,
+      sy * cx, -sx, cy * cx, 0.0,
+      0.0, 0.0, 0.0, 1.0
+    }
+  end
+
+  # YZX rotation order: R = Rx(x) * Rz(z) * Ry(y)
+  defp from_euler_yzx(cx, sx, cy, sy, cz, sz) do
+    {
+      cy * cz, sz, -sy * cz, 0.0,
+      -cx * cy * sz + sx * sy, cx * cz, cx * sy * sz + sx * cy, 0.0,
+      sx * cy * sz + cx * sy, -sx * cz, -sx * sy * sz + cx * cy, 0.0,
+      0.0, 0.0, 0.0, 1.0
+    }
+  end
+
+  # ZXY rotation order: R = Ry(y) * Rx(x) * Rz(z)
+  defp from_euler_zxy(cx, sx, cy, sy, cz, sz) do
+    {
+      cy * cz - sy * sx * sz, cy * sz + sy * sx * cz, -sy * cx, 0.0,
+      -cx * sz, cx * cz, sx, 0.0,
+      sy * cz + cy * sx * sz, sy * sz - cy * sx * cz, cy * cx, 0.0,
+      0.0, 0.0, 0.0, 1.0
+    }
+  end
+
+  # ZYX rotation order: R = Rx(x) * Ry(y) * Rz(z)
+  defp from_euler_zyx(cx, sx, cy, sy, cz, sz) do
+    {
+      clean_float(cy * cz), clean_float(cy * sz), clean_float(-sy), 0.0,
+      clean_float(sx * sy * cz - cx * sz), clean_float(sx * sy * sz + cx * cz), clean_float(sx * cy), 0.0,
+      clean_float(cx * sy * cz + sx * sz), clean_float(cx * sy * sz - sx * cz), clean_float(cx * cy), 0.0,
+      0.0, 0.0, 0.0, 1.0
+    }
+  end
+
   defp calculate_inverse({m0, m1, m2, m3, m4, m5, m6, m7, m8, m9, m10, m11, m12, m13, m14, m15}, det) do
     inv_det = 1.0 / det
 
     # Calculate cofactor matrix and multiply by 1/det
     {
-      inv_det * (m5 * (m10 * m15 - m11 * m14) - m6 * (m9 * m15 - m11 * m13) + m7 * (m9 * m14 - m10 * m13)),
-      inv_det * -(m1 * (m10 * m15 - m11 * m14) - m2 * (m9 * m15 - m11 * m13) + m3 * (m9 * m14 - m10 * m13)),
-      inv_det * (m1 * (m6 * m15 - m7 * m14) - m2 * (m5 * m15 - m7 * m13) + m3 * (m5 * m14 - m6 * m13)),
-      inv_det * -(m1 * (m6 * m11 - m7 * m10) - m2 * (m5 * m11 - m7 * m9) + m3 * (m5 * m10 - m6 * m9)),
+      clean_float(inv_det * (m5 * (m10 * m15 - m11 * m14) - m6 * (m9 * m15 - m11 * m13) + m7 * (m9 * m14 - m10 * m13))),
+      clean_float(inv_det * -(m1 * (m10 * m15 - m11 * m14) - m2 * (m9 * m15 - m11 * m13) + m3 * (m9 * m14 - m10 * m13))),
+      clean_float(inv_det * (m1 * (m6 * m15 - m7 * m14) - m2 * (m5 * m15 - m7 * m13) + m3 * (m5 * m14 - m6 * m13))),
+      clean_float(inv_det * -(m1 * (m6 * m11 - m7 * m10) - m2 * (m5 * m11 - m7 * m9) + m3 * (m5 * m10 - m6 * m9))),
 
-      inv_det * -(m4 * (m10 * m15 - m11 * m14) - m6 * (m8 * m15 - m11 * m12) + m7 * (m8 * m14 - m10 * m12)),
-      inv_det * (m0 * (m10 * m15 - m11 * m14) - m2 * (m8 * m15 - m11 * m12) + m3 * (m8 * m14 - m10 * m12)),
-      inv_det * -(m0 * (m6 * m15 - m7 * m14) - m2 * (m4 * m15 - m7 * m12) + m3 * (m4 * m14 - m6 * m12)),
-      inv_det * (m0 * (m6 * m11 - m7 * m10) - m2 * (m4 * m11 - m7 * m8) + m3 * (m4 * m10 - m6 * m8)),
+      clean_float(inv_det * -(m4 * (m10 * m15 - m11 * m14) - m6 * (m8 * m15 - m11 * m12) + m7 * (m8 * m14 - m10 * m12))),
+      clean_float(inv_det * (m0 * (m10 * m15 - m11 * m14) - m2 * (m8 * m15 - m11 * m12) + m3 * (m8 * m14 - m10 * m12))),
+      clean_float(inv_det * -(m0 * (m6 * m15 - m7 * m14) - m2 * (m4 * m15 - m7 * m12) + m3 * (m4 * m14 - m6 * m12))),
+      clean_float(inv_det * (m0 * (m6 * m11 - m7 * m10) - m2 * (m4 * m11 - m7 * m8) + m3 * (m4 * m10 - m6 * m8))),
 
-      inv_det * (m4 * (m9 * m15 - m11 * m13) - m5 * (m8 * m15 - m11 * m12) + m7 * (m8 * m13 - m9 * m12)),
-      inv_det * -(m0 * (m9 * m15 - m11 * m13) - m1 * (m8 * m15 - m11 * m12) + m3 * (m8 * m13 - m9 * m12)),
-      inv_det * (m0 * (m5 * m15 - m7 * m13) - m1 * (m4 * m15 - m7 * m12) + m3 * (m4 * m13 - m5 * m12)),
-      inv_det * -(m0 * (m5 * m11 - m7 * m9) - m1 * (m4 * m11 - m7 * m8) + m3 * (m4 * m9 - m5 * m8)),
+      clean_float(inv_det * (m4 * (m9 * m15 - m11 * m13) - m5 * (m8 * m15 - m11 * m12) + m7 * (m8 * m13 - m9 * m12))),
+      clean_float(inv_det * -(m0 * (m9 * m15 - m11 * m13) - m1 * (m8 * m15 - m11 * m12) + m3 * (m8 * m13 - m9 * m12))),
+      clean_float(inv_det * (m0 * (m5 * m15 - m7 * m13) - m1 * (m4 * m15 - m7 * m12) + m3 * (m4 * m13 - m5 * m12))),
+      clean_float(inv_det * -(m0 * (m5 * m11 - m7 * m9) - m1 * (m4 * m11 - m7 * m8) + m3 * (m4 * m9 - m5 * m8))),
 
-      inv_det * -(m4 * (m9 * m14 - m10 * m13) - m5 * (m8 * m14 - m10 * m12) + m6 * (m8 * m13 - m9 * m12)),
-      inv_det * (m0 * (m9 * m14 - m10 * m13) - m1 * (m8 * m14 - m10 * m12) + m2 * (m8 * m13 - m9 * m12)),
-      inv_det * -(m0 * (m5 * m14 - m6 * m13) - m1 * (m4 * m14 - m6 * m12) + m2 * (m4 * m13 - m5 * m12)),
-      inv_det * (m0 * (m5 * m10 - m6 * m9) - m1 * (m4 * m10 - m6 * m8) + m2 * (m4 * m9 - m5 * m8))
+      clean_float(inv_det * -(m4 * (m9 * m14 - m10 * m13) - m5 * (m8 * m14 - m10 * m12) + m6 * (m8 * m13 - m9 * m12))),
+      clean_float(inv_det * (m0 * (m9 * m14 - m10 * m13) - m1 * (m8 * m14 - m10 * m12) + m2 * (m8 * m13 - m9 * m12))),
+      clean_float(inv_det * -(m0 * (m5 * m14 - m6 * m13) - m1 * (m4 * m14 - m6 * m12) + m2 * (m4 * m13 - m5 * m12))),
+      clean_float(inv_det * (m0 * (m5 * m10 - m6 * m9) - m1 * (m4 * m10 - m6 * m8) + m2 * (m4 * m9 - m5 * m8)))
     }
   end
 
