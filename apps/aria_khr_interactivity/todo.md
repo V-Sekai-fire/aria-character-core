@@ -59,9 +59,9 @@ AriaKhrInteractivity provides the KHR Interactivity domain implementation for gl
 ```elixir
 defp deps do
   [
-    {:aria_math, in_umbrella: true},      # Mathematical operations
-    {:aria_joint, in_umbrella: true},     # Joint operations if needed
-    {:aria_state, in_umbrella: true}      # State management
+    {:aria_engine_core, in_umbrella: true}, # External planner interface
+    {:aria_math, in_umbrella: true},        # Mathematical operations
+    {:aria_joint, in_umbrella: true}        # Joint operations if needed
   ]
 end
 ```
@@ -91,20 +91,27 @@ end
   - [ ] IEEE-754 compliance throughout all operations
   - [ ] Comprehensive error handling for edge cases
 
-### Phase 2: Behavior Graph Processing (HIGH PRIORITY) (Replace with planner)
+### Phase 2: AriaEngineCore Planner Integration (HIGH PRIORITY)
 
-- [ ] **Behavior Graph Engine**
-  - [ ] Create `lib/aria_khr_interactivity/behavior_graph.ex`
-  - [ ] Behavior graph creation and validation
-  - [ ] Node execution framework
-  - [ ] Graph execution coordination
-  - [ ] State management for behavior graphs
+- [ ] **KHR Domain Definition**
+  - [ ] Create `lib/aria_khr_interactivity/domain.ex`
+  - [ ] Define KHR domain actions using AriaEngineCore.Domain
+  - [ ] KHR primitive composition methods
+  - [ ] Domain registration and action metadata
+  - [ ] Temporal specifications for KHR operations
+
+- [ ] **Planner Integration Bridge**
+  - [ ] Create `lib/aria_khr_interactivity/planner_integration.ex`
+  - [ ] Task abstraction layer (Layer 2 from ADR R25W064B8E2)
+  - [ ] KHR sequence planning using AriaEngineCore.plan/3
+  - [ ] KHR execution using AriaEngineCore.run_lazy/3
+  - [ ] State management integration with AriaEngineCore
 
 - [ ] **Node Library Interface**
   - [ ] Create `lib/aria_khr_interactivity/node_library.ex`
   - [ ] Standardized node definition system
   - [ ] Node registration and discovery
-  - [ ] Node execution interface
+  - [ ] Integration with AriaEngineCore domain actions
   - [ ] Node validation and error handling
 
 ### Phase 3: Integration Bridge (MEDIUM PRIORITY)
@@ -139,10 +146,11 @@ defmodule AriaKhrInteractivity do
   defdelegate execute_math_node(node_type, inputs), to: AriaKhrInteractivity.Primitives
   defdelegate get_supported_math_nodes(), to: AriaKhrInteractivity.Primitives
   
-  # Behavior graph operations
-  defdelegate create_behavior_graph(definition), to: AriaKhrInteractivity.BehaviorGraph
-  defdelegate execute_behavior_graph(graph, inputs), to: AriaKhrInteractivity.BehaviorGraph
-  defdelegate validate_behavior_graph(graph), to: AriaKhrInteractivity.BehaviorGraph
+  # AriaEngineCore planner integration
+  defdelegate create_khr_domain(definition), to: AriaKhrInteractivity.PlannerIntegration
+  defdelegate plan_khr_sequence(domain, state, goals), to: AriaKhrInteractivity.PlannerIntegration
+  defdelegate execute_khr_plan(domain, state, goals), to: AriaKhrInteractivity.PlannerIntegration
+  defdelegate execute_khr_tree(domain, state, solution_tree), to: AriaKhrInteractivity.PlannerIntegration
   
   # Node library interface
   defdelegate get_node_definition(node_type), to: AriaKhrInteractivity.NodeLibrary
@@ -156,7 +164,7 @@ end
 ## Success Criteria
 
 - [ ] Complete KHR Interactivity mathematical primitives implementation
-- [ ] Functional behavior graph processing system
+- [ ] Functional AriaEngineCore planner integration system
 - [ ] Comprehensive test suite with IEEE-754 compliance
 - [ ] Clear external API following umbrella standards
 - [ ] Integration capabilities with other umbrella apps
