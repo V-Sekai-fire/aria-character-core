@@ -132,7 +132,8 @@ defmodule AriaMath.Primitives.Sphere do
         {updated_vertices, acc_indices ++ new_triangle_indices}
       end)
 
-    {new_vertices, new_<read_file>
+    {new_vertices, new_indices}
+  end
 
   # Helper function to calculate midpoint and project to sphere surface
   defp midpoint_on_sphere({x1, y1, z1}, {x2, y2, z2}, radius) do
