@@ -114,42 +114,30 @@ defmodule AriaMath.Matrix4.Core do
     value == :positive_infinity or value == :negative_infinity
   end
 
-  # Clean up floating-point precision errors
-  defp clean_float(value) when is_float(value) do
-    epsilon = 1.0e-15
-    cond do
-      abs(value) < epsilon -> 0.0
-      abs(value - 1.0) < epsilon -> 1.0
-      abs(value + 1.0) < epsilon -> -1.0
-      value == -0.0 -> 0.0  # Convert -0.0 to 0.0
-      true -> value
-    end
-  end
-
   defp calculate_inverse({m0, m1, m2, m3, m4, m5, m6, m7, m8, m9, m10, m11, m12, m13, m14, m15}, det) do
     inv_det = 1.0 / det
 
     # Calculate cofactor matrix and multiply by 1/det
     {
-      clean_float(inv_det * (m5 * (m10 * m15 - m11 * m14) - m6 * (m9 * m15 - m11 * m13) + m7 * (m9 * m14 - m10 * m13))),
-      clean_float(inv_det * -(m1 * (m10 * m15 - m11 * m14) - m2 * (m9 * m15 - m11 * m13) + m3 * (m9 * m14 - m10 * m13))),
-      clean_float(inv_det * (m1 * (m6 * m15 - m7 * m14) - m2 * (m5 * m15 - m7 * m13) + m3 * (m5 * m14 - m6 * m13))),
-      clean_float(inv_det * -(m1 * (m6 * m11 - m7 * m10) - m2 * (m5 * m11 - m7 * m9) + m3 * (m5 * m10 - m6 * m9))),
+      inv_det * (m5 * (m10 * m15 - m11 * m14) - m6 * (m9 * m15 - m11 * m13) + m7 * (m9 * m14 - m10 * m13)),
+      inv_det * -(m1 * (m10 * m15 - m11 * m14) - m2 * (m9 * m15 - m11 * m13) + m3 * (m9 * m14 - m10 * m13)),
+      inv_det * (m1 * (m6 * m15 - m7 * m14) - m2 * (m5 * m15 - m7 * m13) + m3 * (m5 * m14 - m6 * m13)),
+      inv_det * -(m1 * (m6 * m11 - m7 * m10) - m2 * (m5 * m11 - m7 * m9) + m3 * (m5 * m10 - m6 * m9)),
 
-      clean_float(inv_det * -(m4 * (m10 * m15 - m11 * m14) - m6 * (m8 * m15 - m11 * m12) + m7 * (m8 * m14 - m10 * m12))),
-      clean_float(inv_det * (m0 * (m10 * m15 - m11 * m14) - m2 * (m8 * m15 - m11 * m12) + m3 * (m8 * m14 - m10 * m12))),
-      clean_float(inv_det * -(m0 * (m6 * m15 - m7 * m14) - m2 * (m4 * m15 - m7 * m12) + m3 * (m4 * m14 - m6 * m12))),
-      clean_float(inv_det * (m0 * (m6 * m11 - m7 * m10) - m2 * (m4 * m11 - m7 * m8) + m3 * (m4 * m10 - m6 * m8))),
+      inv_det * -(m4 * (m10 * m15 - m11 * m14) - m6 * (m8 * m15 - m11 * m12) + m7 * (m8 * m14 - m10 * m12)),
+      inv_det * (m0 * (m10 * m15 - m11 * m14) - m2 * (m8 * m15 - m11 * m12) + m3 * (m8 * m14 - m10 * m12)),
+      inv_det * -(m0 * (m6 * m15 - m7 * m14) - m2 * (m4 * m15 - m7 * m12) + m3 * (m4 * m14 - m6 * m12)),
+      inv_det * (m0 * (m6 * m11 - m7 * m10) - m2 * (m4 * m11 - m7 * m8) + m3 * (m4 * m10 - m6 * m8)),
 
-      clean_float(inv_det * (m4 * (m9 * m15 - m11 * m13) - m5 * (m8 * m15 - m11 * m12) + m7 * (m8 * m13 - m9 * m12))),
-      clean_float(inv_det * -(m0 * (m9 * m15 - m11 * m13) - m1 * (m8 * m15 - m11 * m12) + m3 * (m8 * m13 - m9 * m12))),
-      clean_float(inv_det * (m0 * (m5 * m15 - m7 * m13) - m1 * (m4 * m15 - m7 * m12) + m3 * (m4 * m13 - m5 * m12))),
-      clean_float(inv_det * -(m0 * (m5 * m11 - m7 * m9) - m1 * (m4 * m11 - m7 * m8) + m3 * (m4 * m9 - m5 * m8))),
+      inv_det * (m4 * (m9 * m15 - m11 * m13) - m5 * (m8 * m15 - m11 * m12) + m7 * (m8 * m13 - m9 * m12)),
+      inv_det * -(m0 * (m9 * m15 - m11 * m13) - m1 * (m8 * m15 - m11 * m12) + m3 * (m8 * m13 - m9 * m12)),
+      inv_det * (m0 * (m5 * m15 - m7 * m13) - m1 * (m4 * m15 - m7 * m12) + m3 * (m4 * m13 - m5 * m12)),
+      inv_det * -(m0 * (m5 * m11 - m7 * m9) - m1 * (m4 * m11 - m7 * m8) + m3 * (m4 * m9 - m5 * m8)),
 
-      clean_float(inv_det * -(m4 * (m9 * m14 - m10 * m13) - m5 * (m8 * m14 - m10 * m12) + m6 * (m8 * m13 - m9 * m12))),
-      clean_float(inv_det * (m0 * (m9 * m14 - m10 * m13) - m1 * (m8 * m14 - m10 * m12) + m2 * (m8 * m13 - m9 * m12))),
-      clean_float(inv_det * -(m0 * (m5 * m14 - m6 * m13) - m1 * (m4 * m14 - m6 * m12) + m2 * (m4 * m13 - m5 * m12))),
-      clean_float(inv_det * (m0 * (m5 * m10 - m6 * m9) - m1 * (m4 * m10 - m6 * m8) + m2 * (m4 * m9 - m5 * m8)))
+      inv_det * -(m4 * (m9 * m14 - m10 * m13) - m5 * (m8 * m14 - m10 * m12) + m6 * (m8 * m13 - m9 * m12)),
+      inv_det * (m0 * (m9 * m14 - m10 * m13) - m1 * (m8 * m14 - m10 * m12) + m2 * (m8 * m13 - m9 * m12)),
+      inv_det * -(m0 * (m5 * m14 - m6 * m13) - m1 * (m4 * m14 - m6 * m12) + m2 * (m4 * m13 - m5 * m12)),
+      inv_det * (m0 * (m5 * m10 - m6 * m9) - m1 * (m4 * m10 - m6 * m8) + m2 * (m4 * m9 - m5 * m8))
     }
   end
 end

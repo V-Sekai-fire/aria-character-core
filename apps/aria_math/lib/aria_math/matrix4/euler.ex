@@ -34,12 +34,12 @@ defmodule AriaMath.Matrix4.Euler do
   @spec from_euler(float(), float(), float(), atom()) :: Matrix4.t()
   def from_euler(x, y, z, order) when is_number(x) and is_number(y) and is_number(z) and is_atom(order) do
     # Calculate trigonometric values with epsilon cleanup
-    cx = clean_float(:math.cos(x))
-    sx = clean_float(:math.sin(x))
-    cy = clean_float(:math.cos(y))
-    sy = clean_float(:math.sin(y))
-    cz = clean_float(:math.cos(z))
-    sz = clean_float(:math.sin(z))
+    cx = :math.cos(x)
+    sx = :math.sin(x)
+    cy = :math.cos(y)
+    sy = :math.sin(y)
+    cz = :math.cos(z)
+    sz = :math.sin(z)
 
     case order do
       :xyz -> from_euler_xyz(cx, sx, cy, sy, cz, sz)
@@ -52,24 +52,12 @@ defmodule AriaMath.Matrix4.Euler do
     end
   end
 
-  # Clean up floating-point precision errors
-  defp clean_float(value) when is_float(value) do
-    epsilon = 1.0e-15
-    cond do
-      abs(value) < epsilon -> 0.0
-      abs(value - 1.0) < epsilon -> 1.0
-      abs(value + 1.0) < epsilon -> -1.0
-      value == -0.0 -> 0.0  # Convert -0.0 to 0.0
-      true -> value
-    end
-  end
-
   # XYZ rotation order: R = Rz(z) * Ry(y) * Rx(x)
   defp from_euler_xyz(cx, sx, cy, sy, cz, sz) do
     {
-      clean_float(cy * cz), clean_float(sx * sy * cz + cx * sz), clean_float(-cx * sy * cz + sx * sz), 0.0,
-      clean_float(-cy * sz), clean_float(-sx * sy * sz + cx * cz), clean_float(cx * sy * sz + sx * cz), 0.0,
-      clean_float(sy), clean_float(-sx * cy), clean_float(cx * cy), 0.0,
+      cy * cz, sx * sy * cz + cx * sz, -cx * sy * cz + sx * sz, 0.0,
+      -cy * sz, -sx * sy * sz + cx * cz, cx * sy * sz + sx * cz, 0.0,
+      sy, -sx * cy, cx * cy, 0.0,
       0.0, 0.0, 0.0, 1.0
     }
   end
@@ -117,9 +105,9 @@ defmodule AriaMath.Matrix4.Euler do
   # ZYX rotation order: R = Rx(x) * Ry(y) * Rz(z)
   defp from_euler_zyx(cx, sx, cy, sy, cz, sz) do
     {
-      clean_float(cy * cz), clean_float(cy * sz), clean_float(-sy), 0.0,
-      clean_float(sx * sy * cz - cx * sz), clean_float(sx * sy * sz + cx * cz), clean_float(sx * cy), 0.0,
-      clean_float(cx * sy * cz + sx * sz), clean_float(cx * sy * sz - sx * cz), clean_float(cx * cy), 0.0,
+      cy * cz, cy * sz, -sy, 0.0,
+      sx * sy * cz - cx * sz, sx * sy * sz + cx * cz, sx * cy, 0.0,
+      cx * sy * cz + sx * sz, cx * sy * sz - sx * cz, cx * cy, 0.0,
       0.0, 0.0, 0.0, 1.0
     }
   end

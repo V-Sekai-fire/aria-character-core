@@ -5,7 +5,7 @@ defmodule AriaMath.PrimitivesTest do
   use ExUnit.Case
   doctest AriaMath.Primitives
 
-  alias AriaMath.{Primitives, Vector3, Matrix4, Quaternion}
+  alias AriaMath.{Primitives, Matrix4, Quaternion}
 
   describe "Primitives.box/1" do
     test "creates box with default size" do
@@ -146,7 +146,7 @@ defmodule AriaMath.PrimitivesTest do
       assert_in_delta(max_y - min_y, height, 1.0e-5)
 
       # Check that radial distance is correct for side vertices
-      for {x, y, z} <- vertices do
+      for {x, _y, z} <- vertices do
         radial_distance = :math.sqrt(x * x + z * z)
         # Should be either 0 (center vertices) or approximately radius
         assert radial_distance <= radius + 1.0e-5
@@ -286,7 +286,7 @@ defmodule AriaMath.PrimitivesTest do
       transformed_triangle = Primitives.transform(triangle, rotation)
 
       # First vertex (1,0,0) should become approximately (0,1,0)
-      [{x1, y1, z1}, {x2, y2, z2}, {x3, y3, z3}] = transformed_triangle.vertices
+      [{x1, y1, z1}, {_x2, _y2, _z2}, {_x3, _y3, _z3}] = transformed_triangle.vertices
 
       assert_in_delta(x1, 0.0, 1.0e-6)
       assert_in_delta(y1, 1.0, 1.0e-6)

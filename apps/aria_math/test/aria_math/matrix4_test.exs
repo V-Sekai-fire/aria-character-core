@@ -5,7 +5,7 @@ defmodule AriaMath.Matrix4Test do
   use ExUnit.Case
   doctest AriaMath.Matrix4
 
-  alias AriaMath.{Matrix4, Vector3, Quaternion}
+  alias AriaMath.{Matrix4, Quaternion}
 
   describe "Matrix4.new/16" do
     test "creates matrix from 16 floats" do
@@ -75,8 +75,8 @@ defmodule AriaMath.Matrix4Test do
       identity = Matrix4.identity()
 
       # Check each component with tolerance
-      {r0,r1,r2,r3,r4,r5,r6,r7,r8,r9,r10,r11,r12,r13,r14,r15} = result
-      {i0,i1,i2,i3,i4,i5,i6,i7,i8,i9,i10,i11,i12,i13,i14,i15} = identity
+      {r0,_r1,_r2,_r3,_r4,r5,_r6,_r7,_r8,_r9,r10,_r11,_r12,_r13,_r14,r15} = result
+      {i0,_i1,_i2,_i3,_i4,i5,_i6,_i7,_i8,_i9,i10,_i11,_i12,_i13,_i14,i15} = identity
 
       assert_in_delta(r0, i0, 1.0e-10)
       assert_in_delta(r5, i5, 1.0e-10)
@@ -182,8 +182,8 @@ defmodule AriaMath.Matrix4Test do
       assert_in_delta(sz, 4.0, 1.0e-10)
 
       # Check rotation (approximately, since decomposition may have numerical differences)
-      {rx, ry, rz, rw} = recovered_rotation
-      {ox, oy, oz, ow} = rotation
+      {_rx, _ry, _rz, _rw} = recovered_rotation
+      {_ox, _oy, _oz, _ow} = rotation
       # Compare magnitudes since quaternions q and -q represent same rotation
       rotation_dot = Quaternion.dot(recovered_rotation, rotation)
       assert(abs(rotation_dot) > 0.999)  # Should be very close to ±1

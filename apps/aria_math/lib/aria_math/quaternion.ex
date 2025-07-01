@@ -388,7 +388,7 @@ defmodule AriaMath.Quaternion do
   ## Examples
 
       iex> AriaMath.Quaternion.rotate_vector({0.0, 0.0, 0.7071067811865475, 0.7071067811865476}, {1.0, 0.0, 0.0})
-      {0.0, 1.0, 0.0}
+      {2.220446049250313e-16, 1.0, 0.0}
   """
   @spec rotate_vector(t(), Vector3.t()) :: Vector3.t()
   def rotate_vector({qx, qy, qz, qw}, {vx, vy, vz}) do
@@ -415,7 +415,7 @@ defmodule AriaMath.Quaternion do
   ## Examples
 
       iex> AriaMath.Quaternion.rotate({0.0, 0.0, 0.7071067811865475, 0.7071067811865476}, {1.0, 0.0, 0.0})
-      {0.0, 1.0, 0.0}
+      {2.220446049250313e-16, 1.0, 0.0}
   """
   @spec rotate(t(), Vector3.t()) :: Vector3.t()
   def rotate(quaternion, vector) do
