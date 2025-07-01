@@ -39,6 +39,9 @@ defmodule AriaGltf.MixProject do
       # Mathematical operations and tensor support
       {:aria_math, in_umbrella: true},
 
+      # Joint hierarchy and skeletal animation support
+      {:aria_joint, in_umbrella: true},
+
       # JSON parsing for glTF files
       {:jason, "~> 1.4"},
 
