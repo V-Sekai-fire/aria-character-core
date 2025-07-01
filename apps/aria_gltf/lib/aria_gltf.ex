@@ -135,6 +135,14 @@ defmodule AriaGltf do
   defdelegate load_binary(file_path), to: AriaGltf.IO
   defdelegate save_binary(document, file_path), to: AriaGltf.IO
 
+  # External File Operations API
+  defdelegate load_external_file(uri, opts \\ []), to: AriaGltf.ExternalFiles, as: :load_file
+  defdelegate load_external_image(uri, opts \\ []), to: AriaGltf.ExternalFiles, as: :load_image
+  defdelegate load_external_buffer(uri, opts \\ []), to: AriaGltf.ExternalFiles, as: :load_buffer
+  defdelegate parse_uri(uri), to: AriaGltf.ExternalFiles
+  defdelegate validate_uri(uri_info, allow_http), to: AriaGltf.ExternalFiles
+  defdelegate resolve_file_path(uri_info, base_path), to: AriaGltf.ExternalFiles
+
   @doc """
   Creates a complete glTF document with minimal required elements.
 
