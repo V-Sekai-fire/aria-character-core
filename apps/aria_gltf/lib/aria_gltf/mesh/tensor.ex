@@ -334,7 +334,7 @@ defmodule AriaGltf.Mesh.Tensor do
   """
   @spec optimize_mesh(mesh_tensor(), keyword()) :: mesh_tensor()
   def optimize_mesh(mesh_tensor, opts \\ []) do
-    tolerance = Keyword.get(opts, :tolerance, 0.001)
+    _tolerance = Keyword.get(opts, :tolerance, 0.001)
 
     # Simplified optimization - would implement spatial hashing for duplicate detection
     # For now, return the original mesh
@@ -432,7 +432,7 @@ defmodule AriaGltf.Mesh.Tensor do
 
   # Helper function for joint blending
   @spec blend_joint_transforms(Nx.Tensor.t(), Nx.Tensor.t(), Nx.Tensor.t(), Nx.Tensor.t()) :: Nx.Tensor.t()
-  defp blend_joint_transforms(vertex, joint_matrices, joint_indices, joint_weights) do
+  defp blend_joint_transforms(vertex, _joint_matrices, _joint_indices, _joint_weights) do
     # Simplified implementation - would use more efficient tensor operations
     vertex
   end

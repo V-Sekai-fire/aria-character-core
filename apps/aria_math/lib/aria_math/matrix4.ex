@@ -178,4 +178,29 @@ defmodule AriaMath.Matrix4 do
   """
   defdelegate equal_batch?(a_matrices, b_matrices, tolerance \\ 1.0e-6), to: Tensor
 
+  @doc """
+  Matrix inversion using Nx operations (alias for invert_nx).
+  """
+  defdelegate inverse_nx(matrix), to: Tensor, as: :invert
+
+  @doc """
+  Batch transform multiple points by a single matrix.
+  """
+  defdelegate transform_points_batch(matrix, points), to: Tensor
+
+  @doc """
+  Batch transform multiple vectors by a single matrix.
+  """
+  defdelegate transform_vectors_batch(matrix, vectors), to: Tensor
+
+  @doc """
+  Convert matrix to tuple list format.
+  """
+  defdelegate to_tuple_list(matrix), to: Tensor
+
+  @doc """
+  Create matrix from tuple list format.
+  """
+  defdelegate from_tuple_list(tuple_list), to: Tensor
+
 end

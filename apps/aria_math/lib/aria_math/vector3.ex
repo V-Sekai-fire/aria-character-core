@@ -120,4 +120,9 @@ defmodule AriaMath.Vector3 do
   Batch cross product for multiple vector pairs.
   """
   defdelegate cross_batch(a_tensors, b_tensors), to: Tensor
+
+  @doc """
+  Batch vector scaling for multiple vectors.
+  """
+  defdelegate scale_batch(tensors, scalar), to: Tensor
 end

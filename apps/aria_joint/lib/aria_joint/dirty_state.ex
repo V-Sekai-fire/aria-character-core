@@ -9,6 +9,8 @@ defmodule AriaJoint.DirtyState do
   dirty flags for transforms and hierarchy changes.
   """
 
+  import Bitwise
+
   @type dirty_state() ::
     :dirty_none |
     :dirty_vectors |
@@ -98,4 +100,62 @@ defmodule AriaJoint.DirtyState do
   """
   @spec dirty_global() :: atom()
   def dirty_global, do: @dirty_global
+
+  @doc """
+  Convert dirty state to integer representation for tensor operations.
+
+  ## Examples
+
+      iex> AriaJoint.DirtyState.to_integer(:dirty_none)
+      0
+
+      iex> AriaJoint.DirtyState.to_integer(:dirty_vectors)
+      1
+
+      iex> AriaJoint.DirtyState.to_integer([:dirty_vectors, :dirty_local])
+      3
+  """
+  @spec to_integer(dirty_state()) :: integer()
+  def to_integer(@dirty_none), do: 0
+  def to_integer(@dirty_vectors), do: 1
+  def to_integer(@dirty_local), do: 2
+  def to_integer(@dirty_global), do: 4
+  def to_integer(flags) when is_list(flags) do
+    Enum.reduce(flags, 0, fn flag, acc ->
+      acc + to_integer(flag)
+    end)
+  end
+
+  @doc """
+  Convert integer representation back to dirty state for tensor operations.
+
+  ## Examples
+
+      iex> AriaJoint.DirtyState.from_integer(0)
+      :dirty_none
+
+      iex> AriaJoint.DirtyState.from_integer(1)
+      :dirty_vectors
+
+      iex> AriaJoint.DirtyState.from_integer(3)
+      [:dirty_vectors, :dirty_local]
+  """
+  @spec from_integer(integer()) :: dirty_state()
+  def from_integer(0), do: @dirty_none
+  def from_integer(1), do: @dirty_vectors
+  def from_integer(2), do: @dirty_local
+  def from_integer(4), do: @dirty_global
+  def from_integer(int) when is_integer(int) and int > 0 do
+    flags = []
+    flags = if (int &&& 4) != 0, do: [@dirty_global | flags], else: flags
+    flags = if (int &&& 2) != 0, do: [@dirty_local | flags], else: flags
+    flags = if (int &&& 1) != 0, do: [@dirty_vectors | flags], else: flags
+
+    case flags do
+      [] -> @dirty_none
+      [single] -> single
+      multiple -> multiple
+    end
+  end
+  def from_integer(_), do: @dirty_none
 end
