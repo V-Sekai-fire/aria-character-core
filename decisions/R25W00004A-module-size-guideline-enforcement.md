@@ -19,8 +19,8 @@ Analysis reveals multiple modules violating these guidelines, with several requi
 ✅ **ALL RESOLVED** - No modules exceed 1000 lines
 
 ### Critical Violations (500+ lines) - **MANDATORY SPLITTING**
-- `aria_joint/transform/tensor.ex` (653 lines) - **CRITICAL**
-- `aria_gltf/helpers.ex` (640 lines) - **CRITICAL**
+- ~~`aria_joint/transform/tensor.ex` (653 → 59 lines)~~ - **COMPLETED**
+- ~~`aria_gltf/helpers.ex` (640 → 37 lines)~~ - **COMPLETED**
 - `aria_math/primitives.ex` (619 lines) - **CRITICAL**
 - `aria_math/vector3/tensor.ex` (570 lines) - **CRITICAL**
 - `aria_timeline/internal/stn/core.ex` (550 lines) - **CRITICAL**
@@ -57,6 +57,7 @@ Analysis reveals multiple modules violating these guidelines, with several requi
 ### Recently Resolved ✅
 - ~~`aria_math/matrix4/tensor.ex` (1085 → 269 lines)~~ - **COMPLETED**
 - ~~`aria_core/action_attributes.ex` (596 → 84 lines)~~ - **COMPLETED**
+- ~~`aria_joint/transform/tensor.ex` (653 → 59 lines)~~ - **COMPLETED**
 
 ## Implementation Plan
 
@@ -116,7 +117,62 @@ Analysis reveals multiple modules violating these guidelines, with several requi
 
 **Status:** ✅ **COMPLETED** - All critical violations resolved, system functional
 
-#### Task 1.2: Split Timeline.Internal.STN.Core (550 lines) 
+#### Task 1.2: Split AriaJoint.Transform.Tensor (653 lines) ✅ **COMPLETED**
+**File:** `apps/aria_joint/lib/aria_joint/transform/tensor.ex`
+
+**Splitting Strategy:**
+- [x] **Core operations**: Basic tensor operations and conversions (137 lines)
+- [x] **Operations module**: Transform and coordinate operations (144 lines)
+- [x] **Hierarchy module**: Hierarchy propagation and global transforms (224 lines)
+- [x] **Advanced module**: IK solving and integration functions (99 lines)
+
+**Implementation Steps:**
+1. ✅ Create `tensor/core.ex` for basic tensor operations and conversions
+2. ✅ Create `tensor/operations.ex` for transform and coordinate operations
+3. ✅ Create `tensor/hierarchy.ex` for hierarchy propagation logic
+4. ✅ Create `tensor/advanced.ex` for IK solving and integration functions
+5. ✅ Update main tensor module to delegate to split modules
+6. ✅ Verify tensor performance benchmarks remain functional
+
+**Results:** Successfully split 653-line module into 4 focused modules:
+- **Core** (137 lines): Basic tensor operations, joint conversions, data extraction
+- **Operations** (144 lines): Transform applications, coordinate space conversions
+- **Hierarchy** (224 lines): Global transform computation, memory-optimized propagation
+- **Advanced** (99 lines): IK solving, integration functions, batch operations
+- **Main Tensor** (59 lines): Clean delegation API maintaining full backward compatibility
+
+**Status:** ✅ **COMPLETED** - Critical violation eliminated, all modules under soft threshold
+
+#### Task 1.3: Split AriaGltf.Helpers (640 lines) ✅ **COMPLETED**
+**File:** `apps/aria_gltf/lib/aria_gltf/helpers.ex`
+
+**Splitting Strategy:**
+- [x] **Document creation**: Document, scene, and node creation utilities (145 lines)
+- [x] **Mesh creation**: Mesh and primitive creation with geometry data (200 lines)
+- [x] **Material creation**: PBR material creation and configuration (85 lines)
+- [x] **Animation creation**: Animation, channel, and sampler creation (86 lines)
+- [x] **Buffer management**: Buffer, buffer view, and accessor management (178 lines)
+
+**Implementation Steps:**
+1. ✅ Create `helpers/document_creation.ex` for document and scene utilities
+2. ✅ Create `helpers/mesh_creation.ex` for mesh and geometry creation
+3. ✅ Create `helpers/material_creation.ex` for PBR material setup
+4. ✅ Create `helpers/animation_creation.ex` for animation utilities
+5. ✅ Create `helpers/buffer_management.ex` for buffer and accessor management
+6. ✅ Update main helpers module to delegate to specialized modules
+7. ✅ Verify all glTF creation functionality remains intact
+
+**Results:** Successfully split 640-line module into 5 focused modules:
+- **DocumentCreation** (145 lines): Document, scene, and node creation utilities
+- **MeshCreation** (200 lines): Mesh primitives and complete geometry creation
+- **MaterialCreation** (85 lines): PBR material configuration and setup
+- **AnimationCreation** (86 lines): Animation channels, samplers, and interpolation
+- **BufferManagement** (178 lines): Buffer, buffer view, and accessor management
+- **Main Helpers** (37 lines): Clean delegation API maintaining backward compatibility
+
+**Status:** ✅ **COMPLETED** - Critical violation eliminated, all modules under firm threshold
+
+#### Task 1.4: Split Timeline.Internal.STN.Core (550 lines)
 **File:** `apps/aria_timeline/lib/timeline/internal/stn/core.ex`
 
 **Splitting Strategy:**
@@ -209,15 +265,15 @@ Analysis reveals multiple modules violating these guidelines, with several requi
 
 **CURRENT PRIORITY:** With extreme violations resolved, focus shifts to **Critical Violations (500+ lines)**. The next targets are:
 
-1. **AriaJoint.Transform.Tensor** (653 lines) - Largest remaining violation
-2. **AriaGltf.Helpers** (640 lines) - High-impact utility module
-3. **AriaMath.Primitives** (619 lines) - Core mathematical operations
-4. **AriaMath.Vector3.Tensor** (570 lines) - Vector operations module
-5. **Timeline.Internal.STN.Core** (550 lines) - Critical temporal planning component
+1. **AriaGltf.Helpers** (640 lines) - High-impact utility module
+2. **AriaMath.Primitives** (619 lines) - Core mathematical operations
+3. **AriaMath.Vector3.Tensor** (570 lines) - Vector operations module
+4. **Timeline.Internal.STN.Core** (550 lines) - Critical temporal planning component
+5. **AriaSerial.Mix.Tasks.Decode** (515 lines) - CLI task module
 
 **Strategy:** Apply the proven splitting methodology from successful Matrix4.Tensor and ActionAttributes splits. Each module should be analyzed for logical responsibility boundaries and split into focused, single-purpose modules under the firm threshold (400 lines).
 
 **Success Metrics:** 
 - ✅ **Phase 0 Complete:** Zero extreme violations (1000+ lines)
 - 🎯 **Phase 1 Target:** Zero critical violations (500+ lines)
-- 📊 **Progress:** 2/9 critical violations resolved (22% complete)
+- 📊 **Progress:** 4/9 critical violations resolved (44% complete)
