@@ -18,6 +18,7 @@ defmodule AriaMath.Quaternion do
   alias AriaMath.Quaternion.Conversions
   alias AriaMath.Quaternion.Operations
   alias AriaMath.Quaternion.Utilities
+  alias AriaMath.Quaternion.Tensor
 
   @type t :: {float(), float(), float(), float()}
 
@@ -49,4 +50,28 @@ defmodule AriaMath.Quaternion do
   defdelegate approx_equal?(q1, q2, tolerance), to: Utilities
   defdelegate equal?(q1, q2), to: Utilities
   defdelegate equal?(q1, q2, tolerance), to: Utilities
+
+  # Nx tensor operations
+  defdelegate new_nx(x, y, z, w), to: Tensor, as: :new
+  defdelegate from_tuple_nx(tuple), to: Tensor, as: :from_tuple
+  defdelegate to_tuple_nx(tensor), to: Tensor, as: :to_tuple
+  defdelegate identity_nx(), to: Tensor, as: :identity
+  defdelegate length_nx(quaternion), to: Tensor, as: :length
+  defdelegate normalize_nx(quaternion), to: Tensor, as: :normalize
+  defdelegate dot_nx(q1, q2), to: Tensor, as: :dot
+  defdelegate conjugate_nx(quaternion), to: Tensor, as: :conjugate
+  defdelegate multiply_nx(q1, q2), to: Tensor, as: :multiply
+  defdelegate slerp_nx(q1, q2, t), to: Tensor, as: :slerp
+  defdelegate equal_nx?(q1, q2), to: Tensor, as: :equal?
+  defdelegate equal_nx?(q1, q2, tolerance), to: Tensor, as: :equal?
+
+  # Nx batch operations
+  defdelegate length_batch(quaternions), to: Tensor
+  defdelegate normalize_batch(quaternions), to: Tensor
+  defdelegate dot_batch(q1_batch, q2_batch), to: Tensor
+  defdelegate conjugate_batch(quaternions), to: Tensor
+  defdelegate multiply_batch(q1_batch, q2_batch), to: Tensor
+  defdelegate slerp_batch(q1_batch, q2_batch, t_batch), to: Tensor
+  defdelegate equal_batch?(q1_batch, q2_batch), to: Tensor
+  defdelegate equal_batch?(q1_batch, q2_batch, tolerance), to: Tensor
 end
