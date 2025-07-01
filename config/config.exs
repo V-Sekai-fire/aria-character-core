@@ -25,11 +25,15 @@ config :hammer,
 config :porcelain, goon_warn_if_missing: false
 
 # Configure Nx with TorchX backend for GPU acceleration
-config :nx, :default_backend, Torchx.Backend
+config :nx, :default_backend, {Torchx.Backend, device: :cuda}
 
 # Configure TorchX for CUDA support (RTX 4090)
-# This will use CUDA 12.8 for optimal RTX 4090 performance
-config :torchx, :default_device, :cuda
+# This will use CUDA for optimal RTX 4090 performance
+config :torchx,
+  default_device: :cuda,
+  # Use more aggressive GPU settings for better performance
+  memory_fraction: 0.9,  # Use 90% of available GPU memory
+  allow_mixed_precision: true
 
 # Import environment specific config files
 import_config "#{config_env()}.exs"

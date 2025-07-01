@@ -44,18 +44,18 @@ defmodule AriaMath.Memory do
     backend: atom()
   }
 
-  # Conservative memory limits (in bytes)
-  @gpu_memory_safety_factor 0.8  # Use max 80% of available GPU memory
-  @max_batch_size 50000
-  @min_batch_size 100
+  # More aggressive memory limits for better GPU utilization
+  @gpu_memory_safety_factor 0.9  # Use max 90% of available GPU memory
+  @max_batch_size 100000  # Increased for better GPU parallelism
+  @min_batch_size 1000    # Larger minimum batches for GPU efficiency
 
-  # Memory estimates per operation type (bytes per element)
+  # Optimized memory estimates per operation type (bytes per element)
   @operation_memory_cost %{
-    matrix_multiply: 256,        # 4x4 matrices = 16 floats * 4 bytes * 4 (intermediate)
-    coordinate_transform: 48,    # 3D point + transform overhead
-    hierarchy_propagation: 128,  # Joint transform + hierarchy data
-    mesh_processing: 72,         # Vertex + normal + UV data
-    vector_operations: 24        # 3D vector operations
+    matrix_multiply: 128,        # Reduced overhead for GPU batch operations
+    coordinate_transform: 32,    # More efficient GPU point transforms
+    hierarchy_propagation: 64,   # Optimized joint transform processing
+    mesh_processing: 48,         # Efficient vertex processing
+    vector_operations: 16        # Minimal overhead for vector ops
   }
 
   @doc """
@@ -301,21 +301,25 @@ defmodule AriaMath.Memory do
 
   defp get_torchx_memory_info do
     try do
-      # Try to get CUDA device info if available
-      devices = Torchx.Backend.list_devices()
-      cuda_device = Enum.find(devices, &String.contains?(to_string(&1), "cuda"))
+      # Check if we're using CUDA backend by inspecting default device
+      default_device = Nx.default_backend()
 
-      if cuda_device do
-        # For CUDA devices, we need to query memory info
-        # This is a simplified implementation - in practice you'd use proper CUDA APIs
-        %{
-          total_memory: 22 * 1024 * 1024 * 1024,  # 22 GB RTX 4090 (example)
-          available_memory: 16 * 1024 * 1024 * 1024,  # Conservative estimate
-          used_memory: 6 * 1024 * 1024 * 1024,
-          backend: :torchx_cuda
-        }
-      else
-        get_cpu_memory_info()
+      case default_device do
+        {Torchx.Backend, device_opts} ->
+          device = Keyword.get(device_opts, :device, :cpu)
+          if device == :cuda do
+            # RTX 4090 has 24GB VRAM - use more aggressive memory allocation
+            %{
+              total_memory: 24 * 1024 * 1024 * 1024,  # 24 GB RTX 4090
+              available_memory: 20 * 1024 * 1024 * 1024,  # Use 20GB (83% utilization)
+              used_memory: 4 * 1024 * 1024 * 1024,
+              backend: :torchx_cuda
+            }
+          else
+            get_cpu_memory_info()
+          end
+        _ ->
+          get_cpu_memory_info()
       end
     rescue
       _ -> get_cpu_memory_info()
