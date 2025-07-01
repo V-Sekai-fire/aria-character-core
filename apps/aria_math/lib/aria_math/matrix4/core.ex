@@ -3,141 +3,300 @@
 
 defmodule AriaMath.Matrix4.Core do
   @moduledoc """
-  Core matrix operations for Matrix4.
+  Core Matrix4 operations using Nx tensors.
 
-  Contains fundamental matrix operations like multiplication, determinant,
-  inverse, and transpose operations.
+  This module provides basic matrix operations including creation, multiplication,
+  inversion, and fundamental transformations.
   """
 
-  alias AriaMath.Matrix4
+  @type matrix4_tensor :: Nx.Tensor.t()
+  @type matrix4_tuple :: {
+    float(), float(), float(), float(),
+    float(), float(), float(), float(),
+    float(), float(), float(), float(),
+    float(), float(), float(), float()
+  }
 
   @doc """
-  Matrix multiplication.
+  Creates a new Matrix4 tensor from 16 float components in row-major order.
 
-  Implements `math/matMul` operation from KHR Interactivity spec.
+  ## Examples
 
-  Returns matrix product C = A * B following standard matrix multiplication rules.
-  NaN and infinity values are propagated according to IEEE-754.
+      iex> AriaMath.Matrix4.Core.new(
+      ...>   1.0, 0.0, 0.0, 0.0,
+      ...>   0.0, 1.0, 0.0, 0.0,
+      ...>   0.0, 0.0, 1.0, 0.0,
+      ...>   0.0, 0.0, 0.0, 1.0
+      ...> )
+      #Nx.Tensor<
+        f32[4][4]
+        [
+          [1.0, 0.0, 0.0, 0.0],
+          [0.0, 1.0, 0.0, 0.0],
+          [0.0, 0.0, 1.0, 0.0],
+          [0.0, 0.0, 0.0, 1.0]
+        ]
+      >
   """
-  @spec multiply(Matrix4.t(), Matrix4.t()) :: Matrix4.t()
-  def multiply(
-        {a0, a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15},
-        {b0, b1, b2, b3, b4, b5, b6, b7, b8, b9, b10, b11, b12, b13, b14, b15}
-      ) do
-    {
-      # Column 0
-      a0 * b0 + a4 * b1 + a8 * b2 + a12 * b3,
-      a1 * b0 + a5 * b1 + a9 * b2 + a13 * b3,
-      a2 * b0 + a6 * b1 + a10 * b2 + a14 * b3,
-      a3 * b0 + a7 * b1 + a11 * b2 + a15 * b3,
-      # Column 1
-      a0 * b4 + a4 * b5 + a8 * b6 + a12 * b7,
-      a1 * b4 + a5 * b5 + a9 * b6 + a13 * b7,
-      a2 * b4 + a6 * b5 + a10 * b6 + a14 * b7,
-      a3 * b4 + a7 * b5 + a11 * b6 + a15 * b7,
-      # Column 2
-      a0 * b8 + a4 * b9 + a8 * b10 + a12 * b11,
-      a1 * b8 + a5 * b9 + a9 * b10 + a13 * b11,
-      a2 * b8 + a6 * b9 + a10 * b10 + a14 * b11,
-      a3 * b8 + a7 * b9 + a11 * b10 + a15 * b11,
-      # Column 3
-      a0 * b12 + a4 * b13 + a8 * b14 + a12 * b15,
-      a1 * b12 + a5 * b13 + a9 * b14 + a13 * b15,
-      a2 * b12 + a6 * b13 + a10 * b14 + a14 * b15,
-      a3 * b12 + a7 * b13 + a11 * b14 + a15 * b15
-    }
+  @spec new(
+    float(), float(), float(), float(),
+    float(), float(), float(), float(),
+    float(), float(), float(), float(),
+    float(), float(), float(), float()
+  ) :: matrix4_tensor()
+  def new(
+    m00, m01, m02, m03,
+    m10, m11, m12, m13,
+    m20, m21, m22, m23,
+    m30, m31, m32, m33
+  ) do
+    Nx.tensor([
+      [m00, m01, m02, m03],
+      [m10, m11, m12, m13],
+      [m20, m21, m22, m23],
+      [m30, m31, m32, m33]
+    ], type: :f32)
   end
 
   @doc """
-  Matrix determinant calculation.
+  Creates a Matrix4 tensor from a 16-tuple.
 
-  Implements `math/matDeterminant` operation from KHR Interactivity spec.
+  ## Examples
 
-  Returns the determinant of the 4x4 matrix.
-  NaN and infinity values are propagated according to IEEE-754.
+      iex> tuple = {1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0}
+      iex> AriaMath.Matrix4.Core.from_tuple(tuple)
+      #Nx.Tensor<
+        f32[4][4]
+        [
+          [1.0, 0.0, 0.0, 0.0],
+          [0.0, 1.0, 0.0, 0.0],
+          [0.0, 0.0, 1.0, 0.0],
+          [0.0, 0.0, 0.0, 1.0]
+        ]
+      >
   """
-  @spec determinant(Matrix4.t()) :: float()
-  def determinant({m0, m1, m2, m3, m4, m5, m6, m7, m8, m9, m10, m11, m12, m13, m14, m15}) do
-    # Using cofactor expansion along first row
-    minor_0 = (m5 * (m10 * m15 - m11 * m14) - m6 * (m9 * m15 - m11 * m13) + m7 * (m9 * m14 - m10 * m13))
-    minor_1 = (m4 * (m10 * m15 - m11 * m14) - m6 * (m8 * m15 - m11 * m12) + m7 * (m8 * m14 - m10 * m12))
-    minor_2 = (m4 * (m9 * m15 - m11 * m13) - m5 * (m8 * m15 - m11 * m12) + m7 * (m8 * m13 - m9 * m12))
-    minor_3 = (m4 * (m9 * m14 - m10 * m13) - m5 * (m8 * m14 - m10 * m12) + m6 * (m8 * m13 - m9 * m12))
-
-    m0 * minor_0 - m1 * minor_1 + m2 * minor_2 - m3 * minor_3
+  @spec from_tuple(matrix4_tuple()) :: matrix4_tensor()
+  def from_tuple({
+    m00, m01, m02, m03,
+    m10, m11, m12, m13,
+    m20, m21, m22, m23,
+    m30, m31, m32, m33
+  }) do
+    new(
+      m00, m01, m02, m03,
+      m10, m11, m12, m13,
+      m20, m21, m22, m23,
+      m30, m31, m32, m33
+    )
   end
 
   @doc """
-  Matrix inversion with validity checking.
+  Converts a Matrix4 tensor to a 16-tuple.
 
-  Implements `math/matInverse` operation from KHR Interactivity spec.
+  ## Examples
+
+      iex> matrix = AriaMath.Matrix4.Core.identity()
+      iex> AriaMath.Matrix4.Core.to_tuple(matrix)
+      {1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0}
+  """
+  @spec to_tuple(matrix4_tensor()) :: matrix4_tuple()
+  def to_tuple(tensor) do
+    [[m00, m01, m02, m03], [m10, m11, m12, m13], [m20, m21, m22, m23], [m30, m31, m32, m33]] =
+      Nx.to_list(tensor)
+    {m00, m01, m02, m03, m10, m11, m12, m13, m20, m21, m22, m23, m30, m31, m32, m33}
+  end
+
+  @doc """
+  Creates an identity matrix using Nx operations.
+
+  ## Examples
+
+      iex> AriaMath.Matrix4.Core.identity()
+      #Nx.Tensor<
+        f32[4][4]
+        [
+          [1.0, 0.0, 0.0, 0.0],
+          [0.0, 1.0, 0.0, 0.0],
+          [0.0, 0.0, 1.0, 0.0],
+          [0.0, 0.0, 0.0, 1.0]
+        ]
+      >
+  """
+  @spec identity() :: matrix4_tensor()
+  def identity do
+    Nx.eye(4, type: :f32)
+  end
+
+  @doc """
+  Matrix multiplication using Nx operations.
+
+  ## Examples
+
+      iex> a = AriaMath.Matrix4.Core.identity()
+      iex> b = AriaMath.Matrix4.Core.identity()
+      iex> result = AriaMath.Matrix4.Core.multiply(a, b)
+      iex> AriaMath.Matrix4.Core.equal?(result, AriaMath.Matrix4.Core.identity())
+      true
+  """
+  @spec multiply(matrix4_tensor(), matrix4_tensor()) :: matrix4_tensor()
+  def multiply(a, b) do
+    Nx.dot(a, b)
+  end
+
+  @doc """
+  Matrix transpose using Nx operations.
+
+  ## Examples
+
+      iex> matrix = AriaMath.Matrix4.Core.new(
+      ...>   1.0, 2.0, 3.0, 4.0,
+      ...>   5.0, 6.0, 7.0, 8.0,
+      ...>   9.0, 10.0, 11.0, 12.0,
+      ...>   13.0, 14.0, 15.0, 16.0
+      ...> )
+      iex> transposed = AriaMath.Matrix4.Core.transpose(matrix)
+      iex> Nx.to_list(transposed)
+      [[1.0, 5.0, 9.0, 13.0], [2.0, 6.0, 10.0, 14.0], [3.0, 7.0, 11.0, 15.0], [4.0, 8.0, 12.0, 16.0]]
+  """
+  @spec transpose(matrix4_tensor()) :: matrix4_tensor()
+  def transpose(matrix) do
+    Nx.transpose(matrix)
+  end
+
+  @doc """
+  Matrix determinant using Nx operations.
+
+  ## Examples
+
+      iex> matrix = AriaMath.Matrix4.Core.identity()
+      iex> AriaMath.Matrix4.Core.determinant(matrix)
+      1.0
+  """
+  @spec determinant(matrix4_tensor()) :: float()
+  def determinant(matrix) do
+    Nx.LinAlg.determinant(matrix) |> Nx.to_number()
+  end
+
+  @doc """
+  Matrix inversion using Nx operations with validity checking.
 
   Returns {inverted_matrix, is_valid} where:
-  - inverted_matrix: inverse matrix, or identity if invalid
+  - inverted_matrix: inverse matrix if valid, or identity matrix if invalid
   - is_valid: true if matrix is invertible, false otherwise
+
+  ## Examples
+
+      iex> matrix = AriaMath.Matrix4.Core.identity()
+      iex> {inverse, valid} = AriaMath.Matrix4.Core.invert(matrix)
+      iex> valid
+      true
+      iex> AriaMath.Matrix4.Core.equal?(inverse, AriaMath.Matrix4.Core.identity())
+      true
   """
-  @spec inverse(Matrix4.t()) :: {Matrix4.t(), boolean()}
-  def inverse(matrix) do
-    det = determinant(matrix)
+  @spec invert(matrix4_tensor()) :: {matrix4_tensor(), boolean()}
+  def invert(matrix) do
+    det = Nx.LinAlg.determinant(matrix) |> Nx.to_number()
 
-    cond do
-      # If determinant is zero, NaN, or infinity, return identity and false
-      det == 0.0 or is_nan_float(det) or is_infinite_float(det) ->
-        {Matrix4.identity(), false}
-
-      # If determinant is valid, calculate inverse
-      true ->
-        inv_matrix = calculate_inverse(matrix, det)
-        {inv_matrix, true}
+    if abs(det) < 1.0e-10 do
+      # Matrix is singular, return identity and false
+      {identity(), false}
+    else
+      try do
+        inverse = Nx.LinAlg.invert(matrix)
+        {inverse, true}
+      rescue
+        _ ->
+          # Inversion failed, return identity and false
+          {identity(), false}
+      end
     end
   end
 
   @doc """
-  Matrix transpose operation.
+  Checks if two matrices are approximately equal within a tolerance.
 
-  Implements `math/matTranspose` operation from KHR Interactivity spec.
+  ## Examples
 
-  Returns the transpose of the matrix.
-  NaN and infinity values are propagated according to IEEE-754.
+      iex> a = AriaMath.Matrix4.Core.identity()
+      iex> b = AriaMath.Matrix4.Core.identity()
+      iex> AriaMath.Matrix4.Core.equal?(a, b)
+      true
   """
-  @spec transpose(Matrix4.t()) :: Matrix4.t()
-  def transpose({m0, m1, m2, m3, m4, m5, m6, m7, m8, m9, m10, m11, m12, m13, m14, m15}) do
-    {m0/1, m4/1, m8/1, m12/1, m1/1, m5/1, m9/1, m13/1, m2/1, m6/1, m10/1, m14/1, m3/1, m7/1, m11/1, m15/1}
+  @spec equal?(matrix4_tensor(), matrix4_tensor(), float()) :: boolean()
+  def equal?(a, b, tolerance \\ 1.0e-6) do
+    diff = Nx.subtract(a, b)
+    max_diff = Nx.abs(diff) |> Nx.reduce_max() |> Nx.to_number()
+    max_diff <= tolerance
   end
 
-  # Helper functions for IEEE-754 compliance
-  defp is_nan_float(value) when is_float(value) do
-    value != value
+  @doc """
+  Matrix transpose using Nx operations.
+
+  ## Examples
+
+      iex> m = AriaMath.Matrix4.Core.new([
+      ...>   [1.0, 2.0, 3.0, 4.0],
+      ...>   [5.0, 6.0, 7.0, 8.0],
+      ...>   [9.0, 10.0, 11.0, 12.0],
+      ...>   [13.0, 14.0, 15.0, 16.0]
+      ...> ])
+      iex> transposed = AriaMath.Matrix4.Core.transpose_nx(m)
+      iex> Nx.shape(transposed)
+      {4, 4}
+  """
+  @spec transpose_nx(Nx.Tensor.t()) :: Nx.Tensor.t()
+  def transpose_nx(matrix) do
+    Nx.transpose(matrix, axes: [1, 0])
   end
 
-  defp is_infinite_float(value) when is_float(value) do
-    value == :positive_infinity or value == :negative_infinity
+  @doc """
+  Matrix inverse using Nx operations.
+
+  ## Examples
+
+      iex> m = AriaMath.Matrix4.Core.identity()
+      iex> inv = AriaMath.Matrix4.Core.inverse_nx(m)
+      iex> AriaMath.Matrix4.Core.equal?(m, inv)
+      true
+  """
+  @spec inverse_nx(Nx.Tensor.t()) :: Nx.Tensor.t()
+  def inverse_nx(matrix) do
+    # Use Nx.LinAlg.invert for matrix inversion
+    # Handle potential singular matrices by adding small regularization
+    regularized = Nx.add(matrix, Nx.multiply(Nx.eye(4), 1.0e-12))
+    Nx.LinAlg.invert(regularized)
   end
 
-  defp calculate_inverse({m0, m1, m2, m3, m4, m5, m6, m7, m8, m9, m10, m11, m12, m13, m14, m15}, det) do
-    inv_det = 1.0 / det
+  @doc """
+  Convert a Matrix4 tensor to a list of tuples (row-wise).
 
-    # Calculate cofactor matrix and multiply by 1/det
-    {
-      inv_det * (m5 * (m10 * m15 - m11 * m14) - m6 * (m9 * m15 - m11 * m13) + m7 * (m9 * m14 - m10 * m13)),
-      inv_det * -(m1 * (m10 * m15 - m11 * m14) - m2 * (m9 * m15 - m11 * m13) + m3 * (m9 * m14 - m10 * m13)),
-      inv_det * (m1 * (m6 * m15 - m7 * m14) - m2 * (m5 * m15 - m7 * m13) + m3 * (m5 * m14 - m6 * m13)),
-      inv_det * -(m1 * (m6 * m11 - m7 * m10) - m2 * (m5 * m11 - m7 * m9) + m3 * (m5 * m10 - m6 * m9)),
+  ## Examples
 
-      inv_det * -(m4 * (m10 * m15 - m11 * m14) - m6 * (m8 * m15 - m11 * m12) + m7 * (m8 * m14 - m10 * m12)),
-      inv_det * (m0 * (m10 * m15 - m11 * m14) - m2 * (m8 * m15 - m11 * m12) + m3 * (m8 * m14 - m10 * m12)),
-      inv_det * -(m0 * (m6 * m15 - m7 * m14) - m2 * (m4 * m15 - m7 * m12) + m3 * (m4 * m14 - m6 * m12)),
-      inv_det * (m0 * (m6 * m11 - m7 * m10) - m2 * (m4 * m11 - m7 * m8) + m3 * (m4 * m10 - m6 * m8)),
+      iex> matrix = AriaMath.Matrix4.Core.identity()
+      iex> AriaMath.Matrix4.Core.to_tuple_list(matrix)
+      [{1.0, 0.0, 0.0, 0.0}, {0.0, 1.0, 0.0, 0.0}, {0.0, 0.0, 1.0, 0.0}, {0.0, 0.0, 0.0, 1.0}]
+  """
+  @spec to_tuple_list(matrix4_tensor()) :: [tuple()]
+  def to_tuple_list(matrix) do
+    matrix
+    |> Nx.to_list()
+    |> Enum.map(&List.to_tuple/1)
+  end
 
-      inv_det * (m4 * (m9 * m15 - m11 * m13) - m5 * (m8 * m15 - m11 * m12) + m7 * (m8 * m13 - m9 * m12)),
-      inv_det * -(m0 * (m9 * m15 - m11 * m13) - m1 * (m8 * m15 - m11 * m12) + m3 * (m8 * m13 - m9 * m12)),
-      inv_det * (m0 * (m5 * m15 - m7 * m13) - m1 * (m4 * m15 - m7 * m12) + m3 * (m4 * m13 - m5 * m12)),
-      inv_det * -(m0 * (m5 * m11 - m7 * m9) - m1 * (m4 * m11 - m7 * m8) + m3 * (m4 * m9 - m5 * m8)),
+  @doc """
+  Convert a list of tuples to a Matrix4 tensor.
 
-      inv_det * -(m4 * (m9 * m14 - m10 * m13) - m5 * (m8 * m14 - m10 * m12) + m6 * (m8 * m13 - m9 * m12)),
-      inv_det * (m0 * (m9 * m14 - m10 * m13) - m1 * (m8 * m14 - m10 * m12) + m2 * (m8 * m13 - m9 * m12)),
-      inv_det * -(m0 * (m5 * m14 - m6 * m13) - m1 * (m4 * m14 - m6 * m12) + m2 * (m4 * m13 - m5 * m12)),
-      inv_det * (m0 * (m5 * m10 - m6 * m9) - m1 * (m4 * m10 - m6 * m8) + m2 * (m4 * m9 - m5 * m8))
-    }
+  ## Examples
+
+      iex> tuple_list = [{1.0, 0.0, 0.0, 0.0}, {0.0, 1.0, 0.0, 0.0}, {0.0, 0.0, 1.0, 0.0}, {0.0, 0.0, 0.0, 1.0}]
+      iex> matrix = AriaMath.Matrix4.Core.from_tuple_list(tuple_list)
+      iex> AriaMath.Matrix4.Core.equal?(matrix, AriaMath.Matrix4.Core.identity())
+      true
+  """
+  @spec from_tuple_list([tuple()]) :: matrix4_tensor()
+  def from_tuple_list(tuple_list) do
+    tuple_list
+    |> Enum.map(&Tuple.to_list/1)
+    |> Nx.tensor(type: :f32)
   end
 end

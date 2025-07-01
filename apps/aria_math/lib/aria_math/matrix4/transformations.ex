@@ -3,203 +3,390 @@
 
 defmodule AriaMath.Matrix4.Transformations do
   @moduledoc """
-  Transformation operations for Matrix4.
+  Matrix4 transformation operations using Nx tensors.
 
-  Contains TRS (Translation, Rotation, Scale) operations including
-  composition, decomposition, and individual transformation matrices.
+  This module provides specialized transformation matrices including
+  translation, rotation, scaling, and perspective transformations.
   """
 
-  alias AriaMath.{Matrix4, Vector3, Quaternion}
+  alias AriaMath.Matrix4.Core
+  alias AriaMath.Vector3.Tensor, as: Vector3
+  alias AriaMath.Quaternion.Tensor, as: Quaternion
 
   @doc """
-  Extract translation vector from transformation matrix.
-  """
-  @spec get_translation(Matrix4.t()) :: Vector3.t()
-  def get_translation({_, _, _, _, _, _, _, _, _, _, _, _, tx, ty, tz, _}) do
-    {tx, ty, tz}
-  end
+  Creates a translation matrix from a Vector3.
 
-  @doc """
-  Create translation matrix from vector.
-  """
-  @spec translation(Vector3.t()) :: Matrix4.t()
-  def translation({x, y, z}) do
-    {1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, x, y, z, 1.0}
-  end
+  ## Examples
 
-  @doc """
-  Create scaling matrix from vector.
+      iex> translation_vec = AriaMath.Vector3.Tensor.new(1.0, 2.0, 3.0)
+      iex> matrix = AriaMath.Matrix4.Transformations.translation(translation_vec)
+      iex> Nx.to_list(matrix)
+      [[1.0, 0.0, 0.0, 1.0], [0.0, 1.0, 0.0, 2.0], [0.0, 0.0, 1.0, 3.0], [0.0, 0.0, 0.0, 1.0]]
   """
-  @spec scaling(Vector3.t()) :: Matrix4.t()
-  def scaling({x, y, z}) do
-    {x, 0.0, 0.0, 0.0, 0.0, y, 0.0, 0.0, 0.0, 0.0, z, 0.0, 0.0, 0.0, 0.0, 1.0}
-  end
+  @spec translation(Nx.Tensor.t()) :: Nx.Tensor.t()
+  def translation(translation_vector) do
+    [x, y, z] = Nx.to_list(translation_vector)
 
-  @doc """
-  Create rotation matrix from quaternion or extract rotation from matrix.
-  """
-  @spec rotation(Quaternion.t() | Matrix4.t()) :: Matrix4.t()
-  def rotation({x, y, z, w}) when is_float(x) and is_float(y) and is_float(z) and is_float(w) do
-    # Convert unit quaternion to rotation matrix
-    xx = x * x
-    yy = y * y
-    zz = z * z
-    xy = x * y
-    xz = x * z
-    yz = y * z
-    wx = w * x
-    wy = w * y
-    wz = w * z
-
-    {
-      1.0 - 2.0 * (yy + zz), 2.0 * (xy + wz), 2.0 * (xz - wy), 0.0,
-      2.0 * (xy - wz), 1.0 - 2.0 * (xx + zz), 2.0 * (yz + wx), 0.0,
-      2.0 * (xz + wy), 2.0 * (yz - wx), 1.0 - 2.0 * (xx + yy), 0.0,
+    Core.new(
+      1.0, 0.0, 0.0, x,
+      0.0, 1.0, 0.0, y,
+      0.0, 0.0, 1.0, z,
       0.0, 0.0, 0.0, 1.0
-    }
-  end
-
-  def rotation({m0, m1, m2, m3, m4, m5, m6, m7, m8, m9, m10, m11, m12, m13, m14, m15}) do
-    # Extract rotation component from 4x4 matrix (remove translation and normalize)
-    rotation_3x3 = extract_basis({m0, m1, m2, m3, m4, m5, m6, m7, m8, m9, m10, m11, m12, m13, m14, m15})
-    orthogonalize(rotation_3x3)
+    )
   end
 
   @doc """
-  Create transformation matrix from translation, rotation, and scale.
-  """
-  @spec compose(Vector3.t(), Quaternion.t(), Vector3.t()) :: Matrix4.t()
-  def compose(translation_vec, rotation_quat, scale_vec) do
-    t_matrix = translation(translation_vec)
-    r_matrix = rotation(rotation_quat)
-    s_matrix = scaling(scale_vec)
+  Creates a translation matrix from x, y, z components.
 
-    # Apply in order: Scale, then Rotate, then Translate (T * R * S)
-    Matrix4.Core.multiply(Matrix4.Core.multiply(t_matrix, r_matrix), s_matrix)
+  ## Examples
+
+      iex> matrix = AriaMath.Matrix4.Transformations.translation_xyz(1.0, 2.0, 3.0)
+      iex> Nx.to_list(matrix)
+      [[1.0, 0.0, 0.0, 1.0], [0.0, 1.0, 0.0, 2.0], [0.0, 0.0, 1.0, 3.0], [0.0, 0.0, 0.0, 1.0]]
+  """
+  @spec translation_xyz(float(), float(), float()) :: Nx.Tensor.t()
+  def translation_xyz(x, y, z) do
+    Core.new(
+      1.0, 0.0, 0.0, x,
+      0.0, 1.0, 0.0, y,
+      0.0, 0.0, 1.0, z,
+      0.0, 0.0, 0.0, 1.0
+    )
   end
 
   @doc """
-  Decompose transformation matrix into translation, rotation, and scale.
+  Creates a scaling matrix from a Vector3.
+
+  ## Examples
+
+      iex> scale_vec = AriaMath.Vector3.Tensor.new(2.0, 3.0, 4.0)
+      iex> matrix = AriaMath.Matrix4.Transformations.scaling(scale_vec)
+      iex> Nx.to_list(matrix)
+      [[2.0, 0.0, 0.0, 0.0], [0.0, 3.0, 0.0, 0.0], [0.0, 0.0, 4.0, 0.0], [0.0, 0.0, 0.0, 1.0]]
   """
-  @spec decompose(Matrix4.t()) :: {Vector3.t(), Quaternion.t(), Vector3.t()}
-  def decompose({m0, m1, m2, _m3, m4, m5, m6, _m7, m8, m9, m10, _m11, m12, m13, m14, _m15}) do
-    # Extract translation (last column)
-    translation = {m12, m13, m14}
+  @spec scaling(Nx.Tensor.t()) :: Nx.Tensor.t()
+  def scaling(scale_vector) do
+    [x, y, z] = Nx.to_list(scale_vector)
+
+    Core.new(
+      x, 0.0, 0.0, 0.0,
+      0.0, y, 0.0, 0.0,
+      0.0, 0.0, z, 0.0,
+      0.0, 0.0, 0.0, 1.0
+    )
+  end
+
+  @doc """
+  Creates a uniform scaling matrix.
+
+  ## Examples
+
+      iex> matrix = AriaMath.Matrix4.Transformations.uniform_scaling(2.0)
+      iex> Nx.to_list(matrix)
+      [[2.0, 0.0, 0.0, 0.0], [0.0, 2.0, 0.0, 0.0], [0.0, 0.0, 2.0, 0.0], [0.0, 0.0, 0.0, 1.0]]
+  """
+  @spec uniform_scaling(float()) :: Nx.Tensor.t()
+  def uniform_scaling(scale) do
+    Core.new(
+      scale, 0.0, 0.0, 0.0,
+      0.0, scale, 0.0, 0.0,
+      0.0, 0.0, scale, 0.0,
+      0.0, 0.0, 0.0, 1.0
+    )
+  end
+
+  @doc """
+  Creates a rotation matrix from a quaternion.
+
+  ## Examples
+
+      iex> quat = AriaMath.Quaternion.Tensor.identity()
+      iex> matrix = AriaMath.Matrix4.Transformations.rotation_from_quaternion(quat)
+      iex> AriaMath.Matrix4.Core.equal?(matrix, AriaMath.Matrix4.Core.identity())
+      true
+  """
+  @spec rotation_from_quaternion(Nx.Tensor.t()) :: Nx.Tensor.t()
+  def rotation_from_quaternion(quaternion) do
+    # Convert quaternion to rotation matrix
+    rotation_3x3 = Quaternion.to_rotation_matrix(quaternion)
+
+    # Embed 3x3 rotation in 4x4 matrix
+    [[r00, r01, r02], [r10, r11, r12], [r20, r21, r22]] = Nx.to_list(rotation_3x3)
+
+    Core.new(
+      r00, r01, r02, 0.0,
+      r10, r11, r12, 0.0,
+      r20, r21, r22, 0.0,
+      0.0, 0.0, 0.0, 1.0
+    )
+  end
+
+  @doc """
+  Creates a rotation matrix around the X axis.
+
+  ## Examples
+
+      iex> matrix = AriaMath.Matrix4.Transformations.rotation_x(0.0)
+      iex> AriaMath.Matrix4.Core.equal?(matrix, AriaMath.Matrix4.Core.identity())
+      true
+  """
+  @spec rotation_x(float()) :: Nx.Tensor.t()
+  def rotation_x(angle_radians) do
+    cos_a = :math.cos(angle_radians)
+    sin_a = :math.sin(angle_radians)
+
+    Core.new(
+      1.0, 0.0, 0.0, 0.0,
+      0.0, cos_a, -sin_a, 0.0,
+      0.0, sin_a, cos_a, 0.0,
+      0.0, 0.0, 0.0, 1.0
+    )
+  end
+
+  @doc """
+  Creates a rotation matrix around the Y axis.
+
+  ## Examples
+
+      iex> matrix = AriaMath.Matrix4.Transformations.rotation_y(0.0)
+      iex> AriaMath.Matrix4.Core.equal?(matrix, AriaMath.Matrix4.Core.identity())
+      true
+  """
+  @spec rotation_y(float()) :: Nx.Tensor.t()
+  def rotation_y(angle_radians) do
+    cos_a = :math.cos(angle_radians)
+    sin_a = :math.sin(angle_radians)
+
+    Core.new(
+      cos_a, 0.0, sin_a, 0.0,
+      0.0, 1.0, 0.0, 0.0,
+      -sin_a, 0.0, cos_a, 0.0,
+      0.0, 0.0, 0.0, 1.0
+    )
+  end
+
+  @doc """
+  Creates a rotation matrix around the Z axis.
+
+  ## Examples
+
+      iex> matrix = AriaMath.Matrix4.Transformations.rotation_z(0.0)
+      iex> AriaMath.Matrix4.Core.equal?(matrix, AriaMath.Matrix4.Core.identity())
+      true
+  """
+  @spec rotation_z(float()) :: Nx.Tensor.t()
+  def rotation_z(angle_radians) do
+    cos_a = :math.cos(angle_radians)
+    sin_a = :math.sin(angle_radians)
+
+    Core.new(
+      cos_a, -sin_a, 0.0, 0.0,
+      sin_a, cos_a, 0.0, 0.0,
+      0.0, 0.0, 1.0, 0.0,
+      0.0, 0.0, 0.0, 1.0
+    )
+  end
+
+  @doc """
+  Creates a perspective projection matrix.
+
+  ## Examples
+
+      iex> matrix = AriaMath.Matrix4.Transformations.perspective(45.0, 16.0/9.0, 0.1, 100.0)
+      iex> Nx.shape(matrix)
+      {4, 4}
+  """
+  @spec perspective(float(), float(), float(), float()) :: Nx.Tensor.t()
+  def perspective(fov_y_degrees, aspect_ratio, near_plane, far_plane) do
+    fov_y_radians = fov_y_degrees * :math.pi() / 180.0
+    f = 1.0 / :math.tan(fov_y_radians / 2.0)
+
+    Core.new(
+      f / aspect_ratio, 0.0, 0.0, 0.0,
+      0.0, f, 0.0, 0.0,
+      0.0, 0.0, (far_plane + near_plane) / (near_plane - far_plane), (2.0 * far_plane * near_plane) / (near_plane - far_plane),
+      0.0, 0.0, -1.0, 0.0
+    )
+  end
+
+  @doc """
+  Creates an orthographic projection matrix.
+
+  ## Examples
+
+      iex> matrix = AriaMath.Matrix4.Transformations.orthographic(-10.0, 10.0, -10.0, 10.0, 0.1, 100.0)
+      iex> Nx.shape(matrix)
+      {4, 4}
+  """
+  @spec orthographic(float(), float(), float(), float(), float(), float()) :: Nx.Tensor.t()
+  def orthographic(left, right, bottom, top, near_plane, far_plane) do
+    width = right - left
+    height = top - bottom
+    depth = far_plane - near_plane
+
+    Core.new(
+      2.0 / width, 0.0, 0.0, -(right + left) / width,
+      0.0, 2.0 / height, 0.0, -(top + bottom) / height,
+      0.0, 0.0, -2.0 / depth, -(far_plane + near_plane) / depth,
+      0.0, 0.0, 0.0, 1.0
+    )
+  end
+
+  @doc """
+  Creates a look-at view matrix.
+
+  ## Examples
+
+      iex> eye = AriaMath.Vector3.Tensor.new(0.0, 0.0, 5.0)
+      iex> target = AriaMath.Vector3.Tensor.new(0.0, 0.0, 0.0)
+      iex> up = AriaMath.Vector3.Tensor.new(0.0, 1.0, 0.0)
+      iex> matrix = AriaMath.Matrix4.Transformations.look_at(eye, target, up)
+      iex> Nx.shape(matrix)
+      {4, 4}
+  """
+  @spec look_at(Nx.Tensor.t(), Nx.Tensor.t(), Nx.Tensor.t()) :: Nx.Tensor.t()
+  def look_at(eye, target, up) do
+    # Calculate forward vector (from eye to target)
+    forward = Vector3.subtract(target, eye) |> Vector3.normalize()
+
+    # Calculate right vector (cross product of forward and up)
+    right = Vector3.cross(forward, up) |> Vector3.normalize()
+
+    # Recalculate up vector (cross product of right and forward)
+    new_up = Vector3.cross(right, forward)
+
+    # Extract components
+    [fx, fy, fz] = Nx.to_list(forward)
+    [rx, ry, rz] = Nx.to_list(right)
+    [ux, uy, uz] = Nx.to_list(new_up)
+    [ex, ey, ez] = Nx.to_list(eye)
+
+    # Create view matrix
+    Core.new(
+      rx, ux, -fx, -Vector3.dot(right, eye) |> Nx.to_number(),
+      ry, uy, -fy, -Vector3.dot(new_up, eye) |> Nx.to_number(),
+      rz, uz, -fz, Vector3.dot(forward, eye) |> Nx.to_number(),
+      0.0, 0.0, 0.0, 1.0
+    )
+  end
+
+  @doc """
+  Creates a transformation matrix from translation, rotation, and scale.
+
+  ## Examples
+
+      iex> translation = AriaMath.Vector3.Tensor.new(1.0, 2.0, 3.0)
+      iex> rotation = AriaMath.Quaternion.Tensor.identity()
+      iex> scale = AriaMath.Vector3.Tensor.new(2.0, 2.0, 2.0)
+      iex> matrix = AriaMath.Matrix4.Transformations.compose_trs(translation, rotation, scale)
+      iex> Nx.shape(matrix)
+      {4, 4}
+  """
+  @spec compose_trs(Nx.Tensor.t(), Nx.Tensor.t(), Nx.Tensor.t()) :: Nx.Tensor.t()
+  def compose_trs(translation, rotation, scale) do
+    # Create individual transformation matrices
+    t_matrix = translation(translation)
+    r_matrix = rotation_from_quaternion(rotation)
+    s_matrix = scaling(scale)
+
+    # Combine: T * R * S (applied in reverse order)
+    Core.multiply(t_matrix, Core.multiply(r_matrix, s_matrix))
+  end
+
+  @doc """
+  Decomposes a transformation matrix into translation, rotation, and scale.
+
+  Returns {translation_vector, rotation_quaternion, scale_vector}.
+
+  ## Examples
+
+      iex> translation = AriaMath.Vector3.Tensor.new(1.0, 2.0, 3.0)
+      iex> rotation = AriaMath.Quaternion.Tensor.identity()
+      iex> scale = AriaMath.Vector3.Tensor.new(2.0, 2.0, 2.0)
+      iex> matrix = AriaMath.Matrix4.Transformations.compose_trs(translation, rotation, scale)
+      iex> {t, r, s} = AriaMath.Matrix4.Transformations.decompose_trs(matrix)
+      iex> Vector3.equal?(t, translation)
+      true
+  """
+  @spec decompose_trs(Nx.Tensor.t()) :: {Nx.Tensor.t(), Nx.Tensor.t(), Nx.Tensor.t()}
+  def decompose_trs(matrix) do
+    # Extract translation (last column, first 3 rows)
+    translation = Nx.slice(matrix, [0, 3], [3, 1]) |> Nx.reshape({3})
+
+    # Extract upper-left 3x3 matrix for rotation and scale
+    upper_3x3 = Nx.slice(matrix, [0, 0], [3, 3])
 
     # Extract scale (length of each column vector)
-    scale_x = :math.sqrt(m0 * m0 + m1 * m1 + m2 * m2)
-    scale_y = :math.sqrt(m4 * m4 + m5 * m5 + m6 * m6)
-    scale_z = :math.sqrt(m8 * m8 + m9 * m9 + m10 * m10)
+    col0 = upper_3x3[[.., 0]]
+    col1 = upper_3x3[[.., 1]]
+    col2 = upper_3x3[[.., 2]]
 
-    scale = {scale_x, scale_y, scale_z}
+    scale_x = Vector3.magnitude(col0) |> Nx.to_number()
+    scale_y = Vector3.magnitude(col1) |> Nx.to_number()
+    scale_z = Vector3.magnitude(col2) |> Nx.to_number()
 
-    # Remove scale from rotation matrix
-    rotation_matrix = {
-      m0 / scale_x, m1 / scale_x, m2 / scale_x, 0.0,
-      m4 / scale_y, m5 / scale_y, m6 / scale_y, 0.0,
-      m8 / scale_z, m9 / scale_z, m10 / scale_z, 0.0,
-      0.0, 0.0, 0.0, 1.0
-    }
+    scale = Vector3.new(scale_x, scale_y, scale_z)
+
+    # Remove scale to get pure rotation matrix
+    rotation_matrix = Nx.stack([
+      Nx.divide(col0, scale_x),
+      Nx.divide(col1, scale_y),
+      Nx.divide(col2, scale_z)
+    ], axis: 1)
 
     # Convert rotation matrix to quaternion
-    rotation = matrix_to_quaternion(rotation_matrix)
+    rotation = Quaternion.from_rotation_matrix(rotation_matrix)
 
     {translation, rotation, scale}
   end
 
   @doc """
-  Extract the 3x3 basis (rotation + scale) matrix from a 4x4 transformation matrix.
+  Transforms a point using a transformation matrix.
+
+  ## Examples
+
+      iex> matrix = AriaMath.Matrix4.Transformations.translation_xyz(1.0, 2.0, 3.0)
+      iex> point = AriaMath.Vector3.Tensor.new(0.0, 0.0, 0.0)
+      iex> transformed = AriaMath.Matrix4.Transformations.transform_point(matrix, point)
+      iex> Nx.to_list(transformed)
+      [1.0, 2.0, 3.0]
   """
-  @spec extract_basis(Matrix4.t()) :: Matrix4.t()
-  def extract_basis({m0, m1, m2, _, m4, m5, m6, _, m8, m9, m10, _, _, _, _, _}) do
-    {m0, m1, m2, 0.0, m4, m5, m6, 0.0, m8, m9, m10, 0.0, 0.0, 0.0, 0.0, 1.0}
+  @spec transform_point(Nx.Tensor.t(), Nx.Tensor.t()) :: Nx.Tensor.t()
+  def transform_point(matrix, point) do
+    # Convert point to homogeneous coordinates (w = 1.0)
+    [x, y, z] = Nx.to_list(point)
+    homogeneous_point = Nx.tensor([x, y, z, 1.0], type: :f32)
+
+    # Transform the point
+    transformed = Nx.dot(matrix, homogeneous_point)
+
+    # Extract x, y, z components (ignore w)
+    Nx.slice(transformed, [0], [3])
   end
 
   @doc """
-  Orthogonalize a matrix by removing scaling effects while preserving rotation.
+  Transforms a direction vector using a transformation matrix.
+
+  Direction vectors are not affected by translation (w = 0.0).
+
+  ## Examples
+
+      iex> matrix = AriaMath.Matrix4.Transformations.translation_xyz(1.0, 2.0, 3.0)
+      iex> direction = AriaMath.Vector3.Tensor.new(1.0, 0.0, 0.0)
+      iex> transformed = AriaMath.Matrix4.Transformations.transform_direction(matrix, direction)
+      iex> Vector3.equal?(transformed, direction)
+      true
   """
-  @spec orthogonalize(Matrix4.t()) :: Matrix4.t()
-  def orthogonalize({m0, m1, m2, m3, m4, m5, m6, m7, m8, m9, m10, m11, m12, m13, m14, m15}) do
-    # Extract the 3x3 rotation part
-    col0 = {m0, m1, m2}
-    col1 = {m4, m5, m6}
-    col2 = {m8, m9, m10}
+  @spec transform_direction(Nx.Tensor.t(), Nx.Tensor.t()) :: Nx.Tensor.t()
+  def transform_direction(matrix, direction) do
+    # Convert direction to homogeneous coordinates (w = 0.0)
+    [x, y, z] = Nx.to_list(direction)
+    homogeneous_direction = Nx.tensor([x, y, z, 0.0], type: :f32)
 
-    # Gram-Schmidt orthogonalization
-    # First column - normalize
-    col0_len = Vector3.length(col0)
-    norm_col0 = if col0_len > 1.0e-6 do
-      Vector3.div_scalar(col0, col0_len)
-    else
-      {1.0, 0.0, 0.0}
-    end
+    # Transform the direction
+    transformed = Nx.dot(matrix, homogeneous_direction)
 
-    # Second column - remove component along first, then normalize
-    proj1 = Vector3.mul_scalar(norm_col0, Vector3.dot(col1, norm_col0))
-    orth_col1 = Vector3.sub(col1, proj1)
-    col1_len = Vector3.length(orth_col1)
-    norm_col1 = if col1_len > 1.0e-6 do
-      Vector3.div_scalar(orth_col1, col1_len)
-    else
-      {0.0, 1.0, 0.0}
-    end
-
-    # Third column - remove components along first two, then normalize
-    proj2_0 = Vector3.mul_scalar(norm_col0, Vector3.dot(col2, norm_col0))
-    proj2_1 = Vector3.mul_scalar(norm_col1, Vector3.dot(col2, norm_col1))
-    orth_col2 = col2 |> Vector3.sub(proj2_0) |> Vector3.sub(proj2_1)
-    col2_len = Vector3.length(orth_col2)
-    norm_col2 = if col2_len > 1.0e-6 do
-      Vector3.div_scalar(orth_col2, col2_len)
-    else
-      Vector3.cross(norm_col0, norm_col1)
-    end
-
-    # Reconstruct matrix with orthonormal basis
-    {nx0, nx1, nx2} = norm_col0
-    {ny0, ny1, ny2} = norm_col1
-    {nz0, nz1, nz2} = norm_col2
-
-    {nx0, nx1, nx2, m3, ny0, ny1, ny2, m7, nz0, nz1, nz2, m11, m12, m13, m14, m15}
-  end
-
-  # Helper function for matrix to quaternion conversion
-  defp matrix_to_quaternion({m0, m1, m2, _, m4, m5, m6, _, m8, m9, m10, _, _, _, _, _}) do
-    # Convert 3x3 rotation matrix to quaternion using Shepperd's method
-    trace = m0 + m5 + m10
-
-    cond do
-      trace > 0.0 ->
-        s = :math.sqrt(trace + 1.0) * 2.0  # s = 4 * qw
-        w = 0.25 * s
-        x = (m6 - m9) / s
-        y = (m8 - m2) / s
-        z = (m1 - m4) / s
-        {x, y, z, w}
-
-      m0 > m5 and m0 > m10 ->
-        s = :math.sqrt(1.0 + m0 - m5 - m10) * 2.0  # s = 4 * qx
-        w = (m6 - m9) / s
-        x = 0.25 * s
-        y = (m4 + m1) / s
-        z = (m8 + m2) / s
-        {x, y, z, w}
-
-      m5 > m10 ->
-        s = :math.sqrt(1.0 + m5 - m0 - m10) * 2.0  # s = 4 * qy
-        w = (m8 - m2) / s
-        x = (m4 + m1) / s
-        y = 0.25 * s
-        z = (m9 + m6) / s
-        {x, y, z, w}
-
-      true ->
-        s = :math.sqrt(1.0 + m10 - m0 - m5) * 2.0  # s = 4 * qz
-        w = (m1 - m4) / s
-        x = (m8 + m2) / s
-        y = (m9 + m6) / s
-        z = 0.25 * s
-        {x, y, z, w}
-    end
+    # Extract x, y, z components (ignore w)
+    Nx.slice(transformed, [0], [3])
   end
 end

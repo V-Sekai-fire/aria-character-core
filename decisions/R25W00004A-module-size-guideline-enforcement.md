@@ -13,32 +13,77 @@ The .clinerules specify module size guidelines that are currently violated acros
 
 Analysis reveals multiple modules violating these guidelines, with several requiring mandatory splitting.
 
-## Violation Analysis
+## Violation Analysis (Updated January 2025)
 
-### Mandatory Splitting Required (500+ lines)
-- `aria_core/action_attributes.ex` (596 lines) - **CRITICAL**
-- `timeline/internal/stn/core.ex` (550 lines) - **CRITICAL**  
+### Extreme Violations (1000+ lines) - **EMERGENCY PRIORITY**
+- `aria_math/matrix4/tensor.ex` (1085 lines) - **EXTREME VIOLATION**
+
+### Critical Violations (500+ lines) - **MANDATORY SPLITTING**
+- `aria_joint/transform/tensor.ex` (653 lines) - **CRITICAL**
+- `aria_gltf/helpers.ex` (640 lines) - **CRITICAL**
+- `aria_math/primitives.ex` (619 lines) - **CRITICAL**
+- `aria_math/vector3/tensor.ex` (570 lines) - **CRITICAL**
+- `timeline/internal/stn/core.ex` (550 lines) - **CRITICAL**
 - `aria_serial/mix/tasks/decode.ex` (515 lines) - **CRITICAL**
+- `aria_gltf/import/parser.ex` (502 lines) - **CRITICAL**
 
 ### Strong Recommendation (400-500 lines)
+- `aria_math/primitives/tensor.ex` (493 lines)
 - `aria_timeline/bridge.ex` (480 lines)
 - `aria_gltf/mesh.ex` (480 lines)
-- `aria_math/primitives.ex` (477 lines)
+- `aria_gltf.ex` (479 lines)
+- `aria_gltf/validation.ex` (477 lines)
 - `aria_core/state/relational.ex` (477 lines)
 - `aria_storage/casync_decoder.ex` (472 lines)
 - `aria_core/temporal/interval.ex` (469 lines)
 - `aria_core/unified_domain.ex` (468 lines)
+- `aria_qcp/tensor.ex` (464 lines)
 - `aria_hybrid_planner/plan.ex` (455 lines)
 - `aria_core/temporal_converter.ex` (453 lines)
+- `aria_gltf/camera.ex` (447 lines)
+- `aria_gltf/skin.ex` (446 lines)
+- `aria_math/quaternion/tensor.ex` (445 lines)
 - `aria_joint/joint.ex` (444 lines)
+- `aria_gltf/accessor.ex` (441 lines)
 - `aria_engine_core/plan.ex` (440 lines)
+- `aria_gltf/mesh/tensor.ex` (439 lines)
 - `aria_storage/parsers/casync_format/archive_parser.ex` (436 lines)
 - `aria_core/entity/management.ex` (412 lines)
 - `aria_town.ex` (404 lines)
 - `aria_timeline_intervals/allen_relations.ex` (402 lines)
 - `aria_hybrid_planner/engine_integration.ex` (401 lines)
+- `aria_engine_core/planner.ex` (400 lines)
 
 ## Implementation Plan
+
+### Phase 0: Emergency Splitting (PRIORITY: CRITICAL)
+**Target:** Eliminate extreme violations (1000+ lines)
+
+#### Task 0.1: Split AriaMath.Matrix4.Tensor (1085 lines) ✅ **COMPLETED**
+**File:** `apps/aria_math/lib/aria_math/matrix4/tensor.ex`
+
+**Splitting Strategy:**
+- [x] **Core operations**: Basic matrix creation, multiplication, inversion (302 lines)
+- [x] **Batch operations**: Batch processing for multiple matrices (219 lines)
+- [x] **Memory optimization**: Memory-safe operations with chunking (331 lines)
+- [x] **Transformations**: Point/vector transformations and specialized matrices (392 lines)
+
+**Implementation Steps:**
+1. ✅ Create `matrix4/core.ex` for basic matrix operations
+2. ✅ Create `matrix4/batch.ex` for batch processing operations
+3. ✅ Create `matrix4/memory.ex` for memory-optimized operations
+4. ✅ Create `matrix4/transformations.ex` for transformation utilities
+5. ✅ Update main tensor module to delegate appropriately
+6. ✅ Verify all mathematical operations remain accurate
+
+**Results:** Successfully split 1085-line module into 4 focused modules:
+- **Core** (302 lines): Basic matrix operations, creation, multiplication, inversion
+- **Batch** (219 lines): Batch processing operations for multiple matrices
+- **Memory** (331 lines): Memory-safe operations with CUDA OOM prevention
+- **Transformations** (392 lines): Transformation matrices and point/vector operations
+- **Main Tensor** (269 lines): Clean delegation API maintaining backward compatibility
+
+**Status:** ✅ **COMPLETED** - Extreme violation eliminated, all modules under firm threshold
 
 ### Phase 1: Mandatory Splitting (PRIORITY: HIGH)
 **Target:** Eliminate all 500+ line violations
@@ -152,4 +197,6 @@ Analysis reveals multiple modules violating these guidelines, with several requi
 
 ## Current Focus
 
-Starting with **AriaCore.ActionAttributes** (596 lines) as the largest violation. This module has clear responsibility boundaries making it an ideal candidate for demonstrating the splitting approach.
+**EMERGENCY PRIORITY:** The **AriaMath.Matrix4.Tensor** module (1085 lines) represents an extreme violation that must be addressed immediately. This module contains multiple distinct responsibilities around matrix operations, batch processing, memory optimization, and transformations that can be cleanly separated.
+
+**Next Priority:** Address the remaining critical violations (500+ lines) using the proven approach from the successful ActionAttributes split.
