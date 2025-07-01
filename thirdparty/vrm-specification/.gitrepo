@@ -1,0 +1,12 @@
+; DO NOT EDIT (unless you know what you are doing)
+;
+; This subdirectory is a git "subrepo", and this file is maintained by the
+; git-subrepo command. See https://github.com/ingydotnet/git-subrepo#readme
+;
+[subrepo]
+	remote = https://github.com/vrm-c/vrm-specification.git
+	branch = master
+	commit = c24d76d99a18738dd2c266be1c83f089064a7b5e
+	parent = 0d77130fb1ade7683a134c9b68f48007698797cc
+	method = merge
+	cmdver = 0.4.9
