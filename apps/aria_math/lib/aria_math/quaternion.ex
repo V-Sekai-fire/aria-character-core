@@ -284,11 +284,11 @@ defmodule AriaMath.Quaternion do
     cond do
       # If any component is positive or negative infinity, return positive infinity
       is_infinite(x) or is_infinite(y) or is_infinite(z) or is_infinite(w) ->
-        :math.pow(1.0, 0.0) / 0.0  # positive infinity
+        :positive_infinity
 
       # If no components are infinity and any component is NaN, return NaN
       is_nan(x) or is_nan(y) or is_nan(z) or is_nan(w) ->
-        :math.pow(-1.0, 0.5)  # NaN
+        :nan
 
       # If all components are positive or negative zeros, return positive zero
       x == 0.0 and y == 0.0 and z == 0.0 and w == 0.0 ->
