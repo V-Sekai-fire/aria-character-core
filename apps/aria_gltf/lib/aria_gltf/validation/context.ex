@@ -18,6 +18,7 @@ defmodule AriaGltf.Validation.Context do
   @type t :: %__MODULE__{
     document: Document.t(),
     mode: validation_mode(),
+    overrides: [atom()],
     errors: [Error.t()],
     warnings: [Warning.t()],
     start_time: DateTime.t()
@@ -26,6 +27,7 @@ defmodule AriaGltf.Validation.Context do
   defstruct [
     :document,
     :mode,
+    overrides: [],
     errors: [],
     warnings: [],
     start_time: nil
@@ -34,15 +36,24 @@ defmodule AriaGltf.Validation.Context do
   @doc """
   Creates a new validation context.
   """
-  @spec new(Document.t(), validation_mode()) :: t()
-  def new(%Document{} = document, mode \\ :strict) do
+  @spec new(Document.t(), validation_mode(), [atom()]) :: t()
+  def new(%Document{} = document, mode \\ :strict, overrides \\ []) do
     %__MODULE__{
       document: document,
       mode: mode,
+      overrides: overrides,
       errors: [],
       warnings: [],
       start_time: DateTime.utc_now()
     }
+  end
+
+  @doc """
+  Checks if a specific validation check should be overridden.
+  """
+  @spec has_override?(t(), atom()) :: boolean()
+  def has_override?(%__MODULE__{overrides: overrides}, check_name) do
+    check_name in overrides
   end
 
   @doc """

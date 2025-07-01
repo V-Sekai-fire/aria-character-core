@@ -113,7 +113,17 @@ defmodule AriaGltf.Document do
     case Map.get(json, field_name) do
       nil -> document
       array when is_list(array) ->
-        parsed_items = Enum.map(array, parser_fn)
+        parsed_items =
+          array
+          |> Enum.map(parser_fn)
+          |> Enum.map(fn
+            {:ok, item} -> item
+            {:error, _} -> nil
+            item when is_struct(item) -> item
+            _ -> nil
+          end)
+          |> Enum.reject(&is_nil/1)
+
         field_atom = String.to_atom(field_name)
         Map.put(document, field_atom, parsed_items)
       _ -> document

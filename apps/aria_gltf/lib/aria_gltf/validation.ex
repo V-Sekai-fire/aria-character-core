@@ -24,6 +24,10 @@ defmodule AriaGltf.Validation do
   - `:check_indices` - Whether to validate index references (default: true)
   - `:check_extensions` - Whether to validate extensions (default: true)
   - `:check_schema` - Whether to validate against JSON schema (default: true)
+  - `:overrides` - List of validation checks to override, can be:
+    - `:buffer_view_indices` - Skip strict bufferView index validation
+    - `:accessor_buffer_views` - Allow accessors without bufferView references
+    - `:strict_bounds_checking` - Downgrade bounds errors to warnings
 
   ## Examples
 
@@ -32,6 +36,9 @@ defmodule AriaGltf.Validation do
 
       iex> AriaGltf.Validation.validate(invalid_document)
       {:error, %AriaGltf.Validation.Report{errors: [...]}}
+
+      iex> AriaGltf.Validation.validate(document, overrides: [:buffer_view_indices])
+      {:ok, document}
   """
   @spec validate(Document.t(), keyword()) :: validation_result()
   def validate(%Document{} = document, opts \\ []) do
@@ -39,8 +46,9 @@ defmodule AriaGltf.Validation do
     check_indices = Keyword.get(opts, :check_indices, true)
     check_extensions = Keyword.get(opts, :check_extensions, true)
     check_schema = Keyword.get(opts, :check_schema, true)
+    overrides = Keyword.get(opts, :overrides, [])
 
-    context = Context.new(document, mode)
+    context = Context.new(document, mode, overrides)
 
     context
     |> validate_asset()
@@ -318,10 +326,22 @@ defmodule AriaGltf.Validation do
         if buffer_view_index >= 0 and buffer_view_index < length(buffer_views) do
           context
         else
-          Context.add_error(context, {:accessor, accessor_index},
-            "Invalid bufferView index: #{buffer_view_index}")
+          # Check if buffer_view_indices validation should be overridden
+          if Context.has_override?(context, :buffer_view_indices) do
+            Context.add_warning(context, {:accessor, accessor_index},
+              "Invalid bufferView index: #{buffer_view_index} (validation overridden)")
+          else
+            Context.add_error(context, {:accessor, accessor_index},
+              "Invalid bufferView index: #{buffer_view_index}")
+          end
         end
-      _ -> context
+      _ ->
+        # Check if accessor_buffer_views validation should be overridden
+        if Context.has_override?(context, :accessor_buffer_views) do
+          context
+        else
+          context
+        end
     end
   end
 

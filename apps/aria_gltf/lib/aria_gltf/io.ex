@@ -244,7 +244,11 @@ defmodule AriaGltf.IO do
   @spec validate_imported_document(Document.t(), keyword()) :: {:ok, Document.t()} | {:error, term()}
   defp validate_imported_document(document, opts) do
     validation_mode = Keyword.get(opts, :validation_mode, :strict)
-    validation_opts = Keyword.put(opts, :mode, validation_mode)
+    validation_overrides = Keyword.get(opts, :validation_overrides, [])
+
+    validation_opts = opts
+                     |> Keyword.put(:mode, validation_mode)
+                     |> Keyword.put(:overrides, validation_overrides)
 
     case AriaGltf.Validation.validate(document, validation_opts) do
       {:ok, validated_document} -> {:ok, validated_document}

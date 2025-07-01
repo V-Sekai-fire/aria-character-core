@@ -428,6 +428,11 @@ defmodule AriaGltf do
   """
   defdelegate uvs_to_tensor_nx(uvs), to: AriaGltf.Mesh.Tensor, as: :uvs_to_tensor
 
+  # Sample Validation API (Phase 8 requirements)
+  defdelegate validate_simple_skin(opts \\ []), to: AriaGltf.SampleValidation
+  defdelegate validate_simple_morph(opts \\ []), to: AriaGltf.SampleValidation
+  defdelegate process_frame_accurate(document, timestamp, options \\ []), to: AriaGltf.SampleValidation
+
   @doc """
   Hello world.
 
