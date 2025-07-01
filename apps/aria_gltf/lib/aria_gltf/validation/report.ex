@@ -106,12 +106,12 @@ defmodule AriaGltf.Validation.Report do
 
     # Errors
     if has_errors?(report) do
-      parts = [format_errors(report.errors) | parts]
+      ^parts = [format_errors(report.errors) | parts]
     end
 
     # Warnings
     if has_warnings?(report) do
-      parts = [format_warnings(report.warnings) | parts]
+      ^parts = [format_warnings(report.warnings) | parts]
     end
 
     # Summary

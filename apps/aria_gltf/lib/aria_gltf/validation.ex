@@ -9,8 +9,8 @@ defmodule AriaGltf.Validation do
   conform to the glTF 2.0 specification and reporting detailed errors and warnings.
   """
 
-  alias AriaGltf.{Document, Asset, Scene, Node, Mesh, Material, Texture, Image, Sampler, Accessor, BufferView, Buffer, Camera, Skin, Animation}
-  alias AriaGltf.Validation.{Report, Context, SchemaValidator}
+  alias AriaGltf.{Document, Asset}
+  alias AriaGltf.Validation.{Report, Context}
 
   @type validation_result :: {:ok, Document.t()} | {:error, Report.t()}
   @type validation_mode :: :strict | :permissive | :warning_only

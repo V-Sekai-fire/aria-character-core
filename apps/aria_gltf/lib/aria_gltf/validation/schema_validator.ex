@@ -10,7 +10,7 @@ defmodule AriaGltf.Validation.SchemaValidator do
   """
 
   alias AriaGltf.Document
-  alias AriaGltf.Validation.{Context, Error}
+  alias AriaGltf.Validation.{Context}
 
   @doc """
   Validates a document against the glTF 2.0 JSON schema.
@@ -41,7 +41,7 @@ defmodule AriaGltf.Validation.SchemaValidator do
     # Check asset structure
     if asset = json["asset"] do
       errors = check_required_field(errors, asset, "version", "Asset version is required")
-      errors = check_field_type(errors, asset, "version", "string", "Asset version must be a string")
+      ^errors = check_field_type(errors, asset, "version", "string", "Asset version must be a string")
     end
 
     # Check array fields are actually arrays
@@ -50,7 +50,7 @@ defmodule AriaGltf.Validation.SchemaValidator do
                    "skins", "animations"]
 
     errors = Enum.reduce(array_fields, errors, fn field, acc ->
-      if value = json[field] do
+      if _value = json[field] do
         check_field_type(acc, json, field, "array", "#{field} must be an array")
       else
         acc
@@ -61,7 +61,7 @@ defmodule AriaGltf.Validation.SchemaValidator do
     if scene_index = json["scene"] do
       scenes = json["scenes"] || []
       if not is_integer(scene_index) or scene_index < 0 or scene_index >= length(scenes) do
-        errors = ["Invalid scene index: #{scene_index}" | errors]
+        ^errors = ["Invalid scene index: #{scene_index}" | errors]
       end
     end
 
