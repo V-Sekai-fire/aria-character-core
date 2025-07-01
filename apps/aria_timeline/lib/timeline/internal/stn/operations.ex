@@ -2,276 +2,277 @@
 # SPDX-License-Identifier: MIT
 
 defmodule Timeline.Internal.STN.Operations do
-  @moduledoc false
+  @moduledoc """
+  Core STN operations for interval and constraint management.
+
+  This module handles the fundamental operations of Simple Temporal Networks:
+  - Adding and removing intervals
+  - Managing time points
+  - Adding and updating constraints
+  - Constraint intersection and validation
+  """
+
+  alias Timeline.Interval
   alias Timeline.Internal.STN
-  alias Timeline.Internal.STN.Core
-  alias AriaMinizincStn
-  @doc "Performs intersection operation on two STNs.\n"
-  @spec intersection(STN.t(), STN.t()) :: STN.t()
-  def intersection(stn1, stn2) do
-    {compatible_stn1, compatible_stn2} = ensure_compatible_stns(stn1, stn2)
-    merged_points = MapSet.union(compatible_stn1.time_points, compatible_stn2.time_points)
 
-    merged_constraints =
-      merge_constraints_intersection(compatible_stn1.constraints, compatible_stn2.constraints)
+  @type constraint :: {number(), number()}
+  @type time_point :: String.t()
+  @type constraint_matrix :: %{optional({time_point(), time_point()}) => constraint()}
 
-    %STN{
-      time_points: merged_points,
-      constraints: merged_constraints,
-      consistent: compatible_stn1.consistent and compatible_stn2.consistent,
-      segments: compatible_stn1.segments ++ compatible_stn2.segments,
-      metadata: Map.merge(compatible_stn1.metadata, compatible_stn2.metadata),
-      time_unit: compatible_stn1.time_unit,
-      lod_level: compatible_stn1.lod_level,
-      lod_resolution: compatible_stn1.lod_resolution,
-      auto_rescale: compatible_stn1.auto_rescale,
-      datetime_conversion_unit: compatible_stn1.datetime_conversion_unit,
-      max_timepoints: max(compatible_stn1.max_timepoints, compatible_stn2.max_timepoints),
-      constant_work_enabled:
-        compatible_stn1.constant_work_enabled or compatible_stn2.constant_work_enabled,
-      dummy_constraints:
-        Map.merge(compatible_stn1.dummy_constraints, compatible_stn2.dummy_constraints)
-    }
-    |> solve()
+  @doc """
+  Adds an interval to the STN with automatic unit conversion and LOD rescaling.
+
+  This creates two time points (start and end) and adds the necessary
+  temporal constraints. Then applies MiniZinc solver to maintain consistency.
+
+  The interval's DateTime values are automatically converted to the STN's
+  declared time units and rescaled according to the LOD level.
+  """
+  @spec add_interval(STN.t(), Interval.t()) :: STN.t()
+  def add_interval(stn, interval) do
+    start_point = "#{interval.id}_start"
+    end_point = "#{interval.id}_end"
+
+    duration =
+      STN.Units.convert_datetime_duration_to_stn_units(
+        interval.start_time,
+        interval.end_time,
+        stn.time_unit,
+        stn.lod_level,
+        stn.lod_resolution
+      )
+
+    # Ensure minimum duration of 1 STN unit
+    duration = max(duration, 1)
+    # Use exact duration constraint
+    duration_constraint = {duration, duration}
+
+    stn
+    |> add_time_point(start_point)
+    |> add_time_point(end_point)
+    |> add_constraint(start_point, end_point, duration_constraint)
   end
 
-  @doc "Performs difference operation on two STNs.\n"
-  @spec difference(STN.t(), STN.t()) :: STN.t()
-  def difference(stn1, stn2) do
-    {compatible_stn1, compatible_stn2} = ensure_compatible_stns(stn1, stn2)
-    merged_points = MapSet.difference(compatible_stn1.time_points, compatible_stn2.time_points)
-
-    merged_constraints =
-      merge_constraints_difference(compatible_stn1.constraints, compatible_stn2.constraints)
-
-    result_stn = %STN{
-      time_points: merged_points,
-      constraints: merged_constraints,
-      consistent: compatible_stn1.consistent,
-      segments: compatible_stn1.segments,
-      metadata: compatible_stn1.metadata,
-      time_unit: compatible_stn1.time_unit,
-      lod_level: compatible_stn1.lod_level,
-      lod_resolution: compatible_stn1.lod_resolution,
-      auto_rescale: compatible_stn1.auto_rescale,
-      datetime_conversion_unit: compatible_stn1.datetime_conversion_unit,
-      max_timepoints: compatible_stn1.max_timepoints,
-      constant_work_enabled: compatible_stn1.constant_work_enabled,
-      dummy_constraints: compatible_stn1.dummy_constraints
-    }
-
-    case solve(result_stn) do
-      {:error, :unsatisfiable} = error -> error
-      stn -> stn
-    end
+  @doc """
+  Updates an interval in the STN by removing the old one and adding the new one.
+  """
+  @spec update_interval(STN.t(), Interval.t()) :: STN.t()
+  def update_interval(stn, interval) do
+    stn |> remove_interval(interval.id) |> add_interval(interval)
   end
 
-  @doc "Splits an STN into multiple independent segments for parallel processing.\n"
-  @spec split(STN.t(), pos_integer()) :: [STN.t()]
-  def split(stn, num_segments) do
-    segment(stn, num_segments)
-  end
+  @doc """
+  Removes an interval from the STN.
+  """
+  @spec remove_interval(STN.t(), String.t()) :: STN.t()
+  def remove_interval(stn, interval_id) do
+    start_point = "#{interval_id}_start"
+    end_point = "#{interval_id}_end"
 
-  @doc "Chains multiple STNs sequentially using temporal ordering constraints.\n"
-  @spec chain([STN.t()]) :: STN.t()
-  def chain([]) do
-    STN.new()
-  end
-
-  def chain([single_stn]) do
-    single_stn
-  end
-
-  def chain([first_stn | rest_stns]) do
-    Enum.reduce(rest_stns, first_stn, fn stn, acc -> compose(acc, stn) end)
-  end
-
-  @doc "Combines two STNs using union operation.\n"
-  @spec union(STN.t(), STN.t()) :: STN.t()
-  def union(stn1, stn2) do
-    # Handle case where STNs might be wrapped in {:ok, stn} tuples
-    unwrapped_stn1 =
-      case stn1 do
-        {:ok, stn} -> stn
-        stn -> stn
-      end
-
-    unwrapped_stn2 =
-      case stn2 do
-        {:ok, stn} -> stn
-        stn -> stn
-      end
-
-    {compatible_stn1, compatible_stn2} = ensure_compatible_stns(unwrapped_stn1, unwrapped_stn2)
-    merged_points = MapSet.union(compatible_stn1.time_points, compatible_stn2.time_points)
-
-    merged_constraints =
-      merge_constraints_union(compatible_stn1.constraints, compatible_stn2.constraints)
-
-    merged_metadata = Map.merge(compatible_stn1.metadata, compatible_stn2.metadata)
-
-    %STN{
-      time_points: merged_points,
-      constraints: merged_constraints,
-      consistent: compatible_stn1.consistent and compatible_stn2.consistent,
-      segments: compatible_stn1.segments ++ compatible_stn2.segments,
-      metadata: merged_metadata,
-      time_unit: compatible_stn1.time_unit,
-      lod_level: compatible_stn1.lod_level,
-      lod_resolution: compatible_stn1.lod_resolution,
-      auto_rescale: compatible_stn1.auto_rescale,
-      datetime_conversion_unit: compatible_stn1.datetime_conversion_unit,
-      max_timepoints: max(compatible_stn1.max_timepoints, compatible_stn2.max_timepoints),
-      constant_work_enabled:
-        compatible_stn1.constant_work_enabled or compatible_stn2.constant_work_enabled,
-      dummy_constraints:
-        Map.merge(compatible_stn1.dummy_constraints, compatible_stn2.dummy_constraints)
-    }
-    |> solve()
-  end
-
-  @doc "Composes two STNs sequentially.\n"
-  @spec compose(STN.t(), STN.t()) :: STN.t()
-  def compose(stn1, stn2) do
-    bridged_constraints = create_bridge_constraints(stn1, stn2)
-
-    bridge_stn = %STN{
-      time_points: MapSet.new(),
-      constraints: bridged_constraints,
-      consistent: true,
-      segments: [],
-      metadata: %{}
-    }
-
-    union(stn1, stn2) |> union(bridge_stn)
-  end
-
-  @doc "Performs parallel join of multiple STN segments.\n"
-  @spec parallel_join([STN.t()]) :: STN.t()
-  def parallel_join([]) do
-    STN.new()
-  end
-
-  def parallel_join([single_stn]) do
-    single_stn
-  end
-
-  def parallel_join(stns) do
-    case length(stns) do
-      count when count > 4 ->
-        %STN{}
-
-      _ ->
-        case stns |> Enum.reduce(&union/2) do
-          {:error, :unsatisfiable} = error -> error
-          stn -> solve(stn)
-        end
-    end
-  end
-
-  @doc "Segments an STN into independent chunks for parallel processing.\nEach segment is limited to 5 time points for optimal Apple Vision Pro performance.\n"
-  @spec segment(STN.t(), pos_integer()) :: [STN.t()]
-  def segment(stn, _max_segments) do
-    time_points = MapSet.to_list(stn.time_points)
-    point_count = length(time_points)
-    max_points_per_segment = 5
-
-    if point_count <= max_points_per_segment do
-      [stn]
-    else
-      time_points
-      |> Enum.chunk_every(max_points_per_segment)
-      |> Enum.with_index()
-      |> Enum.map(fn {chunk_points, index} -> create_segment(stn, chunk_points, index) end)
-    end
-  end
-
-  defp create_segment(stn, chunk_points, _index) do
-    time_points_set = MapSet.new(chunk_points)
-
-    segment_constraints =
-      Enum.filter(stn.constraints, fn {{p1, p2}, _} ->
-        MapSet.member?(time_points_set, p1) and MapSet.member?(time_points_set, p2)
+    updated_constraints =
+      stn.constraints
+      |> Enum.reject(fn {{from, to}, _} ->
+        from == start_point or to == start_point or from == end_point or to == end_point
       end)
       |> Map.new()
 
-    %STN{
-      time_points: time_points_set,
-      constraints: segment_constraints,
-      consistent: stn.consistent,
-      time_unit: stn.time_unit,
-      lod_level: stn.lod_level,
-      lod_resolution: stn.lod_resolution
-    }
+    updated_time_points =
+      stn.time_points |> MapSet.delete(start_point) |> MapSet.delete(end_point)
+
+    %{stn | time_points: updated_time_points, constraints: updated_constraints}
   end
 
-  @doc "Solves STN segments in parallel and merges results.\n"
-  @spec parallel_solve(STN.t(), integer()) :: STN.t() | {:error, :unsatisfiable}
-  def parallel_solve(stn, max_segments \\ System.schedulers_online()) do
-    segments = segment(stn, max_segments)
+  @doc """
+  Adds a temporal constraint between two time points.
 
-    case length(segments) do
-      1 ->
-        solve(hd(segments))
+  The constraint represents the allowable distance between the time points
+  as {min_distance, max_distance}. Supports :infinity for unbounded constraints.
+  """
+  @spec add_constraint(STN.t(), time_point(), time_point(), constraint()) :: STN.t()
+  def add_constraint(stn, from_point, to_point, {min_dist, max_dist} = constraint)
+      when (is_number(min_dist) or min_dist == :neg_infinity) and
+             (is_number(max_dist) or max_dist == :infinity) do
+    unless valid_constraint_bounds?(min_dist, max_dist) do
+      raise ArgumentError, "Invalid constraint bounds: #{inspect(constraint)}"
+    end
 
-      _segment_count ->
-        solved_segments = segments |> Enum.map(&solve/1)
+    stn = stn |> add_time_point(from_point) |> add_time_point(to_point)
+    current_constraints = stn.constraints
+    is_consistent = stn.consistent
 
-        # Check if any segment is unsatisfiable
-        case Enum.find(solved_segments, fn
-               {:error, :unsatisfiable} -> true
-               _ -> false
-             end) do
-          {:error, :unsatisfiable} = error -> error
-          nil -> parallel_join(solved_segments)
+    {updated_constraints_1, consistent_1} =
+      update_single_constraint(current_constraints, {from_point, to_point}, constraint)
+
+    reverse_constraint = {negate_constraint_value(max_dist), negate_constraint_value(min_dist)}
+
+    {updated_constraints_2, consistent_2} =
+      update_single_constraint(updated_constraints_1, {to_point, from_point}, reverse_constraint)
+
+    final_consistent = is_consistent and consistent_1 and consistent_2
+
+    # Debug logging
+    if not final_consistent do
+      require Logger
+
+      Logger.debug(
+        "Constraint inconsistency detected: #{from_point} -> #{to_point} #{inspect(constraint)}"
+      )
+
+      Logger.debug(
+        "Initial consistent: #{is_consistent}, step1: #{consistent_1}, step2: #{consistent_2}"
+      )
+
+      Logger.debug("Reverse constraint: #{inspect(reverse_constraint)}")
+    end
+
+    updated_stn = %{stn | constraints: updated_constraints_2, consistent: final_consistent}
+    updated_stn
+  end
+
+  @doc """
+  Gets a constraint between two time points.
+  """
+  @spec get_constraint(STN.t(), time_point(), time_point()) :: constraint() | nil
+  def get_constraint(stn, from_point, to_point) do
+    Map.get(stn.constraints, {from_point, to_point})
+  end
+
+  @doc """
+  Adds a time point to the STN.
+  """
+  @spec add_time_point(STN.t(), time_point()) :: STN.t()
+  def add_time_point(stn, time_point) do
+    updated_time_points = MapSet.put(stn.time_points, time_point)
+    # No self-constraint needed - distance from point to itself is implicitly zero
+    %{stn | time_points: updated_time_points}
+  end
+
+  @doc """
+  Gets all time points in the STN.
+  """
+  @spec time_points(STN.t()) :: [time_point()]
+  def time_points(stn) do
+    MapSet.to_list(stn.time_points)
+  end
+
+  # Private helper functions
+
+  defp valid_constraint_bounds?(min_dist, max_dist) do
+    case {min_dist, max_dist} do
+      {:neg_infinity, :infinity} ->
+        true
+
+      {:neg_infinity, max_dist} when is_number(max_dist) ->
+        true
+
+      {min_dist, :infinity} when is_number(min_dist) ->
+        true
+
+      {min_dist, max_dist} when is_number(min_dist) and is_number(max_dist) ->
+        min_dist <= max_dist
+
+      _ ->
+        false
+    end
+  end
+
+  defp intersect_constraints({min1, max1}, {min2, max2}) do
+    new_min = constraint_max(min1, min2)
+    new_max = constraint_min(max1, max2)
+
+    # Check for inconsistency: new_min > new_max means no valid intersection
+    if constraint_greater_than?(new_min, new_max) do
+      :inconsistent
+    else
+      {new_min, new_max}
+    end
+  end
+
+  defp constraint_max(:neg_infinity, other) do
+    other
+  end
+
+  defp constraint_max(other, :neg_infinity) do
+    other
+  end
+
+  defp constraint_max(:infinity, _) do
+    :infinity
+  end
+
+  defp constraint_max(_, :infinity) do
+    :infinity
+  end
+
+  defp constraint_max(a, b) when is_number(a) and is_number(b) do
+    max(a, b)
+  end
+
+  defp constraint_min(:infinity, other) do
+    other
+  end
+
+  defp constraint_min(other, :infinity) do
+    other
+  end
+
+  defp constraint_min(:neg_infinity, _) do
+    :neg_infinity
+  end
+
+  defp constraint_min(_, :neg_infinity) do
+    :neg_infinity
+  end
+
+  defp constraint_min(a, b) when is_number(a) and is_number(b) do
+    min(a, b)
+  end
+
+  defp constraint_greater_than?(:infinity, _) do
+    false
+  end
+
+  defp constraint_greater_than?(_, :neg_infinity) do
+    false
+  end
+
+  defp constraint_greater_than?(:neg_infinity, _) do
+    true
+  end
+
+  defp constraint_greater_than?(_, :infinity) do
+    true
+  end
+
+  defp constraint_greater_than?(a, b) when is_number(a) and is_number(b) do
+    a > b
+  end
+
+  defp negate_constraint_value(:infinity) do
+    :neg_infinity
+  end
+
+  defp negate_constraint_value(:neg_infinity) do
+    :infinity
+  end
+
+  defp negate_constraint_value(value) when is_number(value) do
+    -value
+  end
+
+  defp update_single_constraint(constraints, key, new_constraint) do
+    case Map.get(constraints, key) do
+      nil ->
+        {Map.put(constraints, key, new_constraint), true}
+
+      existing_constraint ->
+        case intersect_constraints(existing_constraint, new_constraint) do
+          :inconsistent ->
+            {constraints, false}
+
+          intersected_constraint ->
+            {Map.put(constraints, key, intersected_constraint), true}
         end
     end
-  end
-
-  @doc "Solves the STN for consistency and computes shortest paths.\n"
-  @spec solve(STN.t()) :: STN.t() | {:error, :unsatisfiable}
-  def solve(stn) do
-    if Core.simple_stn?(stn) do
-      # Simple STN - validate consistency mathematically and bypass MiniZinc
-      validated_stn = %{stn | consistent: Core.mathematically_consistent?(stn)}
-      validated_stn
-    else
-      # Complex STN - use MiniZinc solver
-      case AriaMinizincStn.solve_stn(stn) do
-        {:ok, solved_stn} -> solved_stn
-        {:error, :unsatisfiable} -> {:error, :unsatisfiable}
-        solved_stn -> solved_stn
-      end
-    end
-  end
-
-  defp merge_constraints_intersection(constraints1, constraints2) do
-    Map.merge(constraints1, constraints2, fn _key, {min1, max1}, {min2, max2} ->
-      new_min = max(min1, min2)
-      new_max = min(max1, max2)
-      {new_min, new_max}
-    end)
-  end
-
-  defp merge_constraints_difference(constraints1, constraints2) do
-    constraints1
-    |> Enum.reject(fn {key, _constraint} -> Map.has_key?(constraints2, key) end)
-    |> Map.new()
-  end
-
-  defp merge_constraints_union(constraints1, constraints2) do
-    Map.merge(constraints1, constraints2, fn _key, {min1, max1}, {min2, max2} ->
-      new_min = min(min1, min2)
-      new_max = max(max1, max2)
-      {new_min, new_max}
-    end)
-  end
-
-  defp create_bridge_constraints(_stn1, _stn2) do
-    %{}
-  end
-
-  defp ensure_compatible_stns(stn1, stn2) do
-    {stn1, stn2}
   end
 end
