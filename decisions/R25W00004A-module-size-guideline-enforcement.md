@@ -47,12 +47,12 @@ Analysis reveals multiple modules violating these guidelines, with several requi
 **File:** `apps/aria_core/lib/aria_core/action_attributes.ex`
 
 **Splitting Strategy:**
-- [x] **Main module**: Macro system and `__using__` logic (~60 lines)
-- [x] **Documentation module**: All `*_attribute_docs` functions (~145 lines) 
-- [x] **Converters module**: All `convert_*_metadata` functions (~125 lines)
-- [x] **Registry module**: `create_entity_registry` and `create_temporal_specifications` (~75 lines)
-- [x] **Macros module**: All attribute macro definitions (~100 lines)
-- [x] **Compiler module**: Compilation-time processing (~165 lines)
+- [x] **Main module**: Macro system and `__using__` logic (77 lines)
+- [x] **Documentation module**: All `*_attribute_docs` functions (145 lines) 
+- [x] **Converters module**: All `convert_*_metadata` functions (145 lines)
+- [x] **Registry module**: `create_entity_registry` and `create_temporal_specifications` (79 lines)
+- [x] **Macros module**: All attribute macro definitions (115 lines)
+- [x] **Compiler module**: Compilation-time processing (274 lines - **SOFT THRESHOLD**)
 
 **Implementation Steps:**
 1. ✅ Create `action_attributes/documentation.ex` for docs functions
@@ -61,9 +61,11 @@ Analysis reveals multiple modules violating these guidelines, with several requi
 4. ✅ Create `action_attributes/macros.ex` for attribute macros
 5. ✅ Create `action_attributes/compiler.ex` for compilation processing
 6. ✅ Update main module to delegate to split modules
-7. ✅ All modules now under 200-line guideline
+7. ✅ All unused attribute warnings resolved
 
-**Results:** Successfully split into 6 focused modules, each with single responsibility and under size guidelines.
+**Results:** Successfully split into 6 focused modules. Compiler module at 274 lines falls into soft threshold (200-300 lines) but has focused responsibility with tightly coupled compilation hooks and code generation. Splitting deferred until Domain API stabilizes.
+
+**Status:** ✅ **COMPLETED** - All critical violations resolved, system functional
 
 #### Task 1.2: Split Timeline.Internal.STN.Core (550 lines) 
 **File:** `apps/aria_timeline/lib/timeline/internal/stn/core.ex`

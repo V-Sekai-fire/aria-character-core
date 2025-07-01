@@ -66,6 +66,17 @@ defmodule AriaCore.ActionAttributes do
       Module.register_attribute(__MODULE__, :unigoal_metadata, accumulate: true)
       Module.register_attribute(__MODULE__, :command_metadata, accumulate: true)
 
+      # Register raw attribute handlers for @action, @command, etc.
+      Module.register_attribute(__MODULE__, :action, accumulate: true)
+      Module.register_attribute(__MODULE__, :command, accumulate: true)
+      Module.register_attribute(__MODULE__, :task_method, accumulate: true)
+      Module.register_attribute(__MODULE__, :unigoal_method, accumulate: true)
+      Module.register_attribute(__MODULE__, :multigoal_method, accumulate: true)
+      Module.register_attribute(__MODULE__, :multitodo_method, accumulate: true)
+
+      # Add function definition hook to process attributes
+      @on_definition AriaCore.ActionAttributes.Compiler
+
       # Process metadata after compilation
       @before_compile AriaCore.ActionAttributes.Compiler
     end

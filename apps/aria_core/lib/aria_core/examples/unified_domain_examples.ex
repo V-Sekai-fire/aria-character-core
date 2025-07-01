@@ -3,6 +3,7 @@
 
 defmodule AriaCore.Examples.UnifiedDomainExamples do
   use AriaCore.Domain
+  use AriaCore.ActionAttributes
   alias AriaCore.State.Relational, as: RelationalState
   require Logger
 
