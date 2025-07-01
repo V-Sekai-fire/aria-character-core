@@ -18,6 +18,7 @@
 - Transform propagation throughout hierarchy
 - Scale management (can disable scale for pure rotational joints)
 - Efficient updates only when transforms are dirty
+- **✅ UPDATED (January 7, 2025):** Now includes `:nx` dependency for numerical computing support
 
 **Impact on glTF implementation:** The complex joint hierarchy and transform chain management required for glTF skeletal animation is now available as a dedicated app. This significantly reduces the complexity of implementing the `AriaGltf.Skin` module and joint-based animations.
 
@@ -31,6 +32,7 @@
 - Vector3 operations for 3D points and directions
 - Quaternion operations for rotations
 - Mathematical primitives and utilities
+- **✅ UPDATED (January 7, 2025):** Now includes `:nx` dependency for numerical computing support
 
 **Impact on glTF implementation:** Core mathematical operations required for mesh transformations, joint calculations, and animation interpolation are now available as a dedicated app.
 
@@ -41,6 +43,7 @@
 - Motion validation and optimization
 - Quaternion-based transformations
 - Advanced geometric computations
+- **✅ UPDATED (January 7, 2025):** Now includes `:nx` dependency for numerical computing support
 
 **Impact on glTF implementation:** Advanced motion processing capabilities available for sophisticated animation and transform validation.
 

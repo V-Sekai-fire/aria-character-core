@@ -34,7 +34,8 @@ defmodule AriaQcp.MixProject do
   # Run "mix help deps" to learn about dependencies.
   defp deps do
     [
-      {:aria_math, in_umbrella: true}
+      {:aria_math, in_umbrella: true},
+      {:nx, "~> 0.10.0"},
     ]
   end
 end
