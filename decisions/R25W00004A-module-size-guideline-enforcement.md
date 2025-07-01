@@ -22,7 +22,7 @@ Analysis reveals multiple modules violating these guidelines, with several requi
 - ~~`aria_joint/transform/tensor.ex` (653 → 59 lines)~~ - **COMPLETED**
 - ~~`aria_gltf/helpers.ex` (640 → 37 lines)~~ - **COMPLETED**
 - ~~`aria_math/primitives.ex` (619 → 330 lines)~~ - **COMPLETED**
-- `aria_math/vector3/tensor.ex` (570 lines) - **CRITICAL**
+- ~~`aria_math/vector3/tensor.ex` (570 → 67 lines)~~ - **COMPLETED**
 - `aria_timeline/internal/stn/core.ex` (550 lines) - **CRITICAL**
 - `aria_serial/mix/tasks/decode.ex` (515 lines) - **CRITICAL**
 - `aria_gltf/import/parser.ex` (502 lines) - **CRITICAL**
@@ -198,7 +198,36 @@ Analysis reveals multiple modules violating these guidelines, with several requi
 
 **Status:** ✅ **COMPLETED** - Critical violation eliminated, all modules under firm threshold
 
-#### Task 1.5: Split Timeline.Internal.STN.Core (550 lines)
+#### Task 1.5: Split AriaMath.Vector3.Tensor (570 lines) ✅ **COMPLETED**
+**File:** `apps/aria_math/lib/aria_math/vector3/tensor.ex`
+
+**Splitting Strategy:**
+- [x] **Core operations**: Basic vector creation and conversion (95 lines)
+- [x] **Math operations**: Mathematical operations (dot, cross, normalize) (118 lines)
+- [x] **Batch operations**: Batch processing for multiple vectors (150 lines)
+- [x] **Memory optimization**: Memory-safe operations with chunking (140 lines)
+- [x] **Monitoring utilities**: Memory monitoring and optimization tools (87 lines)
+
+**Implementation Steps:**
+1. ✅ Create `vector3/tensor/core.ex` for basic vector operations
+2. ✅ Create `vector3/tensor/math.ex` for mathematical operations
+3. ✅ Create `vector3/tensor/batch.ex` for batch processing operations
+4. ✅ Create `vector3/tensor/memory.ex` for memory-optimized operations
+5. ✅ Create `vector3/tensor/monitoring.ex` for memory monitoring utilities
+6. ✅ Update main tensor module to delegate to split modules
+7. ✅ Verify all vector operations remain accurate and memory-safe
+
+**Results:** Successfully split 570-line module into 5 focused modules:
+- **Core** (95 lines): Basic vector creation, conversion, length, and magnitude
+- **Math** (118 lines): Mathematical operations (dot, cross, normalize) with numerical stability
+- **Batch** (150 lines): Batch processing operations for multiple vectors
+- **Memory** (140 lines): Memory-safe operations with automatic chunking and CPU fallback
+- **Monitoring** (87 lines): Memory monitoring and optimization utilities
+- **Main Tensor** (67 lines): Clean delegation API maintaining full backward compatibility
+
+**Status:** ✅ **COMPLETED** - Critical violation eliminated, all modules under soft threshold
+
+#### Task 1.6: Split Timeline.Internal.STN.Core (550 lines)
 **File:** `apps/aria_timeline/lib/timeline/internal/stn/core.ex`
 
 **Splitting Strategy:**
@@ -302,4 +331,4 @@ Analysis reveals multiple modules violating these guidelines, with several requi
 **Success Metrics:** 
 - ✅ **Phase 0 Complete:** Zero extreme violations (1000+ lines)
 - 🎯 **Phase 1 Target:** Zero critical violations (500+ lines)
-- 📊 **Progress:** 5/9 critical violations resolved (56% complete)
+- 📊 **Progress:** 6/9 critical violations resolved (67% complete)
