@@ -638,4 +638,142 @@ defmodule AriaMath.Matrix4.Tensor do
       [0.0, 0.0, 0.0, 1.0]
     ], type: :f32)
   end
+
+  @doc """
+  Convert a Matrix4 tensor to a list of tuples (row-wise).
+
+  ## Examples
+
+      iex> matrix = AriaMath.Matrix4.Tensor.identity()
+      iex> AriaMath.Matrix4.Tensor.to_tuple_list(matrix)
+      [{1.0, 0.0, 0.0, 0.0}, {0.0, 1.0, 0.0, 0.0}, {0.0, 0.0, 1.0, 0.0}, {0.0, 0.0, 0.0, 1.0}]
+  """
+  @spec to_tuple_list(matrix4_tensor()) :: [tuple()]
+  def to_tuple_list(matrix) do
+    matrix
+    |> Nx.to_list()
+    |> Enum.map(&List.to_tuple/1)
+  end
+
+  @doc """
+  Convert a list of tuples to a Matrix4 tensor.
+
+  ## Examples
+
+      iex> tuple_list = [{1.0, 0.0, 0.0, 0.0}, {0.0, 1.0, 0.0, 0.0}, {0.0, 0.0, 1.0, 0.0}, {0.0, 0.0, 0.0, 1.0}]
+      iex> matrix = AriaMath.Matrix4.Tensor.from_tuple_list(tuple_list)
+      iex> AriaMath.Matrix4.Tensor.equal?(matrix, AriaMath.Matrix4.Tensor.identity())
+      true
+  """
+  @spec from_tuple_list([tuple()]) :: matrix4_tensor()
+  def from_tuple_list(tuple_list) do
+    tuple_list
+    |> Enum.map(&Tuple.to_list/1)
+    |> Nx.tensor(type: :f32)
+  end
+
+  @doc """
+  Batch matrix inversion using Nx operations.
+
+  ## Examples
+
+      iex> matrices = Nx.stack([AriaMath.Matrix4.Tensor.identity(), AriaMath.Matrix4.Tensor.identity()])
+      iex> inverses = AriaMath.Matrix4.Tensor.inverse_batch(matrices)
+      iex> Nx.shape(inverses)
+      {2, 4, 4}
+  """
+  @spec inverse_batch(Nx.Tensor.t()) :: Nx.Tensor.t()
+  def inverse_batch(matrices) do
+    Nx.LinAlg.invert(matrices)
+  end
+
+  @doc """
+  Batch scaling matrix creation from vectors.
+
+  ## Examples
+
+      iex> scales = Nx.tensor([[2.0, 3.0, 4.0], [1.5, 2.5, 3.5]])
+      iex> matrices = AriaMath.Matrix4.Tensor.scaling_batch(scales)
+      iex> Nx.shape(matrices)
+      {2, 4, 4}
+  """
+  @spec scaling_batch(Nx.Tensor.t()) :: Nx.Tensor.t()
+  def scaling_batch(scale_vectors) do
+    batch_size = Nx.axis_size(scale_vectors, 0)
+
+    # Create identity matrices for the batch
+    identities = Nx.broadcast(identity(), {batch_size, 4, 4})
+
+    # Extract scale components
+    scale_x = scale_vectors[[.., 0]]
+    scale_y = scale_vectors[[.., 1]]
+    scale_z = scale_vectors[[.., 2]]
+
+    # Apply scaling to diagonal elements
+    scaled_matrices = identities
+    |> Nx.put_slice([0, 0, 0], Nx.reshape(scale_x, {batch_size, 1, 1}))
+    |> Nx.put_slice([0, 1, 1], Nx.reshape(scale_y, {batch_size, 1, 1}))
+    |> Nx.put_slice([0, 2, 2], Nx.reshape(scale_z, {batch_size, 1, 1}))
+
+    scaled_matrices
+  end
+
+  @doc """
+  Linear interpolation between two batches of matrices.
+
+  ## Examples
+
+      iex> m1_batch = Nx.stack([AriaMath.Matrix4.Tensor.identity(), AriaMath.Matrix4.Tensor.identity()])
+      iex> m2_batch = Nx.stack([AriaMath.Matrix4.Tensor.scale(2.0), AriaMath.Matrix4.Tensor.scale(3.0)])
+      iex> t_values = Nx.tensor([0.5, 0.5])
+      iex> interpolated = AriaMath.Matrix4.Tensor.lerp_batch(m1_batch, m2_batch, t_values)
+      iex> Nx.shape(interpolated)
+      {2, 4, 4}
+  """
+  @spec lerp_batch(Nx.Tensor.t(), Nx.Tensor.t(), Nx.Tensor.t()) :: Nx.Tensor.t()
+  def lerp_batch(m1_batch, m2_batch, t_batch) do
+    # Linear interpolation: (1 - t) * m1 + t * m2
+    t_expanded = Nx.reshape(t_batch, {Nx.axis_size(t_batch, 0), 1, 1})
+    one_minus_t = Nx.subtract(1.0, t_expanded)
+
+    term1 = Nx.multiply(one_minus_t, m1_batch)
+    term2 = Nx.multiply(t_expanded, m2_batch)
+
+    Nx.add(term1, term2)
+  end
+
+  @doc """
+  Extract translation vectors from batch of transformation matrices.
+
+  ## Examples
+
+      iex> trans_vec = AriaMath.Vector3.Tensor.new(1.0, 2.0, 3.0)
+      iex> matrix = AriaMath.Matrix4.Tensor.translation(trans_vec)
+      iex> matrices = Nx.stack([matrix, matrix])
+      iex> translations = AriaMath.Matrix4.Tensor.extract_translations_batch(matrices)
+      iex> Nx.shape(translations)
+      {2, 3}
+  """
+  @spec extract_translations_batch(Nx.Tensor.t()) :: Nx.Tensor.t()
+  def extract_translations_batch(matrices) do
+    # Extract the translation column (last column, first 3 rows)
+    matrices[[.., 0..2, 3]]
+  end
+
+  @doc """
+  Extract rotation matrices from batch of transformation matrices.
+
+  ## Examples
+
+      iex> matrices = Nx.stack([AriaMath.Matrix4.Tensor.identity(), AriaMath.Matrix4.Tensor.identity()])
+      iex> rotations = AriaMath.Matrix4.Tensor.extract_rotations_batch(matrices)
+      iex> Nx.shape(rotations)
+      {2, 3, 3}
+  """
+  @spec extract_rotations_batch(Nx.Tensor.t()) :: Nx.Tensor.t()
+  def extract_rotations_batch(matrices) do
+    # Extract the upper-left 3x3 rotation part
+    matrices[[.., 0..2, 0..2]]
+  end
+
 end

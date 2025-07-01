@@ -187,11 +187,16 @@ defmodule AriaGltf do
 
   ## Examples
 
+      iex> asset = AriaGltf.create_asset("2.0", "Test")
+      iex> document = AriaGltf.new_document(asset)
       iex> result = AriaGltf.validate_document(document)
       iex> {:ok, :valid} = result
 
+      iex> invalid_document = %AriaGltf.Document{asset: nil}
       iex> result = AriaGltf.validate_document(invalid_document)
       iex> {:error, {:validation_failed, errors}} = result
+      iex> length(errors) > 0
+      true
   """
   def validate_document(document, options \\ []) do
     strict = Keyword.get(options, :strict, false)
@@ -234,8 +239,12 @@ defmodule AriaGltf do
 
   ## Examples
 
+      iex> asset = AriaGltf.create_asset("2.0", "Test")
+      iex> document = AriaGltf.new_document(asset)
       iex> resources = AriaGltf.extract_textures(document)
       iex> %{textures: textures, images: images} = resources
+      iex> is_list(textures) and is_list(images)
+      true
   """
   def extract_textures(document) do
     textures = document.textures || []

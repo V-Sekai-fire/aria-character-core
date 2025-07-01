@@ -283,33 +283,38 @@ defmodule AriaMath.Vector3.Tensor do
     Nx.concatenate([cx, cy, cz], axis: 0)
   end
 
+
   @doc """
-  Batch cross product for multiple vector pairs.
+  Convert a Vector3 tuple to tensor format.
 
   ## Examples
 
-      iex> a_vecs = Nx.tensor([[1.0, 0.0, 0.0], [1.0, 2.0, 3.0]])
-      iex> b_vecs = Nx.tensor([[0.0, 1.0, 0.0], [4.0, 5.0, 6.0]])
-      iex> results = AriaMath.Vector3.Tensor.cross_batch(a_vecs, b_vecs)
-      iex> Nx.to_list(results)
-      [[0.0, 0.0, 1.0], [-3.0, 6.0, -3.0]]
+      iex> AriaMath.Vector3.Tensor.from_tuple({1.0, 2.0, 3.0})
+      #Nx.Tensor<
+        f32[3]
+        [1.0, 2.0, 3.0]
+      >
   """
-  @spec cross_batch(Nx.Tensor.t(), Nx.Tensor.t()) :: Nx.Tensor.t()
-  def cross_batch(a_vecs, b_vecs) do
-    ax = Nx.slice_along_axis(a_vecs, 0, 1, axis: 1)
-    ay = Nx.slice_along_axis(a_vecs, 1, 1, axis: 1)
-    az = Nx.slice_along_axis(a_vecs, 2, 1, axis: 1)
-
-    bx = Nx.slice_along_axis(b_vecs, 0, 1, axis: 1)
-    by = Nx.slice_along_axis(b_vecs, 1, 1, axis: 1)
-    bz = Nx.slice_along_axis(b_vecs, 2, 1, axis: 1)
-
-    cx = Nx.subtract(Nx.multiply(ay, bz), Nx.multiply(az, by))
-    cy = Nx.subtract(Nx.multiply(az, bx), Nx.multiply(ax, bz))
-    cz = Nx.subtract(Nx.multiply(ax, by), Nx.multiply(ay, bx))
-
-    Nx.concatenate([cx, cy, cz], axis: 1)
+  @spec from_tuple(vector3_tuple()) :: vector3_tensor()
+  def from_tuple({x, y, z}) when is_number(x) and is_number(y) and is_number(z) do
+    Nx.tensor([x / 1, y / 1, z / 1], type: :f32)
   end
+
+  @doc """
+  Convert a Vector3 tensor to tuple format.
+
+  ## Examples
+
+      iex> vec = AriaMath.Vector3.Tensor.new(1.0, 2.0, 3.0)
+      iex> AriaMath.Vector3.Tensor.to_tuple(vec)
+      {1.0, 2.0, 3.0}
+  """
+  @spec to_tuple(vector3_tensor()) :: vector3_tuple()
+  def to_tuple(vec) when is_struct(vec, Nx.Tensor) do
+    [x, y, z] = Nx.to_list(vec)
+    {x, y, z}
+  end
+
 
   # Helper functions
 

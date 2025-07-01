@@ -222,7 +222,7 @@ defmodule AriaQcp.Tensor do
 
     # Calculate squared differences
     diff = Nx.subtract(rotated_moved, target_points)
-    squared_diff = Nx.power(diff, 2)
+    squared_diff = Nx.pow(diff, 2)
 
     # Sum over coordinates and points, then take square root
     sum_squared = Nx.sum(squared_diff, axes: [1, 2])
