@@ -10,7 +10,6 @@ defmodule AriaJoint.Registry do
   """
 
   @registry_name :joint_registry
-  @table_name :joint_table
 
   @type node_id() :: reference()
   @type joint_id() :: term()
@@ -55,8 +54,8 @@ defmodule AriaJoint.Registry do
   Joint metadata map, or `nil` if not found.
   """
   def get_joint_metadata(joint_id) do
-    case :ets.lookup(@table_name, joint_id) do
-      [{^joint_id, joint}] -> joint.metadata
+    case Registry.lookup(:joint_registry, joint_id) do
+      [{_pid, joint}] -> joint.metadata
       [] -> nil
     end
   end
@@ -74,10 +73,7 @@ defmodule AriaJoint.Registry do
   `[{pid, joint}]` if found, `[]` if not found.
   """
   def lookup(registry_name, joint_id) when registry_name == :joint_registry do
-    case :ets.lookup(@table_name, joint_id) do
-      [{^joint_id, joint}] -> [{self(), joint}]
-      [] -> []
-    end
+    Registry.lookup(registry_name, joint_id)
   end
 
   @doc """
@@ -94,11 +90,11 @@ defmodule AriaJoint.Registry do
   `{:ok, new_value}` on success, `{:error, reason}` on failure.
   """
   def update_value(registry_name, joint_id, update_fn) when registry_name == :joint_registry do
-    case :ets.lookup(@table_name, joint_id) do
-      [{^joint_id, old_joint}] ->
-        new_joint = update_fn.(old_joint)
-        :ets.insert(@table_name, {joint_id, new_joint})
-        {:ok, new_joint}
+    case Registry.lookup(registry_name, joint_id) do
+      [{_pid, _old_joint}] ->
+        case Registry.update_value(registry_name, joint_id, update_fn) do
+          {new_value, _old_value} -> {:ok, new_value}
+        end
       [] ->
         {:error, :not_found}
     end
@@ -154,7 +150,6 @@ defmodule AriaJoint.Registry do
         [{_pid, _old_node}] ->
           case Registry.update_value(@registry_name, node.id, fn _old_node -> node end) do
             {_new_value, _old_value} -> :ok
-            {:error, reason} -> {:error, reason}
           end
 
         [] ->

@@ -21,6 +21,8 @@
 
 **Impact on glTF implementation:** The complex joint hierarchy and transform chain management required for glTF skeletal animation is now available as a dedicated app. This significantly reduces the complexity of implementing the `AriaGltf.Skin` module and joint-based animations.
 
+**✅ FIXED (January 7, 2025):** Resolved ETS table issue in `aria_joint` Registry module - inconsistent usage between ETS tables and Elixir Registry process has been corrected. All tests now pass without "table identifier does not refer to an existing ETS table" errors.
+
 ### AriaMath App ✅ AVAILABLE
 
 **Mathematical foundation now provided by `aria_math`:**
