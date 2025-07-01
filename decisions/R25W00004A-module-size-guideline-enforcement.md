@@ -21,7 +21,7 @@ Analysis reveals multiple modules violating these guidelines, with several requi
 ### Critical Violations (500+ lines) - **MANDATORY SPLITTING**
 - ~~`aria_joint/transform/tensor.ex` (653 → 59 lines)~~ - **COMPLETED**
 - ~~`aria_gltf/helpers.ex` (640 → 37 lines)~~ - **COMPLETED**
-- `aria_math/primitives.ex` (619 lines) - **CRITICAL**
+- ~~`aria_math/primitives.ex` (619 → 330 lines)~~ - **COMPLETED**
 - `aria_math/vector3/tensor.ex` (570 lines) - **CRITICAL**
 - `aria_timeline/internal/stn/core.ex` (550 lines) - **CRITICAL**
 - `aria_serial/mix/tasks/decode.ex` (515 lines) - **CRITICAL**
@@ -172,7 +172,33 @@ Analysis reveals multiple modules violating these guidelines, with several requi
 
 **Status:** ✅ **COMPLETED** - Critical violation eliminated, all modules under firm threshold
 
-#### Task 1.4: Split Timeline.Internal.STN.Core (550 lines)
+#### Task 1.4: Split AriaMath.Primitives (619 lines) ✅ **COMPLETED**
+**File:** `apps/aria_math/lib/aria_math/primitives.ex`
+
+**Splitting Strategy:**
+- [x] **Core primitives**: Basic shapes (box, plane, triangle) (145 lines)
+- [x] **Operations**: Transform, merge, and geometric operations (85 lines)
+- [x] **Math utilities**: Mathematical utility functions (86 lines)
+- [x] **Main module**: Clean delegation API with comprehensive documentation (330 lines)
+
+**Implementation Steps:**
+1. ✅ Create `primitives/core.ex` for basic shape generation
+2. ✅ Create `primitives/operations.ex` for transform and merge operations
+3. ✅ Create `primitives/math_utils.ex` for mathematical utilities
+4. ✅ Update main primitives module to delegate to split modules
+5. ✅ Fix infinity handling to eliminate arithmetic warnings
+6. ✅ Preserve all existing API functionality through delegation
+7. ✅ Maintain comprehensive documentation and examples
+
+**Results:** Successfully split 619-line module into 4 focused modules:
+- **Core** (145 lines): Basic shape generation (box, plane, triangle)
+- **Operations** (85 lines): Transform and merge operations for primitives
+- **MathUtils** (86 lines): Mathematical utility functions with proper infinity handling
+- **Main Primitives** (330 lines): Clean delegation API maintaining full backward compatibility
+
+**Status:** ✅ **COMPLETED** - Critical violation eliminated, all modules under firm threshold
+
+#### Task 1.5: Split Timeline.Internal.STN.Core (550 lines)
 **File:** `apps/aria_timeline/lib/timeline/internal/stn/core.ex`
 
 **Splitting Strategy:**
@@ -276,4 +302,4 @@ Analysis reveals multiple modules violating these guidelines, with several requi
 **Success Metrics:** 
 - ✅ **Phase 0 Complete:** Zero extreme violations (1000+ lines)
 - 🎯 **Phase 1 Target:** Zero critical violations (500+ lines)
-- 📊 **Progress:** 4/9 critical violations resolved (44% complete)
+- 📊 **Progress:** 5/9 critical violations resolved (56% complete)
