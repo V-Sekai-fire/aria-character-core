@@ -73,13 +73,17 @@ defmodule AriaGltf.Import do
   """
   @spec from_json(String.t(), import_options()) :: import_result()
   def from_json(json_content, opts \\ []) when is_binary(json_content) do
-    with {:ok, parsed} <- Parser.parse_json(json_content),
-         {:ok, document} <- Parser.json_to_document(parsed, opts) do
+    with {:ok, parsed} <- Jason.decode(json_content),
+         result <- Parser.parse_and_validate(parsed) do
 
-      if Keyword.get(opts, :validate, true) do
-        validate_and_finalize(document, opts)
-      else
-        finalize_document(document, opts)
+      case result do
+        {:ok, document} ->
+          if Keyword.get(opts, :validate, true) do
+            validate_and_finalize(document, opts)
+          else
+            finalize_document(document, opts)
+          end
+        {:error, _} = error -> error
       end
     else
       error -> error
@@ -98,16 +102,20 @@ defmodule AriaGltf.Import do
   @spec from_binary(binary(), import_options()) :: import_result()
   def from_binary(glb_content, opts \\ []) when is_binary(glb_content) do
     with {:ok, {json_chunk, bin_chunk}} <- BinaryLoader.parse_glb(glb_content),
-         {:ok, parsed} <- Parser.parse_json(json_chunk),
-         {:ok, document} <- Parser.json_to_document(parsed, opts) do
+         {:ok, parsed} <- Jason.decode(json_chunk),
+         result <- Parser.parse_and_validate(parsed) do
 
-      # Inject binary buffer data
-      document = inject_binary_buffer(document, bin_chunk)
+      case result do
+        {:ok, document} ->
+          # Inject binary buffer data
+          document = inject_binary_buffer(document, bin_chunk)
 
-      if Keyword.get(opts, :validate, true) do
-        validate_and_finalize(document, opts)
-      else
-        finalize_document(document, opts)
+          if Keyword.get(opts, :validate, true) do
+            validate_and_finalize(document, opts)
+          else
+            finalize_document(document, opts)
+          end
+        {:error, _} = error -> error
       end
     else
       error -> error
