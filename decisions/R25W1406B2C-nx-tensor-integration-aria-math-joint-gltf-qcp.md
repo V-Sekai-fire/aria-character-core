@@ -29,7 +29,10 @@ Migrate all four apps to use Nx tensors for their core mathematical operations w
   - ✅ Created `AriaMath.Vector3.Tensor` module with full Nx implementation
   - ✅ Added batch operations for multiple vectors
   - ✅ Integrated with main `AriaMath.Vector3` module
-- [ ] Convert Matrix4 from 16-tuples to `Nx.tensor([[...], [...], [...], [...]])`  
+- [x] Convert Matrix4 from 16-tuples to `Nx.tensor([[...], [...], [...], [...]])`
+  - ✅ Created `AriaMath.Matrix4.Tensor` module with full Nx implementation
+  - ✅ Added batch operations for multiple matrices
+  - ✅ Integrated with main `AriaMath.Matrix4` module
 - [ ] Convert Quaternion from `{w, x, y, z}` tuples to `Nx.tensor([w, x, y, z])`
 - [ ] Update Primitives (Sphere, Cylinder) to use Nx tensors
 

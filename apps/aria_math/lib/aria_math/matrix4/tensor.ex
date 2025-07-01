@@ -1,0 +1,445 @@
+# Copyright (c) 2025-present K. S. Ernest (iFire) Lee
+# SPDX-License-Identifier: MIT
+
+defmodule AriaMath.Matrix4.Tensor do
+  @moduledoc """
+  Nx tensor-based Matrix4 operations.
+
+  This module provides the same API as Matrix4.Core but uses Nx tensors
+  for optimized numerical computing and potential GPU acceleration.
+  """
+
+  @type matrix4_tensor :: Nx.Tensor.t()
+  @type matrix4_tuple :: {
+    float(), float(), float(), float(),
+    float(), float(), float(), float(),
+    float(), float(), float(), float(),
+    float(), float(), float(), float()
+  }
+
+  @doc """
+  Creates a new Matrix4 tensor from 16 float components in row-major order.
+
+  ## Examples
+
+      iex> AriaMath.Matrix4.Tensor.new(
+      ...>   1.0, 0.0, 0.0, 0.0,
+      ...>   0.0, 1.0, 0.0, 0.0,
+      ...>   0.0, 0.0, 1.0, 0.0,
+      ...>   0.0, 0.0, 0.0, 1.0
+      ...> )
+      #Nx.Tensor<
+        f32[4][4]
+        [
+          [1.0, 0.0, 0.0, 0.0],
+          [0.0, 1.0, 0.0, 0.0],
+          [0.0, 0.0, 1.0, 0.0],
+          [0.0, 0.0, 0.0, 1.0]
+        ]
+      >
+  """
+  @spec new(
+    float(), float(), float(), float(),
+    float(), float(), float(), float(),
+    float(), float(), float(), float(),
+    float(), float(), float(), float()
+  ) :: matrix4_tensor()
+  def new(
+    m00, m01, m02, m03,
+    m10, m11, m12, m13,
+    m20, m21, m22, m23,
+    m30, m31, m32, m33
+  ) do
+    Nx.tensor([
+      [m00, m01, m02, m03],
+      [m10, m11, m12, m13],
+      [m20, m21, m22, m23],
+      [m30, m31, m32, m33]
+    ], type: :f32)
+  end
+
+  @doc """
+  Creates a Matrix4 tensor from a 16-tuple.
+
+  ## Examples
+
+      iex> tuple = {1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0}
+      iex> AriaMath.Matrix4.Tensor.from_tuple(tuple)
+      #Nx.Tensor<
+        f32[4][4]
+        [
+          [1.0, 0.0, 0.0, 0.0],
+          [0.0, 1.0, 0.0, 0.0],
+          [0.0, 0.0, 1.0, 0.0],
+          [0.0, 0.0, 0.0, 1.0]
+        ]
+      >
+  """
+  @spec from_tuple(matrix4_tuple()) :: matrix4_tensor()
+  def from_tuple({
+    m00, m01, m02, m03,
+    m10, m11, m12, m13,
+    m20, m21, m22, m23,
+    m30, m31, m32, m33
+  }) do
+    new(
+      m00, m01, m02, m03,
+      m10, m11, m12, m13,
+      m20, m21, m22, m23,
+      m30, m31, m32, m33
+    )
+  end
+
+  @doc """
+  Converts a Matrix4 tensor to a 16-tuple.
+
+  ## Examples
+
+      iex> matrix = AriaMath.Matrix4.Tensor.identity()
+      iex> AriaMath.Matrix4.Tensor.to_tuple(matrix)
+      {1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0}
+  """
+  @spec to_tuple(matrix4_tensor()) :: matrix4_tuple()
+  def to_tuple(tensor) do
+    [[m00, m01, m02, m03], [m10, m11, m12, m13], [m20, m21, m22, m23], [m30, m31, m32, m33]] =
+      Nx.to_list(tensor)
+    {m00, m01, m02, m03, m10, m11, m12, m13, m20, m21, m22, m23, m30, m31, m32, m33}
+  end
+
+  @doc """
+  Creates an identity matrix using Nx operations.
+
+  ## Examples
+
+      iex> AriaMath.Matrix4.Tensor.identity()
+      #Nx.Tensor<
+        f32[4][4]
+        [
+          [1.0, 0.0, 0.0, 0.0],
+          [0.0, 1.0, 0.0, 0.0],
+          [0.0, 0.0, 1.0, 0.0],
+          [0.0, 0.0, 0.0, 1.0]
+        ]
+      >
+  """
+  @spec identity() :: matrix4_tensor()
+  def identity do
+    Nx.eye(4, type: :f32)
+  end
+
+  @doc """
+  Matrix multiplication using Nx operations.
+
+  ## Examples
+
+      iex> a = AriaMath.Matrix4.Tensor.identity()
+      iex> b = AriaMath.Matrix4.Tensor.identity()
+      iex> result = AriaMath.Matrix4.Tensor.multiply(a, b)
+      iex> AriaMath.Matrix4.Tensor.equal?(result, AriaMath.Matrix4.Tensor.identity())
+      true
+  """
+  @spec multiply(matrix4_tensor(), matrix4_tensor()) :: matrix4_tensor()
+  def multiply(a, b) do
+    Nx.dot(a, b)
+  end
+
+  @doc """
+  Batch matrix multiplication for multiple matrix pairs.
+
+  ## Examples
+
+      iex> a_matrices = Nx.stack([AriaMath.Matrix4.Tensor.identity(), AriaMath.Matrix4.Tensor.identity()])
+      iex> b_matrices = Nx.stack([AriaMath.Matrix4.Tensor.identity(), AriaMath.Matrix4.Tensor.identity()])
+      iex> results = AriaMath.Matrix4.Tensor.multiply_batch(a_matrices, b_matrices)
+      iex> Nx.shape(results)
+      {2, 4, 4}
+  """
+  @spec multiply_batch(Nx.Tensor.t(), Nx.Tensor.t()) :: Nx.Tensor.t()
+  def multiply_batch(a_matrices, b_matrices) do
+    Nx.dot(a_matrices, b_matrices)
+  end
+
+  @doc """
+  Matrix transpose using Nx operations.
+
+  ## Examples
+
+      iex> matrix = AriaMath.Matrix4.Tensor.new(
+      ...>   1.0, 2.0, 3.0, 4.0,
+      ...>   5.0, 6.0, 7.0, 8.0,
+      ...>   9.0, 10.0, 11.0, 12.0,
+      ...>   13.0, 14.0, 15.0, 16.0
+      ...> )
+      iex> transposed = AriaMath.Matrix4.Tensor.transpose(matrix)
+      iex> Nx.to_list(transposed)
+      [[1.0, 5.0, 9.0, 13.0], [2.0, 6.0, 10.0, 14.0], [3.0, 7.0, 11.0, 15.0], [4.0, 8.0, 12.0, 16.0]]
+  """
+  @spec transpose(matrix4_tensor()) :: matrix4_tensor()
+  def transpose(matrix) do
+    Nx.transpose(matrix)
+  end
+
+  @doc """
+  Batch matrix transpose for multiple matrices.
+
+  ## Examples
+
+      iex> matrices = Nx.stack([AriaMath.Matrix4.Tensor.identity(), AriaMath.Matrix4.Tensor.identity()])
+      iex> transposed = AriaMath.Matrix4.Tensor.transpose_batch(matrices)
+      iex> Nx.shape(transposed)
+      {2, 4, 4}
+  """
+  @spec transpose_batch(Nx.Tensor.t()) :: Nx.Tensor.t()
+  def transpose_batch(matrices) do
+    Nx.transpose(matrices, axes: [0, 2, 1])
+  end
+
+  @doc """
+  Matrix determinant using Nx operations.
+
+  ## Examples
+
+      iex> matrix = AriaMath.Matrix4.Tensor.identity()
+      iex> AriaMath.Matrix4.Tensor.determinant(matrix)
+      1.0
+  """
+  @spec determinant(matrix4_tensor()) :: float()
+  def determinant(matrix) do
+    Nx.LinAlg.determinant(matrix) |> Nx.to_number()
+  end
+
+  @doc """
+  Batch matrix determinant for multiple matrices.
+
+  ## Examples
+
+      iex> matrices = Nx.stack([AriaMath.Matrix4.Tensor.identity(), AriaMath.Matrix4.Tensor.identity()])
+      iex> dets = AriaMath.Matrix4.Tensor.determinant_batch(matrices)
+      iex> Nx.to_list(dets)
+      [1.0, 1.0]
+  """
+  @spec determinant_batch(Nx.Tensor.t()) :: Nx.Tensor.t()
+  def determinant_batch(matrices) do
+    Nx.LinAlg.determinant(matrices)
+  end
+
+  @doc """
+  Matrix inversion using Nx operations with validity checking.
+
+  Returns {inverted_matrix, is_valid} where:
+  - inverted_matrix: inverse matrix if valid, or identity matrix if invalid
+  - is_valid: true if matrix is invertible, false otherwise
+
+  ## Examples
+
+      iex> matrix = AriaMath.Matrix4.Tensor.identity()
+      iex> {inverse, valid} = AriaMath.Matrix4.Tensor.invert(matrix)
+      iex> valid
+      true
+      iex> AriaMath.Matrix4.Tensor.equal?(inverse, AriaMath.Matrix4.Tensor.identity())
+      true
+  """
+  @spec invert(matrix4_tensor()) :: {matrix4_tensor(), boolean()}
+  def invert(matrix) do
+    det = Nx.LinAlg.determinant(matrix) |> Nx.to_number()
+
+    if abs(det) < 1.0e-10 do
+      # Matrix is singular, return identity and false
+      {identity(), false}
+    else
+      try do
+        inverse = Nx.LinAlg.invert(matrix)
+        {inverse, true}
+      rescue
+        _ ->
+          # Inversion failed, return identity and false
+          {identity(), false}
+      end
+    end
+  end
+
+  @doc """
+  Batch matrix inversion for multiple matrices.
+
+  ## Examples
+
+      iex> matrices = Nx.stack([AriaMath.Matrix4.Tensor.identity(), AriaMath.Matrix4.Tensor.identity()])
+      iex> {inverses, valid_mask} = AriaMath.Matrix4.Tensor.invert_batch(matrices)
+      iex> Nx.to_list(valid_mask)
+      [1, 1]  # Both matrices are invertible
+  """
+  @spec invert_batch(Nx.Tensor.t()) :: {Nx.Tensor.t(), Nx.Tensor.t()}
+  def invert_batch(matrices) do
+    dets = Nx.LinAlg.determinant(matrices)
+    valid_mask = Nx.greater(Nx.abs(dets), 1.0e-10)
+
+    # For invalid matrices, we'll replace with identity
+    identity_batch = Nx.broadcast(identity(), Nx.shape(matrices))
+
+    try do
+      inverses = Nx.LinAlg.invert(matrices)
+      # Replace invalid inverses with identity matrices
+      safe_inverses = Nx.select(
+        Nx.new_axis(Nx.new_axis(valid_mask, -1), -1),
+        inverses,
+        identity_batch
+      )
+      {safe_inverses, valid_mask}
+    rescue
+      _ ->
+        # If batch inversion fails, return identity matrices and all false
+        {identity_batch, Nx.broadcast(0, Nx.shape(dets))}
+    end
+  end
+
+  @doc """
+  Transform a Vector3 by this matrix (treating vector as homogeneous coordinate with w=1).
+
+  ## Examples
+
+      iex> matrix = AriaMath.Matrix4.Tensor.identity()
+      iex> vector = AriaMath.Vector3.Tensor.new(1.0, 2.0, 3.0)
+      iex> result = AriaMath.Matrix4.Tensor.transform_vector3(matrix, vector)
+      iex> AriaMath.Vector3.Tensor.to_tuple(result)
+      {1.0, 2.0, 3.0}
+  """
+  @spec transform_vector3(matrix4_tensor(), AriaMath.Vector3.Tensor.vector3_tensor()) :: AriaMath.Vector3.Tensor.vector3_tensor()
+  def transform_vector3(matrix, vector) do
+    # Convert Vector3 to homogeneous coordinates (add w=1)
+    homogeneous = Nx.concatenate([vector, Nx.tensor([1.0])])
+
+    # Transform by matrix
+    transformed = Nx.dot(matrix, homogeneous)
+
+    # Extract x, y, z components (ignore w)
+    Nx.slice_along_axis(transformed, 0, 3, axis: 0)
+  end
+
+  @doc """
+  Batch transform multiple Vector3s by multiple matrices.
+
+  ## Examples
+
+      iex> matrices = Nx.stack([AriaMath.Matrix4.Tensor.identity(), AriaMath.Matrix4.Tensor.identity()])
+      iex> vectors = Nx.tensor([[1.0, 2.0, 3.0], [4.0, 5.0, 6.0]])
+      iex> results = AriaMath.Matrix4.Tensor.transform_vector3_batch(matrices, vectors)
+      iex> Nx.to_list(results)
+      [[1.0, 2.0, 3.0], [4.0, 5.0, 6.0]]
+  """
+  @spec transform_vector3_batch(Nx.Tensor.t(), Nx.Tensor.t()) :: Nx.Tensor.t()
+  def transform_vector3_batch(matrices, vectors) do
+    # Add homogeneous coordinate (w=1) to all vectors
+    ones = Nx.broadcast(1.0, {Nx.axis_size(vectors, 0), 1})
+    homogeneous = Nx.concatenate([vectors, ones], axis: 1)
+
+    # Transform by matrices (batch matrix-vector multiplication)
+    transformed = Nx.dot(matrices, Nx.new_axis(homogeneous, -1))
+
+    # Remove the last axis and extract x, y, z components
+    squeezed = Nx.squeeze(transformed, axes: [-1])
+    Nx.slice_along_axis(squeezed, 0, 3, axis: 1)
+  end
+
+  @doc """
+  Creates a translation matrix from a Vector3.
+
+  ## Examples
+
+      iex> translation = AriaMath.Vector3.Tensor.new(1.0, 2.0, 3.0)
+      iex> matrix = AriaMath.Matrix4.Tensor.translation(translation)
+      iex> # Check that it's a translation matrix
+      iex> [row0, row1, row2, row3] = Nx.to_list(matrix)
+      iex> row3
+      [1.0, 2.0, 3.0, 1.0]
+  """
+  @spec translation(AriaMath.Vector3.Tensor.vector3_tensor()) :: matrix4_tensor()
+  def translation(vector) do
+    [x, y, z] = Nx.to_list(vector)
+
+    new(
+      1.0, 0.0, 0.0, x,
+      0.0, 1.0, 0.0, y,
+      0.0, 0.0, 1.0, z,
+      0.0, 0.0, 0.0, 1.0
+    )
+  end
+
+  @doc """
+  Creates a uniform scale matrix.
+
+  ## Examples
+
+      iex> matrix = AriaMath.Matrix4.Tensor.scale(2.0)
+      iex> # Check diagonal elements
+      iex> diag = Nx.take_diagonal(matrix) |> Nx.to_list()
+      iex> diag
+      [2.0, 2.0, 2.0, 1.0]
+  """
+  @spec scale(float()) :: matrix4_tensor()
+  def scale(factor) when is_number(factor) do
+    new(
+      factor, 0.0, 0.0, 0.0,
+      0.0, factor, 0.0, 0.0,
+      0.0, 0.0, factor, 0.0,
+      0.0, 0.0, 0.0, 1.0
+    )
+  end
+
+  @doc """
+  Creates a non-uniform scale matrix from a Vector3.
+
+  ## Examples
+
+      iex> scale_vec = AriaMath.Vector3.Tensor.new(2.0, 3.0, 4.0)
+      iex> matrix = AriaMath.Matrix4.Tensor.scale_vector3(scale_vec)
+      iex> diag = Nx.take_diagonal(matrix) |> Nx.to_list()
+      iex> diag
+      [2.0, 3.0, 4.0, 1.0]
+  """
+  @spec scale_vector3(AriaMath.Vector3.Tensor.vector3_tensor()) :: matrix4_tensor()
+  def scale_vector3(vector) do
+    [x, y, z] = Nx.to_list(vector)
+
+    new(
+      x, 0.0, 0.0, 0.0,
+      0.0, y, 0.0, 0.0,
+      0.0, 0.0, z, 0.0,
+      0.0, 0.0, 0.0, 1.0
+    )
+  end
+
+  @doc """
+  Checks if two matrices are approximately equal within a tolerance.
+
+  ## Examples
+
+      iex> a = AriaMath.Matrix4.Tensor.identity()
+      iex> b = AriaMath.Matrix4.Tensor.identity()
+      iex> AriaMath.Matrix4.Tensor.equal?(a, b)
+      true
+  """
+  @spec equal?(matrix4_tensor(), matrix4_tensor(), float()) :: boolean()
+  def equal?(a, b, tolerance \\ 1.0e-6) do
+    diff = Nx.subtract(a, b)
+    max_diff = Nx.abs(diff) |> Nx.reduce_max() |> Nx.to_number()
+    max_diff <= tolerance
+  end
+
+  @doc """
+  Batch equality check for multiple matrix pairs.
+
+  ## Examples
+
+      iex> a_matrices = Nx.stack([AriaMath.Matrix4.Tensor.identity(), AriaMath.Matrix4.Tensor.identity()])
+      iex> b_matrices = Nx.stack([AriaMath.Matrix4.Tensor.identity(), AriaMath.Matrix4.Tensor.identity()])
+      iex> results = AriaMath.Matrix4.Tensor.equal_batch?(a_matrices, b_matrices)
+      iex> Nx.to_list(results)
+      [1, 1]  # Both pairs are equal
+  """
+  @spec equal_batch?(Nx.Tensor.t(), Nx.Tensor.t(), float()) :: Nx.Tensor.t()
+  def equal_batch?(a_matrices, b_matrices, tolerance \\ 1.0e-6) do
+    diff = Nx.subtract(a_matrices, b_matrices)
+    max_diff_per_matrix = Nx.abs(diff) |> Nx.reduce_max(axes: [1, 2])
+    Nx.less_equal(max_diff_per_matrix, tolerance)
+  end
+end

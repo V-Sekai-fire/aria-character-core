@@ -75,4 +75,107 @@ defmodule AriaMath.Matrix4 do
   defdelegate extract_basis(matrix), to: Transformations
   defdelegate orthogonalize(matrix), to: Transformations
 
+  # Nx tensor-based operations
+  alias AriaMath.Matrix4.Tensor
+
+  @doc """
+  Creates a new Matrix4 tensor from 16 float components.
+  """
+  defdelegate new_nx(
+    m00, m01, m02, m03,
+    m10, m11, m12, m13,
+    m20, m21, m22, m23,
+    m30, m31, m32, m33
+  ), to: Tensor, as: :new
+
+  @doc """
+  Creates a Matrix4 tensor from a tuple.
+  """
+  defdelegate from_tuple(tuple), to: Tensor
+
+  @doc """
+  Converts a Matrix4 tensor to a tuple.
+  """
+  defdelegate to_tuple(tensor), to: Tensor
+
+  @doc """
+  Creates an identity matrix using Nx operations.
+  """
+  defdelegate identity_nx(), to: Tensor, as: :identity
+
+  @doc """
+  Matrix multiplication using Nx operations.
+  """
+  defdelegate multiply_nx(a, b), to: Tensor, as: :multiply
+
+  @doc """
+  Batch matrix multiplication for multiple matrix pairs.
+  """
+  defdelegate multiply_batch(a_matrices, b_matrices), to: Tensor
+
+  @doc """
+  Matrix transpose using Nx operations.
+  """
+  defdelegate transpose_nx(matrix), to: Tensor, as: :transpose
+
+  @doc """
+  Batch matrix transpose for multiple matrices.
+  """
+  defdelegate transpose_batch(matrices), to: Tensor
+
+  @doc """
+  Matrix determinant using Nx operations.
+  """
+  defdelegate determinant_nx(matrix), to: Tensor, as: :determinant
+
+  @doc """
+  Batch matrix determinant for multiple matrices.
+  """
+  defdelegate determinant_batch(matrices), to: Tensor
+
+  @doc """
+  Matrix inversion using Nx operations.
+  """
+  defdelegate invert_nx(matrix), to: Tensor, as: :invert
+
+  @doc """
+  Batch matrix inversion for multiple matrices.
+  """
+  defdelegate invert_batch(matrices), to: Tensor
+
+  @doc """
+  Transform a Vector3 by this matrix using Nx operations.
+  """
+  defdelegate transform_vector3_nx(matrix, vector), to: Tensor, as: :transform_vector3
+
+  @doc """
+  Batch transform multiple Vector3s by multiple matrices.
+  """
+  defdelegate transform_vector3_batch(matrices, vectors), to: Tensor
+
+  @doc """
+  Creates a translation matrix from a Vector3 using Nx operations.
+  """
+  defdelegate translation_nx(vector), to: Tensor, as: :translation
+
+  @doc """
+  Creates a uniform scale matrix using Nx operations.
+  """
+  defdelegate scale_nx(factor), to: Tensor, as: :scale
+
+  @doc """
+  Creates a non-uniform scale matrix from a Vector3 using Nx operations.
+  """
+  defdelegate scale_vector3_nx(vector), to: Tensor, as: :scale_vector3
+
+  @doc """
+  Checks if two matrices are approximately equal using Nx operations.
+  """
+  defdelegate equal_nx?(a, b, tolerance \\ 1.0e-6), to: Tensor, as: :equal?
+
+  @doc """
+  Batch equality check for multiple matrix pairs.
+  """
+  defdelegate equal_batch?(a_matrices, b_matrices, tolerance \\ 1.0e-6), to: Tensor
+
 end
