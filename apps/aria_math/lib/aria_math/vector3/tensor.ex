@@ -7,9 +7,14 @@ defmodule AriaMath.Vector3.Tensor do
 
   This module provides the same API as Vector3.Core but uses Nx tensors
   for optimized numerical computing and potential GPU acceleration.
+
+  Includes memory-optimized operations that prevent CUDA out-of-memory errors
+  through intelligent chunking and automatic CPU fallback mechanisms.
   """
 
   import Kernel, except: [length: 1]
+
+  alias AriaMath.Memory
 
   @type vector3_tensor :: Nx.Tensor.t()
   @type vector3_tuple :: {float(), float(), float()}
@@ -363,6 +368,196 @@ defmodule AriaMath.Vector3.Tensor do
     |> Nx.sum()
     |> Nx.sqrt()
     |> Nx.to_number()
+  end
+
+  # Memory-optimized operations
+
+  @doc """
+  Memory-optimized batch cross product with automatic chunking.
+
+  Safely performs cross product on large batches of vectors while preventing memory overflow.
+
+  ## Examples
+
+      # Large batch that would normally cause OOM
+      large_v1 = Nx.random_uniform({100000, 3})
+      large_v2 = Nx.random_uniform({100000, 3})
+      result = AriaMath.Vector3.Tensor.cross_batch_safe(large_v1, large_v2)
+  """
+  @spec cross_batch_safe(Nx.Tensor.t(), Nx.Tensor.t()) :: Nx.Tensor.t()
+  def cross_batch_safe(v1_batch, v2_batch) do
+    Memory.auto_chunk_process(
+      Nx.stack([v1_batch, v2_batch]),
+      :vector_compute,
+      fn [v1_chunk, v2_chunk] ->
+        cross_batch(v1_chunk, v2_chunk)
+      end
+    )
+  end
+
+  @doc """
+  Memory-optimized batch vector normalization with automatic chunking.
+
+  Safely normalizes large batches of vectors with memory monitoring.
+
+  ## Examples
+
+      large_vectors = Nx.random_uniform({1000000, 3})
+      {normalized, valid_mask} = AriaMath.Vector3.Tensor.normalize_batch_safe(large_vectors)
+  """
+  @spec normalize_batch_safe(Nx.Tensor.t()) :: {Nx.Tensor.t(), Nx.Tensor.t()}
+  def normalize_batch_safe(vectors) do
+    tensor_shape = Nx.shape(vectors)
+
+    if Memory.will_fit_in_memory?(:vector_compute, tensor_shape) do
+      # Direct operation if it fits in memory
+      normalize_batch(vectors)
+    else
+      # Use chunked processing
+      batch_size = Memory.optimal_batch_size(:vector_compute, tensor_shape)
+
+      # Process in chunks and combine results
+      normalized_chunks = Memory.process_in_chunks(vectors, batch_size, fn chunk ->
+        {norm_chunk, valid_chunk} = normalize_batch(chunk)
+        {norm_chunk, valid_chunk}
+      end)
+
+      # Split the tuples and concatenate each part
+      {normalized_results, valid_results} = Enum.unzip(normalized_chunks)
+
+      normalized_final = Nx.concatenate(normalized_results, axis: 0)
+      valid_final = Nx.concatenate(valid_results, axis: 0)
+
+      {normalized_final, valid_final}
+    end
+  end
+
+  @doc """
+  Memory-optimized batch dot product with automatic chunking.
+
+  Computes dot products for large batches of vector pairs safely.
+
+  ## Examples
+
+      large_a = Nx.random_uniform({500000, 3})
+      large_b = Nx.random_uniform({500000, 3})
+      dots = AriaMath.Vector3.Tensor.dot_batch_safe(large_a, large_b)
+  """
+  @spec dot_batch_safe(Nx.Tensor.t(), Nx.Tensor.t()) :: Nx.Tensor.t()
+  def dot_batch_safe(a_vectors, b_vectors) do
+    Memory.auto_chunk_process(
+      Nx.stack([a_vectors, b_vectors]),
+      :vector_compute,
+      fn [a_chunk, b_chunk] ->
+        dot_batch(a_chunk, b_chunk)
+      end
+    )
+  end
+
+  @doc """
+  Memory-optimized batch vector addition with automatic chunking.
+
+  Adds large batches of vector pairs while preventing memory overflow.
+
+  ## Examples
+
+      large_a = Nx.random_uniform({1000000, 3})
+      large_b = Nx.random_uniform({1000000, 3})
+      sums = AriaMath.Vector3.Tensor.add_batch_safe(large_a, large_b)
+  """
+  @spec add_batch_safe(Nx.Tensor.t(), Nx.Tensor.t()) :: Nx.Tensor.t()
+  def add_batch_safe(vectors_a, vectors_b) do
+    Memory.auto_chunk_process(
+      Nx.stack([vectors_a, vectors_b]),
+      :vector_compute,
+      fn [a_chunk, b_chunk] ->
+        add_batch(a_chunk, b_chunk)
+      end
+    )
+  end
+
+  @doc """
+  Memory-optimized batch vector scaling with automatic chunking.
+
+  Scales large batches of vectors by a scalar factor safely.
+
+  ## Examples
+
+      large_vectors = Nx.random_uniform({2000000, 3})
+      scaled = AriaMath.Vector3.Tensor.scale_batch_safe(large_vectors, 2.5)
+  """
+  @spec scale_batch_safe(Nx.Tensor.t(), float()) :: Nx.Tensor.t()
+  def scale_batch_safe(vectors, factor) do
+    Memory.auto_chunk_process(
+      vectors,
+      :vector_compute,
+      fn chunk -> scale_batch(chunk, factor) end
+    )
+  end
+
+  @doc """
+  Memory-optimized batch magnitude calculation with automatic chunking.
+
+  Computes magnitudes for large batches of vectors safely.
+
+  ## Examples
+
+      large_vectors = Nx.random_uniform({3000000, 3})
+      magnitudes = AriaMath.Vector3.Tensor.magnitude_batch_safe(large_vectors)
+  """
+  @spec magnitude_batch_safe(Nx.Tensor.t()) :: Nx.Tensor.t()
+  def magnitude_batch_safe(vectors) do
+    Memory.auto_chunk_process(
+      vectors,
+      :vector_compute,
+      &magnitude_batch/1
+    )
+  end
+
+  @doc """
+  Monitor memory usage during vector operations.
+
+  Wraps any vector operation with memory monitoring for debugging and optimization.
+
+  ## Examples
+
+      {result, memory_stats} = AriaMath.Vector3.Tensor.with_memory_monitoring(fn ->
+        AriaMath.Vector3.Tensor.cross_batch(large_a, large_b)
+      end)
+
+      IO.puts("Memory used: \#{memory_stats.memory_used} bytes")
+  """
+  @spec with_memory_monitoring(function()) :: {any(), map()}
+  def with_memory_monitoring(operation_fn) when is_function(operation_fn, 0) do
+    Memory.monitor_memory(operation_fn)
+  end
+
+  @doc """
+  Get optimal batch size for vector operations based on current memory availability.
+
+  ## Examples
+
+      batch_size = AriaMath.Vector3.Tensor.optimal_batch_size({100000, 3})
+      IO.puts("Process \#{batch_size} vectors at a time for optimal memory usage")
+  """
+  @spec optimal_batch_size(tuple()) :: integer()
+  def optimal_batch_size(tensor_shape) do
+    Memory.optimal_batch_size(:vector_compute, tensor_shape)
+  end
+
+  @doc """
+  Force vector operations to use CPU backend for memory-intensive operations.
+
+  ## Examples
+
+      # Force CPU for very large operations
+      result = AriaMath.Vector3.Tensor.with_cpu_backend(fn ->
+        AriaMath.Vector3.Tensor.cross_batch(huge_a, huge_b)
+      end)
+  """
+  @spec with_cpu_backend(function()) :: any()
+  def with_cpu_backend(operation_fn) when is_function(operation_fn, 0) do
+    Memory.with_cpu_fallback(operation_fn)
   end
 
   # Helper functions
