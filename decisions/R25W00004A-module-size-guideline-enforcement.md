@@ -23,8 +23,8 @@ Analysis reveals multiple modules violating these guidelines, with several requi
 - ~~`aria_gltf/helpers.ex` (640 → 37 lines)~~ - **COMPLETED**
 - ~~`aria_math/primitives.ex` (619 → 330 lines)~~ - **COMPLETED**
 - ~~`aria_math/vector3/tensor.ex` (570 → 67 lines)~~ - **COMPLETED**
-- `aria_timeline/internal/stn/core.ex` (550 lines) - **CRITICAL**
-- `aria_serial/mix/tasks/decode.ex` (515 lines) - **CRITICAL**
+- ~~`aria_timeline/internal/stn/core.ex` (550 → 92 lines)~~ - **COMPLETED**
+- ~~`aria_serial/mix/tasks/decode.ex` (515 → 127 lines)~~ - **COMPLETED**
 - `aria_gltf/import/parser.ex` (502 lines) - **CRITICAL**
 
 ### Strong Recommendation (400-500 lines)
@@ -227,34 +227,50 @@ Analysis reveals multiple modules violating these guidelines, with several requi
 
 **Status:** ✅ **COMPLETED** - Critical violation eliminated, all modules under soft threshold
 
-#### Task 1.6: Split Timeline.Internal.STN.Core (550 lines)
+#### Task 1.6: Split Timeline.Internal.STN.Core (550 lines) ✅ **COMPLETED**
 **File:** `apps/aria_timeline/lib/timeline/internal/stn/core.ex`
 
 **Splitting Strategy:**
-- [ ] **Core operations**: add/remove intervals, constraints (~200 lines)
-- [ ] **Consistency module**: validation and mathematical checks (~150 lines)
-- [ ] **Scheduling module**: interval queries, slot finding (~200 lines)
+- [x] **Operations module**: Core interval and constraint management (200 lines)
+- [x] **Consistency module**: Validation and mathematical consistency checks (150 lines)
+- [x] **Scheduling module**: Interval queries and scheduling operations (200 lines)
+- [x] **Core delegation**: Clean API maintaining backward compatibility (92 lines)
 
 **Implementation Steps:**
-1. Create `stn/operations.ex` for core add/remove operations
-2. Create `stn/consistency.ex` for validation logic  
-3. Create `stn/scheduling.ex` for interval scheduling
-4. Update main core module to delegate appropriately
-5. Verify STN functionality remains intact
+1. ✅ Create `stn/operations.ex` for core add/remove operations
+2. ✅ Create `stn/consistency.ex` for validation logic  
+3. ✅ Create `stn/scheduling.ex` for interval scheduling
+4. ✅ Update main core module to delegate appropriately
+5. ✅ Verify STN functionality remains intact
 
-#### Task 1.3: Split Mix.Tasks.Serial.Decode (515 lines)
+**Results:** Successfully split 550-line module into 3 focused modules:
+- **Operations** (200 lines): Core interval and constraint management, time point operations
+- **Consistency** (150 lines): STN validation, mathematical consistency checks, classification
+- **Scheduling** (200 lines): Interval queries, overlap detection, slot finding, conflict checking
+- **Main Core** (92 lines): Clean delegation API maintaining full backward compatibility
+
+**Status:** ✅ **COMPLETED** - Critical violation eliminated, all basic STN tests pass
+
+#### Task 1.3: Split Mix.Tasks.Serial.Decode (515 lines) ✅ **COMPLETED**
 **File:** `apps/aria_serial/lib/mix/tasks/decode.ex`
 
 **Splitting Strategy:**
-- [ ] **Mix task interface**: CLI parsing and main run function (~100 lines)
-- [ ] **Display module**: Formatting and output functions (~200 lines)
-- [ ] **Similarity module**: String matching algorithms (~200 lines)
+- [x] **Mix task interface**: CLI parsing and main run function (127 lines)
+- [x] **Display module**: Formatting and output functions (251 lines) 
+- [x] **Similarity module**: String matching algorithms (242 lines)
 
 **Implementation Steps:**
-1. Create `serial/display.ex` for output formatting
-2. Create `serial/similarity.ex` for string matching
-3. Update mix task to use extracted modules
-4. Test CLI functionality thoroughly
+1. ✅ Create `aria_serial/display.ex` for output formatting
+2. ✅ Create `aria_serial/similarity.ex` for string matching
+3. ✅ Update mix task to use extracted modules
+4. ✅ Test CLI functionality thoroughly
+
+**Results:** Successfully split 515-line module into 3 focused modules:
+- **Main Mix Task** (127 lines): CLI interface, option parsing, and coordination logic
+- **Display Module** (251 lines): All console output, formatting, calendar display, and help
+- **Similarity Module** (242 lines): String matching algorithms (Jaro, Levenshtein, prefix matching)
+
+**Status:** ✅ **COMPLETED** - Critical violation eliminated, all functionality preserved
 
 ### Phase 2: Firm Threshold Modules (PRIORITY: MEDIUM)
 **Target:** Address 400-500 line modules systematically
@@ -318,17 +334,20 @@ Analysis reveals multiple modules violating these guidelines, with several requi
 
 ## Current Focus
 
-**CURRENT PRIORITY:** With extreme violations resolved, focus shifts to **Critical Violations (500+ lines)**. The next targets are:
+**CURRENT PRIORITY:** With extreme violations resolved, focus shifts to **Critical Violations (500+ lines)**. The remaining target is:
 
-1. **AriaGltf.Helpers** (640 lines) - High-impact utility module
-2. **AriaMath.Primitives** (619 lines) - Core mathematical operations
-3. **AriaMath.Vector3.Tensor** (570 lines) - Vector operations module
-4. **Timeline.Internal.STN.Core** (550 lines) - Critical temporal planning component
-5. **AriaSerial.Mix.Tasks.Decode** (515 lines) - CLI task module
+1. **AriaGltf.Import.Parser** (502 lines) - glTF parsing module
+
+**Recently Completed:**
+- ✅ **AriaSerial.Mix.Tasks.Decode** (515 → 127 lines) - CLI task module with Display and Similarity extraction
+- ✅ **AriaGltf.Helpers** (640 → 37 lines) - High-impact utility module
+- ✅ **AriaMath.Primitives** (619 → 330 lines) - Core mathematical operations
+- ✅ **AriaMath.Vector3.Tensor** (570 → 67 lines) - Vector operations module
+- ✅ **Timeline.Internal.STN.Core** (550 → 92 lines) - Critical temporal planning component
 
 **Strategy:** Apply the proven splitting methodology from successful Matrix4.Tensor and ActionAttributes splits. Each module should be analyzed for logical responsibility boundaries and split into focused, single-purpose modules under the firm threshold (400 lines).
 
 **Success Metrics:** 
 - ✅ **Phase 0 Complete:** Zero extreme violations (1000+ lines)
 - 🎯 **Phase 1 Target:** Zero critical violations (500+ lines)
-- 📊 **Progress:** 6/9 critical violations resolved (67% complete)
+- 📊 **Progress:** 8/9 critical violations resolved (89% complete)
