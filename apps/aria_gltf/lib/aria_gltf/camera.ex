@@ -50,6 +50,54 @@ defmodule AriaGltf.Camera do
       )
   """
 
+  defmodule Orthographic do
+    @moduledoc """
+    Orthographic projection camera properties.
+    """
+
+    @type t :: %__MODULE__{
+            xmag: float(),
+            ymag: float(),
+            zfar: float(),
+            znear: float(),
+            extensions: map() | nil,
+            extras: any() | nil
+          }
+
+    defstruct [
+      :xmag,
+      :ymag,
+      :zfar,
+      :znear,
+      :extensions,
+      :extras
+    ]
+  end
+
+  defmodule Perspective do
+    @moduledoc """
+    Perspective projection camera properties.
+    """
+
+    @type t :: %__MODULE__{
+            aspect_ratio: float() | nil,
+            yfov: float(),
+            zfar: float() | nil,
+            znear: float(),
+            extensions: map() | nil,
+            extras: any() | nil
+          }
+
+    defstruct [
+      :aspect_ratio,
+      :yfov,
+      :zfar,
+      :znear,
+      :extensions,
+      :extras
+    ]
+  end
+
   # Perspective camera properties
   @type perspective :: %{
     yfov: float(),
@@ -72,10 +120,12 @@ defmodule AriaGltf.Camera do
     type: camera_type(),
     perspective: perspective() | nil,
     orthographic: orthographic() | nil,
-    name: String.t() | nil
+    name: String.t() | nil,
+    extensions: map() | nil,
+    extras: any() | nil
   }
 
-  defstruct [:type, :perspective, :orthographic, :name]
+  defstruct [:type, :perspective, :orthographic, :name, :extensions, :extras]
 
   @doc """
   Creates a new perspective camera.

@@ -59,10 +59,12 @@ defmodule AriaGltf.Skin do
     joints: [joint_index()],
     inverse_bind_matrices: non_neg_integer() | nil,
     skeleton: joint_index() | nil,
-    name: String.t() | nil
+    name: String.t() | nil,
+    extensions: map() | nil,
+    extras: any() | nil
   }
 
-  defstruct [:joints, :inverse_bind_matrices, :skeleton, :name]
+  defstruct [:joints, :inverse_bind_matrices, :skeleton, :name, :extensions, :extras]
 
   @doc """
   Creates a new skin with joints and options.

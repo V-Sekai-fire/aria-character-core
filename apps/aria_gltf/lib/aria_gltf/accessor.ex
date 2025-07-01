@@ -10,6 +10,70 @@ defmodule AriaGltf.Accessor do
   The accessor specifies a component type (e.g., float) and a data type (e.g., VEC3 for 3D vectors).
   """
 
+  defmodule Sparse do
+    @moduledoc """
+    Sparse storage of elements that deviate from their initialization value.
+    """
+
+    defmodule Indices do
+      @moduledoc """
+      An object pointing to a buffer view containing the indices of deviating accessor values.
+      """
+
+      @type t :: %__MODULE__{
+              buffer_view: non_neg_integer(),
+              byte_offset: non_neg_integer(),
+              component_type: AriaGltf.Accessor.component_type(),
+              extensions: map() | nil,
+              extras: any() | nil
+            }
+
+      defstruct [
+        :buffer_view,
+        :byte_offset,
+        :component_type,
+        :extensions,
+        :extras
+      ]
+    end
+
+    defmodule Values do
+      @moduledoc """
+      An object pointing to a buffer view containing the deviating accessor values.
+      """
+
+      @type t :: %__MODULE__{
+              buffer_view: non_neg_integer(),
+              byte_offset: non_neg_integer(),
+              extensions: map() | nil,
+              extras: any() | nil
+            }
+
+      defstruct [
+        :buffer_view,
+        :byte_offset,
+        :extensions,
+        :extras
+      ]
+    end
+
+    @type t :: %__MODULE__{
+            count: pos_integer(),
+            indices: Indices.t(),
+            values: Values.t(),
+            extensions: map() | nil,
+            extras: any() | nil
+          }
+
+    defstruct [
+      :count,
+      :indices,
+      :values,
+      :extensions,
+      :extras
+    ]
+  end
+
   @type component_type :: 5120 | 5121 | 5122 | 5123 | 5125 | 5126
   @type accessor_type :: :scalar | :vec2 | :vec3 | :vec4 | :mat2 | :mat3 | :mat4
 

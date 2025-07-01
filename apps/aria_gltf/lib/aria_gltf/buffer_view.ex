@@ -15,10 +15,12 @@ defmodule AriaGltf.BufferView do
     byte_length: non_neg_integer(),
     byte_stride: non_neg_integer() | nil,
     target: non_neg_integer() | nil,
-    name: String.t() | nil
+    name: String.t() | nil,
+    extensions: map() | nil,
+    extras: any() | nil
   }
 
-  defstruct [:buffer, :byte_offset, :byte_length, :byte_stride, :target, :name]
+  defstruct [:buffer, :byte_offset, :byte_length, :byte_stride, :target, :name, :extensions, :extras]
 
   @doc """
   Creates a new buffer view with buffer, byte_length, and options.

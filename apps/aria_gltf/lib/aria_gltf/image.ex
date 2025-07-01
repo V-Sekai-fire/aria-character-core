@@ -12,7 +12,8 @@ defmodule AriaGltf.Image do
     buffer_view: non_neg_integer() | nil,
     name: String.t() | nil,
     extensions: map() | nil,
-    extras: any() | nil
+    extras: any() | nil,
+    data: binary() | nil
   }
 
   defstruct [
@@ -21,7 +22,8 @@ defmodule AriaGltf.Image do
     :buffer_view,
     :name,
     :extensions,
-    :extras
+    :extras,
+    :data
   ]
 
   @doc """

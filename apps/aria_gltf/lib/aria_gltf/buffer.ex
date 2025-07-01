@@ -15,7 +15,8 @@ defmodule AriaGltf.Buffer do
           byte_length: non_neg_integer(),
           name: String.t() | nil,
           extensions: map() | nil,
-          extras: any() | nil
+          extras: any() | nil,
+          data: binary() | nil
         }
 
   @enforce_keys [:byte_length]
@@ -24,7 +25,8 @@ defmodule AriaGltf.Buffer do
     :byte_length,
     :name,
     :extensions,
-    :extras
+    :extras,
+    :data
   ]
 
   @doc """
