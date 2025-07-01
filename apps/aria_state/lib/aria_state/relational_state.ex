@@ -42,33 +42,6 @@ defmodule AriaState.RelationalState do
     %__MODULE__{data: data}
   end
 
-  @doc """
-  Gets the fact_value for a given predicate and subject.
-  Returns nil if the triple doesn't exist.
-  """
-  @spec get_fact(t(), predicate(), subject()) :: fact_value() | nil
-  def get_fact(%__MODULE__{data: data}, predicate, subject) do
-    Map.get(data, {predicate, subject})
-  end
-
-  @doc "Sets the fact_value for a given predicate and subject."
-  @spec set_fact(t(), predicate(), subject(), fact_value()) :: t()
-  def set_fact(%__MODULE__{data: data} = state, predicate, subject, fact_value) do
-    %{state | data: Map.put(data, {predicate, subject}, fact_value)}
-  end
-
-  @doc "Removes a triple from the state."
-  @spec remove_fact(t(), predicate(), subject()) :: t()
-  def remove_fact(%__MODULE__{data: data} = state, predicate, subject) do
-    %{state | data: Map.delete(data, {predicate, subject})}
-  end
-
-  @doc "Checks if a subject has a given predicate with any object."
-  @spec has_subject?(t(), predicate(), subject()) :: boolean()
-  def has_subject?(%__MODULE__{data: data}, predicate, subject) do
-    Map.has_key?(data, {predicate, subject})
-  end
-
   @doc "Checks if a subject variable exists in any predicate."
   @spec has_subject_variable?(t(), subject()) :: boolean()
   def has_subject_variable?(%__MODULE__{data: data}, subject) do
@@ -94,6 +67,63 @@ defmodule AriaState.RelationalState do
   @spec to_triples(t()) :: [{predicate(), subject(), fact_value()}]
   def to_triples(%__MODULE__{data: data}) do
     Enum.map(data, fn {{predicate, subject}, fact_value} -> {predicate, subject, fact_value} end)
+  end
+
+  @doc "Gets all facts in the state as a map."
+  @spec get_all_facts(t()) :: %{triple_key() => fact_value()}
+  def get_all_facts(%__MODULE__{data: data}) do
+    data
+  end
+
+  @doc """
+  Gets a specific fact from the state.
+
+  ## Parameters
+
+  - `state`: The relational state
+  - `predicate`: The predicate to look up
+  - `subject`: The subject to look up
+
+  ## Returns
+
+  The fact value or `nil` if not found.
+
+  ## Examples
+
+      iex> state = AriaState.RelationalState.new()
+      iex> state = AriaState.RelationalState.set_fact(state, "location", "player", "room1")
+      iex> AriaState.RelationalState.get_fact(state, "location", "player")
+      "room1"
+  """
+  @spec get_fact(t(), predicate(), subject()) :: fact_value() | nil
+  def get_fact(%__MODULE__{data: data}, predicate, subject) do
+    Map.get(data, {predicate, subject})
+  end
+
+  @doc """
+  Sets a fact in the state.
+
+  ## Parameters
+
+  - `state`: The relational state
+  - `predicate`: The predicate to set
+  - `subject`: The subject to set
+  - `value`: The value to set
+
+  ## Returns
+
+  Updated state with the fact set.
+
+  ## Examples
+
+      iex> state = AriaState.RelationalState.new()
+      iex> state = AriaState.RelationalState.set_fact(state, "location", "player", "room1")
+      iex> AriaState.RelationalState.get_fact(state, "location", "player")
+      "room1"
+  """
+  @spec set_fact(t(), predicate(), subject(), fact_value()) :: t()
+  def set_fact(%__MODULE__{data: data}, predicate, subject, value) do
+    %__MODULE__{data: Map.put(data, {predicate, subject}, value)}
   end
 
   @doc "Creates a state from a list of triples."

@@ -11,8 +11,10 @@ defmodule AriaJoint.Registry do
 
   @registry_name :joint_registry
   @registry_timeout 5000
+  @table_name :joint_table
 
   @type node_id() :: reference()
+  @type joint_id() :: term()
   @type joint_error ::
     :registry_unavailable |
     :node_not_found |
@@ -20,30 +22,101 @@ defmodule AriaJoint.Registry do
     :registry_sync_failed
 
   @doc """
-  Ensure the registry is available and running.
+  Updates an existing joint in the registry.
   """
-  @spec ensure_registry() :: :ok | {:error, joint_error()}
-  def ensure_registry do
-    case Process.whereis(@registry_name) do
-      nil ->
-        # Try to start registry
-        case Registry.start_link(keys: :unique, name: @registry_name) do
-          {:ok, _pid} -> :ok
-          {:error, {:already_started, _pid}} -> :ok
-          {:error, reason} -> {:error, reason}
-        end
-      _pid -> :ok
+  def update_joint(joint) do
+    case Registry.lookup(:joint_registry, joint.id) do
+      [{_pid, _}] ->
+        Registry.update_value(:joint_registry, joint.id, fn _old -> joint end)
+        {:ok, joint}
+
+      [] ->
+        {:error, :joint_not_found}
     end
   end
 
   @doc """
-  Register a node in the registry.
+  Remove a joint from the registry.
   """
-  @spec register_node(AriaJoint.Joint.t()) :: {:ok, pid()} | {:error, joint_error()}
-  def register_node(node) do
-    case Registry.register(@registry_name, node.id, node) do
-      {:ok, pid} -> {:ok, pid}
-      {:error, {:already_registered, _pid}} -> {:error, :node_not_found}
+  def remove_joint(joint_id) do
+    case Registry.unregister(:joint_registry, joint_id) do
+      :ok -> :ok
+      :error -> {:error, "Joint #{joint_id} not found in registry"}
+    end
+  end
+
+  @doc """
+  Gets metadata for a specific joint.
+
+  ## Parameters
+
+  - `joint_id`: ID of the joint to get metadata for
+
+  ## Returns
+
+  Joint metadata map, or `nil` if not found.
+  """
+  def get_joint_metadata(joint_id) do
+    case :ets.lookup(@table_name, joint_id) do
+      [{^joint_id, joint}] -> joint.metadata
+      [] -> nil
+    end
+  end
+
+  @doc """
+  Looks up a joint by ID from the registry.
+
+  ## Parameters
+
+  - `registry_name`: Name of the registry (usually :joint_registry)
+  - `joint_id`: ID of the joint to look up
+
+  ## Returns
+
+  `[{pid, joint}]` if found, `[]` if not found.
+  """
+  def lookup(registry_name, joint_id) when registry_name == :joint_registry do
+    case :ets.lookup(@table_name, joint_id) do
+      [{^joint_id, joint}] -> [{self(), joint}]
+      [] -> []
+    end
+  end
+
+  @doc """
+  Updates a value in the registry.
+
+  ## Parameters
+
+  - `registry_name`: Name of the registry (usually :joint_registry)
+  - `joint_id`: ID of the joint to update
+  - `update_fn`: Function to apply to the current value
+
+  ## Returns
+
+  `{:ok, new_value}` on success, `{:error, reason}` on failure.
+  """
+  def update_value(registry_name, joint_id, update_fn) when registry_name == :joint_registry do
+    case :ets.lookup(@table_name, joint_id) do
+      [{^joint_id, old_joint}] ->
+        new_joint = update_fn.(old_joint)
+        :ets.insert(@table_name, {joint_id, new_joint})
+        {:ok, new_joint}
+      [] ->
+        {:error, :not_found}
+    end
+  end
+
+  @doc """
+  Ensures the joint registry exists and is available.
+
+  ## Returns
+
+  `:ok` if registry is available, `{:error, reason}` if not.
+  """
+  def ensure_registry() do
+    case Registry.start_link(keys: :unique, name: :joint_registry) do
+      {:ok, _pid} -> :ok
+      {:error, {:already_started, _pid}} -> :ok
       {:error, reason} -> {:error, reason}
     end
   end
@@ -60,6 +133,20 @@ defmodule AriaJoint.Registry do
   end
 
   @doc """
+  Register a node in the registry.
+  """
+  @spec register_node(AriaJoint.Joint.t()) :: {:ok, pid()} | {:error, joint_error()}
+  def register_node(node) do
+    ensure_registry()
+
+    case Registry.register(@registry_name, node.id, node) do
+      {:ok, _pid} -> {:ok, self()}
+      {:error, {:already_registered, _pid}} -> {:error, :already_registered}
+      {:error, reason} -> {:error, reason}
+    end
+  end
+
+  @doc """
   Update a node in the registry.
   """
   @spec update_node(AriaJoint.Joint.t()) :: :ok | {:error, joint_error()}
@@ -68,7 +155,7 @@ defmodule AriaJoint.Registry do
       case Registry.lookup(@registry_name, node.id) do
         [{_pid, _old_node}] ->
           case Registry.update_value(@registry_name, node.id, fn _old_node -> node end) do
-            {_old_value, _new_value} -> :ok
+            {_new_value, _old_value} -> :ok
             {:error, reason} -> {:error, reason}
           end
 

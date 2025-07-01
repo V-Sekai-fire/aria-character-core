@@ -40,6 +40,19 @@ defmodule AriaGltf.Scene do
   end
 
   @doc """
+  Creates a new scene with name, node indices, and options.
+  """
+  @spec new(String.t(), [non_neg_integer()], map()) :: t()
+  def new(name, node_indices, options \\ %{}) when is_binary(name) and is_list(node_indices) do
+    %__MODULE__{
+      name: name,
+      nodes: node_indices,
+      extensions: Map.get(options, :extensions),
+      extras: Map.get(options, :extras)
+    }
+  end
+
+  @doc """
   Parses a scene from JSON data.
   """
   @spec from_json(map()) :: t()

@@ -68,9 +68,6 @@ defmodule AriaCore.ActionExecution do
     end
   end
 
-  @doc """
-  Get action metadata from a domain by atom name.
-  """
   @spec get_action_metadata(map(), atom()) :: map()
   def get_action_metadata(domain, name) when is_atom(name) do
     get_action_metadata(domain, Atom.to_string(name))
@@ -118,9 +115,6 @@ defmodule AriaCore.ActionExecution do
     end
   end
 
-  @doc """
-  Execute an action in a domain with atom action name.
-  """
   @spec execute_action(map(), term(), atom(), list()) :: {:ok, term()} | {:error, String.t()}
   def execute_action(domain, state, action_name, args) when is_atom(action_name) do
     execute_action(domain, state, Atom.to_string(action_name), args)

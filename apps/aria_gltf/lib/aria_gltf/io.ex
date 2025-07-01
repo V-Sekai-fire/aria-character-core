@@ -96,6 +96,49 @@ defmodule AriaGltf.IO do
   end
 
   @doc """
+  Loads a glTF document from a file.
+  """
+  @spec load_file(String.t()) :: {:ok, Document.t()} | {:error, term()}
+  def load_file(file_path) when is_binary(file_path) do
+    with {:ok, content} <- File.read(file_path),
+         {:ok, json_data} <- Jason.decode(content),
+         {:ok, document} <- Document.from_json(json_data) do
+      {:ok, document}
+    else
+      {:error, reason} -> {:error, reason}
+    end
+  end
+
+  @doc """
+  Saves a glTF document to a file.
+  """
+  @spec save_file(Document.t(), String.t()) :: :ok | {:error, term()}
+  def save_file(document, file_path) do
+    case export_to_file(document, file_path) do
+      {:ok, _} -> :ok
+      {:error, reason} -> {:error, reason}
+    end
+  end
+
+  @doc """
+  Loads a binary glTF (GLB) file.
+  """
+  @spec load_binary(String.t()) :: {:ok, Document.t()} | {:error, term()}
+  def load_binary(file_path) when is_binary(file_path) do
+    # For now, stub implementation - GLB parsing would be more complex
+    {:error, :not_implemented}
+  end
+
+  @doc """
+  Saves a glTF document as binary glTF (GLB) file.
+  """
+  @spec save_binary(Document.t(), String.t()) :: :ok | {:error, term()}
+  def save_binary(_document, _file_path) do
+    # For now, stub implementation - GLB creation would be more complex
+    {:error, :not_implemented}
+  end
+
+  @doc """
   Creates a minimal valid glTF document for testing purposes.
 
   Returns a Document struct with the minimum required fields to create

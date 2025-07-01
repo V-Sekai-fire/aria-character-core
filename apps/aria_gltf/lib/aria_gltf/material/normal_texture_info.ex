@@ -6,8 +6,6 @@ defmodule AriaGltf.Material.NormalTextureInfo do
   Reference to a normal texture with additional scale parameter.
   """
 
-  alias AriaGltf.TextureInfo
-
   @type t :: %__MODULE__{
           index: non_neg_integer(),
           tex_coord: non_neg_integer(),

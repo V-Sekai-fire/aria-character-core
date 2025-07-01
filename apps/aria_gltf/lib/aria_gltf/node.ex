@@ -48,6 +48,27 @@ defmodule AriaGltf.Node do
   end
 
   @doc """
+  Creates a new node with name and options.
+  """
+  @spec new(String.t(), map()) :: t()
+  def new(name, options \\ %{}) when is_binary(name) do
+    %__MODULE__{
+      name: name,
+      camera: Map.get(options, :camera),
+      children: Map.get(options, :children),
+      skin: Map.get(options, :skin),
+      matrix: Map.get(options, :matrix),
+      mesh: Map.get(options, :mesh),
+      rotation: Map.get(options, :rotation),
+      scale: Map.get(options, :scale),
+      translation: Map.get(options, :translation),
+      weights: Map.get(options, :weights),
+      extensions: Map.get(options, :extensions),
+      extras: Map.get(options, :extras)
+    }
+  end
+
+  @doc """
   Parses a node from JSON data.
   """
   @spec from_json(map()) :: t()

@@ -36,7 +36,7 @@ defmodule HybridPlanner.HybridCoordinatorV2 do
 
   require Logger
   alias State
-  alias Plan.Utils
+  # alias Plan.Utils  # Currently unused
   alias HybridPlanner.HybridCoordinatorV2.{Planning, Temporal, Execution, Logging}
 
   defstruct [
@@ -292,6 +292,19 @@ defmodule HybridPlanner.HybridCoordinatorV2 do
     replan(coordinator, domain, state, plan, fail_node_id, opts)
   end
 
+  @doc """
+  Plan and execute in one step.
+  """
+  @spec plan_and_execute(t(), Domain.Core.t(), State.t(), [term()], keyword()) :: execution_result()
+  def plan_and_execute(coordinator, domain, state, goals, opts \\ []) do
+    case plan(coordinator, domain, state, goals, opts) do
+      {:ok, plan} ->
+        execute(coordinator, domain, state, plan, opts)
+      {:error, reason} ->
+        {:error, reason}
+    end
+  end
+
   # ==================== STRATEGY MANAGEMENT (SIMPLIFIED) ====================
 
   @doc """
@@ -368,21 +381,22 @@ defmodule HybridPlanner.HybridCoordinatorV2 do
     end
   end
 
-  defp extract_primitive_actions(solution_tree) do
-    case solution_tree do
-      %{children: children} when is_list(children) ->
-        Enum.flat_map(children, &extract_primitive_actions/1)
+  # Function currently unused but kept for future functionality
+  # defp extract_primitive_actions(solution_tree) do
+  #   case solution_tree do
+  #     %{children: children} when is_list(children) ->
+  #       Enum.flat_map(children, &extract_primitive_actions/1)
 
-      %{task: {action_name, args}, status: :primitive} ->
-        [{action_name, args}]
+  #     %{task: {action_name, args}, status: :primitive} ->
+  #       [{action_name, args}]
 
-      %{task: task} when is_tuple(task) ->
-        [task]
+  #     %{task: task} when is_tuple(task) ->
+  #       [task]
 
-      _ ->
-        []
-    end
-  end
+  #     _ ->
+  #       []
+  #   end
+  # end
 
   defp count_solution_tree_nodes(solution_tree) do
     case solution_tree do

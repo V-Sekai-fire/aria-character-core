@@ -3,49 +3,76 @@
 
 defmodule AriaGltf.Sampler do
   @moduledoc """
-  Mock implementation of AriaGltf.Sampler for compilation.
-
-  This module represents glTF texture sampling parameters.
-  Currently mocked with basic functionality to enable compilation.
+  Texture sampler properties for filtering and wrapping modes.
   """
 
   @type t :: %__MODULE__{
     mag_filter: non_neg_integer() | nil,
     min_filter: non_neg_integer() | nil,
-    wrap_s: non_neg_integer() | nil,
-    wrap_t: non_neg_integer() | nil,
-    name: String.t() | nil
+    wrap_s: non_neg_integer(),
+    wrap_t: non_neg_integer(),
+    name: String.t() | nil,
+    extensions: map() | nil,
+    extras: any() | nil
   }
 
-  defstruct [:mag_filter, :min_filter, :wrap_s, :wrap_t, :name]
+  defstruct [
+    :mag_filter,
+    :min_filter,
+    :name,
+    :extensions,
+    :extras,
+    wrap_s: 10497,  # GL_REPEAT
+    wrap_t: 10497   # GL_REPEAT
+  ]
 
   @doc """
-  Create a new sampler from JSON data.
+  Creates a new sampler with options.
   """
-  @spec from_json(map()) :: t()
-  def from_json(json) when is_map(json) do
+  def new(options \\ %{}) do
     %__MODULE__{
-      mag_filter: Map.get(json, "magFilter"),
-      min_filter: Map.get(json, "minFilter"),
-      wrap_s: Map.get(json, "wrapS"),
-      wrap_t: Map.get(json, "wrapT"),
-      name: Map.get(json, "name")
+      mag_filter: Map.get(options, :mag_filter),
+      min_filter: Map.get(options, :min_filter),
+      wrap_s: Map.get(options, :wrap_s, 10497),
+      wrap_t: Map.get(options, :wrap_t, 10497),
+      name: Map.get(options, :name),
+      extensions: Map.get(options, :extensions),
+      extras: Map.get(options, :extras)
     }
   end
 
   @doc """
-  Convert sampler to JSON representation.
+  Creates a Sampler struct from JSON data.
   """
-  @spec to_json(t()) :: map()
-  def to_json(%__MODULE__{} = sampler) do
-    %{}
-    |> maybe_put("magFilter", sampler.mag_filter)
-    |> maybe_put("minFilter", sampler.min_filter)
-    |> maybe_put("wrapS", sampler.wrap_s)
-    |> maybe_put("wrapT", sampler.wrap_t)
-    |> maybe_put("name", sampler.name)
+  def from_json(json) when is_map(json) do
+    %__MODULE__{
+      mag_filter: Map.get(json, "magFilter"),
+      min_filter: Map.get(json, "minFilter"),
+      wrap_s: Map.get(json, "wrapS", 10497),
+      wrap_t: Map.get(json, "wrapT", 10497),
+      name: Map.get(json, "name"),
+      extensions: Map.get(json, "extensions"),
+      extras: Map.get(json, "extras")
+    }
   end
 
-  defp maybe_put(map, _key, nil), do: map
-  defp maybe_put(map, key, value), do: Map.put(map, key, value)
+  @doc """
+  Converts a Sampler struct to JSON-compatible map.
+  """
+  def to_json(%__MODULE__{} = sampler) do
+    %{}
+    |> put_if_present("magFilter", sampler.mag_filter)
+    |> put_if_present("minFilter", sampler.min_filter)
+    |> put_if_present("wrapS", sampler.wrap_s, 10497)
+    |> put_if_present("wrapT", sampler.wrap_t, 10497)
+    |> put_if_present("name", sampler.name)
+    |> put_if_present("extensions", sampler.extensions)
+    |> put_if_present("extras", sampler.extras)
+  end
+
+  # Helper functions
+  defp put_if_present(map, key, value), do: Map.put(map, key, value)
+  defp put_if_present(map, _key, nil), do: map
+  defp put_if_present(map, _key, value, default) when value == default, do: map
+  defp put_if_present(map, key, value, _default), do: Map.put(map, key, value)
 end

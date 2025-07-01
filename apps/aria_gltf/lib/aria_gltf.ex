@@ -75,7 +75,7 @@ defmodule AriaGltf do
   defdelegate node_to_json(node), to: AriaGltf.Node, as: :to_json
 
   # Mesh Management API
-  defdelegate create_mesh(name, primitives, options \\ %{}), to: AriaGltf.Mesh, as: :new
+  defdelegate create_mesh(primitives, options \\ []), to: AriaGltf.Mesh, as: :new
   defdelegate parse_mesh(json), to: AriaGltf.Mesh, as: :from_json
   defdelegate mesh_to_json(mesh), to: AriaGltf.Mesh, as: :to_json
 

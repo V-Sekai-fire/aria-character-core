@@ -57,6 +57,20 @@ defmodule AriaGltf.Buffer do
   end
 
   @doc """
+  Creates a new buffer with byte_length, uri, and options.
+  """
+  @spec new(non_neg_integer(), String.t(), map()) :: t()
+  def new(byte_length, uri, options) when is_integer(byte_length) and byte_length >= 1 and is_binary(uri) and is_map(options) do
+    %__MODULE__{
+      byte_length: byte_length,
+      uri: uri,
+      name: Map.get(options, :name),
+      extensions: Map.get(options, :extensions),
+      extras: Map.get(options, :extras)
+    }
+  end
+
+  @doc """
   Validates a Buffer struct according to glTF 2.0 specification.
 
   ## Validation Rules

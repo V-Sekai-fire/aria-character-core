@@ -40,7 +40,7 @@ defmodule AriaCore.Examples.UnifiedDomainExamples do
   """
   @multigoal_method true
   @spec optimize_cooking_batch(AriaState.t(), AriaEngineCore.Multigoal.t()) :: {:ok, AriaEngineCore.Multigoal.t()} | {:error, atom()}
-  def optimize_cooking_batch(state, multigoal) do
+  def optimize_cooking_batch(_state, multigoal) do
     Logger.info("Optimizing cooking batch for multigoal: #{inspect(multigoal)}")
     # In a real scenario, this would reorder or combine goals for efficiency
     {:ok, multigoal}

@@ -41,6 +41,20 @@ defmodule AriaGltf.Animation do
   end
 
   @doc """
+  Creates a new animation with channels, samplers, and options.
+  """
+  @spec new([Channel.t()], [Sampler.t()], map()) :: t()
+  def new(channels, samplers, options) when is_list(channels) and is_list(samplers) and is_map(options) do
+    %__MODULE__{
+      channels: channels,
+      samplers: samplers,
+      name: Map.get(options, :name),
+      extensions: Map.get(options, :extensions),
+      extras: Map.get(options, :extras)
+    }
+  end
+
+  @doc """
   Parses an animation from JSON data.
   """
   @spec from_json(map()) :: {:ok, t()} | {:error, term()}

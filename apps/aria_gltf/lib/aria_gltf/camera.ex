@@ -19,6 +19,23 @@ defmodule AriaGltf.Camera do
   defstruct [:orthographic, :perspective, :type, :name]
 
   @doc """
+  Creates a new camera with type, properties, and options.
+  """
+  @spec new(String.t(), map(), map()) :: t()
+  def new(type, properties, options \\ %{}) when is_binary(type) and is_map(properties) do
+    camera = %__MODULE__{
+      type: type,
+      name: Map.get(options, :name)
+    }
+
+    case type do
+      "perspective" -> %{camera | perspective: properties}
+      "orthographic" -> %{camera | orthographic: properties}
+      _ -> camera
+    end
+  end
+
+  @doc """
   Create a new camera from JSON data.
   """
   @spec from_json(map()) :: t()

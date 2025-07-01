@@ -229,4 +229,74 @@ defmodule Membrane.PipelineManager do
     send(pipeline_pid, {:switch_topology, new_topology})
     :ok
   end
+
+  # Missing external API functions
+  @doc "Start link for compatibility with external API."
+  @spec start_link(keyword()) :: {:ok, pid()} | {:error, term()}
+  def start_link(opts \\ []) do
+    topology = Keyword.get(opts, :topology, :production)
+    start_pipeline(topology, opts)
+  end
+
+  @doc "Create a pipeline (alias for start_pipeline)."
+  @spec create_pipeline(map()) :: {:ok, pid()} | {:error, term()}
+  def create_pipeline(config) when is_map(config) do
+    topology = Map.get(config, :topology, :production)
+    opts = Map.to_list(config)
+    start_pipeline(topology, opts)
+  end
+
+  @doc "Create a testing pipeline."
+  @spec create_testing_pipeline(atom()) :: {:ok, pid()} | {:error, term()}
+  def create_testing_pipeline(topology \\ :echo_pipeline) do
+    # Map topology names to internal testing topology
+    internal_topology = case topology do
+      :echo_pipeline -> :testing
+      other -> other
+    end
+    start_pipeline(internal_topology, [])
+  end
+
+  @doc "Configure pipeline topology (placeholder)."
+  @spec configure_pipeline_topology(pid(), map()) :: :ok
+  def configure_pipeline_topology(pipeline_pid, _config) do
+    # For now, just acknowledge the configuration
+    # In a full implementation, this would reconfigure the running pipeline
+    Logger.info("Pipeline topology configuration requested for #{inspect(pipeline_pid)}")
+    :ok
+  end
+
+  @doc "List active pipelines (placeholder)."
+  @spec list_active_pipelines() :: [pid()]
+  def list_active_pipelines() do
+    # Placeholder implementation
+    # In a full implementation, this would track active pipeline processes
+    []
+  end
+
+  @doc "Stop a pipeline."
+  @spec stop_pipeline(pid()) :: :ok
+  def stop_pipeline(pipeline_pid) do
+    # Use Membrane's built-in pipeline termination
+    if Process.alive?(pipeline_pid) do
+      Process.exit(pipeline_pid, :normal)
+    end
+    :ok
+  end
+
+  @doc "Send request to pipeline (alias for send_mcp_request)."
+  @spec send_request_to_pipeline(pid(), map()) :: :ok
+  def send_request_to_pipeline(pipeline_pid, mcp_params) do
+    send_mcp_request(pipeline_pid, mcp_params)
+  end
+
+  @doc "Get manager statistics (placeholder)."
+  @spec get_manager_stats() :: map()
+  def get_manager_stats() do
+    %{
+      active_pipelines: length(list_active_pipelines()),
+      implementation: :membrane_framework,
+      uptime: System.monotonic_time(:second)
+    }
+  end
 end

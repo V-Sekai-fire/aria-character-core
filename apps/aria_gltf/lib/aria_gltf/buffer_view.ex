@@ -21,6 +21,21 @@ defmodule AriaGltf.BufferView do
   defstruct [:buffer, :byte_offset, :byte_length, :byte_stride, :target, :name]
 
   @doc """
+  Creates a new buffer view with buffer, byte_length, and options.
+  """
+  @spec new(non_neg_integer(), non_neg_integer(), map()) :: t()
+  def new(buffer, byte_length, options \\ %{}) when is_integer(buffer) and is_integer(byte_length) do
+    %__MODULE__{
+      buffer: buffer,
+      byte_length: byte_length,
+      byte_offset: Map.get(options, :byte_offset, 0),
+      byte_stride: Map.get(options, :byte_stride),
+      target: Map.get(options, :target),
+      name: Map.get(options, :name)
+    }
+  end
+
+  @doc """
   Create a new buffer view from JSON data.
   """
   @spec from_json(map()) :: t()

@@ -123,6 +123,31 @@ defmodule AriaGltf.Accessor do
   end
 
   @doc """
+  Creates a new accessor with buffer view, type, component type, count, and options.
+  """
+  @spec new(non_neg_integer(), accessor_type(), component_type(), pos_integer(), map()) :: t()
+  def new(buffer_view, type, component_type, count, options)
+      when is_integer(buffer_view) and
+           type in [:scalar, :vec2, :vec3, :vec4, :mat2, :mat3, :mat4] and
+           component_type in [@byte, @unsigned_byte, @short, @unsigned_short, @unsigned_int, @float] and
+           is_integer(count) and count >= 1 and is_map(options) do
+    %__MODULE__{
+      buffer_view: buffer_view,
+      type: type,
+      component_type: component_type,
+      count: count,
+      byte_offset: Map.get(options, :byte_offset, 0),
+      normalized: Map.get(options, :normalized, false),
+      max: Map.get(options, :max),
+      min: Map.get(options, :min),
+      sparse: Map.get(options, :sparse),
+      name: Map.get(options, :name),
+      extensions: Map.get(options, :extensions),
+      extras: Map.get(options, :extras)
+    }
+  end
+
+  @doc """
   Validates an Accessor struct according to glTF 2.0 specification.
 
   ## Validation Rules

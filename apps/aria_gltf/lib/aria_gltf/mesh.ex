@@ -137,22 +137,23 @@ defmodule AriaGltf.Mesh do
     end
   end
 
-  @doc """
-  Creates a Mesh struct from JSON data.
-  """
-  @spec from_json(map()) :: t()
-  def from_json(json) do
-    case from_map(json) do
-      {:ok, mesh} -> mesh
-      {:error, _reason} -> raise ArgumentError, "Invalid mesh JSON"
-    end
-  end
 
   @doc """
   Converts a Mesh struct to JSON-compatible map.
   """
   @spec to_json(t()) :: map()
   def to_json(mesh), do: to_map(mesh)
+
+  @doc """
+  Creates a Mesh struct from JSON data.
+  """
+  @spec from_json(map()) :: t()
+  def from_json(json) when is_map(json) do
+    case from_map(json) do
+      {:ok, mesh} -> mesh
+      {:error, _reason} -> raise ArgumentError, "Invalid mesh JSON"
+    end
+  end
 
   # Private validation functions
 

@@ -139,7 +139,7 @@ defmodule Membrane.ResponseFilter do
 
     mcp_response = MCPResponse.success(
       content,
-      planning_result.metadata,
+      planning_result.execution_metadata,
       planning_result.request_id
     )
 
@@ -161,7 +161,7 @@ defmodule Membrane.ResponseFilter do
     response_map = %{
       status: "success",
       result: result_data,
-      metadata: planning_result.metadata,
+      metadata: planning_result.execution_metadata,
       request_id: planning_result.request_id,
       timestamp: DateTime.utc_now()
     }
@@ -176,7 +176,7 @@ defmodule Membrane.ResponseFilter do
     %{
       status: "success",
       result: result_data,
-      metadata: planning_result.metadata,
+      metadata: planning_result.execution_metadata,
       request_id: planning_result.request_id,
       timestamp: DateTime.utc_now()
     }

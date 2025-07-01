@@ -3,46 +3,85 @@
 
 defmodule AriaGltf.Image do
   @moduledoc """
-  Mock implementation of AriaGltf.Image for compilation.
-
-  This module represents glTF image data and URI references.
-  Currently mocked with basic functionality to enable compilation.
+  Image data used by a texture.
   """
 
   @type t :: %__MODULE__{
     uri: String.t() | nil,
     mime_type: String.t() | nil,
     buffer_view: non_neg_integer() | nil,
-    name: String.t() | nil
+    name: String.t() | nil,
+    extensions: map() | nil,
+    extras: any() | nil
   }
 
-  defstruct [:uri, :mime_type, :buffer_view, :name]
+  defstruct [
+    :uri,
+    :mime_type,
+    :buffer_view,
+    :name,
+    :extensions,
+    :extras
+  ]
 
   @doc """
-  Create a new image from JSON data.
+  Creates a new image.
   """
-  @spec from_json(map()) :: t()
+  def new do
+    %__MODULE__{}
+  end
+
+  @doc """
+  Creates a new image with URI or buffer and options.
+  """
+  def new(uri_or_buffer, options \\ %{}) do
+    if is_binary(uri_or_buffer) do
+      %__MODULE__{
+        uri: uri_or_buffer,
+        name: Map.get(options, :name),
+        mime_type: Map.get(options, :mime_type),
+        extensions: Map.get(options, :extensions),
+        extras: Map.get(options, :extras)
+      }
+    else
+      %__MODULE__{
+        buffer_view: uri_or_buffer,
+        name: Map.get(options, :name),
+        mime_type: Map.get(options, :mime_type),
+        extensions: Map.get(options, :extensions),
+        extras: Map.get(options, :extras)
+      }
+    end
+  end
+
+  @doc """
+  Creates an Image struct from JSON data.
+  """
   def from_json(json) when is_map(json) do
     %__MODULE__{
       uri: Map.get(json, "uri"),
       mime_type: Map.get(json, "mimeType"),
       buffer_view: Map.get(json, "bufferView"),
-      name: Map.get(json, "name")
+      name: Map.get(json, "name"),
+      extensions: Map.get(json, "extensions"),
+      extras: Map.get(json, "extras")
     }
   end
 
   @doc """
-  Convert image to JSON representation.
+  Converts an Image struct to JSON-compatible map.
   """
-  @spec to_json(t()) :: map()
   def to_json(%__MODULE__{} = image) do
     %{}
-    |> maybe_put("uri", image.uri)
-    |> maybe_put("mimeType", image.mime_type)
-    |> maybe_put("bufferView", image.buffer_view)
-    |> maybe_put("name", image.name)
+    |> put_if_present("uri", image.uri)
+    |> put_if_present("mimeType", image.mime_type)
+    |> put_if_present("bufferView", image.buffer_view)
+    |> put_if_present("name", image.name)
+    |> put_if_present("extensions", image.extensions)
+    |> put_if_present("extras", image.extras)
   end
 
-  defp maybe_put(map, _key, nil), do: map
-  defp maybe_put(map, key, value), do: Map.put(map, key, value)
+  # Helper function
+  defp put_if_present(map, _key, nil), do: map
+  defp put_if_present(map, key, value), do: Map.put(map, key, value)
 end

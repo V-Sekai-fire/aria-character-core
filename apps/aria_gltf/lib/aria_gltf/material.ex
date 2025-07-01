@@ -97,6 +97,26 @@ defmodule AriaGltf.Material do
   end
 
   @doc """
+  Creates a new material with name, properties, and options.
+  """
+  @spec new(String.t(), map(), map()) :: t()
+  def new(name, properties, options \\ %{}) when is_binary(name) and is_map(properties) do
+    %__MODULE__{
+      name: name,
+      pbr_metallic_roughness: Map.get(properties, :pbr_metallic_roughness),
+      normal_texture: Map.get(properties, :normal_texture),
+      occlusion_texture: Map.get(properties, :occlusion_texture),
+      emissive_texture: Map.get(properties, :emissive_texture),
+      emissive_factor: Map.get(properties, :emissive_factor, [0.0, 0.0, 0.0]),
+      alpha_mode: Map.get(properties, :alpha_mode, :opaque),
+      alpha_cutoff: Map.get(properties, :alpha_cutoff, 0.5),
+      double_sided: Map.get(properties, :double_sided, false),
+      extensions: Map.get(options, :extensions),
+      extras: Map.get(options, :extras)
+    }
+  end
+
+  @doc """
   Validates a Material struct according to glTF 2.0 specification.
 
   ## Validation Rules
@@ -248,11 +268,11 @@ defmodule AriaGltf.Material do
 
   # Helper functions
 
+  defp put_if_present(map, key, value), do: Map.put(map, key, value)
   defp put_if_present(map, _key, nil), do: map
   defp put_if_present(map, key, value, transform_fn) when is_function(transform_fn, 1), do: Map.put(map, key, transform_fn.(value))
   defp put_if_present(map, key, value, _default), do: Map.put(map, key, value)
   defp put_if_present(map, _key, value, default) when value == default, do: map
-  defp put_if_present(map, key, value), do: Map.put(map, key, value)
 
   defp alpha_mode_to_string(:opaque), do: "OPAQUE"
   defp alpha_mode_to_string(:mask), do: "MASK"

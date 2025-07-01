@@ -45,6 +45,21 @@ defmodule AriaGltf.Asset do
   end
 
   @doc """
+  Creates a new asset with version, generator, and options.
+  """
+  @spec new(String.t(), String.t(), map()) :: t()
+  def new(version, generator, options \\ %{}) when is_binary(version) and is_binary(generator) do
+    %__MODULE__{
+      version: version,
+      generator: generator,
+      copyright: Map.get(options, :copyright),
+      min_version: Map.get(options, :min_version),
+      extensions: Map.get(options, :extensions),
+      extras: Map.get(options, :extras)
+    }
+  end
+
+  @doc """
   Parses an asset from JSON data.
   """
   @spec from_json(map()) :: {:ok, t()} | {:error, term()}

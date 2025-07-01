@@ -3,55 +3,71 @@
 
 defmodule Membrane.Format.PlanningParams do
   @moduledoc """
-  Format definition for planning parameters flowing through the pipeline.
-
-  This format represents the transformed MCP request data that is ready
-  for processing by the hybrid planner.
+  Format for planning parameters in Membrane pipelines.
   """
 
   @type t :: %__MODULE__{
-          goal: String.t(),
-          context: map(),
-          constraints: list(),
-          request_id: String.t(),
-          timestamp: DateTime.t(),
-          conversion_metadata: map()
-        }
+    status: :request | :error,
+    params: map(),
+    request_id: String.t(),
+    error_reason: String.t() | nil,
+    conversion_metadata: map(),
+    context: map(),
+    goal: any()
+  }
 
   defstruct [
-    :goal,
-    :context,
-    :constraints,
+    :status,
+    :params,
     :request_id,
-    :timestamp,
-    :conversion_metadata
+    :error_reason,
+    :conversion_metadata,
+    :context,
+    :goal
   ]
 
   @doc """
-  Creates a new PlanningParams format struct.
+  Creates a new planning params structure.
   """
-  @spec new(String.t(), map(), list(), String.t(), map()) :: t()
-  def new(goal, context, constraints, request_id, conversion_metadata \\ %{}) do
+  def new(status, params, request_id, opts \\ %{}) do
     %__MODULE__{
-      goal: goal,
-      context: context,
-      constraints: constraints,
+      status: status,
+      params: params,
       request_id: request_id,
-      timestamp: DateTime.utc_now(),
-      conversion_metadata: conversion_metadata
+      error_reason: Map.get(opts, :error_reason),
+      conversion_metadata: Map.get(opts, :conversion_metadata, %{}),
+      context: Map.get(opts, :context, %{}),
+      goal: Map.get(opts, :goal)
     }
   end
 
   @doc """
-  Validates that the PlanningParams has all required fields.
+  Creates a planning params request.
   """
-  @spec valid?(t()) :: boolean()
-  def valid?(%__MODULE__{} = params) do
-    not is_nil(params.goal) and
-      not is_nil(params.context) and
-      not is_nil(params.constraints) and
-      not is_nil(params.request_id) and
-      not is_nil(params.timestamp) and
-      not is_nil(params.conversion_metadata)
+  def request(params, request_id) do
+    %__MODULE__{
+      status: :request,
+      params: params,
+      request_id: request_id,
+      error_reason: nil,
+      conversion_metadata: %{},
+      context: %{},
+      goal: nil
+    }
+  end
+
+  @doc """
+  Creates an error planning params.
+  """
+  def error(reason, request_id) do
+    %__MODULE__{
+      status: :error,
+      params: %{},
+      request_id: request_id,
+      error_reason: reason,
+      conversion_metadata: %{},
+      context: %{},
+      goal: nil
+    }
   end
 end

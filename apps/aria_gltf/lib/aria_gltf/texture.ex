@@ -3,43 +3,83 @@
 
 defmodule AriaGltf.Texture do
   @moduledoc """
-  Mock implementation of AriaGltf.Texture for compilation.
-
-  This module represents glTF texture definitions.
-  Currently mocked with basic functionality to enable compilation.
+  A texture and its sampler.
   """
 
   @type t :: %__MODULE__{
     sampler: non_neg_integer() | nil,
     source: non_neg_integer() | nil,
-    name: String.t() | nil
+    name: String.t() | nil,
+    extensions: map() | nil,
+    extras: any() | nil
   }
 
-  defstruct [:sampler, :source, :name]
+  defstruct [
+    :sampler,
+    :source,
+    :name,
+    :extensions,
+    :extras
+  ]
 
   @doc """
-  Create a new texture from JSON data.
+  Creates a new texture.
   """
-  @spec from_json(map()) :: t()
-  def from_json(json) when is_map(json) do
+  def new do
+    %__MODULE__{}
+  end
+
+  @doc """
+  Creates a new texture with source, sampler, and options.
+  """
+  def new(source, sampler, options \\ %{}) do
     %__MODULE__{
-      sampler: Map.get(json, "sampler"),
-      source: Map.get(json, "source"),
-      name: Map.get(json, "name")
+      source: source,
+      sampler: sampler,
+      name: Map.get(options, :name),
+      extensions: Map.get(options, :extensions, %{}),
+      extras: Map.get(options, :extras, %{})
     }
   end
 
   @doc """
-  Convert texture to JSON representation.
+  Validates texture data structure.
   """
-  @spec to_json(t()) :: map()
-  def to_json(%__MODULE__{} = texture) do
-    %{}
-    |> maybe_put("sampler", texture.sampler)
-    |> maybe_put("source", texture.source)
-    |> maybe_put("name", texture.name)
+  def validate(%__MODULE__{} = texture) do
+    cond do
+      is_nil(texture.source) ->
+        {:error, "Texture must have a source"}
+
+      true ->
+        {:ok, texture}
+    end
   end
 
-  defp maybe_put(map, _key, nil), do: map
-  defp maybe_put(map, key, value), do: Map.put(map, key, value)
+  @doc """
+  Creates texture from JSON data.
+  """
+  def from_json(json) when is_map(json) do
+    %__MODULE__{
+      source: Map.get(json, "source"),
+      sampler: Map.get(json, "sampler"),
+      name: Map.get(json, "name"),
+      extensions: Map.get(json, "extensions", %{}),
+      extras: Map.get(json, "extras", %{})
+    }
+  end
+
+  @doc """
+  Converts texture to JSON format.
+  """
+  def to_json(%__MODULE__{} = texture) do
+    %{}
+    |> put_if_present("source", texture.source)
+    |> put_if_present("sampler", texture.sampler)
+    |> put_if_present("name", texture.name)
+    |> put_if_present("extensions", texture.extensions)
+    |> put_if_present("extras", texture.extras)
+  end
+
+  defp put_if_present(map, _key, nil), do: map
+  defp put_if_present(map, key, value), do: Map.put(map, key, value)
 end

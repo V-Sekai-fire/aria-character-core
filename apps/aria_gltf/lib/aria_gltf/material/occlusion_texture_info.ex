@@ -6,8 +6,6 @@ defmodule AriaGltf.Material.OcclusionTextureInfo do
   Reference to an occlusion texture with additional strength parameter.
   """
 
-  alias AriaGltf.TextureInfo
-
   @type t :: %__MODULE__{
           index: non_neg_integer(),
           tex_coord: non_neg_integer(),

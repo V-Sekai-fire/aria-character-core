@@ -3,65 +3,71 @@
 
 defmodule Membrane.Format.MCPResponse do
   @moduledoc """
-  Format definition for MCP (Model Context Protocol) responses flowing through the pipeline.
-
-  This format represents the final response that will be sent back to MCP tools
-  after processing through the planning pipeline.
+  Format for MCP responses in Membrane pipelines.
   """
 
   @type t :: %__MODULE__{
-          content: list(),
-          status: :success | :error,
-          request_id: String.t(),
-          timestamp: DateTime.t(),
-          error_details: map() | nil
-        }
+    status: :success | :error,
+    result: any(),
+    request_id: String.t(),
+    error_reason: String.t() | nil,
+    conversion_metadata: map(),
+    execution_metadata: map(),
+    processing_time: float()
+  }
 
   defstruct [
-    :content,
     :status,
+    :result,
     :request_id,
-    :timestamp,
-    :error_details
+    :error_reason,
+    :conversion_metadata,
+    :execution_metadata,
+    :processing_time
   ]
 
   @doc """
-  Creates a new successful MCPResponse format struct.
+  Creates a success response.
   """
-  @spec success(list(), String.t()) :: t()
-  def success(content, request_id) do
+  def success(result, request_id) do
     %__MODULE__{
-      content: content,
       status: :success,
+      result: result,
       request_id: request_id,
-      timestamp: DateTime.utc_now(),
-      error_details: nil
+      error_reason: nil,
+      conversion_metadata: %{},
+      execution_metadata: %{},
+      processing_time: 0.0
     }
   end
 
   @doc """
-  Creates a new error MCPResponse format struct.
+  Creates a success MCP response with metadata.
   """
-  @spec error(map(), String.t()) :: t()
-  def error(error_details, request_id) do
+  def success(result, request_id, metadata) do
     %__MODULE__{
-      content: [],
-      status: :error,
+      status: :success,
+      result: result,
       request_id: request_id,
-      timestamp: DateTime.utc_now(),
-      error_details: error_details
+      error_reason: nil,
+      conversion_metadata: metadata,
+      execution_metadata: %{},
+      processing_time: 0.0
     }
   end
 
   @doc """
-  Validates that the MCPResponse has all required fields.
+  Creates an error MCP response.
   """
-  @spec valid?(t()) :: boolean()
-  def valid?(%__MODULE__{} = response) do
-    not is_nil(response.content) and
-      not is_nil(response.status) and
-      not is_nil(response.request_id) and
-      not is_nil(response.timestamp) and
-      response.status in [:success, :error]
+  def error(reason, request_id) do
+    %__MODULE__{
+      status: :error,
+      result: nil,
+      request_id: request_id,
+      error_reason: reason,
+      conversion_metadata: %{},
+      execution_metadata: %{},
+      processing_time: 0.0
+    }
   end
 end

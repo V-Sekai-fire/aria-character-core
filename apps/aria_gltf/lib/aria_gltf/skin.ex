@@ -19,6 +19,19 @@ defmodule AriaGltf.Skin do
   defstruct [:inverse_bind_matrices, :skeleton, :joints, :name]
 
   @doc """
+  Creates a new skin with joints and options.
+  """
+  @spec new([non_neg_integer()], map()) :: t()
+  def new(joints, options \\ %{}) when is_list(joints) do
+    %__MODULE__{
+      joints: joints,
+      inverse_bind_matrices: Map.get(options, :inverse_bind_matrices),
+      skeleton: Map.get(options, :skeleton),
+      name: Map.get(options, :name)
+    }
+  end
+
+  @doc """
   Create a new skin from JSON data.
   """
   @spec from_json(map()) :: t()
