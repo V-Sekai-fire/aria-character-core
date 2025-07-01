@@ -154,4 +154,146 @@ defmodule AriaGltf.IOTest do
       assert :ok = IO.ensure_directory_exists(existing_path)
     end
   end
+
+  describe "import_from_file/2" do
+    setup do
+      # Create a valid test file
+      document = IO.create_minimal_document()
+      test_file = Path.join(@tmp_dir, "test_import.gltf")
+      {:ok, json_content} = IO.serialize_document(document)
+      :ok = File.write(test_file, json_content)
+
+      # Create an invalid JSON file
+      invalid_file = Path.join(@tmp_dir, "test_invalid.gltf")
+      :ok = File.write(invalid_file, "{invalid json")
+
+      # Create a malformed but recoverable JSON file
+      recoverable_file = Path.join(@tmp_dir, "test_recoverable.gltf")
+      recoverable_content = """
+      {
+        "asset": {
+          "version": "2.0",
+          "generator": "test",
+        },
+        "scenes": [],
+      }
+      """
+      :ok = File.write(recoverable_file, recoverable_content)
+
+      on_exit(fn ->
+        File.rm(test_file)
+        File.rm(invalid_file)
+        File.rm(recoverable_file)
+      end)
+
+      %{
+        test_file: test_file,
+        invalid_file: invalid_file,
+        recoverable_file: recoverable_file
+      }
+    end
+
+    test "imports valid glTF file successfully", %{test_file: test_file} do
+      assert {:ok, document} = IO.import_from_file(test_file)
+      assert %Document{} = document
+      assert document.asset.version == "2.0"
+      assert document.asset.generator == "aria_gltf"
+    end
+
+    test "imports with different validation modes", %{test_file: test_file} do
+      assert {:ok, _document} = IO.import_from_file(test_file, validation_mode: :strict)
+      assert {:ok, _document} = IO.import_from_file(test_file, validation_mode: :permissive)
+      assert {:ok, _document} = IO.import_from_file(test_file, validation_mode: :warning_only)
+    end
+
+    test "handles file not found error" do
+      non_existent = Path.join(@tmp_dir, "does_not_exist.gltf")
+      assert {:error, {:file_not_found, ^non_existent}} = IO.import_from_file(non_existent)
+    end
+
+    test "handles invalid JSON without recovery", %{invalid_file: invalid_file} do
+      assert {:error, {:json_parse_failed, _}} = IO.import_from_file(invalid_file)
+    end
+
+    test "attempts JSON recovery when enabled", %{recoverable_file: recoverable_file} do
+      # Without recovery - should fail
+      assert {:error, {:json_parse_failed, _}} = IO.import_from_file(recoverable_file)
+
+      # With recovery - should succeed
+      assert {:ok, _document} = IO.import_from_file(recoverable_file, continue_on_errors: true)
+    end
+
+    test "handles validation errors in strict mode", %{test_file: _test_file} do
+      # Create a file with validation issues - missing required asset version
+      invalid_document = %{
+        "asset" => %{"generator" => "test"},  # Missing required version field
+        "scenes" => []
+      }
+
+      invalid_content = Jason.encode!(invalid_document, pretty: true)
+      invalid_file = Path.join(@tmp_dir, "validation_test.gltf")
+      :ok = File.write(invalid_file, invalid_content)
+
+      # Strict mode should fail validation
+      result = IO.import_from_file(invalid_file, validation_mode: :strict)
+
+      case result do
+        {:error, %AriaGltf.Validation.Report{}} -> :ok
+        {:error, _other} -> :ok  # Other validation errors are also acceptable
+        {:ok, _} -> flunk("Expected validation to fail in strict mode")
+      end
+
+      File.rm(invalid_file)
+    end
+
+    test "permissive mode allows validation warnings", %{test_file: test_file} do
+      # Should succeed even with potential validation issues
+      assert {:ok, _document} = IO.import_from_file(test_file, validation_mode: :permissive)
+    end
+  end
+
+  describe "load_file/1 (legacy)" do
+    test "loads file using legacy interface" do
+      # Create test file
+      document = IO.create_minimal_document()
+      test_file = Path.join(@tmp_dir, "legacy_test.gltf")
+      {:ok, json_content} = IO.serialize_document(document)
+      :ok = File.write(test_file, json_content)
+
+      assert {:ok, loaded_document} = IO.load_file(test_file)
+      assert %Document{} = loaded_document
+      assert loaded_document.asset.version == "2.0"
+
+      # Clean up
+      File.rm(test_file)
+    end
+  end
+
+  describe "save_file/2" do
+    test "saves document to file" do
+      document = IO.create_minimal_document()
+      file_path = Path.join(@tmp_dir, "test_save.gltf")
+
+      assert :ok = IO.save_file(document, file_path)
+      assert File.exists?(file_path)
+
+      # Verify content
+      {:ok, content} = File.read(file_path)
+      {:ok, parsed} = Jason.decode(content)
+      assert parsed["asset"]["version"] == "2.0"
+
+      File.rm(file_path)
+    end
+  end
+
+  describe "binary glTF support (stubs)" do
+    test "load_binary returns not implemented" do
+      assert {:error, :not_implemented} = IO.load_binary("test.glb")
+    end
+
+    test "save_binary returns not implemented" do
+      document = IO.create_minimal_document()
+      assert {:error, :not_implemented} = IO.save_binary(document, "test.glb")
+    end
+  end
 end

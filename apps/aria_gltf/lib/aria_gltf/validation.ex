@@ -441,6 +441,7 @@ defmodule AriaGltf.Validation do
   defp finalize_validation(%Context{mode: mode} = context) do
     case {mode, Context.has_errors?(context)} do
       {:strict, true} -> {:error, Context.to_report(context)}
+      {:strict, false} -> {:ok, context.document}
       {:permissive, _} -> handle_permissive_result(context)
       {:warning_only, _} -> {:ok, context.document}
     end
