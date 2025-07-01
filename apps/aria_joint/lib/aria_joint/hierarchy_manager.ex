@@ -372,63 +372,11 @@ defmodule AriaJoint.HierarchyManager do
 
   # Private implementation functions
 
-  @spec rebuild_nested_set(t()) :: t()
-  defp rebuild_nested_set(manager) do
-    # Get all root joints from registry
-    root_joints = manager.root_nodes
-                  |> Enum.map(&get_joint_by_id/1)
-                  |> Enum.reject(&is_nil/1)
-
-    # Build new nested set structure
-    new_nested_set = NestedSet.build_nested_set(root_joints)
-
-    # Update joints with nested set metadata
-    update_joints_with_nested_set_metadata(new_nested_set)
-
-    %{manager |
-      nested_set: new_nested_set,
-      hierarchy_version: manager.hierarchy_version + 1
-    }
-  end
-
-  @spec update_joints_with_nested_set_metadata(NestedSet.nested_set()) :: :ok
-  defp update_joints_with_nested_set_metadata(nested_set) do
-    # Update each joint in registry with its nested set offset and span
-    for {node_id, %{offset: offset, span: span}} <- nested_set.node_id_to_metadata do
-      case get_joint_by_id(node_id) do
-        nil -> :ok
-        joint ->
-          updated_joint = %{joint |
-            nested_set_offset: offset,
-            nested_set_span: span
-          }
-          safe_update_joint_in_registry(updated_joint)
-      end
-    end
-    :ok
-  end
-
-
   @spec get_joint_by_id(Joint.node_id()) :: Joint.t() | nil
   defp get_joint_by_id(joint_id) do
     case Registry.lookup(:joint_registry, joint_id) do
       [{_pid, joint}] -> joint
       [] -> nil
-    end
-  end
-
-  @spec safe_update_joint_in_registry(Joint.t()) :: :ok
-  defp safe_update_joint_in_registry(joint) do
-    try do
-      case Registry.lookup(:joint_registry, joint.id) do
-        [{_pid, _old_joint}] ->
-          Registry.update_value(:joint_registry, joint.id, fn _old -> joint end)
-          :ok
-        [] ->
-          :ok
-      end
-    rescue
-      _error -> :ok
     end
   end
 end

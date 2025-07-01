@@ -10,7 +10,7 @@ defmodule Mix.Tasks.DetectViolations do
 
   @impl Mix.Task
   def run(args) do
-    {opts, _, _} = OptionParser.parse(args, switches: [verbose: :boolean])
+    {_opts, _, _} = OptionParser.parse(args, switches: [verbose: :boolean])
 
     IO.puts("=== Cross-App Dependency Violation Detection ===")
 

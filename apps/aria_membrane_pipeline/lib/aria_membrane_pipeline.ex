@@ -28,35 +28,9 @@ defmodule AriaMembranePipeline do
       result = AriaMembranePipeline.process_data(pipeline, input_data)
   """
 
-  alias AriaMembranePipeline.PipelineManager
-
-  # Type definitions
+# Type definitions
   @type pipeline :: term()
   @type config :: map()
   @type data :: term()
   @type result :: {:ok, term()} | {:error, String.t()}
-
-  @spec create_pipeline(config()) :: pipeline()
-  @doc "Creates a new pipeline with the given configuration."
-  def create_pipeline(config \\ %{}) do
-    PipelineManager.create_pipeline(config)
-  end
-
-  @spec start_pipeline(pipeline()) :: result()
-  @doc "Starts a pipeline for processing."
-  def start_pipeline(pipeline) do
-    PipelineManager.start_pipeline(pipeline)
-  end
-
-  @spec process_data(pipeline(), data()) :: result()
-  @doc "Processes data through the specified pipeline."
-  def process_data(pipeline, data) do
-    PipelineManager.process_data(pipeline, data)
-  end
-
-  @spec stop_pipeline(pipeline()) :: result()
-  @doc "Stops a running pipeline."
-  def stop_pipeline(pipeline) do
-    PipelineManager.stop_pipeline(pipeline)
-  end
 end

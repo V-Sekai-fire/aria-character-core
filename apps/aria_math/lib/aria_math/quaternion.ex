@@ -13,7 +13,6 @@ defmodule AriaMath.Quaternion do
   """
 
   import Kernel, except: [length: 1]
-  alias __MODULE__
   alias AriaMath.Vector3
 
   @type t :: {float(), float(), float(), float()}
@@ -182,7 +181,7 @@ defmodule AriaMath.Quaternion do
       {0.0, 0.0, 0.7071067811865475, 0.7071067811865476}
   """
   @spec from_directions(Vector3.t(), Vector3.t()) :: t()
-  def from_directions({ax, ay, az} = a, {bx, by, bz} = b) do
+  def from_directions(a, b) do
     # Implementation-defined threshold for parallel vectors
     threshold = 0.9999
 
@@ -197,6 +196,7 @@ defmodule AriaMath.Quaternion do
       # Vectors are nearly parallel in opposite directions
       dot_product <= -threshold ->
         # Find perpendicular axis
+        {ax, ay, _az} = a
         axis =
           cond do
             abs(ax) < 0.9 -> {1.0, 0.0, 0.0}

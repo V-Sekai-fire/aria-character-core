@@ -118,7 +118,7 @@ defmodule AriaEngineCore.Math do
       # Matrix4 operations - using basic implementations with external API
       mat_mul: &AriaMath.multiply_matrices/2,
       mat_determinant: &AriaMath.matrix_determinant/1,
-      mat_inverse: fn matrix ->
+      mat_inverse: fn _matrix ->
         # For now, return identity as placeholder - should be implemented in AriaMath external API
         AriaMath.identity_matrix()
       end,
@@ -128,7 +128,7 @@ defmodule AriaEngineCore.Math do
       mat_transform_point: &AriaMath.transform_point/2,
       mat_transform_direction: fn matrix, {x, y, z} ->
         # Transform as direction (w = 0)
-        {m0, m1, m2, m3, m4, m5, m6, m7, m8, m9, m10, m11, _, _, _, _} = matrix
+        {m0, m1, m2, _m3, m4, m5, m6, _m7, m8, m9, m10, _m11, _, _, _, _} = matrix
         {
           m0 * x + m1 * y + m2 * z,
           m4 * x + m5 * y + m6 * z,

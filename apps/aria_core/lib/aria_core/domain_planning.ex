@@ -94,39 +94,6 @@ defmodule AriaCore.DomainPlanning do
   end
 
   @doc """
-  Adds an action (function or struct) to a legacy domain.
-  """
-  @spec add_action_to_legacy_domain(legacy_domain(), action_name(), any()) :: legacy_domain()
-  def add_action_to_legacy_domain(%{actions: actions, action_metadata: action_metadata} = domain, name, action) do
-    cond do
-      is_function(action, 2) ->
-        %{domain | actions: Map.put(actions, name, action)}
-
-      is_map(action) and Map.has_key?(action, :metadata) ->
-        metadata = Map.get(action, :metadata, %{})
-
-        normalized_metadata =
-          if Map.has_key?(metadata, :duration) do
-            duration = metadata[:duration]
-            Map.put(metadata, :duration, normalize_duration(duration))
-          else
-            metadata
-          end
-
-        updated_action_metadata = Map.put(action_metadata, name, normalized_metadata)
-
-        %{
-          domain
-          | actions: Map.put(actions, name, action),
-            action_metadata: updated_action_metadata
-        }
-
-      true ->
-        %{domain | actions: Map.put(actions, name, action)}
-    end
-  end
-
-  @doc """
   Retrieves a durative action from a legacy domain by name.
   """
   @spec get_durative_action_from_legacy_domain(legacy_domain(), atom()) :: map() | nil
@@ -173,18 +140,4 @@ defmodule AriaCore.DomainPlanning do
       state_predicates: %{}
     }
   end
-
-  # Private helper functions
-
-  defp normalize_duration(duration) when is_binary(duration) do
-    case AriaCore.Temporal.Interval.parse_iso8601(duration) do
-      {:ok, parsed_duration} -> parsed_duration
-      {:error, _} -> {:fixed, 3600}  # Default to 1 hour
-    end
-  end
-
-  defp normalize_duration({:fixed, seconds}) when is_integer(seconds), do: {:fixed, seconds}
-  defp normalize_duration({:variable, min, max}) when is_integer(min) and is_integer(max), do: {:variable, min, max}
-  defp normalize_duration(seconds) when is_integer(seconds), do: {:fixed, seconds}
-  defp normalize_duration(_), do: {:fixed, 3600}  # Default to 1 hour
 end

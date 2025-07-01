@@ -10,7 +10,6 @@ defmodule AriaQcp.QCP.State do
 
   alias AriaMath.Vector3
 
-  @default_precision 1.0e-6
   @min_weight 1.0e-12
   @max_weight 1.0e12
 

@@ -14,7 +14,6 @@ defmodule AriaJoint.Validation do
   # Robustness constants
   @max_hierarchy_depth 100
   @max_children_per_node 1000
-  @transform_validation_tolerance 1.0e-6
 
   @type joint_error ::
     :invalid_transform |

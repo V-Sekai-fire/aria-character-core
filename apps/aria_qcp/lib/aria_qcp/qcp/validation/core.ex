@@ -13,7 +13,6 @@ defmodule AriaQcp.QCP.Validation.Core do
   @max_points 10_000
   @min_weight 1.0e-12
   @max_weight 1.0e12
-  @default_tolerance 1.0e-10
 
   @type point_set :: [Vector3.t()]
   @type weights :: [float()]

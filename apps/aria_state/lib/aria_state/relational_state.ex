@@ -48,6 +48,18 @@ defmodule AriaState.RelationalState do
     data |> Map.keys() |> Enum.any?(fn {_predicate, subj} -> subj == subject end)
   end
 
+  @doc "Checks if a specific subject exists for a given predicate."
+  @spec has_subject?(t(), predicate(), subject()) :: boolean()
+  def has_subject?(%__MODULE__{data: data}, predicate, subject) do
+    Map.has_key?(data, {predicate, subject})
+  end
+
+  @doc "Removes a fact from the state."
+  @spec remove_fact(t(), predicate(), subject()) :: t()
+  def remove_fact(%__MODULE__{data: data}, predicate, subject) do
+    %__MODULE__{data: Map.delete(data, {predicate, subject})}
+  end
+
   @doc "Gets a list of all subjects that have properties."
   @spec get_subjects(t()) :: [subject()]
   def get_subjects(%__MODULE__{data: data}) do

@@ -186,7 +186,7 @@ defmodule AriaQcp.QCP.Validation.Motion do
   """
   @spec validate_motion_coordination(rotation(), translation(), float()) :: :ok | {:error, validation_error()}
   def validate_motion_coordination(rotation, translation, tolerance \\ @default_tolerance) do
-    {x, y, z, w} = rotation
+    {_x, _y, _z, w} = rotation
     {tx, ty, tz} = translation
 
     # Calculate motion complexity metrics

@@ -53,9 +53,6 @@ defmodule AriaEngineCore.Adapters.HybridPlannerAdapter do
         {:ok, plan} ->
           Logger.debug("Hybrid planning completed successfully")
           {:ok, plan}
-        {:error, reason} ->
-          Logger.warning("Hybrid planning failed: #{inspect(reason)}")
-          {:error, reason}
         other ->
           Logger.error("Unexpected hybrid planning result: #{inspect(other)}")
           {:error, :unexpected_planning_result}
@@ -76,9 +73,6 @@ defmodule AriaEngineCore.Adapters.HybridPlannerAdapter do
         {:ok, final_state} ->
           Logger.debug("Hybrid execution completed successfully")
           {:ok, final_state}
-        {:error, reason} ->
-          Logger.warning("Hybrid execution failed: #{inspect(reason)}")
-          {:error, reason}
         other ->
           Logger.error("Unexpected hybrid execution result: #{inspect(other)}")
           {:error, :unexpected_execution_result}

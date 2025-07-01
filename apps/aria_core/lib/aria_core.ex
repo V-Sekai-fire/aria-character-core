@@ -228,25 +228,6 @@ defmodule AriaCore do
     Map.get(domain, :temporal_specifications, %{})
   end
 
-  # Method Management Mock Functions
-  @doc """
-  Adds a task method to a domain with explicit method name.
-  """
-  def add_task_method_to_domain(domain, task_name, method_name, method_fn) do
-    task_methods = get_in(domain, [:methods, :task, task_name]) || []
-    updated_methods = [{method_name, method_fn} | task_methods]
-    put_in(domain, [:methods, :task, task_name], updated_methods)
-  end
-
-  @doc """
-  Adds a unigoal method to a domain with explicit method name.
-  """
-  def add_unigoal_method_to_domain(domain, predicate, method_name, method_fn) do
-    unigoal_methods = get_in(domain, [:methods, :unigoal, predicate]) || []
-    updated_methods = [{method_name, method_fn} | unigoal_methods]
-    put_in(domain, [:methods, :unigoal, predicate], updated_methods)
-  end
-
   @doc """
   Adds a unigoal method to a domain without explicit method name.
   """
@@ -264,53 +245,6 @@ defmodule AriaCore do
     put_in(domain, [:methods, :multigoal], updated_methods)
   end
 
-  @doc """
-  Adds a multitodo method to a domain.
-  """
-  def add_multitodo_method_to_domain(domain, method_name, method_fn) do
-    multitodo_methods = domain.methods.multitodo
-    updated_methods = [{method_name, method_fn} | multitodo_methods]
-    put_in(domain, [:methods, :multitodo], updated_methods)
-  end
-
-  @doc """
-  Gets task methods from a domain.
-  """
-  def get_task_methods_from_domain(domain, task_name) do
-    get_in(domain, [:methods, :task, task_name]) || []
-  end
-
-  @doc """
-  Gets unigoal methods from a domain by predicate.
-  """
-  def get_unigoal_methods_from_domain(domain, predicate) do
-    get_in(domain, [:methods, :unigoal, predicate]) || []
-  end
-
-  @doc """
-  Gets all multigoal methods from a domain.
-  """
-  def get_multigoal_methods_from_domain(domain) do
-    get_in(domain, [:methods, :multigoal]) || []
-  end
-
-  @doc """
-  Gets all multitodo methods from a domain.
-  """
-  def get_multitodo_methods_from_domain(domain) do
-    get_in(domain, [:methods, :multitodo]) || []
-  end
-
-  @doc """
-  Generic method addition to domain.
-  """
-  def add_method_to_domain(domain, method_name, method_spec) do
-    # Add to general methods storage
-    methods = Map.get(domain, :general_methods, %{})
-    updated_methods = Map.put(methods, method_name, method_spec)
-    Map.put(domain, :general_methods, updated_methods)
-  end
-
   # Action Execution Mock Functions
   @doc """
   Executes an action in the context of a domain.
@@ -320,7 +254,7 @@ defmodule AriaCore do
       nil ->
         {:error, "Action #{action_name} not found in domain"}
 
-      action_spec ->
+      _action_spec ->
         # Mock execution - return modified state
         result = %{
           action: action_name,
@@ -334,19 +268,7 @@ defmodule AriaCore do
     end
   end
 
-  @doc """
-  Gets action metadata from a domain.
-  """
-  def get_action_metadata_from_domain(domain, action_name) do
-    case Map.get(domain.actions, action_name) do
-      nil -> {:error, "Action #{action_name} not found"}
-      action_spec ->
-        metadata = Map.get(action_spec, :metadata, %{})
-        {:ok, metadata}
-    end
-  end
-
-  @doc """
+@doc """
   Gets all actions with their metadata from a domain.
   """
   def get_all_actions_with_metadata_from_domain(domain) do
@@ -356,13 +278,6 @@ defmodule AriaCore do
       {name, Map.put(spec, :metadata, metadata)}
     end)
     |> Map.new()
-  end
-
-  @doc """
-  Main action execution function used by planners.
-  """
-  def execute_action(domain, state, action_name, args) do
-    execute_action_in_domain(domain, state, action_name, args)
   end
 
   # Additional Mock Functions for Undefined References

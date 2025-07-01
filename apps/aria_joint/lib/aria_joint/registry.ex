@@ -10,7 +10,6 @@ defmodule AriaJoint.Registry do
   """
 
   @registry_name :joint_registry
-  @registry_timeout 5000
   @table_name :joint_table
 
   @type node_id() :: reference()
@@ -41,7 +40,6 @@ defmodule AriaJoint.Registry do
   def remove_joint(joint_id) do
     case Registry.unregister(:joint_registry, joint_id) do
       :ok -> :ok
-      :error -> {:error, "Joint #{joint_id} not found in registry"}
     end
   end
 

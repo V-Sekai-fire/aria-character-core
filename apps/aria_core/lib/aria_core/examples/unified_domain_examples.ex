@@ -2,9 +2,6 @@
 # SPDX-License-Identifier: MIT
 
 defmodule AriaCore.Examples.UnifiedDomainExamples do
-  @moduledoc """
-  Examples demonstrating the use of unified domain attributes.
-  """
   use AriaCore.Domain
   alias AriaCore.State.Relational, as: RelationalState
   require Logger
@@ -30,7 +27,7 @@ defmodule AriaCore.Examples.UnifiedDomainExamples do
       new_state = state |> RelationalState.set_fact("meal_status", meal_id, "ready")
       {:ok, new_state}
     else
-      Logger.warn("Cooking failed for #{meal_id}")
+      Logger.warning("Cooking failed for #{meal_id}")
       {:error, :cooking_failed}
     end
   end
@@ -51,15 +48,12 @@ defmodule AriaCore.Examples.UnifiedDomainExamples do
   """
   @multitodo_method true
   @spec reorder_tasks_for_efficiency(AriaState.t(), [AriaCore.todo_item()]) :: {:ok, [AriaCore.todo_item()]} | {:error, atom()}
-  def reorder_tasks_for_efficiency(state, todo_list) do
+  def reorder_tasks_for_efficiency(_state, todo_list) do
     Logger.info("Reordering todo list for efficiency: #{inspect(todo_list)}")
     # In a real scenario, this would reorder the todo_list
     {:ok, todo_list}
   end
 
-  @doc """
-  Creates a domain for these examples.
-  """
   @spec create_domain() :: AriaCore.Domain.t()
   def create_domain do
     AriaCore.UnifiedDomain.create_from_module(__MODULE__)

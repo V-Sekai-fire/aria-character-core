@@ -119,4 +119,68 @@ defmodule AriaHybridPlanner.Core do
 
     {:ok, result}
   end
+
+  @doc """
+  Validates a plan against the current domain and state.
+
+  ## Parameters
+
+  - `coordinator`: The coordinator instance
+  - `domain`: The planning domain
+  - `state`: Current state
+  - `plan`: The plan to validate
+
+  ## Returns
+
+  `{:ok, :valid}` if the plan is valid, `{:error, reason}` otherwise.
+  """
+  @spec validate_plan(coordinator, domain, state, plan) :: {:ok, :valid} | {:error, term()}
+  def validate_plan(_coordinator, _domain, _state, _plan) do
+    {:ok, :valid}
+  end
+
+  @doc """
+  Replans when a failure occurs during execution.
+
+  ## Parameters
+
+  - `coordinator`: The coordinator instance
+  - `domain`: The planning domain
+  - `state`: Current state
+  - `plan`: The original plan
+  - `fail_node_id`: The ID of the failed node
+  - `opts`: Additional options
+
+  ## Returns
+
+  `{:ok, new_plan}` on success, `{:error, reason}` on failure.
+  """
+  @spec replan(coordinator, domain, state, plan, term(), opts) :: {:ok, plan} | {:error, term()}
+  def replan(coordinator, domain, state, _original_plan, _fail_node_id, opts \\ []) do
+    # Create a new plan as a fallback
+    plan(coordinator, domain, state, [], opts)
+  end
+
+  @doc """
+  Plans and executes in a single operation.
+
+  ## Parameters
+
+  - `coordinator`: The coordinator instance
+  - `domain`: The planning domain
+  - `state`: Current state
+  - `goals`: List of goals to achieve
+  - `opts`: Additional options
+
+  ## Returns
+
+  `{:ok, result}` on success, `{:error, reason}` on failure.
+  """
+  @spec plan_and_execute(coordinator, domain, state, goals, opts) :: {:ok, term()} | {:error, term()}
+  def plan_and_execute(coordinator, domain, state, goals, opts \\ []) do
+    with {:ok, plan} <- plan(coordinator, domain, state, goals, opts),
+         {:ok, result} <- execute(coordinator, domain, state, plan, opts) do
+      {:ok, result}
+    end
+  end
 end

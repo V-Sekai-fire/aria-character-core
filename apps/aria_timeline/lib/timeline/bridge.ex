@@ -94,9 +94,6 @@ defmodule Timeline.Bridge do
 
   @valid_types [:decision, :condition, :synchronization, :resource_check, :auto_generated]
 
-  # Minimum duration threshold maintained for legacy bridge functions
-  @min_duration_threshold 1
-
   # ==================== BRIDGE MANAGEMENT FUNCTIONS ====================
 
   @doc """

@@ -10,7 +10,7 @@ defmodule AriaMath.Primitives do
   indices, normals, and UV coordinates.
   """
 
-  alias AriaMath.{Vector3, Matrix4, Quaternion}
+  alias AriaMath.{Vector3, Matrix4}
 
   @type primitive :: %{
     vertices: [Vector3.t()],
@@ -158,9 +158,6 @@ defmodule AriaMath.Primitives do
     end
 
     vertices = vertices ++ bottom_vertices ++ top_vertices
-
-    # Generate indices
-    indices = []
 
     # Bottom cap
     bottom_indices = for i <- 0..(segments-1) do
@@ -343,7 +340,7 @@ defmodule AriaMath.Primitives do
   end
 
   @spec subdivide_sphere([Vector3.t()], [non_neg_integer()], float()) :: {[Vector3.t()], [non_neg_integer()]}
-  defp subdivide_sphere(vertices, indices, radius) do
+  defp subdivide_sphere(vertices, indices, _radius) do
     # This is a simplified subdivision - a full implementation would be more complex
     # For now, just return the original sphere
     {vertices, indices}

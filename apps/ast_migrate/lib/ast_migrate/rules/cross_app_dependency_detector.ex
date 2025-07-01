@@ -114,10 +114,6 @@ defmodule AstMigrate.Rules.CrossAppDependencyDetector do
     String.ends_with?(file_path, ".ex") or String.ends_with?(file_path, ".exs")
   end
 
-  defp not_in_ast_migrate_app?(file_path) do
-    not String.contains?(file_path, "apps/ast_migrate/")
-  end
-
   defp is_valid_elixir?(file_path) do
     try do
       content = File.read!(file_path)

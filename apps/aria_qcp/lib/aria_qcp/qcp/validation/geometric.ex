@@ -10,7 +10,6 @@ defmodule AriaQcp.QCP.Validation.Geometric do
   """
 
   alias AriaMath.{Vector3, Quaternion}
-  alias AriaQcp.QCP.Validation.Core
 
   @default_tolerance 1.0e-10
 

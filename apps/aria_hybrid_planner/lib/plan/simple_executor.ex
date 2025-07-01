@@ -120,17 +120,12 @@ defmodule Plan.SimpleExecutor do
   end
 
   # Execute a command that is not blacklisted
-  defp execute_non_blacklisted_command(domain, current_state, action, action_atom, args, remaining_actions, execution_trace, opts) do
+  defp execute_non_blacklisted_command(domain, current_state, action, action_atom, args, _remaining_actions, execution_trace, opts) do
     verbose = Keyword.get(opts, :verbose, 0)
     {action_name, _args} = action
 
     # Execute the action using domain's command execution
     case execute_action_command(domain, current_state, action_atom, args, opts) do
-      {:ok, new_state} ->
-        # Action succeeded - add to trace and continue
-        new_trace = [{action, new_state} | execution_trace]
-        execute_steps(domain, new_state, remaining_actions, new_trace, opts)
-
       {:error, reason} ->
         # Action failed - add failure to trace and return immediately (fail-fast)
         if verbose > 1 do
@@ -139,16 +134,6 @@ defmodule Plan.SimpleExecutor do
 
         failure_trace = [{action, nil} | execution_trace]
         error_message = "Action execution failed: #{action_name} - #{reason}"
-        {:error, error_message, Enum.reverse(failure_trace)}
-
-      false ->
-        # Action returned false (IPyHOP-style failure)
-        if verbose > 1 do
-          Logger.debug("SimpleExecutor: Action #{action_name} returned false")
-        end
-
-        failure_trace = [{action, nil} | execution_trace]
-        error_message = "Action execution failed: #{action_name} - returned false"
         {:error, error_message, Enum.reverse(failure_trace)}
     end
   end
@@ -173,25 +158,14 @@ defmodule Plan.SimpleExecutor do
   @spec execute_action_command(map(), map(), atom(), list(), keyword()) ::
     {:ok, map()} | {:error, String.t()} | false
   defp execute_action_command(domain, state, action_atom, args, opts) do
-    verbose = Keyword.get(opts, :verbose, 0)
-
     # Step 1: Validate entity requirements (ADR-181 compliance)
     case validate_entity_requirements(domain, state, action_atom, args, opts) do
       :ok ->
         # Get action metadata to determine method type
         metadata = get_action_metadata(domain, action_atom)
-        method_type = get_method_type_from_metadata(metadata)
 
         # Step 2: Validate temporal constraints
         case validate_temporal_constraints(metadata, opts) do
-          :ok ->
-            if verbose > 2 do
-              Logger.debug("SimpleExecutor: Dispatching execution for #{action_atom} as #{method_type}")
-            end
-
-            # Dispatch based on method type
-            dispatch_method_execution(domain, state, action_atom, args, method_type, metadata, opts)
-
           {:error, reason} ->
             {:error, "Temporal validation failed: #{reason}"}
         end
@@ -199,69 +173,6 @@ defmodule Plan.SimpleExecutor do
       {:error, reason} ->
         # Entity validation failed
         {:error, "Entity validation failed: #{reason}"}
-    end
-  end
-
-  # Dispatches execution based on the method type
-  @spec dispatch_method_execution(map(), map(), atom(), list(), atom(), map(), keyword()) ::
-    {:ok, map()} | {:error, String.t()} | false
-  defp dispatch_method_execution(domain, state, action_atom, args, method_type, metadata, opts) do
-    verbose = Keyword.get(opts, :verbose, 0)
-
-    case method_type do
-      :action ->
-        if verbose > 2 do
-          Logger.debug("SimpleExecutor: Executing as action: #{action_atom}")
-        end
-        AriaEngineCore.execute_action(domain, state, action_atom, args)
-
-      :command ->
-        command_name = String.to_atom("#{action_atom}_command")
-        if verbose > 2 do
-          Logger.debug("SimpleExecutor: Executing as command: #{command_name}")
-        end
-        AriaEngineCore.execute_action(domain, state, command_name, args)
-
-      :task_method ->
-        if verbose > 2 do
-          Logger.debug("SimpleExecutor: Executing as task method: #{action_atom}")
-        end
-        execute_task_method(domain, state, action_atom, args, metadata, opts)
-
-      :unigoal_method ->
-        if verbose > 2 do
-          Logger.debug("SimpleExecutor: Executing as unigoal method: #{action_atom}")
-        end
-        execute_unigoal_method(domain, state, action_atom, args, metadata, opts)
-
-      :multigoal_method ->
-        if verbose > 2 do
-          Logger.debug("SimpleExecutor: Executing as multigoal method: #{action_atom}")
-        end
-        execute_multigoal_method(domain, state, action_atom, args, metadata, opts)
-
-      :multitodo_method ->
-        if verbose > 2 do
-          Logger.debug("SimpleExecutor: Executing as multitodo method: #{action_atom}")
-        end
-        execute_multitodo_method(domain, state, action_atom, args, metadata, opts)
-
-      _ ->
-        {:error, "Unsupported method type: #{inspect(method_type)} for action: #{action_atom}"}
-    end
-  end
-
-  # Determines the method type from action metadata
-  @spec get_method_type_from_metadata(map()) :: atom()
-  defp get_method_type_from_metadata(metadata) do
-    cond do
-      Map.get(metadata, :action) -> :action
-      Map.get(metadata, :command) -> :command
-      Map.get(metadata, :task_method) -> :task_method
-      Map.get(metadata, :unigoal_method) -> :unigoal_method
-      Map.get(metadata, :multigoal_method) -> :multigoal_method
-      Map.get(metadata, :multitodo_method) -> :multitodo_method
-      true -> :unknown # Default or error case
     end
   end
 
@@ -503,130 +414,6 @@ defmodule Plan.SimpleExecutor do
         %{days: 0, hours: 0, minutes: 0, seconds: seconds}
       true ->
         nil
-    end
-  end
-
-  # Executes a task method
-  @spec execute_task_method(map(), map(), atom(), list(), map(), keyword()) ::
-    {:ok, map()} | {:error, String.t()} | false
-  defp execute_task_method(domain, state, task_atom, args, _metadata, opts) do
-    verbose = Keyword.get(opts, :verbose, 0)
-    case AriaEngineCore.get_task_methods(domain, task_atom) do
-      [] ->
-        {:error, "Task method #{task_atom} not found"}
-      methods ->
-        # For simplicity, just execute the first method found.
-        # In a real planner, this would involve more complex method selection.
-        {_method_name, method_fn} = List.first(methods)
-        case apply(method_fn, [state, args]) do
-          {:ok, todo_items} when is_list(todo_items) ->
-            # For now, we just return the original state.
-            # In a full implementation, these todo_items would be processed by the planner.
-            if verbose > 1 do
-              Logger.debug("SimpleExecutor: Task method #{task_atom} returned todo items: #{inspect(todo_items)}")
-            end
-            {:ok, state}
-          {:error, reason} ->
-            {:error, "Task method #{task_atom} failed: #{reason}"}
-          other ->
-            {:error, "Unexpected task method result: #{inspect(other)}"}
-        end
-    end
-  end
-
-  # Executes a unigoal method
-  @spec execute_unigoal_method(map(), map(), atom(), list(), map(), keyword()) ::
-    {:ok, map()} | {:error, String.t()} | false
-  defp execute_unigoal_method(domain, state, unigoal_atom, args, metadata, opts) do
-    verbose = Keyword.get(opts, :verbose, 0)
-    predicate = Map.get(metadata, :predicate)
-    if is_nil(predicate) do
-      {:error, "Unigoal method #{unigoal_atom} missing predicate in metadata"}
-    end
-
-    # Assuming args is in the format [subject, value] for unigoal
-    case args do
-      [subject, value] ->
-        case AriaEngineCore.get_unigoal_methods(domain, predicate) do
-          [] ->
-            {:error, "Unigoal method for predicate #{predicate} not found"}
-          methods ->
-            # For simplicity, just execute the first method found.
-            {_method_name, method_fn} = List.first(methods)
-            case apply(method_fn, [state, {subject, value}]) do
-              {:ok, todo_items} when is_list(todo_items) ->
-                if verbose > 1 do
-                  Logger.debug("SimpleExecutor: Unigoal method #{unigoal_atom} returned todo items: #{inspect(todo_items)}")
-                end
-                {:ok, state}
-              {:error, reason} ->
-                {:error, "Unigoal method #{unigoal_atom} failed: #{reason}"}
-              other ->
-                {:error, "Unexpected unigoal method result: #{inspect(other)}"}
-            end
-        end
-      _ ->
-        {:error, "Unigoal method #{unigoal_atom} expects args in [subject, value] format"}
-    end
-  end
-
-  # Executes a multigoal method
-  @spec execute_multigoal_method(map(), map(), atom(), list(), map(), keyword()) ::
-    {:ok, map()} | {:error, String.t()} | false
-  defp execute_multigoal_method(domain, state, multigoal_atom, args, _metadata, opts) do
-    verbose = Keyword.get(opts, :verbose, 0)
-    case AriaEngineCore.get_multigoal_methods(domain) do
-      [] ->
-        {:error, "Multigoal method #{multigoal_atom} not found"}
-      methods ->
-        # Assuming args is a single multigoal struct
-        case args do
-          [multigoal_struct] ->
-            {_method_name, method_fn} = List.first(methods)
-            case apply(method_fn, [state, multigoal_struct]) do
-              {:ok, _updated_multigoal} ->
-                if verbose > 1 do
-                  Logger.debug("SimpleExecutor: Multigoal method #{multigoal_atom} executed successfully.")
-                end
-                {:ok, state}
-              {:error, reason} ->
-                {:error, "Multigoal method #{multigoal_atom} failed: #{reason}"}
-              other ->
-                {:error, "Unexpected multigoal method result: #{inspect(other)}"}
-            end
-          _ ->
-            {:error, "Multigoal method #{multigoal_atom} expects a single multigoal struct as argument"}
-        end
-    end
-  end
-
-  # Executes a multitodo method
-  @spec execute_multitodo_method(map(), map(), atom(), list(), map(), keyword()) ::
-    {:ok, map()} | {:error, String.t()} | false
-  defp execute_multitodo_method(domain, state, multitodo_atom, args, _metadata, opts) do
-    verbose = Keyword.get(opts, :verbose, 0)
-    case AriaEngineCore.get_multitodo_methods(domain) do
-      [] ->
-        {:error, "Multitodo method #{multitodo_atom} not found"}
-      methods ->
-        # Assuming args is a list of todo_items
-        case args do
-          [todo_items] when is_list(todo_items) ->
-            {_method_name, method_fn} = List.first(methods)
-            case apply(method_fn, [state, todo_items]) do
-              {:ok, _updated_todo_items} ->
-                if verbose > 1 do
-                  Logger.debug("SimpleExecutor: Multitodo method #{multitodo_atom} executed successfully.")
-                end
-                {:ok, state}
-              {:error, reason} ->
-                {:error, "Multitodo method #{multitodo_atom} failed: #{reason}"}
-              other ->
-                {:error, "Unexpected multitodo method result: #{inspect(other)}"}
-            end
-          _ ->
-            {:error, "Multitodo method #{multitodo_atom} expects a list of todo_items as argument"}
-        end
     end
   end
 end

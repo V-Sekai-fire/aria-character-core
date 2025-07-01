@@ -27,7 +27,7 @@ defmodule AriaQcp.QCP.Validation.Optimization do
   Computes the RMSD of the transformation and verifies it's optimal for the given point sets.
   """
   @spec validate_minimal_rmsd(rotation(), translation(), point_set(), point_set(), float()) :: :ok | {:error, validation_error()}
-  def validate_minimal_rmsd(rotation, translation, moved_points, target_points, tolerance \\ @default_tolerance) do
+  def validate_minimal_rmsd(rotation, translation, moved_points, target_points, _tolerance \\ @default_tolerance) do
     # Transform the moved points
     transformed_points = Enum.map(moved_points, fn point ->
       rotated = Quaternion.rotate_vector(rotation, point)

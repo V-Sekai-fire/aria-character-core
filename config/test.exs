@@ -14,3 +14,10 @@ config :logger, level: :debug
 # Exclude integration tests by default
 # Run integration tests with: mix test --include integration
 config :ex_unit, exclude: [:integration]
+
+# Configure Mox for missing modules
+config :aria_engine_core, :hybrid_planner_adapter, MockAriaHybridPlannerCore
+config :aria_engine_core, :aria_core_module, MockAriaCore
+config :aria_engine_core, :aria_state_module, MockAriaStateRelationalState
+config :aria_membrane_pipeline, :membrane_pipeline_module, MockMembranePipeline
+config :aria_membrane_pipeline, :aria_core_domain_module, MockAriaCoreDomain

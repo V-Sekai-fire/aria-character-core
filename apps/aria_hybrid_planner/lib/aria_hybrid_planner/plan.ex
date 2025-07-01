@@ -260,7 +260,6 @@ defmodule AriaHybridPlanner.Plan do
         end
 
       case AriaCore.execute_action(domain, state, action_atom, args) do
-        false -> {:halt, {:error, "Action #{action_name} failed during validation"}}
         {:ok, new_state} -> {:cont, {:ok, new_state}}
       end
     end)

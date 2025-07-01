@@ -195,6 +195,7 @@ defmodule AriaMath.Vector3 do
     {ax * bx, ay * by, az * bz}
   end
 
+
   @doc """
   Check if two vectors are approximately equal within a tolerance.
 
@@ -291,18 +292,6 @@ defmodule AriaMath.Vector3 do
     end
   end
 
-  @doc """
-  Component-wise multiplication of two vectors.
-
-  ## Examples
-
-      iex> AriaMath.Vector3.mul({2.0, 3.0, 4.0}, {5.0, 6.0, 7.0})
-      {10.0, 18.0, 28.0}
-  """
-  @spec mul(t(), t()) :: t()
-  def mul({x1, y1, z1}, {x2, y2, z2}) do
-    {x1 * x2, y1 * y2, z1 * z2}
-  end
 
   @doc """
   Linear interpolation between two vectors.
@@ -397,16 +386,6 @@ defmodule AriaMath.Vector3 do
   @spec mul_scalar(t(), float()) :: t()
   def mul_scalar(vector, scalar) do
     scale(vector, scalar)
-  end
-
-  @spec div_scalar(t(), float()) :: t()
-  def div_scalar({x, y, z}, scalar) when is_number(scalar) and scalar != 0.0 do
-    {x / scalar, y / scalar, z / scalar}
-  end
-
-  def div_scalar({x, y, z}, 0.0) do
-    # Handle division by zero - return infinity or NaN as appropriate
-    {x / 0.0, y / 0.0, z / 0.0}
   end
 
   @doc """
