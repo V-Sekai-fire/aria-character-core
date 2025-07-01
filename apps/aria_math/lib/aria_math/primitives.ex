@@ -474,4 +474,146 @@ defmodule AriaMath.Primitives do
        ArithmeticError -> false
      end)
   end
+
+  # Nx tensor integration functions
+
+  @doc """
+  Create a box primitive using Nx tensors with default size (1, 1, 1).
+
+  ## Examples
+
+      iex> box = AriaMath.Primitives.box_nx()
+      iex> Nx.shape(box.vertices)
+      {8, 3}
+  """
+  @spec box_nx() :: AriaMath.Primitives.Tensor.primitive_tensor()
+  def box_nx(), do: AriaMath.Primitives.Tensor.box_nx()
+
+  @doc """
+  Create a box primitive using Nx tensors with specified size.
+
+  ## Examples
+
+      iex> box = AriaMath.Primitives.box_nx({2.0, 2.0, 2.0})
+      iex> Nx.shape(box.vertices)
+      {8, 3}
+  """
+  @spec box_nx({float(), float(), float()}) :: AriaMath.Primitives.Tensor.primitive_tensor()
+  def box_nx(size), do: AriaMath.Primitives.Tensor.box_nx(size)
+
+  @doc """
+  Create a sphere primitive using Nx tensors with default radius 1.0 and 2 subdivisions.
+
+  ## Examples
+
+      iex> sphere = AriaMath.Primitives.sphere_nx()
+      iex> {num_vertices, 3} = Nx.shape(sphere.vertices)
+      iex> num_vertices > 12
+      true
+  """
+  @spec sphere_nx() :: AriaMath.Primitives.Tensor.primitive_tensor()
+  def sphere_nx(), do: AriaMath.Primitives.Tensor.sphere_nx()
+
+  @doc """
+  Create a sphere primitive using Nx tensors with specified radius and default 2 subdivisions.
+
+  ## Examples
+
+      iex> sphere = AriaMath.Primitives.sphere_nx(2.0)
+      iex> {num_vertices, 3} = Nx.shape(sphere.vertices)
+      iex> num_vertices > 12
+      true
+  """
+  @spec sphere_nx(float()) :: AriaMath.Primitives.Tensor.primitive_tensor()
+  def sphere_nx(radius), do: AriaMath.Primitives.Tensor.sphere_nx(radius)
+
+  @doc """
+  Create a sphere primitive using Nx tensors with specified radius and subdivisions.
+
+  ## Examples
+
+      iex> sphere = AriaMath.Primitives.sphere_nx(1.0, 1)
+      iex> Nx.shape(sphere.vertices)
+      {42, 3}
+  """
+  @spec sphere_nx(float(), non_neg_integer()) :: AriaMath.Primitives.Tensor.primitive_tensor()
+  def sphere_nx(radius, subdivisions), do: AriaMath.Primitives.Tensor.sphere_nx(radius, subdivisions)
+
+  @doc """
+  Create a plane primitive using Nx tensors with default size (1.0, 1.0).
+
+  ## Examples
+
+      iex> plane = AriaMath.Primitives.plane_nx()
+      iex> Nx.shape(plane.vertices)
+      {4, 3}
+  """
+  @spec plane_nx() :: AriaMath.Primitives.Tensor.primitive_tensor()
+  def plane_nx(), do: AriaMath.Primitives.Tensor.plane_nx()
+
+  @doc """
+  Create a plane primitive using Nx tensors with specified size lying on XZ plane.
+
+  ## Examples
+
+      iex> plane = AriaMath.Primitives.plane_nx({2.0, 3.0})
+      iex> Nx.shape(plane.vertices)
+      {4, 3}
+  """
+  @spec plane_nx({float(), float()}) :: AriaMath.Primitives.Tensor.primitive_tensor()
+  def plane_nx(size), do: AriaMath.Primitives.Tensor.plane_nx(size)
+
+  @doc """
+  Apply a transformation matrix to a primitive using batch operations.
+
+  ## Examples
+
+      iex> prim = AriaMath.Primitives.box_nx()
+      iex> transform = AriaMath.Matrix4.Tensor.translation_nx({1.0, 2.0, 3.0})
+      iex> transformed = AriaMath.Primitives.transform_nx(prim, transform)
+      iex> Nx.shape(transformed.vertices)
+      {8, 3}
+  """
+  @spec transform_nx(AriaMath.Primitives.Tensor.primitive_tensor(), Nx.Tensor.t()) :: AriaMath.Primitives.Tensor.primitive_tensor()
+  def transform_nx(primitive, matrix), do: AriaMath.Primitives.Tensor.transform_nx(primitive, matrix)
+
+  @doc """
+  Merge two tensor primitives into a single primitive using efficient tensor operations.
+
+  ## Examples
+
+      iex> prim1 = AriaMath.Primitives.box_nx()
+      iex> prim2 = AriaMath.Primitives.plane_nx()
+      iex> merged = AriaMath.Primitives.merge_nx(prim1, prim2)
+      iex> Nx.shape(merged.vertices)
+      {12, 3}
+  """
+  @spec merge_nx(AriaMath.Primitives.Tensor.primitive_tensor(), AriaMath.Primitives.Tensor.primitive_tensor()) :: AriaMath.Primitives.Tensor.primitive_tensor()
+  def merge_nx(prim1, prim2), do: AriaMath.Primitives.Tensor.merge_nx(prim1, prim2)
+
+  @doc """
+  Convert a tuple-based primitive to tensor format.
+
+  ## Examples
+
+      iex> tuple_prim = AriaMath.Primitives.box()
+      iex> tensor_prim = AriaMath.Primitives.from_tuple_primitive_nx(tuple_prim)
+      iex> Nx.shape(tensor_prim.vertices)
+      {8, 3}
+  """
+  @spec from_tuple_primitive_nx(primitive()) :: AriaMath.Primitives.Tensor.primitive_tensor()
+  def from_tuple_primitive_nx(primitive), do: AriaMath.Primitives.Tensor.from_tuple_primitive(primitive)
+
+  @doc """
+  Convert a tensor-based primitive back to tuple format.
+
+  ## Examples
+
+      iex> tensor_prim = AriaMath.Primitives.box_nx()
+      iex> tuple_prim = AriaMath.Primitives.to_tuple_primitive_nx(tensor_prim)
+      iex> length(tuple_prim.vertices)
+      8
+  """
+  @spec to_tuple_primitive_nx(AriaMath.Primitives.Tensor.primitive_tensor()) :: primitive()
+  def to_tuple_primitive_nx(tensor_primitive), do: AriaMath.Primitives.Tensor.to_tuple_primitive(tensor_primitive)
 end

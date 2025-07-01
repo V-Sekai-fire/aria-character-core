@@ -37,7 +37,11 @@ Migrate all four apps to use Nx tensors for their core mathematical operations w
   - ✅ Created `AriaMath.Quaternion.Tensor` module with comprehensive Nx implementation
   - ✅ Added advanced operations: multiply, conjugate, slerp, normalize with batch support
   - ✅ Integrated with main `AriaMath.Quaternion` module
-- [ ] Update Primitives (Sphere, Cylinder) to use Nx tensors
+- [x] Update Primitives (Sphere, Cylinder) to use Nx tensors
+  - ✅ Created `AriaMath.Primitives.Tensor` module with full Nx implementation
+  - ✅ Added tensor-based geometric primitive generation (box, sphere, plane)
+  - ✅ Implemented batch operations for primitive transformations and merging
+  - ✅ Integrated with main `AriaMath.Primitives` module with `_nx` suffix functions
 
 **API Compatibility Layer**:
 - [x] Create conversion functions: `to_nx/1`, `from_nx/1` for each type

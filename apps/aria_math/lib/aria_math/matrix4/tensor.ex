@@ -426,20 +426,216 @@ defmodule AriaMath.Matrix4.Tensor do
   end
 
   @doc """
-  Batch equality check for multiple matrix pairs.
+  Batch matrix equality check for multiple matrix pairs.
 
   ## Examples
 
-      iex> a_matrices = Nx.stack([AriaMath.Matrix4.Tensor.identity(), AriaMath.Matrix4.Tensor.identity()])
-      iex> b_matrices = Nx.stack([AriaMath.Matrix4.Tensor.identity(), AriaMath.Matrix4.Tensor.identity()])
-      iex> results = AriaMath.Matrix4.Tensor.equal_batch?(a_matrices, b_matrices)
+      iex> m1_batch = Nx.stack([AriaMath.Matrix4.Tensor.identity(), AriaMath.Matrix4.Tensor.identity()])
+      iex> m2_batch = Nx.stack([AriaMath.Matrix4.Tensor.identity(), AriaMath.Matrix4.Tensor.identity()])
+      iex> results = AriaMath.Matrix4.Tensor.equal_batch?(m1_batch, m2_batch)
       iex> Nx.to_list(results)
       [1, 1]  # Both pairs are equal
   """
   @spec equal_batch?(Nx.Tensor.t(), Nx.Tensor.t(), float()) :: Nx.Tensor.t()
-  def equal_batch?(a_matrices, b_matrices, tolerance \\ 1.0e-6) do
-    diff = Nx.subtract(a_matrices, b_matrices)
+  def equal_batch?(m1_batch, m2_batch, tolerance \\ 1.0e-6) do
+    diff = Nx.subtract(m1_batch, m2_batch)
     max_diff_per_matrix = Nx.abs(diff) |> Nx.reduce_max(axes: [1, 2])
     Nx.less_equal(max_diff_per_matrix, tolerance)
+  end
+
+  @doc """
+  Matrix transpose using Nx operations.
+
+  ## Examples
+
+      iex> m = AriaMath.Matrix4.Tensor.new([
+      ...>   [1.0, 2.0, 3.0, 4.0],
+      ...>   [5.0, 6.0, 7.0, 8.0],
+      ...>   [9.0, 10.0, 11.0, 12.0],
+      ...>   [13.0, 14.0, 15.0, 16.0]
+      ...> ])
+      iex> transposed = AriaMath.Matrix4.Tensor.transpose_nx(m)
+      iex> Nx.shape(transposed)
+      {4, 4}
+  """
+  @spec transpose_nx(Nx.Tensor.t()) :: Nx.Tensor.t()
+  def transpose_nx(matrix) do
+    Nx.transpose(matrix, axes: [1, 0])
+  end
+
+  @doc """
+  Matrix inverse using Nx operations.
+
+  ## Examples
+
+      iex> m = AriaMath.Matrix4.Tensor.identity()
+      iex> inv = AriaMath.Matrix4.Tensor.inverse_nx(m)
+      iex> AriaMath.Matrix4.Tensor.equal?(m, inv)
+      true
+  """
+  @spec inverse_nx(Nx.Tensor.t()) :: Nx.Tensor.t()
+  def inverse_nx(matrix) do
+    # Use Nx.LinAlg.invert for matrix inversion
+    # Handle potential singular matrices by adding small regularization
+    regularized = Nx.add(matrix, Nx.multiply(Nx.eye(4), 1.0e-12))
+    Nx.LinAlg.invert(regularized)
+  end
+
+  @doc """
+  Create a translation matrix using Nx operations.
+
+  ## Examples
+
+      iex> trans = AriaMath.Matrix4.Tensor.translation_nx({1.0, 2.0, 3.0})
+      iex> Nx.shape(trans)
+      {4, 4}
+  """
+  @spec translation_nx({float(), float(), float()}) :: Nx.Tensor.t()
+  def translation_nx({x, y, z}) do
+    Nx.tensor([
+      [1.0, 0.0, 0.0, x],
+      [0.0, 1.0, 0.0, y],
+      [0.0, 0.0, 1.0, z],
+      [0.0, 0.0, 0.0, 1.0]
+    ], type: :f32)
+  end
+
+  @doc """
+  Transform multiple points using a matrix with batch operations.
+
+  Points are assumed to be homogeneous (w = 1.0) for transformation.
+
+  ## Examples
+
+      iex> matrix = AriaMath.Matrix4.Tensor.translation_nx({1.0, 2.0, 3.0})
+      iex> points = Nx.tensor([[0.0, 0.0, 0.0], [1.0, 1.0, 1.0]], type: :f32)
+      iex> transformed = AriaMath.Matrix4.Tensor.transform_points_batch(matrix, points)
+      iex> Nx.shape(transformed)
+      {2, 3}
+  """
+  @spec transform_points_batch(Nx.Tensor.t(), Nx.Tensor.t()) :: Nx.Tensor.t()
+  def transform_points_batch(matrix, points) do
+    # Convert points to homogeneous coordinates by adding w = 1.0
+    num_points = Nx.axis_size(points, 0)
+    ones = Nx.broadcast(1.0, {num_points, 1})
+    homogeneous_points = Nx.concatenate([points, ones], axis: 1)
+
+    # Transform homogeneous points: matrix * points^T, then transpose back
+    transformed_homo = Nx.dot(homogeneous_points, [1], matrix, [0])
+
+    # Extract x, y, z components (drop w component)
+    Nx.slice_along_axis(transformed_homo, 0, 3, axis: 1)
+  end
+
+  @doc """
+  Transform multiple vectors using a matrix with batch operations.
+
+  Vectors are assumed to be directions (w = 0.0) for transformation.
+
+  ## Examples
+
+      iex> matrix = AriaMath.Matrix4.Tensor.identity()
+      iex> vectors = Nx.tensor([[1.0, 0.0, 0.0], [0.0, 1.0, 0.0]], type: :f32)
+      iex> transformed = AriaMath.Matrix4.Tensor.transform_vectors_batch(matrix, vectors)
+      iex> Nx.shape(transformed)
+      {2, 3}
+  """
+  @spec transform_vectors_batch(Nx.Tensor.t(), Nx.Tensor.t()) :: Nx.Tensor.t()
+  def transform_vectors_batch(matrix, vectors) do
+    # Convert vectors to homogeneous coordinates by adding w = 0.0
+    num_vectors = Nx.axis_size(vectors, 0)
+    zeros = Nx.broadcast(0.0, {num_vectors, 1})
+    homogeneous_vectors = Nx.concatenate([vectors, zeros], axis: 1)
+
+    # Transform homogeneous vectors: matrix * vectors^T, then transpose back
+    transformed_homo = Nx.dot(homogeneous_vectors, [1], matrix, [0])
+
+    # Extract x, y, z components (drop w component)
+    Nx.slice_along_axis(transformed_homo, 0, 3, axis: 1)
+  end
+
+  @doc """
+  Create a scaling matrix using Nx operations.
+
+  ## Examples
+
+      iex> scale = AriaMath.Matrix4.Tensor.scaling_nx({2.0, 3.0, 4.0})
+      iex> Nx.shape(scale)
+      {4, 4}
+  """
+  @spec scaling_nx({float(), float(), float()}) :: Nx.Tensor.t()
+  def scaling_nx({x, y, z}) do
+    Nx.tensor([
+      [x, 0.0, 0.0, 0.0],
+      [0.0, y, 0.0, 0.0],
+      [0.0, 0.0, z, 0.0],
+      [0.0, 0.0, 0.0, 1.0]
+    ], type: :f32)
+  end
+
+  @doc """
+  Create a rotation matrix around X-axis using Nx operations.
+
+  ## Examples
+
+      iex> rot = AriaMath.Matrix4.Tensor.rotation_x_nx(:math.pi() / 2)
+      iex> Nx.shape(rot)
+      {4, 4}
+  """
+  @spec rotation_x_nx(float()) :: Nx.Tensor.t()
+  def rotation_x_nx(angle) when is_number(angle) do
+    cos_a = :math.cos(angle)
+    sin_a = :math.sin(angle)
+
+    Nx.tensor([
+      [1.0, 0.0, 0.0, 0.0],
+      [0.0, cos_a, -sin_a, 0.0],
+      [0.0, sin_a, cos_a, 0.0],
+      [0.0, 0.0, 0.0, 1.0]
+    ], type: :f32)
+  end
+
+  @doc """
+  Create a rotation matrix around Y-axis using Nx operations.
+
+  ## Examples
+
+      iex> rot = AriaMath.Matrix4.Tensor.rotation_y_nx(:math.pi() / 2)
+      iex> Nx.shape(rot)
+      {4, 4}
+  """
+  @spec rotation_y_nx(float()) :: Nx.Tensor.t()
+  def rotation_y_nx(angle) when is_number(angle) do
+    cos_a = :math.cos(angle)
+    sin_a = :math.sin(angle)
+
+    Nx.tensor([
+      [cos_a, 0.0, sin_a, 0.0],
+      [0.0, 1.0, 0.0, 0.0],
+      [-sin_a, 0.0, cos_a, 0.0],
+      [0.0, 0.0, 0.0, 1.0]
+    ], type: :f32)
+  end
+
+  @doc """
+  Create a rotation matrix around Z-axis using Nx operations.
+
+  ## Examples
+
+      iex> rot = AriaMath.Matrix4.Tensor.rotation_z_nx(:math.pi() / 2)
+      iex> Nx.shape(rot)
+      {4, 4}
+  """
+  @spec rotation_z_nx(float()) :: Nx.Tensor.t()
+  def rotation_z_nx(angle) when is_number(angle) do
+    cos_a = :math.cos(angle)
+    sin_a = :math.sin(angle)
+
+    Nx.tensor([
+      [cos_a, -sin_a, 0.0, 0.0],
+      [sin_a, cos_a, 0.0, 0.0],
+      [0.0, 0.0, 1.0, 0.0],
+      [0.0, 0.0, 0.0, 1.0]
+    ], type: :f32)
   end
 end

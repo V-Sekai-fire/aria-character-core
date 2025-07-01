@@ -31,34 +31,49 @@ defmodule AriaMath.Vector3.Tensor do
   end
 
   @doc """
-  Creates a Vector3 tensor from a tuple.
+  Batch cross product for multiple vector pairs.
 
   ## Examples
 
-      iex> AriaMath.Vector3.Tensor.from_tuple({1.0, 2.0, 3.0})
-      #Nx.Tensor<
-        f32[3]
-        [1.0, 2.0, 3.0]
-      >
+      iex> v1_batch = Nx.stack([AriaMath.Vector3.Tensor.new(1.0, 0.0, 0.0), AriaMath.Vector3.Tensor.new(0.0, 1.0, 0.0)])
+      iex> v2_batch = Nx.stack([AriaMath.Vector3.Tensor.new(0.0, 1.0, 0.0), AriaMath.Vector3.Tensor.new(1.0, 0.0, 0.0)])
+      iex> cross_results = AriaMath.Vector3.Tensor.cross_batch(v1_batch, v2_batch)
+      iex> Nx.shape(cross_results)
+      {2, 3}
   """
-  @spec from_tuple(vector3_tuple()) :: vector3_tensor()
-  def from_tuple({x, y, z}) do
-    new(x, y, z)
+  @spec cross_batch(Nx.Tensor.t(), Nx.Tensor.t()) :: Nx.Tensor.t()
+  def cross_batch(v1_batch, v2_batch) do
+    # Extract components for batch operation
+    x1 = Nx.slice_along_axis(v1_batch, 0, 1, axis: 1) |> Nx.squeeze(axes: [1])
+    y1 = Nx.slice_along_axis(v1_batch, 1, 1, axis: 1) |> Nx.squeeze(axes: [1])
+    z1 = Nx.slice_along_axis(v1_batch, 2, 1, axis: 1) |> Nx.squeeze(axes: [1])
+
+    x2 = Nx.slice_along_axis(v2_batch, 0, 1, axis: 1) |> Nx.squeeze(axes: [1])
+    y2 = Nx.slice_along_axis(v2_batch, 1, 1, axis: 1) |> Nx.squeeze(axes: [1])
+    z2 = Nx.slice_along_axis(v2_batch, 2, 1, axis: 1) |> Nx.squeeze(axes: [1])
+
+    # Cross product formula: (a2*b3 - a3*b2, a3*b1 - a1*b3, a1*b2 - a2*b1)
+    cross_x = Nx.subtract(Nx.multiply(y1, z2), Nx.multiply(z1, y2))
+    cross_y = Nx.subtract(Nx.multiply(z1, x2), Nx.multiply(x1, z2))
+    cross_z = Nx.subtract(Nx.multiply(x1, y2), Nx.multiply(y1, x2))
+
+    # Stack components back into vectors
+    Nx.stack([cross_x, cross_y, cross_z], axis: 1)
   end
 
   @doc """
-  Converts a Vector3 tensor to a tuple.
+  Scale multiple vectors by a scalar factor using batch operations.
 
   ## Examples
 
-      iex> tensor = AriaMath.Vector3.Tensor.new(1.0, 2.0, 3.0)
-      iex> AriaMath.Vector3.Tensor.to_tuple(tensor)
-      {1.0, 2.0, 3.0}
+      iex> vectors = Nx.stack([AriaMath.Vector3.Tensor.new(1.0, 2.0, 3.0), AriaMath.Vector3.Tensor.new(4.0, 5.0, 6.0)])
+      iex> scaled = AriaMath.Vector3.Tensor.scale_batch(vectors, 2.0)
+      iex> Nx.to_list(scaled)
+      [[2.0, 4.0, 6.0], [8.0, 10.0, 12.0]]
   """
-  @spec to_tuple(vector3_tensor()) :: vector3_tuple()
-  def to_tuple(tensor) do
-    [x, y, z] = Nx.to_list(tensor)
-    {x, y, z}
+  @spec scale_batch(Nx.Tensor.t(), float()) :: Nx.Tensor.t()
+  def scale_batch(vectors, factor) when is_number(factor) do
+    Nx.multiply(vectors, factor)
   end
 
   @doc """
