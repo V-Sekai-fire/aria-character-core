@@ -174,6 +174,8 @@ defmodule AriaMath.Quaternion.Conversions do
   Creates a quaternion from Euler angles in radians.
   Order of rotation: yaw (Y), pitch (X), roll (Z).
 
+  TODO: Use the from_euler in matrix4 instead of this one because it's missing euler orders.
+
   ## Examples
 
       iex> AriaMath.Quaternion.Conversions.from_euler(0.0, 0.0, :math.pi / 2)
