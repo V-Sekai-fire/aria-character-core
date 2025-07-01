@@ -743,6 +743,38 @@ defmodule AriaMath.Matrix4.Tensor do
   end
 
   @doc """
+  Transform multiple point sets using multiple matrices with batch operations.
+
+  Each matrix transforms its corresponding set of points. This is different from
+  transform_points_batch which uses a single matrix for all points.
+
+  ## Examples
+
+      iex> matrices = Nx.stack([AriaMath.Matrix4.Tensor.identity(), AriaMath.Matrix4.Tensor.translation_nx({1.0, 0.0, 0.0})])
+      iex> points = Nx.tensor([[[0.0, 0.0, 0.0], [1.0, 1.0, 1.0]], [[2.0, 2.0, 2.0], [3.0, 3.0, 3.0]]], type: :f32)
+      iex> transformed = AriaMath.Matrix4.Tensor.transform_points_batch_multi(matrices, points)
+      iex> Nx.shape(transformed)
+      {2, 2, 3}
+  """
+  @spec transform_points_batch_multi(Nx.Tensor.t(), Nx.Tensor.t()) :: Nx.Tensor.t()
+  def transform_points_batch_multi(matrices, points) do
+    # matrices: {num_matrices, 4, 4}
+    # points: {num_matrices, num_points, 3}
+
+    # Convert points to homogeneous coordinates by adding w = 1.0
+    {num_matrices, num_points, _} = Nx.shape(points)
+    ones = Nx.broadcast(1.0, {num_matrices, num_points, 1})
+    homogeneous_points = Nx.concatenate([points, ones], axis: 2)
+
+    # Batch matrix multiplication: each matrix transforms its corresponding point set
+    # Use batched dot product: matrices[i] * homogeneous_points[i]^T
+    transformed_homo = Nx.dot(matrices, [2], homogeneous_points, [2])
+
+    # Extract x, y, z components (drop w component)
+    Nx.slice_along_axis(transformed_homo, 0, 3, axis: 2)
+  end
+
+  @doc """
   Extract translation vectors from batch of transformation matrices.
 
   ## Examples

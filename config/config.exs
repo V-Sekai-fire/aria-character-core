@@ -24,5 +24,12 @@ config :hammer,
 # Suppress Porcelain goon executable warning
 config :porcelain, goon_warn_if_missing: false
 
+# Configure Nx with TorchX backend for GPU acceleration
+config :nx, :default_backend, Torchx.Backend
+
+# Configure TorchX for CUDA support (RTX 4090)
+# This will use CUDA 12.8 for optimal RTX 4090 performance
+config :torchx, :default_device, :cuda
+
 # Import environment specific config files
 import_config "#{config_env()}.exs"

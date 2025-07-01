@@ -52,6 +52,10 @@ defmodule AriaCharacterCore.MixProject do
       # Planning and AI/ML
       {:libgraph, "~> 0.16"},
 
+      # Numerical computing with GPU acceleration
+      {:nx, "~> 0.10"},
+      {:torchx, "~> 0.9"},
+
       # Phoenix web framework
       {:phoenix, "~> 1.7"},
       {:phoenix_html, "~> 4.0"},

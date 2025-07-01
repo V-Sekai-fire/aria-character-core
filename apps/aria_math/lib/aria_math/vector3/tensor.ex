@@ -62,6 +62,22 @@ defmodule AriaMath.Vector3.Tensor do
   end
 
   @doc """
+  Batch vector addition for multiple vector pairs.
+
+  ## Examples
+
+      iex> vectors_a = Nx.tensor([[1.0, 2.0, 3.0], [4.0, 5.0, 6.0]])
+      iex> vectors_b = Nx.tensor([[1.0, 1.0, 1.0], [2.0, 2.0, 2.0]])
+      iex> result = AriaMath.Vector3.Tensor.add_batch(vectors_a, vectors_b)
+      iex> Nx.to_list(result)
+      [[2.0, 3.0, 4.0], [6.0, 7.0, 8.0]]
+  """
+  @spec add_batch(Nx.Tensor.t(), Nx.Tensor.t()) :: Nx.Tensor.t()
+  def add_batch(vectors_a, vectors_b) do
+    Nx.add(vectors_a, vectors_b)
+  end
+
+  @doc """
   Scale multiple vectors by a scalar factor using batch operations.
 
   ## Examples
@@ -188,16 +204,13 @@ defmodule AriaMath.Vector3.Tensor do
     # Avoid division by zero by replacing zero lengths with 1
     safe_lengths = Nx.select(valid_mask, lengths, 1.0)
 
-    # Normalize vectors
-    normalized = Nx.divide(vecs, Nx.new_axis(safe_lengths, -1))
+    # Normalize vectors - reshape safe_lengths to broadcast correctly
+    safe_lengths_reshaped = Nx.reshape(safe_lengths, {:auto, 1})
+    normalized = Nx.divide(vecs, safe_lengths_reshaped)
 
-    # Zero out invalid vectors
-    zero_vec = Nx.tensor([0.0, 0.0, 0.0])
-    final_normalized = Nx.select(
-      Nx.new_axis(valid_mask, -1),
-      normalized,
-      zero_vec
-    )
+    # Zero out invalid vectors using where instead of select
+    valid_mask_reshaped = Nx.reshape(valid_mask, {:auto, 1})
+    final_normalized = Nx.multiply(normalized, valid_mask_reshaped)
 
     {final_normalized, valid_mask}
   end

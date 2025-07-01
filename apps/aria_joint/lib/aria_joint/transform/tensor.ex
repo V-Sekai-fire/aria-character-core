@@ -199,7 +199,7 @@ defmodule AriaJoint.Transform.Tensor do
   """
   @spec to_global_batch(joint_tensor(), Nx.Tensor.t()) :: Nx.Tensor.t()
   def to_global_batch(joint_tensor, local_points) do
-    Matrix4.Tensor.transform_points_batch(joint_tensor.global_transforms, local_points)
+    Matrix4.Tensor.transform_points_batch_multi(joint_tensor.global_transforms, local_points)
   end
 
   @doc """
