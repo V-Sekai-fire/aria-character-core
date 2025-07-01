@@ -138,4 +138,97 @@ defmodule AriaQcp do
   def superpose(moved, target, translate \\ true, precision \\ 1.0e-6) do
     weighted_superpose(moved, target, [], translate, precision)
   end
+
+  # Nx tensor integration functions
+
+  @doc """
+  Convert multiple point clouds to tensor format for batch processing.
+
+  ## Examples
+
+      moved_clouds = [
+        [{1.0, 0.0, 0.0}, {0.0, 1.0, 0.0}],
+        [{2.0, 0.0, 0.0}, {0.0, 2.0, 0.0}]
+      ]
+      target_clouds = [
+        [{0.0, 1.0, 0.0}, {-1.0, 0.0, 0.0}],
+        [{0.0, 2.0, 0.0}, {-2.0, 0.0, 0.0}]
+      ]
+      {moved_tensor, target_tensor} = AriaQcp.point_clouds_to_tensors_nx(moved_clouds, target_clouds)
+  """
+  defdelegate point_clouds_to_tensors_nx(moved_clouds, target_clouds), to: AriaQcp.Tensor, as: :point_clouds_to_tensors
+
+  @doc """
+  Convert tensor results back to list format.
+
+  ## Examples
+
+      {rotations_list, translations_list} = AriaQcp.tensors_to_results_nx(rotations, translations)
+  """
+  defdelegate tensors_to_results_nx(rotations, translations), to: AriaQcp.Tensor, as: :tensors_to_results
+
+  @doc """
+  Perform batch superposition of multiple point cloud pairs.
+
+  ## Examples
+
+      # Process 100 protein structures simultaneously
+      results = AriaQcp.batch_superpose_nx(moved_tensor, target_tensor)
+  """
+  defdelegate batch_superpose_nx(moved_tensor, target_tensor, opts \\ []), to: AriaQcp.Tensor, as: :batch_superpose
+
+  @doc """
+  Apply rotations and translations to multiple point clouds.
+
+  ## Examples
+
+      transformed_clouds = AriaQcp.apply_transformations_batch_nx(point_clouds, rotations, translations)
+  """
+  defdelegate apply_transformations_batch_nx(point_clouds, rotations, translations), to: AriaQcp.Tensor, as: :apply_transformations_batch
+
+  @doc """
+  Calculate RMSD (Root Mean Square Deviation) for multiple alignments.
+
+  ## Examples
+
+      rmsd_values = AriaQcp.calculate_rmsd_batch_nx(moved, target, rotations)
+  """
+  defdelegate calculate_rmsd_batch_nx(moved_points, target_points, rotations), to: AriaQcp.Tensor, as: :calculate_rmsd_batch
+
+  @doc """
+  Generate multiple random point cloud pairs for testing.
+
+  ## Examples
+
+      {moved_clouds, target_clouds} = AriaQcp.generate_test_data_nx(10, 50)
+      # 10 pairs of point clouds, each with 50 points
+  """
+  defdelegate generate_test_data_nx(num_pairs, points_per_cloud, opts \\ []), to: AriaQcp.Tensor, as: :generate_test_data
+
+  @doc """
+  Validate batch processing results.
+
+  ## Examples
+
+      validation_results = AriaQcp.validate_batch_results_nx(results)
+  """
+  defdelegate validate_batch_results_nx(results), to: AriaQcp.Tensor, as: :validate_batch_results
+
+  @doc """
+  Batch process weights for multiple point cloud pairs.
+
+  ## Examples
+
+      weighted_clouds = AriaQcp.apply_weights_batch_nx(point_clouds, weights)
+  """
+  defdelegate apply_weights_batch_nx(point_clouds, weights), to: AriaQcp.Tensor, as: :apply_weights_batch
+
+  @doc """
+  Calculate characteristic polynomial eigenvalues for batch QCP processing.
+
+  ## Examples
+
+      eigenvalues = AriaQcp.calculate_eigenvalues_batch_nx(covariance_matrices)
+  """
+  defdelegate calculate_eigenvalues_batch_nx(covariance_matrices), to: AriaQcp.Tensor, as: :calculate_eigenvalues_batch
 end

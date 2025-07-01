@@ -36,6 +36,9 @@ defmodule AriaGltf.MixProject do
   # Run "mix help deps" to learn about dependencies.
   defp deps do
     [
+      # Mathematical operations and tensor support
+      {:aria_math, in_umbrella: true},
+
       # JSON parsing for glTF files
       {:jason, "~> 1.4"},
 

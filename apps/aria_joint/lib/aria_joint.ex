@@ -214,4 +214,138 @@ defmodule AriaJoint do
       AriaJoint.cleanup(node)
   """
   defdelegate cleanup(node), to: Joint
+
+  # Nx tensor integration functions
+
+  @doc """
+  Convert a list of joints to tensor format for batch operations.
+
+  ## Examples
+
+      joint_tensors = AriaJoint.from_joints_nx([joint1, joint2, joint3])
+      {num_joints, 4, 4} = Nx.shape(joint_tensors.local_transforms)
+  """
+  @spec from_joints_nx([Joint.t()]) :: AriaJoint.Transform.Tensor.joint_tensor()
+  def from_joints_nx(joints), do: AriaJoint.Transform.Tensor.from_joints(joints)
+
+  @doc """
+  Convert tensor data back to updated joint list.
+
+  ## Examples
+
+      updated_joints = AriaJoint.to_joints_nx(tensor_data, original_joints)
+  """
+  @spec to_joints_nx(AriaJoint.Transform.Tensor.joint_tensor(), [Joint.t()]) :: [Joint.t()]
+  def to_joints_nx(tensor_data, original_joints), do: AriaJoint.Transform.Tensor.to_joints(tensor_data, original_joints)
+
+  @doc """
+  Apply local transforms to multiple joints using batch tensor operations.
+
+  ## Examples
+
+      # transforms is a tensor of shape {num_joints, 4, 4}
+      updated_tensor = AriaJoint.apply_local_transforms_batch_nx(joint_tensor, transforms)
+  """
+  @spec apply_local_transforms_batch_nx(AriaJoint.Transform.Tensor.joint_tensor(), Nx.Tensor.t()) :: AriaJoint.Transform.Tensor.joint_tensor()
+  def apply_local_transforms_batch_nx(joint_tensor, transforms), do: AriaJoint.Transform.Tensor.apply_local_transforms_batch(joint_tensor, transforms)
+
+  @doc """
+  Compute global transforms for all joints using batch operations.
+
+  ## Examples
+
+      updated_tensor = AriaJoint.compute_global_transforms_batch_nx(joint_tensor)
+  """
+  @spec compute_global_transforms_batch_nx(AriaJoint.Transform.Tensor.joint_tensor()) :: AriaJoint.Transform.Tensor.joint_tensor()
+  def compute_global_transforms_batch_nx(joint_tensor), do: AriaJoint.Transform.Tensor.compute_global_transforms_batch(joint_tensor)
+
+  @doc """
+  Convert multiple points from local to global space for multiple joints.
+
+  ## Examples
+
+      global_points = AriaJoint.to_global_batch_nx(joint_tensor, local_points)
+  """
+  @spec to_global_batch_nx(AriaJoint.Transform.Tensor.joint_tensor(), Nx.Tensor.t()) :: Nx.Tensor.t()
+  def to_global_batch_nx(joint_tensor, local_points), do: AriaJoint.Transform.Tensor.to_global_batch(joint_tensor, local_points)
+
+  @doc """
+  Convert multiple points from global to local space for multiple joints.
+
+  ## Examples
+
+      local_points = AriaJoint.to_local_batch_nx(joint_tensor, global_points)
+  """
+  @spec to_local_batch_nx(AriaJoint.Transform.Tensor.joint_tensor(), Nx.Tensor.t()) :: Nx.Tensor.t()
+  def to_local_batch_nx(joint_tensor, global_points), do: AriaJoint.Transform.Tensor.to_local_batch(joint_tensor, global_points)
+
+  @doc """
+  Apply rotations to multiple joints using batch operations.
+
+  ## Examples
+
+      updated_tensor = AriaJoint.apply_rotations_batch_nx(joint_tensor, rotations)
+  """
+  @spec apply_rotations_batch_nx(AriaJoint.Transform.Tensor.joint_tensor(), Nx.Tensor.t()) :: AriaJoint.Transform.Tensor.joint_tensor()
+  def apply_rotations_batch_nx(joint_tensor, rotations), do: AriaJoint.Transform.Tensor.apply_rotations_batch(joint_tensor, rotations)
+
+  @doc """
+  Apply scaling to multiple joints using batch operations.
+
+  ## Examples
+
+      updated_tensor = AriaJoint.apply_scales_batch_nx(joint_tensor, scales)
+  """
+  @spec apply_scales_batch_nx(AriaJoint.Transform.Tensor.joint_tensor(), Nx.Tensor.t()) :: AriaJoint.Transform.Tensor.joint_tensor()
+  def apply_scales_batch_nx(joint_tensor, scales), do: AriaJoint.Transform.Tensor.apply_scales_batch(joint_tensor, scales)
+
+  @doc """
+  Interpolate between two sets of joint transforms for animation.
+
+  ## Examples
+
+      interpolated = AriaJoint.interpolate_batch_nx(joint_tensor_a, joint_tensor_b, 0.5)
+  """
+  @spec interpolate_batch_nx(AriaJoint.Transform.Tensor.joint_tensor(), AriaJoint.Transform.Tensor.joint_tensor(), float()) :: AriaJoint.Transform.Tensor.joint_tensor()
+  def interpolate_batch_nx(tensor_a, tensor_b, t), do: AriaJoint.Transform.Tensor.interpolate_batch(tensor_a, tensor_b, t)
+
+  @doc """
+  Extract joint positions from transform matrices.
+
+  ## Examples
+
+      positions = AriaJoint.extract_positions_batch_nx(joint_tensor)
+  """
+  @spec extract_positions_batch_nx(AriaJoint.Transform.Tensor.joint_tensor()) :: Nx.Tensor.t()
+  def extract_positions_batch_nx(joint_tensor), do: AriaJoint.Transform.Tensor.extract_positions_batch(joint_tensor)
+
+  @doc """
+  Extract joint rotations as quaternions from transform matrices.
+
+  ## Examples
+
+      quaternions = AriaJoint.extract_rotations_batch_nx(joint_tensor)
+  """
+  @spec extract_rotations_batch_nx(AriaJoint.Transform.Tensor.joint_tensor()) :: Nx.Tensor.t()
+  def extract_rotations_batch_nx(joint_tensor), do: AriaJoint.Transform.Tensor.extract_rotations_batch(joint_tensor)
+
+  @doc """
+  Apply tensor-based transform to a single joint (convenience function).
+
+  ## Examples
+
+      updated_joint = AriaJoint.apply_transform_nx(joint, transform_tensor)
+  """
+  @spec apply_transform_nx(Joint.t(), Nx.Tensor.t()) :: Joint.t()
+  def apply_transform_nx(joint, transform_tensor), do: AriaJoint.Transform.Tensor.apply_transform_nx(joint, transform_tensor)
+
+  @doc """
+  Batch update multiple joints and sync with registry.
+
+  ## Examples
+
+      {:ok, updated_joints} = AriaJoint.batch_update_and_sync_nx(joints, transforms)
+  """
+  @spec batch_update_and_sync_nx([Joint.t()], Nx.Tensor.t()) :: {:ok, [Joint.t()]} | {:error, term()}
+  def batch_update_and_sync_nx(joints, transforms), do: AriaJoint.Transform.Tensor.batch_update_and_sync(joints, transforms)
 end

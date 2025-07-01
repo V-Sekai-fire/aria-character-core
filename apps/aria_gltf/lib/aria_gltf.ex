@@ -249,6 +249,156 @@ defmodule AriaGltf do
     }
   end
 
+  # Nx tensor integration functions
+
+  @doc """
+  Convert vertex position list to Nx tensor for batch processing.
+
+  ## Examples
+
+      positions = [{0.0, 0.0, 0.0}, {1.0, 0.0, 0.0}, {0.0, 1.0, 0.0}]
+      vertex_tensor = AriaGltf.vertices_to_tensor_nx(positions)
+  """
+  defdelegate vertices_to_tensor_nx(positions), to: AriaGltf.Mesh.Tensor, as: :vertices_to_tensor
+
+  @doc """
+  Convert Nx tensor back to vertex position list.
+
+  ## Examples
+
+      positions = AriaGltf.tensor_to_vertices_nx(vertex_tensor)
+  """
+  defdelegate tensor_to_vertices_nx(vertex_tensor), to: AriaGltf.Mesh.Tensor, as: :tensor_to_vertices
+
+  @doc """
+  Create comprehensive mesh tensor from various attribute lists.
+
+  ## Examples
+
+      mesh = AriaGltf.create_mesh_tensor_nx(vertices, normals, uvs, indices)
+  """
+  defdelegate create_mesh_tensor_nx(vertices, normals \\ nil, uvs \\ nil, indices \\ nil), to: AriaGltf.Mesh.Tensor, as: :create_mesh_tensor
+
+  @doc """
+  Apply transformation matrix to vertices using batch operations.
+
+  ## Examples
+
+      transform = AriaMath.Matrix4.translation({1.0, 0.0, 0.0})
+      transformed_vertices = AriaGltf.transform_vertices_batch_nx(vertex_tensor, transform)
+  """
+  defdelegate transform_vertices_batch_nx(vertex_tensor, transform_matrix), to: AriaGltf.Mesh.Tensor, as: :transform_vertices_batch
+
+  @doc """
+  Apply multiple transformations to multiple meshes efficiently.
+
+  ## Examples
+
+      transformed_batches = AriaGltf.transform_mesh_batch_nx(vertex_batches, transforms)
+  """
+  defdelegate transform_mesh_batch_nx(vertex_batches, transforms), to: AriaGltf.Mesh.Tensor, as: :transform_mesh_batch
+
+  @doc """
+  Calculate face normals for triangulated mesh using cross product.
+
+  ## Examples
+
+      normals = AriaGltf.calculate_face_normals_nx(vertices, indices)
+  """
+  defdelegate calculate_face_normals_nx(vertices, indices), to: AriaGltf.Mesh.Tensor, as: :calculate_face_normals
+
+  @doc """
+  Calculate smooth vertex normals by averaging adjacent face normals.
+
+  ## Examples
+
+      vertex_normals = AriaGltf.calculate_vertex_normals_nx(vertices, indices)
+  """
+  defdelegate calculate_vertex_normals_nx(vertices, indices), to: AriaGltf.Mesh.Tensor, as: :calculate_vertex_normals
+
+  @doc """
+  Calculate tangent vectors for normal mapping support.
+
+  ## Examples
+
+      tangents = AriaGltf.calculate_tangents_nx(vertices, normals, uvs, indices)
+  """
+  defdelegate calculate_tangents_nx(vertices, normals, uvs, indices), to: AriaGltf.Mesh.Tensor, as: :calculate_tangents
+
+  @doc """
+  Apply skinning transformations using joint matrices and weights.
+
+  ## Examples
+
+      skinned_vertices = AriaGltf.apply_skinning_nx(vertices, joint_matrices, joint_indices, joint_weights)
+  """
+  defdelegate apply_skinning_nx(vertices, joint_matrices, joint_indices, joint_weights), to: AriaGltf.Mesh.Tensor, as: :apply_skinning
+
+  @doc """
+  Generate level-of-detail (LOD) versions of mesh by vertex decimation.
+
+  ## Examples
+
+      lod_meshes = AriaGltf.generate_lod_levels_nx(mesh_tensor, [0.5, 0.25, 0.1])
+  """
+  defdelegate generate_lod_levels_nx(mesh_tensor, reduction_factors), to: AriaGltf.Mesh.Tensor, as: :generate_lod_levels
+
+  @doc """
+  Optimize mesh by removing duplicate vertices and updating indices.
+
+  ## Examples
+
+      optimized_mesh = AriaGltf.optimize_mesh_nx(mesh_tensor, tolerance: 0.001)
+  """
+  defdelegate optimize_mesh_nx(mesh_tensor, opts \\ []), to: AriaGltf.Mesh.Tensor, as: :optimize_mesh
+
+  @doc """
+  Calculate bounding box for mesh vertices.
+
+  ## Examples
+
+      {min_bounds, max_bounds} = AriaGltf.calculate_bounds_nx(vertex_tensor)
+  """
+  defdelegate calculate_bounds_nx(vertex_tensor), to: AriaGltf.Mesh.Tensor, as: :calculate_bounds
+
+  @doc """
+  Perform batch bounds calculation for multiple meshes.
+
+  ## Examples
+
+      bounds_list = AriaGltf.calculate_bounds_batch_nx([mesh1, mesh2, mesh3])
+  """
+  defdelegate calculate_bounds_batch_nx(vertex_tensors), to: AriaGltf.Mesh.Tensor, as: :calculate_bounds_batch
+
+  @doc """
+  Merge multiple meshes into a single mesh tensor.
+
+  ## Examples
+
+      merged_mesh = AriaGltf.merge_meshes_nx([mesh1, mesh2, mesh3])
+  """
+  defdelegate merge_meshes_nx(mesh_tensors), to: AriaGltf.Mesh.Tensor, as: :merge_meshes
+
+  @doc """
+  Convert mesh indices to Nx tensor.
+
+  ## Examples
+
+      indices = [0, 1, 2, 1, 3, 2]
+      index_tensor = AriaGltf.indices_to_tensor_nx(indices)
+  """
+  defdelegate indices_to_tensor_nx(indices), to: AriaGltf.Mesh.Tensor, as: :indices_to_tensor
+
+  @doc """
+  Convert UV coordinates to Nx tensor.
+
+  ## Examples
+
+      uvs = [{0.0, 0.0}, {1.0, 0.0}, {0.5, 1.0}]
+      uv_tensor = AriaGltf.uvs_to_tensor_nx(uvs)
+  """
+  defdelegate uvs_to_tensor_nx(uvs), to: AriaGltf.Mesh.Tensor, as: :uvs_to_tensor
+
   @doc """
   Hello world.
 
