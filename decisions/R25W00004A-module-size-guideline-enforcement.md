@@ -28,7 +28,7 @@ Analysis reveals multiple modules violating these guidelines, with several requi
 - ~~`aria_gltf/import/parser.ex` (502 → 105 lines)~~ - **COMPLETED**
 
 ### Strong Recommendation (400-500 lines)
-- `aria_math/primitives/tensor.ex` (493 lines)
+- ~~`aria_math/primitives/tensor.ex` (493 → 47 lines)~~ - **COMPLETED**
 - `aria_timeline/bridge.ex` (480 lines)
 - `aria_gltf/mesh.ex` (480 lines)
 - `aria_gltf.ex` (479 lines)
@@ -299,6 +299,30 @@ Analysis reveals multiple modules violating these guidelines, with several requi
 - **Main Parser** (105 lines): Document coordination, validation, and error handling
 
 **Status:** ✅ **COMPLETED** - Critical violation eliminated, all modules under firm threshold
+
+#### Task 1.9: Split AriaMath.Primitives.Tensor (493 lines) ✅ **COMPLETED**
+**File:** `apps/aria_math/lib/aria_math/primitives/tensor.ex`
+
+**Splitting Strategy:**
+- [x] **Core operations**: Conversion and utility functions (103 lines)
+- [x] **Shape generation**: Basic shape creation (box, sphere, plane) (304 lines)
+- [x] **Operations**: Transform, merge, and manipulation operations (106 lines)
+- [x] **Main module**: Clean delegation API maintaining backward compatibility (47 lines)
+
+**Implementation Steps:**
+1. ✅ Create `tensor/core.ex` for conversion and utility functions
+2. ✅ Create `tensor/shapes.ex` for shape generation with complex sphere subdivision
+3. ✅ Create `tensor/operations.ex` for transformation and manipulation operations
+4. ✅ Update main tensor module to delegate to split modules
+5. ✅ Verify all Nx tensor operations remain accurate and efficient
+
+**Results:** Successfully split 493-line module into 3 focused modules:
+- **Core** (103 lines): Conversion functions, bounding box calculations, type definitions
+- **Shapes** (304 lines): Complex shape generation including sphere subdivision algorithms
+- **Operations** (106 lines): Transform, merge, scale, and translate operations
+- **Main Tensor** (47 lines): Clean delegation API maintaining full backward compatibility
+
+**Status:** ✅ **COMPLETED** - Firm threshold violation eliminated, all modules well-organized
 
 ### Phase 2: Firm Threshold Modules (PRIORITY: MEDIUM)
 **Target:** Address 400-500 line modules systematically
