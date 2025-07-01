@@ -148,7 +148,7 @@ defmodule AriaGltf.ExternalFilesTest do
       }
     end
 
-    test "loads regular files", %{test_dir: test_dir, test_image: test_image, png_data: png_data} do
+    test "loads regular files", %{test_dir: test_dir, test_image: _test_image, png_data: png_data} do
       assert {:ok, loaded_data} = ExternalFiles.load_file("test.png", base_path: test_dir)
       assert loaded_data == png_data
     end
@@ -301,7 +301,7 @@ defmodule AriaGltf.ExternalFilesTest do
   describe "image format detection" do
     test "detects JPEG format" do
       jpeg_header = <<0xFF, 0xD8, 0xFF, 0xE0>>
-      uri_info = %{path: "test.jpg", is_data_uri: false, scheme: nil, mime_type: "image/jpeg"}
+      _uri_info = %{path: "test.jpg", is_data_uri: false, scheme: nil, mime_type: "image/jpeg"}
 
       # We'll test this indirectly through load_image since detect_image_format is private
       # but we can test the public interface behavior
@@ -330,7 +330,7 @@ defmodule AriaGltf.ExternalFilesTest do
   def analyze_image_data(data, validate, supported_formats) do
     case AriaGltf.ExternalFiles.load_image("dummy", validate_format: validate, supported_formats: supported_formats) do
       {:ok, %{data: ^data} = info} -> {:ok, Map.delete(info, :data)}
-      {:error, _} = error ->
+      {:error, _} = _error ->
         # Simulate the analyze_image_data call directly
         if validate do
           case data do

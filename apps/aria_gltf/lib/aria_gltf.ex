@@ -143,6 +143,18 @@ defmodule AriaGltf do
   defdelegate validate_uri(uri_info, allow_http), to: AriaGltf.ExternalFiles
   defdelegate resolve_file_path(uri_info, base_path), to: AriaGltf.ExternalFiles
 
+  # Helper Functions API (AriaGltf.Helpers)
+  defdelegate create_minimal_gltf_document(opts \\ []), to: AriaGltf.Helpers, as: :create_minimal_document
+  defdelegate create_simple_scene(opts \\ []), to: AriaGltf.Helpers
+  defdelegate create_helper_node(opts \\ []), to: AriaGltf.Helpers, as: :create_node
+  defdelegate create_simple_mesh(opts \\ []), to: AriaGltf.Helpers
+  defdelegate create_pbr_material(opts \\ []), to: AriaGltf.Helpers
+  defdelegate create_simple_animation(opts \\ []), to: AriaGltf.Helpers
+  defdelegate create_helper_buffer(opts \\ []), to: AriaGltf.Helpers, as: :create_buffer
+  defdelegate create_helper_buffer_view(opts \\ []), to: AriaGltf.Helpers, as: :create_buffer_view
+  defdelegate create_helper_accessor(opts \\ []), to: AriaGltf.Helpers, as: :create_accessor
+  defdelegate create_cube_mesh(opts \\ []), to: AriaGltf.Helpers
+
   @doc """
   Creates a complete glTF document with minimal required elements.
 

@@ -288,7 +288,7 @@ defmodule AriaGltf.ExternalFiles do
     # SOF markers - extract segment based on length
     segment_size = length - 2
     if byte_size(rest) >= segment_size do
-      <<segment::binary-size(segment_size), remaining::binary>> = rest
+      <<segment::binary-size(segment_size), _remaining::binary>> = rest
       case segment do
         <<_precision, height::16-big, width::16-big, _rest::binary>> ->
           {:ok, %{width: width, height: height}}
