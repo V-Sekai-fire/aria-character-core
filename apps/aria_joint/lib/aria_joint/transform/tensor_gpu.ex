@@ -28,41 +28,32 @@ defmodule AriaJoint.Transform.TensorGPU do
   @doc """
   GPU-optimized batch hierarchy propagation using JIT compilation.
 
-  Keeps all operations on GPU with minimal memory transfers.
+  Uses fixed iteration count for maximum GPU performance.
+  All operations stay on GPU with no CPU transfers.
   """
   @spec batch_hierarchy_propagation_gpu(Nx.Tensor.t(), Nx.Tensor.t()) :: Nx.Tensor.t()
   def batch_hierarchy_propagation_gpu(local_transforms, parent_indices) do
-    # Use AriaMath.Memory for optimal batch sizing
-    {batch_size, _, _} = Nx.shape(local_transforms)
-
-    if AriaMath.Memory.will_fit_in_memory?(:hierarchy_propagation, {batch_size, 4, 4}) do
-      # Single GPU operation for optimal performance
-      hierarchy_propagation_defn(local_transforms, parent_indices)
-    else
-      # Use chunked processing with memory management
-      _optimal_batch = AriaMath.Memory.optimal_batch_size(:hierarchy_propagation, {batch_size, 4, 4})
-
-      AriaMath.Memory.auto_chunk_process(
-        local_transforms,
-        :hierarchy_propagation,
-        fn chunk ->
-          {start_idx, _} = chunk |> Nx.shape()
-          chunk_parent_indices = Nx.slice_along_axis(parent_indices, 0, start_idx, axis: 0)
-          hierarchy_propagation_defn(chunk, chunk_parent_indices)
-        end
-      )
-    end
+    # Use fixed iteration count for optimal GPU performance
+    # Most skeletal hierarchies converge in 5-10 iterations
+    hierarchy_propagation_defn(local_transforms, parent_indices)
   end
 
   @doc """
-  JIT-compiled hierarchy propagation for maximum GPU performance.
+  JIT-compiled hierarchy propagation with fixed iterations for maximum GPU performance.
+
+  Uses unrolled iterations to avoid recursion issues in defn compilation.
   """
   @spec hierarchy_propagation_defn(Nx.Tensor.t(), Nx.Tensor.t()) :: Nx.Tensor.t()
   defn hierarchy_propagation_defn(local_transforms, parent_indices) do
-    # Initialize global transforms with local transforms
+    # Initialize with local transforms
     global_transforms = local_transforms
 
-    # Use fixed iterations for GPU optimization (most hierarchies converge in 3-5 iterations)
+    # Unroll iterations for optimal GPU performance (avoids recursion issues)
+    global_transforms = propagate_step_gpu(global_transforms, parent_indices, local_transforms)
+    global_transforms = propagate_step_gpu(global_transforms, parent_indices, local_transforms)
+    global_transforms = propagate_step_gpu(global_transforms, parent_indices, local_transforms)
+    global_transforms = propagate_step_gpu(global_transforms, parent_indices, local_transforms)
+    global_transforms = propagate_step_gpu(global_transforms, parent_indices, local_transforms)
     global_transforms = propagate_step_gpu(global_transforms, parent_indices, local_transforms)
     global_transforms = propagate_step_gpu(global_transforms, parent_indices, local_transforms)
     global_transforms = propagate_step_gpu(global_transforms, parent_indices, local_transforms)
@@ -152,21 +143,7 @@ defmodule AriaJoint.Transform.TensorGPU do
   """
   @spec batch_matrix_multiply_gpu(Nx.Tensor.t(), Nx.Tensor.t()) :: Nx.Tensor.t()
   def batch_matrix_multiply_gpu(matrices_a, matrices_b) do
-    {batch_size, _, _} = Nx.shape(matrices_a)
-
-    if AriaMath.Memory.will_fit_in_memory?(:matrix_multiply, {batch_size, 4, 4}) do
-      batch_matrix_multiply_defn(matrices_a, matrices_b)
-    else
-      AriaMath.Memory.auto_chunk_process(
-        matrices_a,
-        :matrix_multiply,
-        fn chunk_a ->
-          {start_idx, _, _} = Nx.shape(chunk_a)
-          chunk_b = Nx.slice_along_axis(matrices_b, 0, start_idx, axis: 0)
-          batch_matrix_multiply_defn(chunk_a, chunk_b)
-        end
-      )
-    end
+    batch_matrix_multiply_defn(matrices_a, matrices_b)
   end
 
   @doc """
@@ -219,12 +196,13 @@ defmodule AriaJoint.Transform.TensorGPU do
 
   @doc """
   Create GPU-optimized joint tensor data with all tensors on GPU.
+  Ensures data starts and stays on GPU for maximum performance.
   """
   @spec create_gpu_joint_data(list()) :: map()
   def create_gpu_joint_data(transforms_list) when is_list(transforms_list) do
     size = length(transforms_list)
 
-    # Create tensors directly on GPU
+    # Create tensors directly on GPU with proper backend
     local_transforms = transforms_list
     |> Nx.tensor(type: :f32)
     |> Nx.backend_copy({Torchx.Backend, device: :cuda})
@@ -247,6 +225,7 @@ defmodule AriaJoint.Transform.TensorGPU do
 
   @doc """
   Complete GPU-optimized joint processing pipeline.
+  All operations stay on GPU for maximum performance.
   """
   @spec gpu_joint_pipeline(map()) :: map()
   def gpu_joint_pipeline(joint_data) do
@@ -264,5 +243,34 @@ defmodule AriaJoint.Transform.TensorGPU do
       positions: positions,
       rotations: rotations
     })
+  end
+
+  @doc """
+  Simple GPU test function to verify GPU utilization.
+  """
+  @spec simple_gpu_test(integer()) :: Nx.Tensor.t()
+  def simple_gpu_test(size \\ 1000) do
+    # Create simple test data on GPU
+    transforms = 1..size
+    |> Enum.map(fn i ->
+      [
+        [1.0, 0.0, 0.0, i * 0.1],
+        [0.0, 1.0, 0.0, 0.0],
+        [0.0, 0.0, 1.0, 0.0],
+        [0.0, 0.0, 0.0, 1.0]
+      ]
+    end)
+    |> Nx.tensor(type: :f32)
+    |> Nx.backend_copy({Torchx.Backend, device: :cuda})
+
+    # Simple GPU computation
+    simple_computation_defn(transforms)
+  end
+
+  @spec simple_computation_defn(Nx.Tensor.t()) :: Nx.Tensor.t()
+  defn simple_computation_defn(transforms) do
+    # Simple matrix operations to test GPU
+    result = Nx.dot(transforms, [2], [0], transforms, [1], [0])
+    Nx.mean(result, axes: [1, 2])
   end
 end
