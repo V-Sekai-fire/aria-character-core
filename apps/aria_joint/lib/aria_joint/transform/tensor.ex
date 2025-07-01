@@ -192,6 +192,8 @@ defmodule AriaJoint.Transform.Tensor do
   @doc """
   Convert multiple points from local to global space for multiple joints.
 
+  Uses memory-optimized operations to prevent CUDA out-of-memory errors.
+
   ## Examples
 
       # local_points: tensor of shape {num_joints, 3} or {num_joints, num_points, 3}
@@ -199,7 +201,7 @@ defmodule AriaJoint.Transform.Tensor do
   """
   @spec to_global_batch(joint_tensor(), Nx.Tensor.t()) :: Nx.Tensor.t()
   def to_global_batch(joint_tensor, local_points) do
-    Matrix4.Tensor.transform_points_batch_multi(joint_tensor.global_transforms, local_points)
+    Matrix4.Tensor.transform_points_batch_multi_safe(joint_tensor.global_transforms, local_points)
   end
 
   @doc """
