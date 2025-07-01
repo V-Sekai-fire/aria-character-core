@@ -8,7 +8,8 @@ defmodule AriaMath.Vector3 do
   All operations follow IEEE-754 standard for NaN, infinity, and special case handling
   as defined in the glTF KHR Interactivity specification.
 
-  Vector3 is represented as a 3-tuple {x, y, z} where each component is a float.
+  Vector3 supports both tuple-based operations {x, y, z} and Nx tensor operations
+  for optimized numerical computing and potential GPU acceleration.
   """
 
   import Kernel, except: [length: 1]
@@ -61,4 +62,62 @@ defmodule AriaMath.Vector3 do
       _ -> {x / scalar, y / scalar, z / scalar}
     end
   end
+
+  # Nx tensor-based operations
+  alias AriaMath.Vector3.Tensor
+
+  @doc """
+  Creates a new Vector3 tensor from three float components.
+  """
+  defdelegate new_nx(x, y, z), to: Tensor, as: :new
+
+  @doc """
+  Creates a Vector3 tensor from a tuple.
+  """
+  defdelegate from_tuple(tuple), to: Tensor
+
+  @doc """
+  Converts a Vector3 tensor to a tuple.
+  """
+  defdelegate to_tuple(tensor), to: Tensor
+
+  @doc """
+  Vector length using Nx operations.
+  """
+  defdelegate length_nx(tensor), to: Tensor, as: :length
+
+  @doc """
+  Batch vector length calculation for multiple vectors.
+  """
+  defdelegate length_batch(tensors), to: Tensor
+
+  @doc """
+  Vector normalization using Nx operations.
+  """
+  defdelegate normalize_nx(tensor), to: Tensor, as: :normalize
+
+  @doc """
+  Batch vector normalization for multiple vectors.
+  """
+  defdelegate normalize_batch(tensors), to: Tensor
+
+  @doc """
+  Dot product using Nx operations.
+  """
+  defdelegate dot_nx(a, b), to: Tensor, as: :dot
+
+  @doc """
+  Batch dot product for multiple vector pairs.
+  """
+  defdelegate dot_batch(a_tensors, b_tensors), to: Tensor
+
+  @doc """
+  Cross product using Nx operations.
+  """
+  defdelegate cross_nx(a, b), to: Tensor, as: :cross
+
+  @doc """
+  Batch cross product for multiple vector pairs.
+  """
+  defdelegate cross_batch(a_tensors, b_tensors), to: Tensor
 end

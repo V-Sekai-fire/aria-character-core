@@ -40,7 +40,7 @@ defmodule AriaGltf.MixProject do
       {:jason, "~> 1.4"},
 
       # Tensor operations for mesh transformations and image processing
-      {:nx, "~> 0.9"},
+      {:nx, "~> 0.10.0"},
 
       # Image format support (JPG/PNG read/write)
       {:image, "~> 0.54"},
