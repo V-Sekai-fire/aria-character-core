@@ -10,14 +10,6 @@ defmodule AriaEngineCore.Domain.BehaviourImpl do
   """
 
   @doc """
-  Get all actions from a domain.
-  """
-  @spec actions(map()) :: map()
-  def actions(domain) do
-    AriaCore.get_all_actions_with_metadata_from_domain(domain)
-  end
-
-  @doc """
   Get all task methods from a domain.
   """
   @spec task_methods(map()) :: map()
@@ -31,14 +23,6 @@ defmodule AriaEngineCore.Domain.BehaviourImpl do
   @spec unigoal_methods(map()) :: map()
   def unigoal_methods(domain) do
     Map.get(domain, :unigoal_methods, %{})
-  end
-
-  @doc """
-  Get all multigoal methods from a domain.
-  """
-  @spec multigoal_methods(map()) :: map()
-  def multigoal_methods(domain) do
-    AriaCore.get_multigoal_methods_from_domain(domain)
   end
 
   @doc """

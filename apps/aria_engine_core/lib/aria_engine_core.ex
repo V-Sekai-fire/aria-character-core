@@ -190,11 +190,6 @@ defmodule AriaEngineCore do
   defdelegate get_task_methods(domain, task_name), to: AriaEngineCore.Domain
   defdelegate get_unigoal_methods(domain, predicate), to: AriaEngineCore.Domain
   defdelegate get_multigoal_methods(domain), to: AriaEngineCore.Domain
-  defdelegate get_multitodo_methods(domain), to: AriaEngineCore.Domain
-  defdelegate get_action_metadata(domain, action_name), to: AriaEngineCore.Domain
-  defdelegate get_entity_registry(domain), to: AriaEngineCore.Domain
-  defdelegate get_durative_action(domain, action_name), to: AriaEngineCore.Domain
-  defdelegate execute_action(domain, state, action_name, args), to: AriaEngineCore.Domain
 
   # Solution Tree API - Delegate to internal modules
   @doc """

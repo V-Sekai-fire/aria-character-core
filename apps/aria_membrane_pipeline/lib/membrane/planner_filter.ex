@@ -145,7 +145,7 @@ defmodule Membrane.PlannerFilter do
   defp execute_planning(%PlanningParams{} = params) do
     try do
       # Extract planning data from context and constraints
-      domain = Map.get(params.context, "domain") || create_default_domain()
+      domain = Map.get(params.context, "domain")
       state = Map.get(params.context, "state") || create_default_state()
 
       # Convert goal to standardized {predicate, subject, value} format
@@ -171,25 +171,6 @@ defmodule Membrane.PlannerFilter do
       error ->
         Logger.error("Planning execution exception: #{inspect(error)}")
         {:error, "Planning execution exception: #{Exception.message(error)}"}
-    end
-  end
-
-  defp create_default_domain do
-    # Create domain following unified specification from ADR R25W1398085
-    # Use AriaCore.Domain directly since AriaEngineCore.Domain is internal
-    try do
-      domain = AriaCore.Domain.new("membrane_pipeline_domain")
-      # Enable solution tree as per ADR specification
-      AriaCore.Domain.enable_solution_tree(domain, true)
-    rescue
-      _ ->
-        # Fallback to basic map structure if AriaCore is not available
-        %{
-          name: "membrane_pipeline_domain",
-          actions: %{},
-          methods: %{},
-          solution_tree_enabled: true
-        }
     end
   end
 

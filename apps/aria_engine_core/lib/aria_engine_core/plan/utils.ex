@@ -130,22 +130,6 @@ defmodule AriaEngineCore.Plan.Utils do
     validate_plan(domain, initial_state, actions)
   end
 
-  def validate_plan(domain, initial_state, plan) when is_map(domain) and is_list(plan) do
-    Enum.reduce_while(plan, {:ok, initial_state}, fn {action_name, args}, {:ok, state} ->
-      action_atom =
-        if is_binary(action_name) do
-          String.to_atom(action_name)
-        else
-          action_name
-        end
-
-      case AriaEngineCore.Domain.execute_action(domain, state, action_atom, args) do
-        false -> {:halt, {:error, "Action #{action_name} failed during validation"}}
-        {:ok, new_state} -> {:cont, {:ok, new_state}}
-      end
-    end)
-  end
-
   @doc "Estimates the cost of a plan (simple step count for now).\nFor compatibility with existing AriaEngineCore usage.\n"
   @spec plan_cost([plan_step()] | solution_tree()) :: non_neg_integer()
   def plan_cost(%{root_id: _} = solution_tree) do
