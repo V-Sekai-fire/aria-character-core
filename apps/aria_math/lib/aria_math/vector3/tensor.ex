@@ -316,6 +316,42 @@ defmodule AriaMath.Vector3.Tensor do
   end
 
 
+  @doc """
+  Batch vector magnitude calculation for multiple vectors.
+
+  ## Examples
+
+      iex> vectors = Nx.tensor([[3.0, 4.0, 0.0], [1.0, 0.0, 0.0]], type: :f32)
+      iex> magnitudes = AriaMath.Vector3.Tensor.magnitude_batch(vectors)
+      iex> Nx.to_list(magnitudes)
+      [5.0, 1.0]
+  """
+  @spec magnitude_batch(Nx.Tensor.t()) :: Nx.Tensor.t()
+  def magnitude_batch(vectors) do
+    vectors
+    |> Nx.pow(2)
+    |> Nx.sum(axes: [-1])
+    |> Nx.sqrt()
+  end
+
+  @doc """
+  Single vector magnitude calculation.
+
+  ## Examples
+
+      iex> vector = AriaMath.Vector3.Tensor.new(3.0, 4.0, 0.0)
+      iex> AriaMath.Vector3.Tensor.magnitude(vector)
+      5.0
+  """
+  @spec magnitude(vector3_tensor()) :: float()
+  def magnitude(vector) do
+    vector
+    |> Nx.pow(2)
+    |> Nx.sum()
+    |> Nx.sqrt()
+    |> Nx.to_number()
+  end
+
   # Helper functions
 
   defp is_finite_float(x) when is_float(x) do
