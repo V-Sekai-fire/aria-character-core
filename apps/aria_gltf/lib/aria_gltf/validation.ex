@@ -10,7 +10,7 @@ defmodule AriaGltf.Validation do
   """
 
   alias AriaGltf.{Document, Asset}
-  alias AriaGltf.Validation.{Report, Context}
+  alias AriaGltf.Validation.{Report, Context, SchemaValidator}
 
   @type validation_result :: {:ok, Document.t()} | {:error, Report.t()}
   @type validation_mode :: :strict | :permissive | :warning_only
@@ -159,12 +159,193 @@ defmodule AriaGltf.Validation do
   end
   defp validate_node_skin_reference(context, _, _, _), do: context
 
-  defp validate_mesh_indices(context, _meshes), do: context  # TODO: Implement mesh validation
-  defp validate_material_indices(context, _materials), do: context  # TODO: Implement material validation
-  defp validate_texture_indices(context, _textures), do: context  # TODO: Implement texture validation
-  defp validate_accessor_indices(context, _accessors), do: context  # TODO: Implement accessor validation
-  defp validate_buffer_view_indices(context, _buffer_views), do: context  # TODO: Implement buffer view validation
-  defp validate_buffer_indices(context, _buffers), do: context  # TODO: Implement buffer validation
+  defp validate_mesh_indices(context, meshes) do
+    Enum.with_index(meshes)
+    |> Enum.reduce(context, fn {mesh, index}, ctx ->
+      validate_mesh_references(ctx, mesh, index, context.document)
+    end)
+  end
+
+  defp validate_material_indices(context, materials) do
+    Enum.with_index(materials)
+    |> Enum.reduce(context, fn {material, index}, ctx ->
+      validate_material_references(ctx, material, index, context.document)
+    end)
+  end
+
+  defp validate_texture_indices(context, textures) do
+    Enum.with_index(textures)
+    |> Enum.reduce(context, fn {texture, index}, ctx ->
+      validate_texture_references(ctx, texture, index, context.document)
+    end)
+  end
+
+  defp validate_accessor_indices(context, accessors) do
+    Enum.with_index(accessors)
+    |> Enum.reduce(context, fn {accessor, index}, ctx ->
+      validate_accessor_references(ctx, accessor, index, context.document)
+    end)
+  end
+
+  defp validate_buffer_view_indices(context, buffer_views) do
+    Enum.with_index(buffer_views)
+    |> Enum.reduce(context, fn {buffer_view, index}, ctx ->
+      validate_buffer_view_references(ctx, buffer_view, index, context.document)
+    end)
+  end
+
+  defp validate_buffer_indices(context, buffers) do
+    Enum.with_index(buffers)
+    |> Enum.reduce(context, fn {buffer, index}, ctx ->
+      validate_buffer_references(ctx, buffer, index)
+    end)
+  end
+
+  # Individual reference validation functions
+  defp validate_mesh_references(context, mesh, mesh_index, document) do
+    # Validate material references in primitives
+    case mesh do
+      %{primitives: primitives} when is_list(primitives) ->
+        Enum.with_index(primitives)
+        |> Enum.reduce(context, fn {primitive, prim_index}, ctx ->
+          validate_primitive_references(ctx, primitive, {mesh_index, prim_index}, document)
+        end)
+      _ -> context
+    end
+  end
+
+  defp validate_primitive_references(context, primitive, {mesh_index, prim_index}, document) do
+    materials = document.materials || []
+    accessors = document.accessors || []
+
+    context =
+      case primitive do
+        %{material: material_index} when is_integer(material_index) ->
+          if material_index >= 0 and material_index < length(materials) do
+            context
+          else
+            Context.add_error(context, {:mesh, mesh_index, :primitive, prim_index},
+              "Invalid material index: #{material_index}")
+          end
+        _ -> context
+      end
+
+    # Validate accessor references for attributes and indices
+    context =
+      case primitive do
+        %{attributes: attributes} when is_map(attributes) ->
+          Enum.reduce(attributes, context, fn {attr_name, accessor_index}, ctx ->
+            if is_integer(accessor_index) and accessor_index >= 0 and accessor_index < length(accessors) do
+              ctx
+            else
+              Context.add_error(ctx, {:mesh, mesh_index, :primitive, prim_index},
+                "Invalid accessor index for attribute #{attr_name}: #{accessor_index}")
+            end
+          end)
+        _ -> context
+      end
+
+    case primitive do
+      %{indices: indices_accessor} when is_integer(indices_accessor) ->
+        if indices_accessor >= 0 and indices_accessor < length(accessors) do
+          context
+        else
+          Context.add_error(context, {:mesh, mesh_index, :primitive, prim_index},
+            "Invalid indices accessor index: #{indices_accessor}")
+        end
+      _ -> context
+    end
+  end
+
+  defp validate_material_references(context, material, material_index, document) do
+    textures = document.textures || []
+
+    # Validate texture references in material
+    context
+    |> validate_texture_info_reference(material, :base_color_texture, material_index, textures)
+    |> validate_texture_info_reference(material, :metallic_roughness_texture, material_index, textures)
+    |> validate_texture_info_reference(material, :normal_texture, material_index, textures)
+    |> validate_texture_info_reference(material, :occlusion_texture, material_index, textures)
+    |> validate_texture_info_reference(material, :emissive_texture, material_index, textures)
+  end
+
+  defp validate_texture_info_reference(context, material, field, material_index, textures) do
+    case Map.get(material, field) do
+      %{index: texture_index} when is_integer(texture_index) ->
+        if texture_index >= 0 and texture_index < length(textures) do
+          context
+        else
+          Context.add_error(context, {:material, material_index},
+            "Invalid texture index for #{field}: #{texture_index}")
+        end
+      _ -> context
+    end
+  end
+
+  defp validate_texture_references(context, texture, texture_index, document) do
+    images = document.images || []
+    samplers = document.samplers || []
+
+    context =
+      case texture do
+        %{source: image_index} when is_integer(image_index) ->
+          if image_index >= 0 and image_index < length(images) do
+            context
+          else
+            Context.add_error(context, {:texture, texture_index},
+              "Invalid image index: #{image_index}")
+          end
+        _ -> context
+      end
+
+    case texture do
+      %{sampler: sampler_index} when is_integer(sampler_index) ->
+        if sampler_index >= 0 and sampler_index < length(samplers) do
+          context
+        else
+          Context.add_error(context, {:texture, texture_index},
+            "Invalid sampler index: #{sampler_index}")
+        end
+      _ -> context
+    end
+  end
+
+  defp validate_accessor_references(context, accessor, accessor_index, document) do
+    buffer_views = document.buffer_views || []
+
+    case accessor do
+      %{buffer_view: buffer_view_index} when is_integer(buffer_view_index) ->
+        if buffer_view_index >= 0 and buffer_view_index < length(buffer_views) do
+          context
+        else
+          Context.add_error(context, {:accessor, accessor_index},
+            "Invalid bufferView index: #{buffer_view_index}")
+        end
+      _ -> context
+    end
+  end
+
+  defp validate_buffer_view_references(context, buffer_view, buffer_view_index, document) do
+    buffers = document.buffers || []
+
+    case buffer_view do
+      %{buffer: buffer_index} when is_integer(buffer_index) ->
+        if buffer_index >= 0 and buffer_index < length(buffers) do
+          context
+        else
+          Context.add_error(context, {:buffer_view, buffer_view_index},
+            "Invalid buffer index: #{buffer_index}")
+        end
+      _ ->
+        Context.add_error(context, {:buffer_view, buffer_view_index},
+          "Buffer index is required for bufferView")
+    end
+  end
+
+  defp validate_buffer_references(context, _buffer, _buffer_index) do
+    # Buffers don't have index references, but we could validate URI format here
+    context
+  end
 
   # Extension validation
   defp validate_extensions(%Context{document: document} = context) do
@@ -209,9 +390,7 @@ defmodule AriaGltf.Validation do
 
   # Schema validation
   defp validate_schema(%Context{} = context) do
-    # TODO: Implement JSON schema validation
-    # This would validate against the official glTF 2.0 JSON schema
-    context
+    SchemaValidator.validate(context)
   end
 
   # Array validation

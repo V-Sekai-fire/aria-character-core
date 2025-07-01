@@ -29,19 +29,22 @@ defmodule AriaGltf.Validation.SchemaValidator do
 
   # Schema validation implementation
   defp validate_json_schema(json) when is_map(json) do
-    # TODO: Implement actual JSON schema validation
-    # This would use a JSON schema library to validate against the official glTF 2.0 schema
-    # For now, we'll do basic structural validation
-
+    # Comprehensive structural validation following glTF 2.0 specification
     errors = []
 
     # Check required top-level fields
     errors = check_required_field(errors, json, "asset", "Root asset field is required")
 
     # Check asset structure
-    if asset = json["asset"] do
-      errors = check_required_field(errors, asset, "version", "Asset version is required")
-      ^errors = check_field_type(errors, asset, "version", "string", "Asset version must be a string")
+    errors = if asset = json["asset"] do
+      errors
+      |> check_required_field(asset, "version", "Asset version is required")
+      |> check_field_type(asset, "version", "string", "Asset version must be a string")
+      |> validate_asset_version(asset)
+      |> check_field_type(asset, "generator", "string", "Asset generator must be a string")
+      |> check_field_type(asset, "copyright", "string", "Asset copyright must be a string")
+    else
+      errors
     end
 
     # Check array fields are actually arrays
@@ -58,16 +61,209 @@ defmodule AriaGltf.Validation.SchemaValidator do
     end)
 
     # Check scene index is valid
-    if scene_index = json["scene"] do
+    errors = if scene_index = json["scene"] do
       scenes = json["scenes"] || []
       if not is_integer(scene_index) or scene_index < 0 or scene_index >= length(scenes) do
-        ^errors = ["Invalid scene index: #{scene_index}" | errors]
+        ["Invalid scene index: #{scene_index}" | errors]
+      else
+        errors
       end
+    else
+      errors
     end
+
+    # Validate extension fields
+    errors = errors
+             |> check_field_type(json, "extensionsUsed", "array", "extensionsUsed must be an array")
+             |> check_field_type(json, "extensionsRequired", "array", "extensionsRequired must be an array")
+
+    # Validate numeric constraints
+    errors = validate_numeric_constraints(errors, json)
 
     case errors do
       [] -> :ok
       _ -> {:error, Enum.reverse(errors)}
+    end
+  end
+
+  defp validate_asset_version(errors, asset) do
+    case Map.get(asset, "version") do
+      "2.0" -> errors
+      version when is_binary(version) -> ["Unsupported glTF version: #{version}. Only 2.0 is supported" | errors]
+      _ -> errors  # Already handled by type check
+    end
+  end
+
+  defp validate_numeric_constraints(errors, json) do
+    # Validate that numeric fields are within acceptable ranges
+    errors = if scenes = json["scenes"] do
+      validate_scenes_structure(errors, scenes)
+    else
+      errors
+    end
+
+    errors = if nodes = json["nodes"] do
+      validate_nodes_structure(errors, nodes)
+    else
+      errors
+    end
+
+    errors = if accessors = json["accessors"] do
+      validate_accessors_structure(errors, accessors)
+    else
+      errors
+    end
+
+    errors
+  end
+
+  defp validate_scenes_structure(errors, scenes) when is_list(scenes) do
+    Enum.with_index(scenes)
+    |> Enum.reduce(errors, fn {scene, index}, acc ->
+      case scene do
+        %{"nodes" => nodes} when is_list(nodes) ->
+          # Check that all node indices are non-negative integers
+          invalid_nodes = Enum.filter(nodes, fn node_idx ->
+            not is_integer(node_idx) or node_idx < 0
+          end)
+          if length(invalid_nodes) > 0 do
+            ["Scene #{index} contains invalid node indices: #{inspect(invalid_nodes)}" | acc]
+          else
+            acc
+          end
+        _ -> acc
+      end
+    end)
+  end
+  defp validate_scenes_structure(errors, _), do: errors
+
+  defp validate_nodes_structure(errors, nodes) when is_list(nodes) do
+    Enum.with_index(nodes)
+    |> Enum.reduce(errors, fn {node, index}, acc ->
+      acc
+      |> validate_node_transform(node, index)
+      |> validate_node_references(node, index)
+    end)
+  end
+  defp validate_nodes_structure(errors, _), do: errors
+
+  defp validate_node_transform(errors, node, index) do
+    errors = if translation = Map.get(node, "translation") do
+      if is_list(translation) and length(translation) == 3 and Enum.all?(translation, &is_number/1) do
+        errors
+      else
+        ["Node #{index} translation must be array of 3 numbers" | errors]
+      end
+    else
+      errors
+    end
+
+    errors = if rotation = Map.get(node, "rotation") do
+      if is_list(rotation) and length(rotation) == 4 and Enum.all?(rotation, &is_number/1) do
+        errors
+      else
+        ["Node #{index} rotation must be array of 4 numbers (quaternion)" | errors]
+      end
+    else
+      errors
+    end
+
+    errors = if scale = Map.get(node, "scale") do
+      if is_list(scale) and length(scale) == 3 and Enum.all?(scale, &is_number/1) do
+        errors
+      else
+        ["Node #{index} scale must be array of 3 numbers" | errors]
+      end
+    else
+      errors
+    end
+
+    if matrix = Map.get(node, "matrix") do
+      if is_list(matrix) and length(matrix) == 16 and Enum.all?(matrix, &is_number/1) do
+        errors
+      else
+        ["Node #{index} matrix must be array of 16 numbers" | errors]
+      end
+    else
+      errors
+    end
+  end
+
+  defp validate_node_references(errors, node, index) do
+    errors = if children = Map.get(node, "children") do
+      if is_list(children) and Enum.all?(children, fn child -> is_integer(child) and child >= 0 end) do
+        errors
+      else
+        ["Node #{index} children must be array of non-negative integers" | errors]
+      end
+    else
+      errors
+    end
+
+    # Validate optional references
+    ["mesh", "camera", "skin"]
+    |> Enum.reduce(errors, fn field, acc ->
+      case Map.get(node, field) do
+        value when is_integer(value) and value >= 0 -> acc
+        value when not is_nil(value) -> ["Node #{index} #{field} must be non-negative integer" | acc]
+        _ -> acc
+      end
+    end)
+  end
+
+  defp validate_accessors_structure(errors, accessors) when is_list(accessors) do
+    Enum.with_index(accessors)
+    |> Enum.reduce(errors, fn {accessor, index}, acc ->
+      validate_accessor_structure(acc, accessor, index)
+    end)
+  end
+  defp validate_accessors_structure(errors, _), do: errors
+
+  defp validate_accessor_structure(errors, accessor, index) do
+    # Validate required fields
+    errors = check_required_field(errors, accessor, "count", "Accessor #{index} count is required")
+    errors = check_required_field(errors, accessor, "type", "Accessor #{index} type is required")
+
+    # Validate count is positive integer
+    errors = case Map.get(accessor, "count") do
+      count when is_integer(count) and count > 0 -> errors
+      count when not is_nil(count) -> ["Accessor #{index} count must be positive integer, got: #{inspect(count)}" | errors]
+      _ -> errors
+    end
+
+    # Validate type enum
+    errors = case Map.get(accessor, "type") do
+      type when type in ["SCALAR", "VEC2", "VEC3", "VEC4", "MAT2", "MAT3", "MAT4"] -> errors
+      type when not is_nil(type) -> ["Accessor #{index} type must be valid enum, got: #{type}" | errors]
+      _ -> errors
+    end
+
+    # Validate componentType enum
+    errors = case Map.get(accessor, "componentType") do
+      ct when ct in [5120, 5121, 5122, 5123, 5125, 5126] -> errors
+      ct when not is_nil(ct) -> ["Accessor #{index} componentType must be valid enum, got: #{ct}" | errors]
+      _ -> errors
+    end
+
+    # Validate optional fields
+    errors = if buffer_view = Map.get(accessor, "bufferView") do
+      if is_integer(buffer_view) and buffer_view >= 0 do
+        errors
+      else
+        ["Accessor #{index} bufferView must be non-negative integer" | errors]
+      end
+    else
+      errors
+    end
+
+    if byte_offset = Map.get(accessor, "byteOffset") do
+      if is_integer(byte_offset) and byte_offset >= 0 do
+        errors
+      else
+        ["Accessor #{index} byteOffset must be non-negative integer" | errors]
+      end
+    else
+      errors
     end
   end
 
