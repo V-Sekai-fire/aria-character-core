@@ -5,7 +5,6 @@ defmodule AriaCore.ActionAttributesTest do
   use ExUnit.Case, async: true
   doctest AriaCore.ActionAttributes
 
-  alias AriaCore.ActionAttributes
   alias AriaCore.Domain
   alias AriaCore.State.Relational, as: AriaState
 
@@ -22,23 +21,23 @@ defmodule AriaCore.ActionAttributesTest do
       {:ok, state}
     end
 
-    def prepare_meal(state, [meal_id]) do
+    def prepare_meal(_state, [meal_id]) do
       {:ok, [{:cook_meal, [meal_id]}]}
     end
     task_method(:prepare_meal)
 
     @unigoal_method predicate: "meal_status"
-    def achieve_meal_status(state, {subject, value}) do
+    def achieve_meal_status(_state, {subject, _value}) do
       {:ok, [{:cook_meal, [subject]}]}
     end
 
     @multigoal_method true
-    def optimize_goals(state, multigoal) do
+    def optimize_goals(_state, multigoal) do
       {:ok, multigoal}
     end
 
     @multitodo_method true
-    def optimize_todos(state, todo_list) do
+    def optimize_todos(_state, todo_list) do
       {:ok, todo_list}
     end
   end
