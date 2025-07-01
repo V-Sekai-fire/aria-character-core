@@ -62,7 +62,6 @@ defmodule AriaCore do
   # Domain Management API
   defdelegate new_domain(), to: AriaCore.Domain, as: :new
   defdelegate new_domain(name), to: AriaCore.Domain, as: :new
-  defdelegate add_action(domain, action_name, action_spec), to: AriaCore.Domain
   defdelegate add_method(domain, method_name, method_spec), to: AriaCore.Domain
   defdelegate add_unigoal_method(domain, method_name, unigoal_spec), to: AriaCore.Domain
   defdelegate list_actions(domain), to: AriaCore.Domain

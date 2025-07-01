@@ -11,7 +11,6 @@ defmodule Plan.Backtracking do
   Aligned with ADR-195 Phase 4: Remove execution-time backtracking complexity.
   """
   require Logger
-  alias Plan.Core
   @type node_id :: String.t()
   @type solution_node :: %{
           id: node_id(),
@@ -32,54 +31,6 @@ defmodule Plan.Backtracking do
           goal_network: %{node_id() => [node_id()]}
         }
   @type replan_result :: {:ok, solution_tree()} | {:error, String.t()} | :failure
-  @doc "Replan from a specific failure node in the solution tree.\n"
-  @spec replan(
-          AriaEngine.Domain.Core.t(),
-          AriaEngine.State.t(),
-          solution_tree(),
-          node_id(),
-          keyword()
-        ) ::
-          replan_result()
-  def replan(
-        %Domain.Core{} = domain,
-        state,
-        solution_tree,
-        fail_node_id,
-        opts \\ []
-      ) do
-    replan_depth = Keyword.get(opts, :replan_depth, Core.get_default_replan_depth())
-
-    if replan_depth <= 0 do
-      Logger.debug("REPLAN: Maximum replanning depth exceeded.")
-      {:error, "Maximum replanning depth exceeded"}
-    else
-      opts = Keyword.put(opts, :replan_depth, replan_depth - 1)
-      verbose = Keyword.get(opts, :verbose, Core.get_default_verbose())
-
-      if verbose > 2 do
-        Logger.debug("Replanning from failure node: #{fail_node_id}")
-      end
-
-      case find_responsible_task_node(solution_tree, fail_node_id, verbose) do
-        nil ->
-          {:error, "Could not find responsible task node for failed action"}
-
-        task_node_id ->
-          if verbose > 2 do
-            Logger.debug("Found responsible task node: #{task_node_id}")
-          end
-
-          updated_tree = Plan.Utils.update_cached_states(solution_tree, state)
-
-          case try_alternative_method_for_task(domain, updated_tree, task_node_id, verbose) do
-            {:ok, new_tree} -> Core.ipyhop(domain, state, new_tree, opts)
-            {:error, reason} -> {:error, reason}
-            :no_alternatives -> :no_alternatives
-          end
-      end
-    end
-  end
 
   @spec find_responsible_task_node(solution_tree(), node_id(), integer()) :: node_id() | nil
   def find_responsible_task_node(solution_tree, fail_node_id, verbose) do

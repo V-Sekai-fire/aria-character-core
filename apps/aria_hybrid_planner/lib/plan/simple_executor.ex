@@ -90,13 +90,6 @@ defmodule Plan.SimpleExecutor do
     {:ok, current_state, Enum.reverse(execution_trace)}
   end
 
-  # Validate that required entities are available and have necessary capabilities
-  @spec validate_required_entities(map(), map(), list(), keyword()) :: :ok | {:error, String.t()}
-  defp validate_required_entities(_state, _entity_registry, [], _opts) do
-    # No entity requirements, validation passes
-    :ok
-  end
-
   # Check if an entity is available (not busy)
   @spec entity_available?(map(), String.t()) :: boolean()
   def entity_available?(state, entity_id) do

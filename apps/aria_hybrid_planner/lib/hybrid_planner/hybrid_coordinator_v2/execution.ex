@@ -52,15 +52,6 @@ defmodule HybridPlanner.HybridCoordinatorV2.Execution do
                 end
               end
               {:ok, final_state}
-
-            {:error, reason, execution_trace} ->
-              if verbose > 0 do
-                Logger.warning("IPyHOP execution: Execution failed - #{reason}")
-                if verbose > 2 do
-                  Logger.debug("IPyHOP execution: Failure trace length: #{length(execution_trace)}")
-                end
-              end
-              {:error, reason}
           end
 
         _ ->

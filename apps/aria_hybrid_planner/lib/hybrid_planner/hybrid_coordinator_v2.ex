@@ -37,7 +37,7 @@ defmodule HybridPlanner.HybridCoordinatorV2 do
   require Logger
   alias State
   # alias Plan.Utils  # Currently unused
-  alias HybridPlanner.HybridCoordinatorV2.{Planning, Temporal, Execution, Logging}
+  alias HybridPlanner.HybridCoordinatorV2.{Planning, Execution, Logging}
 
   defstruct [
     :metadata,
@@ -87,65 +87,6 @@ defmodule HybridPlanner.HybridCoordinatorV2 do
   # ==================== PLANNING FUNCTIONS ====================
 
   @doc """
-  Plan goals using HTN planning with temporal constraint validation.
-  """
-  @spec plan(t(), Domain.Core.t(), State.t(), [term()], keyword()) :: plan_result()
-  def plan(_coordinator, domain, state, goals, opts \\ []) do
-    _verbose = Keyword.get(opts, :verbose, 0)
-
-    Logging.log_progress("planning", %{status: "started", goals: length(goals), domain: domain.name}, opts)
-
-    try do
-      # HTN Planning (from HTNPlanningStrategy)
-        case Planning.htn_plan(domain, state, goals, opts) do
-        {:ok, solution_tree} ->
-          Logging.log_progress("planning", %{
-            status: "htn_completed",
-            solution_tree_size: count_solution_tree_nodes(solution_tree)
-          }, opts)
-
-          # Add temporal constraints (from STNTemporalStrategy)
-          case Temporal.add_temporal_constraints_to_plan(solution_tree, domain, opts) do
-            {:ok, temporal_constraints} ->
-              # Validate temporal consistency
-              case Temporal.validate_temporal_consistency(temporal_constraints, opts) do
-                {:ok, true} ->
-                  Logging.log_progress("planning", %{status: "completed_successfully"}, opts)
-
-                  {:ok, %{
-                    solution_tree: solution_tree,
-                    temporal_constraints: temporal_constraints,
-                    metadata: %{
-                      goals: goals,
-                      domain_name: domain.name,
-                      planning_time: System.system_time(:millisecond),
-                      coordinator_metadata: %{implementation: :monolithic}
-                    }
-                  }}
-
-                {:error, reason} ->
-                  Logging.log_error(reason, %{phase: "temporal_validation"}, opts)
-                  {:error, "Temporal validation failed: #{reason}"}
-              end
-
-            {:error, reason} ->
-              Logging.log_error(reason, %{phase: "temporal_constraint_creation"}, opts)
-              {:error, "Failed to create temporal constraints: #{reason}"}
-          end
-
-        {:error, reason} ->
-          Logging.log_error(reason, %{phase: "htn_planning"}, opts)
-          {:error, reason}
-      end
-    rescue
-      e ->
-        error_msg = "Planning error: #{Exception.message(e)}"
-        Logging.log_error(error_msg, %{phase: "planning_coordinator"}, opts)
-        {:error, error_msg}
-    end
-  end
-
-  @doc """
   Validate a plan using HTN planning validation.
   """
   @spec validate_plan(t(), Domain.Core.t(), State.t(), map()) ::
@@ -162,15 +103,6 @@ defmodule HybridPlanner.HybridCoordinatorV2 do
     rescue
       e -> {:error, "Plan validation error: #{Exception.message(e)}"}
     end
-  end
-
-  @doc """
-  Simple plan interface for backward compatibility.
-  """
-  @spec plan(t(), map()) :: plan_result()
-  def plan(coordinator, %{domain: domain, state: state, goals: goals} = request) do
-    opts = Map.get(request, :opts, [])
-    plan(coordinator, domain, state, goals, opts)
   end
 
   # ==================== EXECUTION FUNCTIONS ====================
@@ -213,95 +145,6 @@ defmodule HybridPlanner.HybridCoordinatorV2 do
         error_msg = "Execution error: #{Exception.message(e)}"
         Logging.log_error(error_msg, %{phase: "execution_coordinator"}, opts)
         {:error, error_msg}
-    end
-  end
-
-  # ==================== REPLANNING FUNCTIONS ====================
-
-  @doc """
-  Replan from a failure point using HTN replanning.
-  """
-  @spec replan(t(), Domain.Core.t(), State.t(), map(), String.t(), keyword()) ::
-          replan_result()
-  def replan(coordinator, domain, state, plan, fail_node_id, opts \\ []) do
-    Logging.log_progress("replanning", %{status: "started", fail_node_id: fail_node_id}, opts)
-
-    try do
-      solution_tree = Map.get(plan, :solution_tree)
-
-      if is_nil(solution_tree) do
-        {:error, "Invalid plan format for replanning - missing solution tree"}
-      else
-        case Planning.htn_replan(domain, state, solution_tree, fail_node_id, opts) do
-          {:ok, new_solution_tree} ->
-            Logging.log_progress("replanning", %{status: "htn_replanning_completed"}, opts)
-
-            case Temporal.add_temporal_constraints_to_plan(new_solution_tree, domain, opts) do
-              {:ok, new_temporal_constraints} ->
-                case Temporal.validate_temporal_consistency(new_temporal_constraints, opts) do
-                  {:ok, true} ->
-                    Logging.log_progress("replanning", %{status: "completed_successfully"}, opts)
-
-                    original_metadata = Map.get(plan, :metadata, %{})
-                    replan_metadata = Map.merge(original_metadata, %{
-                      replanned_at: System.system_time(:millisecond),
-                      original_fail_node: fail_node_id,
-                      coordinator_metadata: coordinator.metadata
-                    })
-
-                    {:ok, %{
-                      solution_tree: new_solution_tree,
-                      temporal_constraints: new_temporal_constraints,
-                      metadata: replan_metadata
-                    }}
-
-
-                  {:error, reason} ->
-                    Logging.log_error(reason, %{phase: "replanning_temporal_validation"}, opts)
-                    {:error, "Replanning temporal validation failed: #{reason}"}
-                end
-
-              {:error, reason} ->
-                Logging.log_error(reason, %{phase: "replanning_temporal_constraints"}, opts)
-                {:error, "Failed to create temporal constraints during replanning: #{reason}"}
-            end
-
-          {:error, reason} ->
-            Logging.log_error(reason, %{phase: "htn_replanning"}, opts)
-            {:error, reason}
-
-          :failure ->
-            Logging.log_progress("replanning", %{status: "no_alternatives_found"}, opts)
-            :failure
-        end
-      end
-    rescue
-      e ->
-        error_msg = "Replanning error: #{Exception.message(e)}"
-        Logging.log_error(error_msg, %{phase: "replanning_coordinator"}, opts)
-        {:error, error_msg}
-    end
-  end
-
-  @doc """
-  Simple replan interface for backward compatibility.
-  """
-  @spec replan(t(), map()) :: replan_result()
-  def replan(coordinator, %{domain: domain, state: state, plan: plan, fail_node_id: fail_node_id} = request) do
-    opts = Map.get(request, :opts, [])
-    replan(coordinator, domain, state, plan, fail_node_id, opts)
-  end
-
-  @doc """
-  Plan and execute in one step.
-  """
-  @spec plan_and_execute(t(), Domain.Core.t(), State.t(), [term()], keyword()) :: execution_result()
-  def plan_and_execute(coordinator, domain, state, goals, opts \\ []) do
-    case plan(coordinator, domain, state, goals, opts) do
-      {:ok, plan} ->
-        execute(coordinator, domain, state, plan, opts)
-      {:error, reason} ->
-        {:error, reason}
     end
   end
 
@@ -397,14 +240,4 @@ defmodule HybridPlanner.HybridCoordinatorV2 do
   #       []
   #   end
   # end
-
-  defp count_solution_tree_nodes(solution_tree) do
-    case solution_tree do
-      %{children: children} when is_list(children) ->
-        1 + Enum.sum(Enum.map(children, &count_solution_tree_nodes/1))
-
-      _ ->
-        1
-    end
-  end
 end
