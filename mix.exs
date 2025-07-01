@@ -54,7 +54,7 @@ defmodule AriaCharacterCore.MixProject do
 
       # Numerical computing with GPU acceleration
       {:nx, "~> 0.10"},
-      {:torchx, "~> 0.9"},
+      {:torchx, "~> 0.10"},
 
       # Phoenix web framework
       {:phoenix, "~> 1.7"},

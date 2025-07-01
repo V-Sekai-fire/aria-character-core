@@ -235,12 +235,12 @@ defmodule AriaGltf.Mesh.Tensor do
 
     # Accumulate face normals to vertices (simplified implementation)
     # In practice, you'd want a more efficient scatter-add operation
-    triangle_indices = Nx.reshape(indices, {:auto, 3})
+    _triangle_indices = Nx.reshape(indices, {:auto, 3})
 
     # For each triangle, add its normal to all three vertices
     # This is a simplified version - a full implementation would use more efficient operations
     vertex_normals = Enum.reduce(0..(Nx.axis_size(face_normals, 0) - 1), vertex_normals, fn tri_idx, acc_normals ->
-      face_normal = Nx.slice_along_axis(face_normals, tri_idx, 1, axis: 0)
+      _face_normal = Nx.slice_along_axis(face_normals, tri_idx, 1, axis: 0)
       |> Nx.squeeze(axes: [0])
 
       # Add this face normal to all three vertices of the triangle
@@ -260,9 +260,9 @@ defmodule AriaGltf.Mesh.Tensor do
       tangents = AriaGltf.Mesh.Tensor.calculate_tangents(vertices, normals, uvs, indices)
   """
   @spec calculate_tangents(vertex_tensor(), normal_tensor(), uv_tensor(), index_tensor()) :: normal_tensor()
-  def calculate_tangents(vertices, normals, uvs, indices) do
+  def calculate_tangents(vertices, _normals, _uvs, indices) do
     num_vertices = Nx.axis_size(vertices, 0)
-    triangle_indices = Nx.reshape(indices, {:auto, 3})
+    _triangle_indices = Nx.reshape(indices, {:auto, 3})
 
     # Initialize tangent accumulation
     tangents = Nx.broadcast(0.0, {num_vertices, 3})

@@ -36,7 +36,7 @@ defmodule AriaQcp.MixProject do
     [
       {:aria_math, in_umbrella: true},
       {:nx, "~> 0.10.0"},
-      {:torchx, "~> 0.9"},
+      {:torchx, "~> 0.10"},
     ]
   end
 end

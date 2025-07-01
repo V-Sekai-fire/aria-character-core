@@ -38,7 +38,7 @@ defmodule AriaQcp.Tensor do
   - **Weight tensor**: Shape `{batch_size, num_points}` (optional)
   """
 
-  alias AriaMath.{Vector3, Quaternion, Matrix4}
+  alias AriaMath.{Quaternion}
 
   @type point_cloud_tensor() :: Nx.Tensor.t()
   @type rotation_tensor() :: Nx.Tensor.t()
@@ -186,7 +186,7 @@ defmodule AriaQcp.Tensor do
 
     # Calculate trace and determinant for each matrix
     traces = calculate_traces_batch(covariance_matrices)
-    determinants = calculate_determinants_batch(covariance_matrices)
+    _determinants = calculate_determinants_batch(covariance_matrices)
 
     # Solve characteristic polynomial for largest eigenvalue
     # This is a simplified version - full implementation would use proper eigensolvers

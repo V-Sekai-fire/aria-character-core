@@ -14,7 +14,7 @@
 
 - **MUST use R25W1398085** (Unified Durative Action Specification) for all glTF domain planning and temporal coordination
 - **MUST use aria_gltf for execution** with KHR_interactivity extensions to achieve frame-accurate mesh state calculation
-- **MUST use Nx** (https://hex.pm/packages/nx) with `{:torchx, "~> 0.9"}` for efficient tensor operations in mesh transformations
+- **MUST use Nx** (https://hex.pm/packages/nx) with `{:torchx, "~> 0.10"}` for efficient tensor operations in mesh transformations
 - **MUST support combined animation workflows** including simultaneous skinning and morphing operations
 
 **Frame-Accurate Mesh State Calculation:**

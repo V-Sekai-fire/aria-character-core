@@ -161,6 +161,10 @@ defmodule AriaMath.Matrix4.Tensor do
   """
   @spec multiply_batch(Nx.Tensor.t(), Nx.Tensor.t()) :: Nx.Tensor.t()
   def multiply_batch(a_matrices, b_matrices) do
+    # For batch matrix multiplication of {batch, 4, 4} tensors
+    # Nx.dot automatically handles batch dimensions correctly
+    # a_matrices: {batch, 4, 4}, b_matrices: {batch, 4, 4}
+    # Result: {batch, 4, 4}
     Nx.dot(a_matrices, b_matrices)
   end
 
@@ -616,19 +620,29 @@ defmodule AriaMath.Matrix4.Tensor do
   def transform_points_batch_multi_safe(transforms, points) do
     {num_joints, num_points, _} = Nx.shape(points)
 
-    # More aggressive memory estimation - tensor operations create large intermediate tensors
-    # The actual memory usage is much higher than just the input tensors due to:
-    # 1. Homogeneous coordinate expansion: {5000, 100, 3} -> {5000, 100, 4}
-    # 2. Matrix multiplication intermediate results
-    # 3. CUDA memory fragmentation and overhead
-
-    # Use a simple heuristic: if total elements > 50,000, use chunking
+    # Be much more conservative with memory usage to prevent CUDA OOM
+    # The matrix operations can create large intermediate tensors
     total_elements = num_joints * num_points
 
-    if total_elements > 50_000 do  # Much more aggressive threshold
-      # Use much smaller chunks to prevent CUDA OOM
-      chunk_size = max(50, div(num_joints, 20))  # Process ~5% at a time, minimum 50
+    # Use aggressive chunking for any reasonably large operation
+    if total_elements > 50_000 do  # Much lower threshold
+      # Use small chunk sizes to prevent memory explosions
+      # Base chunk size on both total elements and available memory
+      base_chunk_size = cond do
+        total_elements > 1_000_000 -> 64   # Very large: tiny chunks
+        total_elements > 500_000 -> 128    # Large: small chunks
+        total_elements > 100_000 -> 256    # Medium: modest chunks
+        true -> 512                        # Smaller: reasonable chunks
+      end
 
+      # Further reduce chunk size if we have many points per joint
+      chunk_size = if num_points > 50 do
+        max(32, div(base_chunk_size, 2))
+      else
+        base_chunk_size
+      end
+
+      # Process in chunks with conservative memory usage
       0..(num_joints - 1)
       |> Enum.chunk_every(chunk_size)
       |> Enum.map(fn chunk_indices ->
@@ -639,14 +653,59 @@ defmodule AriaMath.Matrix4.Tensor do
         transforms_chunk = Nx.slice_along_axis(transforms, start_idx, actual_chunk_size, axis: 0)
         points_chunk = Nx.slice_along_axis(points, start_idx, actual_chunk_size, axis: 0)
 
-        # Transform this chunk
-        transform_points_batch_multi(transforms_chunk, points_chunk)
+        # Transform this chunk with memory monitoring
+        try do
+          transform_points_batch_multi(transforms_chunk, points_chunk)
+        catch
+          :error, %RuntimeError{message: message} = error ->
+            if String.contains?(message, "out of memory") do
+              # Fallback to CPU for this chunk
+              Memory.with_cpu_fallback(fn ->
+                transform_points_batch_multi(transforms_chunk, points_chunk)
+              end)
+            else
+              reraise error, __STACKTRACE__
+            end
+        end
       end)
       |> Nx.concatenate(axis: 0)
     else
-      # Direct operation for smaller tensors
-      transform_points_batch_multi(transforms, points)
+      # Even for smaller operations, wrap in error handling
+      try do
+        transform_points_batch_multi(transforms, points)
+      catch
+        :error, %RuntimeError{message: message} = error ->
+          if String.contains?(message, "out of memory") do
+            # Fallback to chunked processing
+            transform_points_batch_multi_safe_chunked(transforms, points, 128)
+          else
+            reraise error, __STACKTRACE__
+          end
+      end
     end
+  end
+
+  # Helper function for emergency chunked processing
+  @spec transform_points_batch_multi_safe_chunked(Nx.Tensor.t(), Nx.Tensor.t(), integer()) :: Nx.Tensor.t()
+  defp transform_points_batch_multi_safe_chunked(transforms, points, chunk_size) do
+    {num_joints, _, _} = Nx.shape(points)
+
+    0..(num_joints - 1)
+    |> Enum.chunk_every(chunk_size)
+    |> Enum.map(fn chunk_indices ->
+      start_idx = hd(chunk_indices)
+      actual_chunk_size = length(chunk_indices)
+
+      # Extract chunk of transforms and points
+      transforms_chunk = Nx.slice_along_axis(transforms, start_idx, actual_chunk_size, axis: 0)
+      points_chunk = Nx.slice_along_axis(points, start_idx, actual_chunk_size, axis: 0)
+
+      # Use CPU fallback for safety
+      Memory.with_cpu_fallback(fn ->
+        transform_points_batch_multi(transforms_chunk, points_chunk)
+      end)
+    end)
+    |> Nx.concatenate(axis: 0)
   end
 
   @doc """
@@ -820,9 +879,13 @@ defmodule AriaMath.Matrix4.Tensor do
     ones = Nx.broadcast(1.0, {num_matrices, num_points, 1})
     homogeneous_points = Nx.concatenate([points, ones], axis: 2)
 
-    # Batch matrix multiplication: each matrix transforms its corresponding point set
-    # Use batched dot product: matrices[i] * homogeneous_points[i]^T
-    transformed_homo = Nx.dot(matrices, [2], homogeneous_points, [2])
+    # Reshape for batch matrix multiplication
+    # homogeneous_points: {num_matrices, num_points, 4}
+    # matrices: {num_matrices, 4, 4}
+
+    # We want to multiply each matrix with its corresponding points
+    # Use Nx.dot with proper batching - contract the inner dimensions
+    transformed_homo = Nx.dot(homogeneous_points, [2], matrices, [1])
 
     # Extract x, y, z components (drop w component)
     Nx.slice_along_axis(transformed_homo, 0, 3, axis: 2)

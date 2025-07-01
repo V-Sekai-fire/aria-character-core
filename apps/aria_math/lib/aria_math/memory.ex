@@ -46,8 +46,6 @@ defmodule AriaMath.Memory do
 
   # Conservative memory limits (in bytes)
   @gpu_memory_safety_factor 0.8  # Use max 80% of available GPU memory
-  @cpu_memory_safety_factor 0.6  # Use max 60% of available CPU memory
-  @default_batch_size 1000
   @max_batch_size 50000
   @min_batch_size 100
 
@@ -241,7 +239,7 @@ defmodule AriaMath.Memory do
   @spec estimate_memory_usage(operation_type(), tensor_shape()) :: integer()
   def estimate_memory_usage(operation_type, tensor_shape) do
     element_cost = Map.get(@operation_memory_cost, operation_type, 64)
-    elements_per_item = calculate_elements_per_item(tensor_shape)
+    _elements_per_item = calculate_elements_per_item(tensor_shape)
     total_elements = calculate_total_elements(tensor_shape)
 
     # Account for intermediate tensors and overhead

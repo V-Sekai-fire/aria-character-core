@@ -25,7 +25,7 @@ defmodule AriaMath.MixProject do
   defp deps do
     [
       {:nx, "~> 0.10.0"},
-      {:torchx, "~> 0.9"},
+      {:torchx, "~> 0.10"},
     ]
   end
 end
