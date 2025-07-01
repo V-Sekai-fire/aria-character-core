@@ -340,11 +340,60 @@ defmodule AriaMath.Primitives do
   end
 
   @spec subdivide_sphere([Vector3.t()], [non_neg_integer()], float()) :: {[Vector3.t()], [non_neg_integer()]}
-  defp subdivide_sphere(vertices, indices, _radius) do
-    # This is a simplified subdivision - a full implementation would be more complex
-    # For now, just return the original sphere
-    {vertices, indices}
+  defp subdivide_sphere(vertices, indices, radius) do
+    # Basic subdivision algorithm: split each triangle into 4 triangles
+    # by adding midpoints and projecting them to sphere surface
+
+    # Process triangles in groups of 3 indices
+    {new_vertices, new_indices} =
+      indices
+      |> Enum.chunk_every(3)
+      |> Enum.reduce({vertices, []}, fn [i1, i2, i3], {v_list, acc_indices} ->
+        # Get triangle vertices
+        v1 = Enum.at(v_list, i1)
+        v2 = Enum.at(v_list, i2)
+        v3 = Enum.at(v_list, i3)
+
+        # Calculate midpoints
+        mid12 = midpoint_on_sphere(v1, v2, radius)
+        mid23 = midpoint_on_sphere(v2, v3, radius)
+        mid31 = midpoint_on_sphere(v3, v1, radius)
+
+        # Add new vertices and get their indices
+        current_count = length(v_list)
+        updated_vertices = v_list ++ [mid12, mid23, mid31]
+        idx12 = current_count
+        idx23 = current_count + 1
+        idx31 = current_count + 2
+
+        # Create 4 new triangles from original triangle
+        new_triangle_indices = [
+          # Center triangle
+          idx12, idx23, idx31,
+          # Corner triangles
+          i1, idx12, idx31,
+          i2, idx23, idx12,
+          i3, idx31, idx23
+        ]
+
+        {updated_vertices, acc_indices ++ new_triangle_indices}
+      end)
+
+    {new_vertices, new_indices}
   end
+
+  # Helper function to calculate midpoint and project to sphere surface
+  defp midpoint_on_sphere({x1, y1, z1}, {x2, y2, z2}, radius) do
+    # Calculate midpoint
+    mid_x = (x1 + x2) / 2.0
+    mid_y = (y1 + y2) / 2.0
+    mid_z = (z1 + z2) / 2.0
+
+    # Normalize and scale to radius
+    {normalized, _} = Vector3.normalize({mid_x, mid_y, mid_z})
+    Vector3.scale(normalized, radius)
+  end
+
 
   # Mathematical utility functions
 
@@ -415,11 +464,14 @@ defmodule AriaMath.Primitives do
   @doc """
   Check if a float value is infinite (positive or negative).
   """
-  @spec isinf_float(float()) :: boolean()
-  def isinf_float(value) when is_number(value) do
+  @spec isinf_float(float() | atom()) :: boolean()
+  def isinf_float(value) do
     value == :positive_infinity or value == :negative_infinity or
-    value == 1.0 / 0.0 or value == -1.0 / 0.0
-  rescue
-    ArithmeticError -> false
+    (is_number(value) and
+     try do
+       value == 1.0 / 0.0 or value == -1.0 / 0.0
+     rescue
+       ArithmeticError -> false
+     end)
   end
 end

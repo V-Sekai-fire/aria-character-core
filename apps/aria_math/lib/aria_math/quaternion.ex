@@ -492,10 +492,10 @@ defmodule AriaMath.Quaternion do
 
   ## Examples
 
-      iex> Quaternion.approx_equal?({0.0, 0.0, 0.0, 1.0}, {0.000001, 0.000001, 0.000001, 1.000001}, 0.001)
+      iex> AriaMath.Quaternion.approx_equal?({0.0, 0.0, 0.0, 1.0}, {0.000001, 0.000001, 0.000001, 1.000001}, 0.001)
       true
 
-      iex> Quaternion.approx_equal?({0.0, 0.0, 0.0, 1.0}, {0.1, 0.0, 0.0, 1.0}, 0.001)
+      iex> AriaMath.Quaternion.approx_equal?({0.0, 0.0, 0.0, 1.0}, {0.1, 0.0, 0.0, 1.0}, 0.001)
       false
   """
   @spec approx_equal?(t(), t(), float()) :: boolean()
@@ -511,7 +511,7 @@ defmodule AriaMath.Quaternion do
 
   ## Examples
 
-      iex> Quaternion.equal?({0.0, 0.0, 0.0, 1.0}, {0.000001, 0.000001, 0.000001, 1.000001}, 0.001)
+      iex> AriaMath.Quaternion.equal?({0.0, 0.0, 0.0, 1.0}, {0.000001, 0.000001, 0.000001, 1.000001}, 0.001)
       true
   """
   @spec equal?(t(), t(), float()) :: boolean()

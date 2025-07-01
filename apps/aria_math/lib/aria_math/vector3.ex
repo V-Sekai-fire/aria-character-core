@@ -201,10 +201,10 @@ defmodule AriaMath.Vector3 do
 
   ## Examples
 
-      iex> Vector3.approx_equal?({1.0, 2.0, 3.0}, {1.000001, 2.000001, 3.000001}, 0.001)
+      iex> AriaMath.Vector3.approx_equal?({1.0, 2.0, 3.0}, {1.000001, 2.000001, 3.000001}, 0.001)
       true
 
-      iex> Vector3.approx_equal?({1.0, 2.0, 3.0}, {1.1, 2.0, 3.0}, 0.001)
+      iex> AriaMath.Vector3.approx_equal?({1.0, 2.0, 3.0}, {1.1, 2.0, 3.0}, 0.001)
       false
   """
   @spec approx_equal?(t(), t(), float()) :: boolean()
@@ -219,7 +219,7 @@ defmodule AriaMath.Vector3 do
 
   ## Examples
 
-      iex> Vector3.equal?({1.0, 2.0, 3.0}, {1.000001, 2.000001, 3.000001}, 0.001)
+      iex> AriaMath.Vector3.equal?({1.0, 2.0, 3.0}, {1.000001, 2.000001, 3.000001}, 0.001)
       true
   """
   @spec equal?(t(), t(), float()) :: boolean()
@@ -435,9 +435,11 @@ defmodule AriaMath.Vector3 do
 
   defp is_infinite(x) do
     x == :positive_infinity or x == :negative_infinity or
-    x == 1.0 / 0.0 or x == -1.0 / 0.0
-  rescue
-    ArithmeticError -> false
+    (try do
+      x == 1.0 / 0.0 or x == -1.0 / 0.0
+    rescue
+      ArithmeticError -> false
+    end)
   end
 
   defp math_min(a, b) when a <= b, do: a
