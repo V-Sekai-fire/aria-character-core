@@ -18,9 +18,9 @@ defmodule AriaHybridPlanner do
       {:ok, {final_state, updated_tree}} = AriaHybridPlanner.run_lazy_tree(domain, state, solution_tree)
 
       # Use the coordinator API for advanced control
-      coordinator = AriaHybridPlanner.Core.new_coordinator()
-      {:ok, plan} = AriaHybridPlanner.Core.plan(coordinator, domain, state, goals)
-      {:ok, final_state} = AriaHybridPlanner.Core.execute(coordinator, domain, state, plan)
+      coordinator = AriaHybridPlanner.new_coordinator()
+      {:ok, plan} = AriaHybridPlanner.plan(coordinator, domain, state, goals)
+      {:ok, final_state} = AriaHybridPlanner.execute(coordinator, domain, state, plan)
 
   ## Key Features
 
@@ -53,16 +53,29 @@ defmodule AriaHybridPlanner do
   # Type aliases for external API compatibility
   @type domain :: AriaHybridPlanner.Domain.t()
   @type state :: AriaHybridPlanner.State.t()
-  @type todo_item :: AriaHybridPlanner.Core.todo_item()
-  @type solution_tree :: AriaHybridPlanner.Plan.solution_tree()
+  @type todo_item :: term()
+  @type solution_tree :: map()
 
-  # Delegate core functions to the unified API for convenience
-  defdelegate new_coordinator(opts \\ []), to: AriaHybridPlanner.Core
-  defdelegate plan(coordinator, domain, state, goals, opts \\ []), to: AriaHybridPlanner.Core
-  defdelegate execute(coordinator, domain, state, plan, opts \\ []), to: AriaHybridPlanner.Core
-  defdelegate validate_plan(coordinator, domain, state, plan), to: AriaHybridPlanner.Core
-  defdelegate replan(coordinator, domain, state, plan, fail_node_id, opts \\ []), to: AriaHybridPlanner.Core
-  defdelegate plan_and_execute(coordinator, domain, state, goals, opts \\ []), to: AriaHybridPlanner.Core
+  # Delegate core functions directly to HybridCoordinatorV2
+  defdelegate new_coordinator(opts \\ []), to: HybridPlanner.HybridCoordinatorV2, as: :new_default
+  defdelegate plan(coordinator, domain, state, goals, opts \\ []), to: HybridPlanner.HybridCoordinatorV2
+  defdelegate execute(coordinator, domain, state, plan, opts \\ []), to: HybridPlanner.HybridCoordinatorV2
+  defdelegate validate_plan(coordinator, domain, state, plan), to: HybridPlanner.HybridCoordinatorV2
+
+  # Replan is not implemented in HybridCoordinatorV2 yet
+  def replan(_coordinator, _domain, _state, _plan, _fail_node_id, _opts \\ []) do
+    {:error, "Replanning not yet implemented"}
+  end
+
+  # Plan and execute combines planning and execution
+  def plan_and_execute(coordinator, domain, state, goals, opts \\ []) do
+    case plan(coordinator, domain, state, goals, opts) do
+      {:ok, plan} ->
+        execute(coordinator, domain, state, plan, opts)
+      {:error, reason} ->
+        {:error, reason}
+    end
+  end
 
   # Engine integration functions for AriaEngineCore compatibility
   # These provide a bridge between AriaEngineCore's API and AriaHybridPlanner.Core
@@ -72,8 +85,8 @@ defmodule AriaHybridPlanner do
   Returns only the solution tree portion of the plan.
   """
   def plan(domain, state, goals) do
-    coordinator = AriaHybridPlanner.Core.new_coordinator()
-    case AriaHybridPlanner.Core.plan(coordinator, domain, state, goals) do
+    coordinator = new_coordinator()
+    case plan(coordinator, domain, state, goals) do
       {:ok, plan} ->
         # Extract solution tree from plan structure
         solution_tree = extract_solution_tree(plan)
@@ -86,8 +99,8 @@ defmodule AriaHybridPlanner do
   Plan and execute with lazy execution - compatible with AriaEngineCore API.
   """
   def run_lazy(domain, state, goals) do
-    coordinator = AriaHybridPlanner.Core.new_coordinator()
-    case AriaHybridPlanner.Core.plan_and_execute(coordinator, domain, state, goals) do
+    coordinator = new_coordinator()
+    case plan_and_execute(coordinator, domain, state, goals) do
       {:ok, result} ->
         final_state = Map.get(result, :final_state, state)
         solution_tree = extract_solution_tree(result)
@@ -100,10 +113,11 @@ defmodule AriaHybridPlanner do
   Execute a pre-made solution tree - compatible with AriaEngineCore API.
   """
   def run_lazy_tree(domain, state, solution_tree) do
-    coordinator = AriaHybridPlanner.Core.new_coordinator()
-    case AriaHybridPlanner.Core.execute(coordinator, domain, state, solution_tree) do
-      {:ok, result} ->
-        final_state = Map.get(result, :final_state, state)
+    coordinator = new_coordinator()
+    # Convert solution tree to plan format expected by execute/4
+    plan = %{solution_tree: solution_tree}
+    case execute(coordinator, domain, state, plan) do
+      {:ok, final_state} ->
         {:ok, {final_state, solution_tree}}
       {:error, reason} -> {:error, reason}
     end
@@ -181,8 +195,8 @@ defmodule AriaHybridPlanner do
 
       @type my_todo :: AriaHybridPlanner.todo_item()
   """
-  @spec todo_item() :: module()
-  def todo_item, do: AriaHybridPlanner.Core
+  @spec todo_item() :: atom()
+  def todo_item, do: :term
 
   @doc """
   Get the solution tree from the planner.

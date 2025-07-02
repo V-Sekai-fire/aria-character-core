@@ -34,7 +34,7 @@ defmodule HybridPlanner.HybridCoordinatorV2.Execution do
         nil ->
           {:error, "Domain required for execution but not provided in options"}
 
-        %Domain.Core{} = domain ->
+        domain when is_map(domain) ->
           # Extract primitive actions from solution tree
           primitive_actions = Plan.ReentrantExecutor.extract_primitive_actions(solution_tree)
 

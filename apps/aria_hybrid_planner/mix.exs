@@ -26,7 +26,6 @@ defmodule AriaHybridPlanner.MixProject do
 
   defp deps do
     [
-      # Internal dependencies (merged from aria_engine_core)
       {:aria_math, in_umbrella: true},
       {:aria_state, in_umbrella: true},
       {:aria_timeline, in_umbrella: true},

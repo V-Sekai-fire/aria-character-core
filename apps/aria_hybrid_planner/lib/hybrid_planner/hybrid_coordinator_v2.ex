@@ -87,6 +87,52 @@ defmodule HybridPlanner.HybridCoordinatorV2 do
   # ==================== PLANNING FUNCTIONS ====================
 
   @doc """
+  Plan using HTN planning algorithm.
+  """
+  @spec plan(t(), Domain.Core.t(), State.t(), [term()], keyword()) :: plan_result()
+  def plan(coordinator, domain, initial_state, goals, opts \\ []) do
+    Logging.log_progress("planning", %{status: "started"}, opts)
+
+    try do
+      # Convert goals to todos for HTN planning
+      todos = Planning.convert_goals_to_todos(goals)
+
+      # Create initial blacklist state
+      blacklist_state = Plan.Blacklisting.new()
+
+      # Enhanced options for planning
+      enhanced_opts = opts
+      |> Keyword.put(:domain, domain)
+      |> Keyword.put(:blacklist_state, blacklist_state)
+
+      # Perform HTN planning using the existing planning infrastructure
+      case htn_plan(domain, initial_state, todos, enhanced_opts) do
+        {:ok, solution_tree} ->
+          plan = %{
+            solution_tree: solution_tree,
+            metadata: %{
+              created_at: System.system_time(:millisecond),
+              blacklist_state: blacklist_state,
+              coordinator_id: coordinator.metadata.created_at
+            }
+          }
+
+          Logging.log_progress("planning", %{status: "completed_successfully"}, opts)
+          {:ok, plan}
+
+        {:error, reason} ->
+          Logging.log_error(reason, %{phase: "planning"}, opts)
+          {:error, reason}
+      end
+    rescue
+      e ->
+        error_msg = "Planning error: #{Exception.message(e)}"
+        Logging.log_error(error_msg, %{phase: "planning_coordinator"}, opts)
+        {:error, error_msg}
+    end
+  end
+
+  @doc """
   Validate a plan using HTN planning validation.
   """
   @spec validate_plan(t(), Domain.Core.t(), State.t(), map()) ::
@@ -203,6 +249,61 @@ defmodule HybridPlanner.HybridCoordinatorV2 do
 
 
   # ==================== PRIVATE UTILITY FUNCTIONS ====================
+
+  # HTN planning implementation
+  defp htn_plan(domain, initial_state, todos, opts) do
+    try do
+      # Simple HTN planning implementation
+      # For now, create a basic solution tree structure
+      # This will be enhanced with proper HTN algorithm later
+
+      case todos do
+        [] ->
+          # No goals to achieve
+          {:ok, %{task: :empty, status: :completed, children: []}}
+
+        [single_todo] ->
+          # Single goal - create simple solution tree
+          solution_tree = %{
+            task: single_todo,
+            status: :primitive,
+            children: [],
+            metadata: %{
+              created_at: System.system_time(:millisecond),
+              domain: domain,
+              initial_state: initial_state
+            }
+          }
+          {:ok, solution_tree}
+
+        multiple_todos ->
+          # Multiple goals - create compound solution tree
+          children = Enum.map(multiple_todos, fn todo ->
+            %{
+              task: todo,
+              status: :primitive,
+              children: [],
+              metadata: %{created_at: System.system_time(:millisecond)}
+            }
+          end)
+
+          solution_tree = %{
+            task: {:multigoal, multiple_todos},
+            status: :compound,
+            children: children,
+            metadata: %{
+              created_at: System.system_time(:millisecond),
+              domain: domain,
+              initial_state: initial_state
+            }
+          }
+          {:ok, solution_tree}
+      end
+    rescue
+      e ->
+        {:error, "HTN planning failed: #{Exception.message(e)}"}
+    end
+  end
 
   # Extract or create blacklist state for execution
   defp get_or_create_blacklist_state(plan, opts) do

@@ -1,48 +1,67 @@
-# Current State Analysis
+## Detailed Cleanup Plan
 
-**aria_engine_core** is essentially a thin wrapper that delegates to aria_hybrid_planner:
+### Phase 1: Identify Redundant Files to Remove
 
-- Simple public API that just calls `AriaHybridPlanner.*` functions
-- Has core types (Domain, State, Plan, etc.)
-- Used by: aria_core, aria_membrane_pipeline, aria_blocks_world
-- Heavy dependencies: aria_math, aria_state, aria_timeline, aria_ewbik, aria_minizinc_stn, aria_minizinc_goal, aria_minizinc_executor, aria_hybrid_planner
+**Files to DELETE (redundant/incomplete stubs):**
 
-**aria_hybrid_planner** has the actual implementation:
+1. `lib/aria_hybrid_planner/core.ex` - Unnecessary delegation layer to HybridCoordinatorV2
+2. `lib/planning/core_interface.ex` - Incomplete stub with TODOs
+3. `lib/planning/internal.ex` - Simple helper only used by core_interface.ex
+4. `lib/core.ex` - Root-level duplicate (if it exists)
+5. `lib/stubs.ex` - Appears to be placeholder/stub code
 
-- Complex planning logic with HTN coordinators, temporal planning, node expansion
-- Lighter dependencies: aria_state, aria_timeline, aria_minizinc_stn
-- More focused architecture
+**Potentially redundant files to investigate:**
 
-## Merge Plan
+- Files in `lib/aria_hybrid_planner/` that duplicate functionality from `lib/hybrid_planner/`
+- Root-level files like `lib/multigoal.ex`, `lib/state.ex` that may duplicate `lib/aria_hybrid_planner/` versions
 
-### Phase 1: Enhance aria_hybrid_planner
+### Phase 2: Update AriaHybridPlanner Direct Delegation
 
-1. **Expand public API** - Move the clean public API from `AriaEngineCore` into `AriaHybridPlanner`
-2. **Import core modules** - Move Domain, State, Plan, Utils modules from aria_engine_core to aria_hybrid_planner
-3. **Update dependencies** - Add the additional dependencies that aria_engine_core had (aria_math, aria_ewbik, minizinc modules)
-4. **Preserve compatibility** - Create module aliases so existing code continues to work
+**Current problematic flow:**
 
-### Phase 2: Update dependent apps
+```
+AriaHybridPlanner → AriaHybridPlanner.Core → HybridCoordinatorV2
+```
 
-1. **aria_core** - Change dependency from aria_engine_core to aria_hybrid_planner
-2. **aria_membrane_pipeline** - Update imports and dependency declarations
-3. **aria_blocks_world** - Update imports and dependency declarations
-4. **Update umbrella mix.exs** - Remove aria_engine_core from umbrella dependencies
+**Target simplified flow:**
 
-### Phase 3: Clean removal
+```
+AriaHybridPlanner → HybridCoordinatorV2
+AriaEngineCore (compatibility) → AriaHybridPlanner
+```
 
-1. **Remove aria_engine_core directory** entirely
-2. **Update any remaining references** in documentation, configs, etc.
+**Changes needed in `lib/aria_hybrid_planner.ex`:**
 
-## Benefits
+1. Remove all references to `AriaHybridPlanner.Core`
+2. Update delegation functions to call `HybridPlanner.HybridCoordinatorV2` directly
+3. Update type definitions to reference the correct modules
+4. Maintain the same public API (no breaking changes)
 
-- **Simplified architecture** - One planning app instead of two
-- **Clearer separation of concerns** - No more wrapper/implementation split
-- **Easier maintenance** - All planning logic in one place
-- **Better performance** - Eliminates extra delegation layer
+### Phase 3: Test Validation Strategy
 
-## Risks & Mitigation
+**Pre-cleanup verification:**
 
-- **Breaking changes** - Mitigate with careful module aliasing and API preservation
-- **Test failures** - Will need comprehensive test updates across multiple apps
-- **Import dependencies** - Need to carefully merge dependency lists
+1. Run existing test suite: `mix test apps/aria_hybrid_planner`
+2. Compile entire umbrella: `mix compile`
+3. Check cross-app usage: Search for imports of modules we're removing
+
+**Post-cleanup verification:**
+
+1. Ensure all tests still pass
+2. Verify no compilation errors
+3. Check that public API behavior is unchanged
+
+### Phase 4: Implementation Steps
+
+1. **First**: Remove unused stub modules (Planning.\*, stubs.ex)
+2. **Second**: Update AriaHybridPlanner to delegate directly to HybridCoordinatorV2
+3. **Third**: Remove AriaHybridPlanner.Core after updating main module
+4. **Fourth**: Clean up any remaining duplicate files
+5. **Finally**: Run comprehensive tests
+
+### Risk Mitigation
+
+- Keep AriaEngineCore compatibility layer intact (no breaking changes)
+- Maintain exact same public API in AriaHybridPlanner
+- Test after each major change rather than all at once
+- Use git commits at each phase for easy rollback
