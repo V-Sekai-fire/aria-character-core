@@ -11,12 +11,11 @@ defmodule AriaHybridPlanner do
       {:ok, {final_state, solution_tree}} = AriaHybridPlanner.run_lazy(domain, state, todos)
 
       # Plan first, then execute separately
-      {:ok, solution_tree} = AriaHybridPlanner.plan_simple(domain, state, todos)
-      {:ok, {final_state, updated_tree}} = AriaHybridPlanner.run_lazy_tree(domain, state, solution_tree)
-
-      # Advanced usage with options
       {:ok, plan} = AriaHybridPlanner.plan(domain, state, todos, opts)
-      {:ok, final_state} = AriaHybridPlanner.execute(domain, state, plan, opts)
+      {:ok, {final_state, updated_tree}} = AriaHybridPlanner.run_lazy_tree(domain, state, plan.solution_tree)
+
+      # Advanced planning with options
+      {:ok, plan} = AriaHybridPlanner.plan(domain, state, todos, verbose: 2, max_depth: 15)
 
   ## Key Features
 
@@ -28,15 +27,14 @@ defmodule AriaHybridPlanner do
 
   ## API Functions
 
-  ### Simple API (recommended for most use cases)
-  - `plan_simple/3` - Planning only, returns solution tree
+  ### Primary API
+  - `plan/4` - Planning with options, returns detailed plan structure
   - `run_lazy/3` - Planning + execution, returns final state and solution tree
   - `run_lazy_tree/3` - Execute pre-made plan, returns final state and updated tree
 
-  ### Advanced API (for fine-grained control)
-  - `plan/4` - Planning with options
-  - `execute/4` - Execution with options
-  - `plan_and_execute/4` - Combined planning and execution with options
+  ### State Management
+  - `new_state/0`, `new_state/1` - Create new planning states
+  - `set_fact/4`, `get_fact/3`, `has_subject?/3`, etc. - State manipulation
   """
 
   # Type definitions
@@ -236,11 +234,9 @@ defmodule AriaHybridPlanner do
     end
   end
 
-  @doc """
-  Execute a plan using the existing execution infrastructure.
-  """
+  # Execute a plan using the existing execution infrastructure.
   @spec execute(term(), State.t(), map(), keyword()) :: {:ok, State.t()} | {:error, String.t()}
-  def execute(domain, initial_state, plan, opts \\ []) do
+  defp execute(domain, initial_state, plan, opts \\ []) do
     try do
       solution_tree = Map.get(plan, :solution_tree)
 
@@ -277,10 +273,8 @@ defmodule AriaHybridPlanner do
     end
   end
 
-  @doc """
-  Plan and execute in one step.
-  """
-  def plan_and_execute(domain, state, goals, opts \\ []) do
+  # Plan and execute in one step.
+  defp plan_and_execute(domain, state, goals, opts \\ []) do
     case plan(domain, state, goals, opts) do
       {:ok, plan} ->
         execute(domain, state, plan, opts)
@@ -291,18 +285,6 @@ defmodule AriaHybridPlanner do
 
   # Simple API functions (using direct implementations)
 
-  @doc """
-  Plan only (no execution).
-  Returns solution tree for the given todos.
-  """
-  def plan_simple(domain, state, todos) do
-    case plan(domain, state, todos, []) do
-      {:ok, plan} ->
-        solution_tree = Map.get(plan, :solution_tree, %{})
-        {:ok, solution_tree}
-      {:error, reason} -> {:error, reason}
-    end
-  end
 
   @doc """
   Plan and execute with lazy execution.

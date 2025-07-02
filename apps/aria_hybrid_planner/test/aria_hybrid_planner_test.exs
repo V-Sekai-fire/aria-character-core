@@ -56,25 +56,6 @@ defmodule AriaHybridPlannerTest do
       assert metadata.domain == domain
     end
 
-    test "plan_simple/3 returns solution tree", %{domain: domain, state: state} do
-      todos = [{:move, ["a", "b"]}]
-
-      assert {:ok, solution_tree} = AriaHybridPlanner.plan_simple(domain, state, todos)
-
-      # Verify solution tree structure
-      assert is_map(solution_tree)
-      assert Map.has_key?(solution_tree, :root_id)
-      assert Map.has_key?(solution_tree, :nodes)
-      assert Map.has_key?(solution_tree, :blacklisted_commands)
-
-      # Verify nodes exist
-      assert map_size(solution_tree.nodes) > 0
-
-      # Verify root node exists
-      root_node = solution_tree.nodes[solution_tree.root_id]
-      assert root_node != nil
-      assert root_node.id == solution_tree.root_id
-    end
 
     test "run_lazy/3 performs planning and execution", %{domain: domain, state: state} do
       todos = [{:move, ["a", "b"]}]
@@ -101,8 +82,9 @@ defmodule AriaHybridPlannerTest do
     test "run_lazy_tree/3 executes pre-made solution tree", %{domain: domain, state: state} do
       todos = [{:move, ["a", "b"]}]
 
-      # First create a solution tree
-      assert {:ok, solution_tree} = AriaHybridPlanner.plan_simple(domain, state, todos)
+      # First create a solution tree using plan/4
+      assert {:ok, plan} = AriaHybridPlanner.plan(domain, state, todos)
+      solution_tree = plan.solution_tree
 
       # Then execute it
       case AriaHybridPlanner.run_lazy_tree(domain, state, solution_tree) do
