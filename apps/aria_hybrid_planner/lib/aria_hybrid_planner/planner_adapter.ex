@@ -11,7 +11,6 @@ defmodule AriaEngineCore.PlannerAdapter do
   """
 
   alias AriaEngineCore.Plan.Utils
-  alias AriaEngineCore.Planner
   alias AriaEngineCore.Domain
   alias AriaEngineCore.State
 
@@ -42,30 +41,6 @@ defmodule AriaEngineCore.PlannerAdapter do
   end
 
   @doc """
-  Plan tasks using the AriaEngineCore.Planner implementation.
-
-  This function converts tasks to goals and delegates to AriaEngineCore.Planner.plan/3.
-  """
-  @spec plan_tasks(domain(), state(), [term()], keyword()) ::
-          {:ok, map()} | {:error, String.t()}
-  def plan_tasks(domain, initial_state, tasks, _opts \\ []) do
-    # Convert tasks to goals format expected by AriaEngineCore.Planner
-    goals = convert_tasks_to_goals(tasks)
-    Planner.plan(domain, initial_state, goals)
-  end
-
-  @doc """
-  Plan goals using the AriaEngineCore.Planner implementation.
-
-  This is a direct delegation to AriaEngineCore.Planner.plan/3.
-  """
-  @spec plan(domain(), state(), [term()], keyword()) ::
-          {:ok, map()} | {:error, String.t()}
-  def plan(domain, state, todos, _opts \\ []) do
-    Planner.plan(domain, state, todos)
-  end
-
-  @doc """
   Validate a plan using the AriaEngineCore.Planner implementation.
 
   This function would need to be implemented when validation functionality
@@ -87,20 +62,5 @@ defmodule AriaEngineCore.PlannerAdapter do
           {:ok, map()} | {:error, String.t()} | :failure
   def replan(_domain, _state, _solution_tree, _fail_node_id, _opts) do
     {:error, "Replanning functionality not yet implemented in AriaEngineCore.Planner"}
-  end
-
-  # ==================== PRIVATE HELPERS ====================
-
-  defp convert_tasks_to_goals(tasks) when is_list(tasks) do
-    Enum.map(tasks, &convert_task_to_goal/1)
-  end
-
-  defp convert_task_to_goal({task_name, args}) when is_binary(task_name) and is_list(args) do
-    {task_name, args}
-  end
-
-  defp convert_task_to_goal(task) do
-    # Pass through other formats as-is
-    task
   end
 end
