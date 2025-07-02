@@ -65,13 +65,19 @@ defmodule AriaBlocksWorld do
 
   - `AriaEngineCore.State.t()` - Initialized state
 
-  ## Example
+  ## Examples
 
-      state = AriaBlocksWorld.create_state(%{
-        pos: %{"a" => "table", "b" => "table"},
-        clear: %{"a" => true, "b" => true},
-        holding: %{"hand" => false}
-      })
+      iex> state = AriaBlocksWorld.create_state(%{
+      ...>   pos: %{"a" => "table", "b" => "table"},
+      ...>   clear: %{"a" => true, "b" => true},
+      ...>   holding: %{"hand" => false}
+      ...> })
+      iex> AriaState.RelationalState.get_fact(state, "pos", "a")
+      "table"
+      iex> AriaState.RelationalState.get_fact(state, "clear", "a")
+      true
+      iex> AriaState.RelationalState.get_fact(state, "holding", "hand")
+      false
   """
   @spec create_state(state_data()) :: AriaEngineCore.State.t()
   def create_state(data) do
@@ -89,11 +95,14 @@ defmodule AriaBlocksWorld do
 
   - `AriaEngineCore.Multigoal.t()` - Goal specification
 
-  ## Example
+  ## Examples
 
-      goal = AriaBlocksWorld.create_multigoal(%{
-        pos: %{"a" => "b", "b" => "table"}
-      })
+      iex> goal = AriaBlocksWorld.create_multigoal(%{
+      ...>   pos: %{"a" => "b", "b" => "table"}
+      ...> })
+      iex> {:multigoal, goal_data} = goal
+      iex> goal_data.pos
+      %{"a" => "b", "b" => "table"}
   """
   @spec create_multigoal(map()) :: term()
   def create_multigoal(goal_data) do
@@ -167,10 +176,19 @@ defmodule AriaBlocksWorld do
   - `{:ok, result}` - Success with example results
   - `{:error, reason}` - Failure with error description
 
-  ## Example
+  ## Examples
 
-      {:ok, result} = AriaBlocksWorld.run_example(:sussman_anomaly)
-      IO.inspect(result.plan, label: "Generated plan")
+      iex> {:ok, result} = AriaBlocksWorld.run_example(:simple_pickup)
+      iex> result.name
+      "Simple Pickup"
+      iex> result.description
+      "Basic pickup operation test"
+      iex> result.goals
+      [{"pos", "a", "hand"}]
+
+      iex> {:error, reason} = AriaBlocksWorld.run_example(:unknown_example)
+      iex> reason
+      :unknown_example
   """
   @spec run_example(atom()) :: {:ok, map()} | {:error, atom()}
   def run_example(example_name) do
@@ -184,10 +202,17 @@ defmodule AriaBlocksWorld do
 
   - List of available example names
 
-  ## Example
+  ## Examples
 
-      examples = AriaBlocksWorld.list_examples()
-      # [:sussman_anomaly, :simple_pickup, :simple_stack, :complex_multiblock]
+      iex> examples = AriaBlocksWorld.list_examples()
+      iex> :sussman_anomaly in examples
+      true
+      iex> :simple_pickup in examples
+      true
+      iex> :simple_stack in examples
+      true
+      iex> :complex_multiblock in examples
+      true
   """
   @spec list_examples() :: [atom()]
   def list_examples do
@@ -225,10 +250,19 @@ defmodule AriaBlocksWorld do
 
   - Map containing domain information
 
-  ## Example
+  ## Examples
 
-      info = AriaBlocksWorld.domain_info()
-      IO.inspect(info.actions, label: "Available actions")
+      iex> info = AriaBlocksWorld.domain_info()
+      iex> info.name
+      "Blocks World Domain"
+      iex> :pickup in info.actions
+      true
+      iex> :stack in info.actions
+      true
+      iex> "pos" in info.predicates
+      true
+      iex> "clear" in info.predicates
+      true
   """
   @spec domain_info() :: map()
   def domain_info do
