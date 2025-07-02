@@ -109,9 +109,9 @@ defmodule AriaBlocksWorldTest.State do
 
       pos = AriaBlocksWorldTest.State.get_position(state, "a")
   """
-  @spec get_position(AriaEngineCore.State.t(), block()) :: position()
+  @spec get_position(AriaState.t(), block()) :: position()
   def get_position(state, block) do
-    AriaEngineCore.get_fact(state, :pos, block)
+    AriaState.RelationalState.get_fact(state, "pos", block)
   end
 
   @doc """
@@ -130,9 +130,9 @@ defmodule AriaBlocksWorldTest.State do
 
       is_clear = AriaBlocksWorldTest.State.is_clear?(state, "a")
   """
-  @spec is_clear?(AriaEngineCore.State.t(), block()) :: boolean()
+  @spec is_clear?(AriaState.t(), block()) :: boolean()
   def is_clear?(state, block) do
-    AriaEngineCore.get_fact(state, :clear, block) == true
+    AriaState.RelationalState.get_fact(state, "clear", block) == true
   end
 
   @doc """
@@ -150,9 +150,9 @@ defmodule AriaBlocksWorldTest.State do
 
       held = AriaBlocksWorldTest.State.get_holding(state)
   """
-  @spec get_holding(AriaEngineCore.State.t()) :: block() | false
+  @spec get_holding(AriaState.t()) :: block() | false
   def get_holding(state) do
-    AriaEngineCore.get_fact(state, :holding, :hand)
+    AriaState.RelationalState.get_fact(state, "holding", "hand")
   end
 
   @doc """
@@ -172,9 +172,9 @@ defmodule AriaBlocksWorldTest.State do
 
       new_state = AriaBlocksWorldTest.State.set_position(state, "a", "table")
   """
-  @spec set_position(AriaEngineCore.State.t(), block(), position()) :: AriaEngineCore.State.t()
+  @spec set_position(AriaState.t(), block(), position()) :: AriaState.t()
   def set_position(state, block, position) do
-    AriaEngineCore.set_fact(state, :pos, block, position)
+    AriaState.RelationalState.set_fact(state, "pos", block, position)
   end
 
   @doc """
@@ -194,9 +194,9 @@ defmodule AriaBlocksWorldTest.State do
 
       new_state = AriaBlocksWorldTest.State.set_clear(state, "a", true)
   """
-  @spec set_clear(AriaEngineCore.State.t(), block(), boolean()) :: AriaEngineCore.State.t()
+  @spec set_clear(AriaState.t(), block(), boolean()) :: AriaState.t()
   def set_clear(state, block, is_clear) do
-    AriaEngineCore.set_fact(state, :clear, block, is_clear)
+    AriaState.RelationalState.set_fact(state, "clear", block, is_clear)
   end
 
   @doc """
@@ -215,9 +215,9 @@ defmodule AriaBlocksWorldTest.State do
 
       new_state = AriaBlocksWorldTest.State.set_holding(state, "a")
   """
-  @spec set_holding(AriaEngineCore.State.t(), block() | false) :: AriaEngineCore.State.t()
+  @spec set_holding(AriaState.t(), block() | false) :: AriaState.t()
   def set_holding(state, item) do
-    AriaEngineCore.set_fact(state, :holding, :hand, item)
+    AriaState.RelationalState.set_fact(state, "holding", "hand", item)
   end
 
   @doc """
@@ -235,12 +235,12 @@ defmodule AriaBlocksWorldTest.State do
 
       blocks = AriaBlocksWorldTest.State.all_blocks(state)
   """
-  @spec all_blocks(AriaEngineCore.State.t()) :: [block()]
+  @spec all_blocks(AriaState.t()) :: [block()]
   def all_blocks(state) do
-    # Get all subjects that have a :clear predicate
-    AriaEngineCore.get_subjects_with_fact(state, :clear, true) ++
-    AriaEngineCore.get_subjects_with_fact(state, :clear, false)
-    |> Enum.uniq()
+    # Get all subjects that have a "clear" predicate
+    clear_true = AriaState.RelationalState.get_subjects_with_fact(state, "clear", true)
+    clear_false = AriaState.RelationalState.get_subjects_with_fact(state, "clear", false)
+    (clear_true ++ clear_false) |> Enum.uniq()
   end
 
   @doc """
@@ -258,9 +258,9 @@ defmodule AriaBlocksWorldTest.State do
 
       clear_blocks = AriaBlocksWorldTest.State.all_clear_blocks(state)
   """
-  @spec all_clear_blocks(AriaEngineCore.State.t()) :: [block()]
+  @spec all_clear_blocks(AriaState.t()) :: [block()]
   def all_clear_blocks(state) do
-    AriaEngineCore.get_subjects_with_fact(state, :clear, true)
+    AriaState.RelationalState.get_subjects_with_fact(state, "clear", true)
   end
 
   @doc """
@@ -277,8 +277,8 @@ defmodule AriaBlocksWorldTest.State do
   - `{:ok, final_state}` - Plan is valid, returns final state
   - `{:error, reason}` - Plan is invalid with error description
   """
-  @spec validate_plan(AriaEngineCore.State.t(), [term()], [term()]) ::
-    {:ok, AriaEngineCore.State.t()} | {:error, atom()}
+  @spec validate_plan(AriaState.t(), [term()], [term()]) ::
+    {:ok, AriaState.t()} | {:error, atom()}
   def validate_plan(_initial_state, _plan, _goals) do
     # TODO: Implement plan validation
     {:error, :not_implemented}
@@ -296,7 +296,7 @@ defmodule AriaBlocksWorldTest.State do
 
       AriaBlocksWorldTest.State.display(state, "Initial state")
   """
-  @spec display(AriaEngineCore.State.t(), String.t()) :: :ok
+  @spec display(AriaState.t(), String.t()) :: :ok
   def display(state, label \\ "State") do
     IO.puts("\n#{label}:")
 

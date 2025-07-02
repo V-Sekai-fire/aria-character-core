@@ -140,7 +140,7 @@ defmodule AriaBlocksWorld.DomainTest do
 
       {:ok, actions} = Domain.achieve_position(state, {"a", "table"})
 
-      assert actions == [{:move_block, ["a", "table"]}]
+      assert actions == [{:validate_move, ["a", "table"]}, {:move_block, ["a", "table"]}]
     end
 
     test "achieve_clear when block already clear" do
@@ -160,7 +160,7 @@ defmodule AriaBlocksWorld.DomainTest do
 
       {:ok, actions} = Domain.achieve_clear(state, {"a", true})
 
-      assert actions == [{:move_block, ["b", "table"]}]
+      assert actions == [{:validate_move, ["b", "table"]}, {:move_block, ["b", "table"]}]
     end
   end
 
@@ -185,11 +185,11 @@ defmodule AriaBlocksWorld.DomainTest do
 
       # Test take 'a' should work (unstack)
       {:ok, actions} = Domain.achieve_position(state, {"a", "hand"})
-      assert actions == [{:move_block, ["a", "hand"]}]
+      assert actions == [{:validate_move, ["a", "hand"]}, {:move_block, ["a", "hand"]}]
 
       # Test take 'c' should work (pickup)
       {:ok, actions} = Domain.achieve_position(state, {"c", "hand"})
-      assert actions == [{:move_block, ["c", "hand"]}]
+      assert actions == [{:validate_move, ["c", "hand"]}, {:move_block, ["c", "hand"]}]
     end
 
     test "Sussman anomaly initial state" do
@@ -212,14 +212,14 @@ defmodule AriaBlocksWorld.DomainTest do
 
       # Test that we can identify the blocking relationship
       {:ok, actions} = Domain.achieve_clear(state, {"a", true})
-      assert actions == [{:move_block, ["c", "table"]}]
+      assert actions == [{:validate_move, ["c", "table"]}, {:move_block, ["c", "table"]}]
 
       # Test basic goal achievement
       {:ok, actions} = Domain.achieve_position(state, {"a", "b"})
-      assert actions == [{:move_block, ["a", "b"]}]
+      assert actions == [{:validate_move, ["a", "b"]}, {:move_block, ["a", "b"]}]
 
       {:ok, actions} = Domain.achieve_position(state, {"b", "c"})
-      assert actions == [{:move_block, ["b", "c"]}]
+      assert actions == [{:validate_move, ["b", "c"]}, {:move_block, ["b", "c"]}]
     end
 
     test "state2 configuration" do
@@ -244,10 +244,10 @@ defmodule AriaBlocksWorld.DomainTest do
       # then stacking b on c and a on d
 
       {:ok, actions} = Domain.achieve_position(state, {"b", "c"})
-      assert actions == [{:move_block, ["b", "c"]}]
+      assert actions == [{:validate_move, ["b", "c"]}, {:move_block, ["b", "c"]}]
 
       {:ok, actions} = Domain.achieve_position(state, {"a", "d"})
-      assert actions == [{:move_block, ["a", "d"]}]
+      assert actions == [{:validate_move, ["a", "d"]}, {:move_block, ["a", "d"]}]
     end
   end
 

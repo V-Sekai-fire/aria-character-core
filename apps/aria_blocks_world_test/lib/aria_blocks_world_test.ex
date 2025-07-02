@@ -79,7 +79,7 @@ defmodule AriaBlocksWorldTest do
       iex> AriaState.RelationalState.get_fact(state, "holding", "hand")
       false
   """
-  @spec create_state(state_data()) :: AriaEngineCore.State.t()
+  @spec create_state(state_data()) :: AriaState.t()
   def create_state(data) do
     State.create(data)
   end
@@ -237,8 +237,8 @@ defmodule AriaBlocksWorldTest do
 
       {:ok, final_state} = AriaBlocksWorldTest.validate_plan(state, plan, goals)
   """
-  @spec validate_plan(AriaEngineCore.State.t(), [term()], [term()]) ::
-    {:ok, AriaEngineCore.State.t()} | {:error, atom()}
+  @spec validate_plan(AriaState.t(), [term()], [term()]) ::
+    {:ok, AriaState.t()} | {:error, atom()}
   def validate_plan(initial_state, plan, goals) do
     State.validate_plan(initial_state, plan, goals)
   end

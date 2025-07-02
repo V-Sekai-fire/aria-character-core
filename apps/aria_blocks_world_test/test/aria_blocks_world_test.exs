@@ -1,11 +1,11 @@
 # Copyright (c) 2025-present K. S. Ernest (iFire) Lee
 # SPDX-License-Identifier: MIT
 
-defmodule AriaBlocksWorldTest do
+defmodule AriaBlocksWorldTestTest do
   use ExUnit.Case
-  doctest AriaBlocksWorld
+  doctest AriaBlocksWorldTest
 
-  alias AriaBlocksWorld.{Domain, State, Examples}
+  alias AriaBlocksWorldTest.{Domain, State, Examples}
 
   describe "domain creation" do
     test "creates domain with correct configuration" do
@@ -184,7 +184,7 @@ defmodule AriaBlocksWorldTest do
 
       {:ok, actions} = Domain.achieve_position(state, {"a", "b"})
 
-      assert actions == [{:move_block, ["a", "b"]}]
+      assert actions == [{:validate_move, ["a", "b"]}, {:move_block, ["a", "b"]}]
     end
 
     test "achieve_clear returns empty list when block already clear" do
@@ -210,7 +210,7 @@ defmodule AriaBlocksWorldTest do
 
       {:ok, actions} = Domain.achieve_clear(state, {"b", true})
 
-      assert actions == [{:move_block, ["a", "table"]}]
+      assert actions == [{:validate_move, ["a", "table"]}, {:move_block, ["a", "table"]}]
     end
   end
 
@@ -251,9 +251,9 @@ defmodule AriaBlocksWorldTest do
     end
   end
 
-  describe "integration with AriaBlocksWorld module" do
+  describe "integration with AriaBlocksWorldTest module" do
     test "creates state through main module" do
-      state = AriaBlocksWorld.create_state(%{
+      state = AriaBlocksWorldTest.create_state(%{
         pos: %{"a" => "table"},
         clear: %{"a" => true},
         holding: %{"hand" => false}
@@ -263,7 +263,7 @@ defmodule AriaBlocksWorldTest do
     end
 
     test "creates multigoal through main module" do
-      goal = AriaBlocksWorld.create_multigoal(%{
+      goal = AriaBlocksWorldTest.create_multigoal(%{
         pos: %{"a" => "b"}
       })
 
@@ -271,7 +271,7 @@ defmodule AriaBlocksWorldTest do
     end
 
     test "gets domain info through main module" do
-      info = AriaBlocksWorld.domain_info()
+      info = AriaBlocksWorldTest.domain_info()
 
       assert info.name == "Blocks World Domain"
       assert is_list(info.actions)
@@ -279,14 +279,14 @@ defmodule AriaBlocksWorldTest do
     end
 
     test "lists examples through main module" do
-      examples = AriaBlocksWorld.list_examples()
+      examples = AriaBlocksWorldTest.list_examples()
 
       assert is_list(examples)
       assert :sussman_anomaly in examples
     end
 
     test "runs example through main module" do
-      {:ok, result} = AriaBlocksWorld.run_example(:simple_pickup)
+      {:ok, result} = AriaBlocksWorldTest.run_example(:simple_pickup)
 
       assert result.name == "Simple Pickup"
       assert result.initial_state != nil

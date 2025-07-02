@@ -2,7 +2,7 @@ defmodule AriaBlocksWorldTestTest do
   use ExUnit.Case
   doctest AriaBlocksWorldTest
 
-  alias AriaBlocksWorldTest.{Domain, State, Examples}
+  alias AriaBlocksWorldTest.{Domain}
 
   describe "basic functionality" do
     test "creates domain" do
