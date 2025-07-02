@@ -197,7 +197,7 @@ defmodule AriaBlocksWorld.Domain do
   sequence of pickup/unstack and putdown/stack actions.
   """
   @task_method true
-  @spec move_block(AriaState.t(), [any()]) :: {:ok, [AriaEngine.todo_item()]} | {:error, atom()}
+  @spec move_block(AriaState.t(), [any()]) :: {:ok, [AriaHybridPlanner.todo_item()]} | {:error, atom()}
   def move_block(state, [block, destination]) do
     current_pos = AriaHybridPlanner.get_fact(state, "pos", block)
 
@@ -225,7 +225,7 @@ defmodule AriaBlocksWorld.Domain do
   This unigoal method handles goals of the form {"pos", block, destination}.
   """
   @unigoal_method predicate: "pos"
-  @spec achieve_position(AriaState.t(), {block(), String.t()}) :: {:ok, [AriaEngine.todo_item()]} | {:error, atom()}
+  @spec achieve_position(AriaState.t(), {block(), String.t()}) :: {:ok, [AriaHybridPlanner.todo_item()]} | {:error, atom()}
   def achieve_position(state, {block, destination}) do
     current_pos = AriaHybridPlanner.get_fact(state, "pos", block)
 
@@ -246,7 +246,7 @@ defmodule AriaBlocksWorld.Domain do
   This unigoal method handles goals of the form {"clear", block, true}.
   """
   @unigoal_method predicate: "clear"
-  @spec achieve_clear(AriaState.t(), {block(), boolean()}) :: {:ok, [AriaEngine.todo_item()]} | {:error, atom()}
+  @spec achieve_clear(AriaState.t(), {block(), boolean()}) :: {:ok, [AriaHybridPlanner.todo_item()]} | {:error, atom()}
   def achieve_clear(state, {block, true}) do
     current_clear = AriaHybridPlanner.get_fact(state, "clear", block)
 
@@ -284,7 +284,7 @@ defmodule AriaBlocksWorld.Domain do
   This task method decomposes validation into separate goal checks for the planner to orchestrate.
   """
   @task_method true
-  @spec validate_move_preconditions(AriaState.t(), [block() | String.t()]) :: {:ok, [AriaEngine.todo_item()]} | {:error, atom()}
+  @spec validate_move_preconditions(AriaState.t(), [block() | String.t()]) :: {:ok, [AriaHybridPlanner.todo_item()]} | {:error, atom()}
   def validate_move_preconditions(_state, [block, destination]) do
     # Decompose validation into separate goal checks for planner to orchestrate
     {:ok, [
@@ -300,7 +300,7 @@ defmodule AriaBlocksWorld.Domain do
   This unigoal method handles goals of the form {"accessible", block, true}.
   """
   @unigoal_method predicate: "accessible"
-  @spec check_block_accessible(AriaState.t(), {block(), boolean()}) :: {:ok, [AriaEngine.todo_item()]} | {:error, atom()}
+  @spec check_block_accessible(AriaState.t(), {block(), boolean()}) :: {:ok, [AriaHybridPlanner.todo_item()]} | {:error, atom()}
   def check_block_accessible(state, {block, true}) do
     current_pos = AriaHybridPlanner.get_fact(state, "pos", block)
 
@@ -337,7 +337,7 @@ defmodule AriaBlocksWorld.Domain do
   This unigoal method handles goals of the form {"destination_available", destination, true}.
   """
   @unigoal_method predicate: "destination_available"
-  @spec check_destination_available(AriaState.t(), {String.t(), boolean()}) :: {:ok, [AriaEngine.todo_item()]} | {:error, atom()}
+  @spec check_destination_available(AriaState.t(), {String.t(), boolean()}) :: {:ok, [AriaHybridPlanner.todo_item()]} | {:error, atom()}
   def check_destination_available(_state, {"table", true}) do
     {:ok, []}  # Table is always available
   end
@@ -355,7 +355,7 @@ defmodule AriaBlocksWorld.Domain do
   This unigoal method handles goals of the form {"no_cyclic_dependency", {block, destination}, true}.
   """
   @unigoal_method predicate: "no_cyclic_dependency"
-  @spec check_no_cyclic_dependency(AriaState.t(), {{block(), String.t()}, boolean()}) :: {:ok, [AriaEngine.todo_item()]} | {:error, atom()}
+  @spec check_no_cyclic_dependency(AriaState.t(), {{block(), String.t()}, boolean()}) :: {:ok, [AriaHybridPlanner.todo_item()]} | {:error, atom()}
   def check_no_cyclic_dependency(state, {{block, destination}, true}) when is_binary(destination) do
     # Check if destination is currently on top of block (direct cycle)
     dest_pos = AriaHybridPlanner.get_fact(state, "pos", destination)
