@@ -71,7 +71,7 @@ defmodule AriaEngineCore do
   """
   @spec plan(domain(), state(), [todo_item()]) :: {:ok, solution_tree()} | {:error, atom()}
   def plan(domain, state, goals) do
-    AriaEngineCore.Planner.plan(domain, state, goals)
+    AriaHybridPlanner.plan_only(domain, state, goals)
   end
 
   @doc """
@@ -102,7 +102,7 @@ defmodule AriaEngineCore do
   """
   @spec run_lazy(domain(), state(), [todo_item()]) :: {:ok, {state(), solution_tree()}} | {:error, atom()}
   def run_lazy(domain, state, goals) do
-    AriaEngineCore.Planner.run_lazy(domain, state, goals)
+    AriaHybridPlanner.run_lazy(domain, state, goals)
   end
 
   @doc """
@@ -130,7 +130,7 @@ defmodule AriaEngineCore do
   """
   @spec run_lazy_tree(domain(), state(), solution_tree()) :: {:ok, {state(), solution_tree()}} | {:error, atom()}
   def run_lazy_tree(domain, state, solution_tree) do
-    AriaEngineCore.Planner.run_lazy_tree(domain, state, solution_tree)
+    AriaHybridPlanner.run_lazy_tree(domain, state, solution_tree)
   end
 
   @doc """

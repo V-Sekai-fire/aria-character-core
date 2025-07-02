@@ -30,7 +30,6 @@ defmodule AriaHybridPlanner.MixProject do
       {:aria_state, path: "../aria_state"},
       {:aria_timeline, path: "../aria_timeline"},
       {:aria_minizinc_stn, path: "../aria_minizinc_stn"},
-      {:aria_engine_core, in_umbrella: true},
 
       # External dependencies
       {:libgraph, "~> 0.16"},

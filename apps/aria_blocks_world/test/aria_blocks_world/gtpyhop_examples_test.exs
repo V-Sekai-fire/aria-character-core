@@ -1,0 +1,187 @@
+# Copyright (c) 2025-present K. S. Ernest (iFire) Lee
+# SPDX-License-Identifier: MIT
+
+defmodule AriaBlocksWorld.GtpyhopExamplesTest do
+  @moduledoc """
+  Test suite that validates AriaBlocksWorld against the GTpyhop blocks_gtn examples.
+
+  This test suite implements the same test cases found in:
+  thirdparty/GTPyhop/Examples/blocks_gtn/examples.py
+
+  These tests ensure our Elixir implementation produces the same results as the
+  reference GTpyhop implementation for the blocks world domain.
+  """
+
+  use ExUnit.Case, async: true
+  doctest AriaBlocksWorld
+
+  describe "GTpyhop blocks_gtn examples" do
+    test "simple pickup operations that should fail" do
+      # state1.pos={'a':'b', 'b':'table', 'c':'table'}
+      # state1.clear={'c':True, 'b':False,'a':True}
+      # state1.holding={'hand':False}
+      state1 = AriaBlocksWorld.create_state(%{
+        pos: %{"a" => "b", "b" => "table", "c" => "table"},
+        clear: %{"a" => true, "b" => false, "c" => true},
+        holding: %{"hand" => false}
+      })
+
+      # These should fail because 'a' is on 'b' (can't pickup something that's not clear)
+      # and 'b' has something on it
+      assert {:error, _} = AriaBlocksWorld.solve_problem(state1, [{"pickup", "a"}])
+      assert {:error, _} = AriaBlocksWorld.solve_problem(state1, [{"pickup", "b"}])
+      assert {:error, _} = AriaBlocksWorld.solve_problem(state1, [{"take", "b"}])
+    end
+
+    test "simple pickup operations that should succeed" do
+      state1 = AriaBlocksWorld.create_state(%{
+        pos: %{"a" => "b", "b" => "table", "c" => "table"},
+        clear: %{"a" => true, "b" => false, "c" => true},
+        holding: %{"hand" => false}
+      })
+
+      # pickup 'c' should work (it's clear and on table)
+      assert {:ok, {_final_state, _solution_tree}} = AriaBlocksWorld.solve_problem(state1, [{"pickup", "c"}])
+
+      # take 'a' should work (unstack from 'b')
+      assert {:ok, {_final_state, _solution_tree}} = AriaBlocksWorld.solve_problem(state1, [{"take", "a"}])
+
+      # take 'c' should work (pickup from table)
+      assert {:ok, {_final_state, _solution_tree}} = AriaBlocksWorld.solve_problem(state1, [{"take", "c"}])
+    end
+
+    test "multigoal: c on b, b on a, a on table" do
+      state1 = AriaBlocksWorld.create_state(%{
+        pos: %{"a" => "b", "b" => "table", "c" => "table"},
+        clear: %{"a" => true, "b" => false, "c" => true},
+        holding: %{"hand" => false}
+      })
+
+      # Goal: c on b, b on a, a on table
+      goal1a = AriaBlocksWorld.create_multigoal(%{
+        pos: %{"c" => "b", "b" => "a", "a" => "table"}
+      })
+
+      # Expected plan from GTpyhop:
+      # [('unstack', 'a', 'b'), ('putdown', 'a'), ('pickup', 'b'), ('stack', 'b', 'a'), ('pickup', 'c'), ('stack', 'c', 'b')]
+      assert {:ok, {final_state, _solution_tree}} = AriaBlocksWorld.solve_problem(state1, [goal1a])
+
+      # Verify final state matches goal
+      assert AriaState.RelationalState.get_fact(final_state, "pos", "c") == "b"
+      assert AriaState.RelationalState.get_fact(final_state, "pos", "b") == "a"
+      assert AriaState.RelationalState.get_fact(final_state, "pos", "a") == "table"
+    end
+
+    test "Sussman anomaly" do
+      # sus_s0.pos={'c':'a', 'a':'table', 'b':'table'}
+      # sus_s0.clear={'c':True, 'a':False,'b':True}
+      # sus_s0.holding={'hand':False}
+      sussman_initial = AriaBlocksWorld.create_state(%{
+        pos: %{"c" => "a", "a" => "table", "b" => "table"},
+        clear: %{"c" => true, "a" => false, "b" => true},
+        holding: %{"hand" => false}
+      })
+
+      # Goal: a on b, b on c
+      sussman_goal = AriaBlocksWorld.create_multigoal(%{
+        pos: %{"a" => "b", "b" => "c"}
+      })
+
+      # Expected plan from GTpyhop:
+      # [('unstack', 'c', 'a'), ('putdown', 'c'), ('pickup', 'b'), ('stack', 'b', 'c'), ('pickup', 'a'), ('stack', 'a', 'b')]
+      assert {:ok, {final_state, _solution_tree}} = AriaBlocksWorld.solve_problem(sussman_initial, [sussman_goal])
+
+      # Verify final state matches goal
+      assert AriaState.RelationalState.get_fact(final_state, "pos", "a") == "b"
+      assert AriaState.RelationalState.get_fact(final_state, "pos", "b") == "c"
+    end
+
+    test "complex rearrangement problem" do
+      # state2.pos={'a':'c', 'b':'d', 'c':'table', 'd':'table'}
+      # state2.clear={'a':True, 'c':False,'b':True, 'd':False}
+      # state2.holding={'hand':False}
+      state2 = AriaBlocksWorld.create_state(%{
+        pos: %{"a" => "c", "b" => "d", "c" => "table", "d" => "table"},
+        clear: %{"a" => true, "b" => true, "c" => false, "d" => false},
+        holding: %{"hand" => false}
+      })
+
+      # Goal: b on c, a on d
+      goal2 = AriaBlocksWorld.create_multigoal(%{
+        pos: %{"b" => "c", "a" => "d"}
+      })
+
+      # Expected plan from GTpyhop:
+      # [('unstack', 'a', 'c'), ('putdown', 'a'), ('unstack', 'b', 'd'), ('stack', 'b', 'c'), ('pickup', 'a'), ('stack', 'a', 'd')]
+      assert {:ok, {final_state, _solution_tree}} = AriaBlocksWorld.solve_problem(state2, [goal2])
+
+      # Verify final state matches goal
+      assert AriaState.RelationalState.get_fact(final_state, "pos", "b") == "c"
+      assert AriaState.RelationalState.get_fact(final_state, "pos", "a") == "d"
+    end
+
+    test "planning only (no execution)" do
+      state1 = AriaBlocksWorld.create_state(%{
+        pos: %{"a" => "b", "b" => "table", "c" => "table"},
+        clear: %{"a" => true, "b" => false, "c" => true},
+        holding: %{"hand" => false}
+      })
+
+      goal = AriaBlocksWorld.create_multigoal(%{
+        pos: %{"c" => "b", "b" => "a", "a" => "table"}
+      })
+
+      # Test planning without execution
+      assert {:ok, solution_tree} = AriaBlocksWorld.plan_problem(state1, [goal])
+      assert is_map(solution_tree)
+      assert Map.has_key?(solution_tree, :root_id)
+      assert Map.has_key?(solution_tree, :nodes)
+    end
+  end
+
+  describe "domain information" do
+    test "domain info provides correct metadata" do
+      info = AriaBlocksWorld.domain_info()
+
+      assert info.name == "Blocks World Domain"
+      assert is_list(info.actions)
+      assert is_list(info.predicates)
+
+      # Check that key actions are present
+      assert :pickup in info.actions
+      assert :putdown in info.actions
+      assert :stack in info.actions
+      assert :unstack in info.actions
+
+      # Check that key predicates are present
+      assert "pos" in info.predicates
+      assert "clear" in info.predicates
+      assert "holding" in info.predicates
+    end
+  end
+
+  describe "state validation" do
+    test "create_state produces valid state" do
+      state = AriaBlocksWorld.create_state(%{
+        pos: %{"a" => "table", "b" => "a"},
+        clear: %{"a" => false, "b" => true},
+        holding: %{"hand" => false}
+      })
+
+      assert AriaState.RelationalState.get_fact(state, "pos", "a") == "table"
+      assert AriaState.RelationalState.get_fact(state, "pos", "b") == "a"
+      assert AriaState.RelationalState.get_fact(state, "clear", "a") == false
+      assert AriaState.RelationalState.get_fact(state, "clear", "b") == true
+      assert AriaState.RelationalState.get_fact(state, "holding", "hand") == false
+    end
+
+    test "create_multigoal produces valid goal" do
+      goal = AriaBlocksWorld.create_multigoal(%{
+        pos: %{"a" => "b", "b" => "table"}
+      })
+
+      assert {:multigoal, goal_data} = goal
+      assert goal_data.pos == %{"a" => "b", "b" => "table"}
+    end
+  end
+end

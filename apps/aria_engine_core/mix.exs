@@ -39,6 +39,7 @@ defmodule AriaEngineCore.MixProject do
       {:aria_minizinc_stn, in_umbrella: true},
       {:aria_minizinc_goal, in_umbrella: true},
       {:aria_minizinc_executor, in_umbrella: true},
+      {:aria_hybrid_planner, in_umbrella: true},
       # External dependencies
       {:jason, "~> 1.4"},
       {:libgraph, "~> 0.16"},
