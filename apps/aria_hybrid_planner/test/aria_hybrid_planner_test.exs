@@ -192,10 +192,10 @@ defmodule AriaHybridPlannerTest do
     test "plan/4 uses domain for task decomposition" do
       # Create domain with task methods
       domain = Core.new("test_domain")
-      domain = Core.add_task_method(domain, "transport", "method1", fn -> :ok end)
+      domain = Core.add_task_method(domain, :transport, "method1", fn -> :ok end)
 
       state = AriaHybridPlanner.new_state()
-      todos = [{"transport", ["a", "b"]}]
+      todos = [{:transport, ["a", "b"]}]
 
       assert {:ok, plan} = AriaHybridPlanner.plan(domain, state, todos, verbose: 2)
 
@@ -207,10 +207,10 @@ defmodule AriaHybridPlannerTest do
     test "plan/4 handles goals with unigoal methods" do
       # Create domain with unigoal methods
       domain = Core.new("test_domain")
-      domain = Core.add_unigoal_method(domain, "location", "move_method", fn -> :ok end)
+      domain = Core.add_unigoal_method(domain, :location, "move_method", fn -> :ok end)
 
       state = AriaHybridPlanner.new_state()
-      todos = [{"location", "a", "room1"}]
+      todos = [{:location, "a", "room1"}]
 
       assert {:ok, plan} = AriaHybridPlanner.plan(domain, state, todos, verbose: 2)
 
