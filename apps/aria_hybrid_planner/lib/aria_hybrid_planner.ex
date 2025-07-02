@@ -20,8 +20,6 @@ defmodule AriaHybridPlanner do
 
   The following legacy APIs are still available for backward compatibility:
 
-  - `AriaHybridPlanner.PlanCore` - HTN planning interface
-  - `AriaHybridPlanner.PlanningCore` - General planning interface
   - `HybridPlanner.HybridCoordinatorV2` - Monolithic coordinator
 
   However, new code should use `AriaHybridPlanner.Core` for the best experience.
