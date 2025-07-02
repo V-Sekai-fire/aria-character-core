@@ -67,18 +67,48 @@ defmodule AriaHybridPlanner.Core do
   """
   @spec plan(coordinator, domain, state, goals, opts) :: {:ok, plan} | {:error, term()}
   def plan(coordinator, domain, state, goals, opts \\ []) do
-    plan = %{
-      coordinator_id: coordinator.id,
-      domain: domain,
-      initial_state: state,
-      goals: goals,
-      options: opts,
-      created_at: DateTime.utc_now(),
-      status: :planned,
-      steps: []
-    }
+    # Convert goals to the format expected by LazyExecution
+    lazy_goals = convert_goals_to_lazy_format(goals)
 
-    {:ok, plan}
+    case AriaEngine.Planning.LazyExecution.plan(domain, state, lazy_goals, Map.new(opts)) do
+      {:ok, lazy_plan} ->
+        # Convert LazyExecution plan to our format and add solution tree structure
+        plan = %{
+          coordinator_id: coordinator.id,
+          domain: domain,
+          initial_state: state,
+          goals: goals,
+          options: opts,
+          created_at: DateTime.utc_now(),
+          status: :planned,
+          steps: Map.get(lazy_plan, :actions, []),
+          final_state: Map.get(lazy_plan, :final_state, state),
+          metrics: Map.get(lazy_plan, :metrics, %{}),
+          # Add solution tree structure for compatibility
+          root_id: "root",
+          nodes: %{
+            "root" => %{
+              id: "root",
+              task: {:multigoal, goals},
+              parent_id: nil,
+              children_ids: [],
+              state: state,
+              visited: true,
+              expanded: true,
+              method_tried: "lazy_execution",
+              blacklisted_methods: [],
+              is_primitive: false,
+              is_durative: false
+            }
+          },
+          blacklisted_commands: MapSet.new(),
+          goal_network: %{}
+        }
+        {:ok, plan}
+
+      {:error, reason} ->
+        {:error, reason}
+    end
   end
 
   @doc """
@@ -182,5 +212,30 @@ defmodule AriaHybridPlanner.Core do
          {:ok, result} <- execute(coordinator, domain, state, plan, opts) do
       {:ok, result}
     end
+  end
+
+  # Private helper functions
+
+  @spec convert_goals_to_lazy_format(goals) :: list()
+  defp convert_goals_to_lazy_format(goals) do
+    Enum.flat_map(goals, fn goal ->
+      case goal do
+        {:multigoal, multigoal_map} when is_map(multigoal_map) ->
+          # Convert multigoal map to list of {subject, predicate, value} tuples
+          Enum.flat_map(multigoal_map, fn {predicate, subject_value_map} ->
+            Enum.map(subject_value_map, fn {subject, value} ->
+              {to_string(subject), to_string(predicate), value}
+            end)
+          end)
+
+        {subject, predicate, value} ->
+          # Already in the right format
+          [{to_string(subject), to_string(predicate), value}]
+
+        _ ->
+          # Unknown goal format, skip
+          []
+      end
+    end)
   end
 end

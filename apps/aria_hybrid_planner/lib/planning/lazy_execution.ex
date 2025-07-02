@@ -85,13 +85,7 @@ defmodule AriaEngine.Planning.LazyExecution do
 
   # Check if a goal is satisfied in the current state
   defp goal_satisfied?(state, {subject, predicate, value}) do
-    case Map.get(state, subject) do
-      nil ->
-        false
-
-      entity_state ->
-        Map.get(entity_state, predicate) == value
-    end
+    AriaState.RelationalState.get_fact(state, predicate, subject) == value
   end
 
   # Generate actions to achieve a specific goal
@@ -163,10 +157,7 @@ defmodule AriaEngine.Planning.LazyExecution do
 
   # Get current location of an entity
   defp get_current_location(state, entity) do
-    case Map.get(state, entity) do
-      nil -> "unknown"
-      entity_state -> Map.get(entity_state, "location", "unknown")
-    end
+    AriaState.RelationalState.get_fact(state, "location", entity) || "unknown"
   end
 
   # Calculate duration for move action
@@ -202,17 +193,17 @@ defmodule AriaEngine.Planning.LazyExecution do
 
     case action.action do
       "move" ->
-        put_in(state, [entity, "location"], action.to)
+        AriaState.RelationalState.set_fact(state, "location", entity, action.to)
 
       "pickup" ->
-        put_in(state, [entity, "has"], action.object)
+        AriaState.RelationalState.set_fact(state, "has", entity, action.object)
 
       "change_state" ->
-        put_in(state, [entity, "state"], action.new_state)
+        AriaState.RelationalState.set_fact(state, "state", entity, action.new_state)
 
       _ ->
         # For generic actions, just mark as completed
-        put_in(state, [entity, action.predicate], action.value)
+        AriaState.RelationalState.set_fact(state, action.predicate, entity, action.value)
     end
   end
 

@@ -36,9 +36,40 @@ defmodule AriaHybridPlanner do
   defdelegate plan_and_execute(coordinator, domain, state, goals, opts \\ []), to: AriaHybridPlanner.Core
 
   # Engine integration functions for AriaEngineCore compatibility
-  defdelegate plan_only(domain, state, goals), to: AriaHybridPlanner.EngineIntegration, as: :plan
-  defdelegate run_lazy(domain, state, goals), to: AriaHybridPlanner.EngineIntegration
-  defdelegate run_lazy_tree(domain, state, solution_tree), to: AriaHybridPlanner.EngineIntegration
+  # These provide a bridge between AriaEngineCore's API and AriaHybridPlanner.Core
+
+  @doc """
+  Plan only (no execution) - compatible with AriaEngineCore API.
+  """
+  def plan_only(domain, state, goals) do
+    coordinator = AriaHybridPlanner.Core.new_coordinator()
+    case AriaHybridPlanner.Core.plan(coordinator, domain, state, goals) do
+      {:ok, plan} -> {:ok, plan}
+      {:error, reason} -> {:error, reason}
+    end
+  end
+
+  @doc """
+  Plan and execute with lazy execution - compatible with AriaEngineCore API.
+  """
+  def run_lazy(domain, state, goals) do
+    coordinator = AriaHybridPlanner.Core.new_coordinator()
+    case AriaHybridPlanner.Core.plan_and_execute(coordinator, domain, state, goals) do
+      {:ok, result} -> {:ok, {Map.get(result, :final_state, state), Map.get(result, :plan, %{})}}
+      {:error, reason} -> {:error, reason}
+    end
+  end
+
+  @doc """
+  Execute a pre-made solution tree - compatible with AriaEngineCore API.
+  """
+  def run_lazy_tree(domain, state, solution_tree) do
+    coordinator = AriaHybridPlanner.Core.new_coordinator()
+    case AriaHybridPlanner.Core.execute(coordinator, domain, state, solution_tree) do
+      {:ok, result} -> {:ok, {Map.get(result, :final_state, state), solution_tree}}
+      {:error, reason} -> {:error, reason}
+    end
+  end
 
   @spec version() :: String.t()
   @doc """
