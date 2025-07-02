@@ -49,21 +49,21 @@ defmodule AriaBlocksWorld.State do
   """
   @spec create(map()) :: AriaState.t()
   def create(data) do
-    state = AriaState.RelationalState.new()
+    state = AriaEngineCore.new_state()
 
-    # Set position facts using AriaState.RelationalState
+    # Set position facts using AriaEngineCore
     state = Enum.reduce(data.pos || %{}, state, fn {block, position}, acc ->
-      AriaState.RelationalState.set_fact(acc, "pos", block, position)
+      AriaEngineCore.set_fact(acc, "pos", block, position)
     end)
 
     # Set clear facts
     state = Enum.reduce(data.clear || %{}, state, fn {block, is_clear}, acc ->
-      AriaState.RelationalState.set_fact(acc, "clear", block, is_clear)
+      AriaEngineCore.set_fact(acc, "clear", block, is_clear)
     end)
 
     # Set holding facts
     state = Enum.reduce(data.holding || %{}, state, fn {entity, held_item}, acc ->
-      AriaState.RelationalState.set_fact(acc, "holding", entity, held_item)
+      AriaEngineCore.set_fact(acc, "holding", entity, held_item)
     end)
 
     state
@@ -111,7 +111,7 @@ defmodule AriaBlocksWorld.State do
   """
   @spec get_position(AriaEngineCore.State.t(), block()) :: position()
   def get_position(state, block) do
-    AriaEngineCore.get_fact(state, :pos, block)
+    AriaEngineCore.get_fact(state, "pos", block)
   end
 
   @doc """
@@ -132,7 +132,7 @@ defmodule AriaBlocksWorld.State do
   """
   @spec is_clear?(AriaEngineCore.State.t(), block()) :: boolean()
   def is_clear?(state, block) do
-    AriaEngineCore.get_fact(state, :clear, block) == true
+    AriaEngineCore.get_fact(state, "clear", block) == true
   end
 
   @doc """
@@ -152,7 +152,7 @@ defmodule AriaBlocksWorld.State do
   """
   @spec get_holding(AriaEngineCore.State.t()) :: block() | false
   def get_holding(state) do
-    AriaEngineCore.get_fact(state, :holding, :hand)
+    AriaEngineCore.get_fact(state, "holding", "hand")
   end
 
   @doc """
@@ -174,7 +174,7 @@ defmodule AriaBlocksWorld.State do
   """
   @spec set_position(AriaEngineCore.State.t(), block(), position()) :: AriaEngineCore.State.t()
   def set_position(state, block, position) do
-    AriaEngineCore.set_fact(state, :pos, block, position)
+    AriaEngineCore.set_fact(state, "pos", block, position)
   end
 
   @doc """
@@ -196,7 +196,7 @@ defmodule AriaBlocksWorld.State do
   """
   @spec set_clear(AriaEngineCore.State.t(), block(), boolean()) :: AriaEngineCore.State.t()
   def set_clear(state, block, is_clear) do
-    AriaEngineCore.set_fact(state, :clear, block, is_clear)
+    AriaEngineCore.set_fact(state, "clear", block, is_clear)
   end
 
   @doc """
@@ -217,7 +217,7 @@ defmodule AriaBlocksWorld.State do
   """
   @spec set_holding(AriaEngineCore.State.t(), block() | false) :: AriaEngineCore.State.t()
   def set_holding(state, item) do
-    AriaEngineCore.set_fact(state, :holding, :hand, item)
+    AriaEngineCore.set_fact(state, "holding", "hand", item)
   end
 
   @doc """
@@ -237,9 +237,9 @@ defmodule AriaBlocksWorld.State do
   """
   @spec all_blocks(AriaEngineCore.State.t()) :: [block()]
   def all_blocks(state) do
-    # Get all subjects that have a :clear predicate
-    AriaEngineCore.get_subjects_with_fact(state, :clear, true) ++
-    AriaEngineCore.get_subjects_with_fact(state, :clear, false)
+    # Get all subjects that have a "clear" predicate
+    AriaEngineCore.get_subjects_with_fact(state, "clear", true) ++
+    AriaEngineCore.get_subjects_with_fact(state, "clear", false)
     |> Enum.uniq()
   end
 
@@ -260,7 +260,7 @@ defmodule AriaBlocksWorld.State do
   """
   @spec all_clear_blocks(AriaEngineCore.State.t()) :: [block()]
   def all_clear_blocks(state) do
-    AriaEngineCore.get_subjects_with_fact(state, :clear, true)
+    AriaEngineCore.get_subjects_with_fact(state, "clear", true)
   end
 
   @doc """

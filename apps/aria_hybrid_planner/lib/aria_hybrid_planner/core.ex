@@ -228,9 +228,13 @@ defmodule AriaHybridPlanner.Core do
             end)
           end)
 
-        {subject, predicate, value} ->
-          # Already in the right format
+        {subject, predicate, value} when is_binary(predicate) ->
+          # Goal predicate format
           [{to_string(subject), to_string(predicate), value}]
+
+        {action_name, args} when is_atom(action_name) and is_list(args) ->
+          # Action tuple format - convert to action execution goal
+          [{:action_tuple, action_name, args}]
 
         _ ->
           # Unknown goal format, skip

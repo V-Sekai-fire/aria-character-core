@@ -28,9 +28,9 @@ defmodule AriaBlocksWorld.GtpyhopExamplesTest do
 
       # These should fail because 'a' is on 'b' (can't pickup something that's not clear)
       # and 'b' has something on it
-      assert {:error, _} = AriaBlocksWorld.solve_problem(state1, [{"pickup", "a"}])
-      assert {:error, _} = AriaBlocksWorld.solve_problem(state1, [{"pickup", "b"}])
-      assert {:error, _} = AriaBlocksWorld.solve_problem(state1, [{"take", "b"}])
+      assert {:error, _} = AriaBlocksWorld.solve_problem(state1, [{:pickup, ["a"]}])
+      assert {:error, _} = AriaBlocksWorld.solve_problem(state1, [{:pickup, ["b"]}])
+      assert {:error, _} = AriaBlocksWorld.solve_problem(state1, [{:take, ["b"]}])
     end
 
     test "simple pickup operations that should succeed" do
@@ -41,13 +41,13 @@ defmodule AriaBlocksWorld.GtpyhopExamplesTest do
       })
 
       # pickup 'c' should work (it's clear and on table)
-      assert {:ok, {_final_state, _solution_tree}} = AriaBlocksWorld.solve_problem(state1, [{"pickup", "c"}])
+      assert {:ok, {_final_state, _solution_tree}} = AriaBlocksWorld.solve_problem(state1, [{:pickup, ["c"]}])
 
       # take 'a' should work (unstack from 'b')
-      assert {:ok, {_final_state, _solution_tree}} = AriaBlocksWorld.solve_problem(state1, [{"take", "a"}])
+      assert {:ok, {_final_state, _solution_tree}} = AriaBlocksWorld.solve_problem(state1, [{:take, ["a"]}])
 
       # take 'c' should work (pickup from table)
-      assert {:ok, {_final_state, _solution_tree}} = AriaBlocksWorld.solve_problem(state1, [{"take", "c"}])
+      assert {:ok, {_final_state, _solution_tree}} = AriaBlocksWorld.solve_problem(state1, [{:take, ["c"]}])
     end
 
     test "multigoal: c on b, b on a, a on table" do

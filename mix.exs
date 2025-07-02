@@ -136,8 +136,7 @@ defmodule AriaCharacterCore.MixProject do
       {:ex_unit_notifier, "~> 1.3", only: :test},
 
       # Internal applications
-      {:aria_backtracking_test, path: "apps/aria_backtracking_test"},
-      {:aria_blocks_world_test, path: "apps/aria_blocks_world_test"},
+      {:aria_blocks_world, path: "apps/aria_blocks_world"},
       {:aria_core, path: "apps/aria_core"},
       {:aria_engine_core, path: "apps/aria_engine_core"},
       {:aria_town, path: "apps/aria_town"},

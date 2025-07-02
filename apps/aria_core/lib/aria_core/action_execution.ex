@@ -57,8 +57,8 @@ defmodule AriaCore.ActionExecution do
   @doc """
   Get action metadata from a domain.
   """
-  @spec get_action_metadata(map(), String.t()) :: map()
-  def get_action_metadata(domain, name) do
+  @spec get_action_metadata(map(), atom()) :: map()
+  def get_action_metadata(domain, name) when is_atom(name) do
     domain
     |> Map.get(:actions, %{})
     |> Map.get(name)
@@ -66,11 +66,6 @@ defmodule AriaCore.ActionExecution do
       %{metadata: metadata} -> metadata
       _ -> %{}
     end
-  end
-
-  @spec get_action_metadata(map(), atom()) :: map()
-  def get_action_metadata(domain, name) when is_atom(name) do
-    get_action_metadata(domain, Atom.to_string(name))
   end
 
   @doc """

@@ -1,12 +1,12 @@
 # Copyright (c) 2025-present K. S. Ernest (iFire) Lee
 # SPDX-License-Identifier: MIT
 
-defmodule AriaBlocksWorldTest.MixProject do
+defmodule AriaBlocksWorld.MixProject do
   use Mix.Project
 
   def project do
     [
-      app: :aria_blocks_world_test,
+      app: :aria_blocks_world,
       version: "0.1.0",
       build_path: "../../_build",
       config_path: "../../config/config.exs",
@@ -26,7 +26,7 @@ defmodule AriaBlocksWorldTest.MixProject do
   def application do
     [
       extra_applications: [:logger],
-      mod: {AriaBlocksWorldTest.Application, []}
+      mod: {AriaBlocksWorld.Application, []}
     ]
   end
 

@@ -69,17 +69,133 @@ defmodule AriaEngine.Planning.LazyExecution do
   end
 
   # Plan to achieve a single goal
-  defp plan_single_goal(domain, state, {subject, predicate, value}, options) do
-    Logger.debug("Planning for goal: #{subject} #{predicate} #{value}")
+  defp plan_single_goal(domain, state, goal, options) do
+    case goal do
+      {:action_tuple, action_name, args} ->
+        Logger.debug("Executing action tuple: #{action_name} with args #{inspect(args)}")
+        execute_action_tuple(domain, state, action_name, args, options)
 
-    # Check if goal is already satisfied
-    if goal_satisfied?(state, {subject, predicate, value}) do
-      {:ok, [], state}
+      {subject, predicate, value} ->
+        Logger.debug("Planning for goal: #{subject} #{predicate} #{value}")
+
+        # Check if goal is already satisfied
+        if goal_satisfied?(state, {subject, predicate, value}) do
+          {:ok, [], state}
+        else
+          # Generate actions to achieve the goal
+          actions = generate_actions_for_goal(domain, state, {subject, predicate, value}, options)
+          new_state = apply_actions_to_state(state, actions)
+          {:ok, actions, new_state}
+        end
+    end
+  end
+
+  # Execute an action tuple directly with validation
+  defp execute_action_tuple(domain, state, action_name, args, options) do
+    # Try to call the action function directly on the domain module
+    case call_domain_action(domain, action_name, state, args) do
+      {:ok, new_state} ->
+        action_record = %{
+          action: to_string(action_name),
+          args: args,
+          start_time: Map.get(options, :start_time, 0),
+          duration: 1,
+          cost: 1
+        }
+        {:ok, [action_record], new_state}
+
+      {:error, reason} ->
+        raise "Action precondition failed: #{reason}"
+
+      _ ->
+        raise "Unknown action: #{action_name}"
+    end
+  end
+
+  # Call a domain action function
+  defp call_domain_action(domain, action_name, state, args) do
+    # Get the domain module - it could be a struct with a module field or the module itself
+    domain_module = case domain do
+      %{module: module} -> module
+      module when is_atom(module) -> module
+      _ -> AriaBlocksWorld.Domain  # Fallback for blocks world
+    end
+
+    # Try to call the action function
+    if function_exported?(domain_module, action_name, 2) do
+      apply(domain_module, action_name, [state, args])
     else
-      # Generate actions to achieve the goal
-      actions = generate_actions_for_goal(domain, state, {subject, predicate, value}, options)
-      new_state = apply_actions_to_state(state, actions)
-      {:ok, actions, new_state}
+      {:error, :unknown_action}
+    end
+  end
+
+  # Validate action preconditions
+  defp validate_action_preconditions(action_def, state, args) do
+    preconditions = Map.get(action_def, :preconditions, [])
+
+    # Check each precondition
+    Enum.reduce_while(preconditions, :ok, fn precond, _acc ->
+      if check_precondition(precond, state, args) do
+        {:cont, :ok}
+      else
+        {:halt, {:error, "Precondition failed: #{inspect(precond)}"}}
+      end
+    end)
+  end
+
+  # Check a single precondition
+  defp check_precondition(precond, state, args) do
+    case precond do
+      {:clear, subject_index} when is_integer(subject_index) ->
+        subject = Enum.at(args, subject_index)
+        AriaState.RelationalState.get_fact(state, "clear", subject) == true
+
+      {:on_table, subject_index} when is_integer(subject_index) ->
+        subject = Enum.at(args, subject_index)
+        AriaState.RelationalState.get_fact(state, "pos", subject) == "table"
+
+      {:holding_nothing} ->
+        AriaState.RelationalState.get_fact(state, "holding", "hand") == false
+
+      {:holding, object_index} when is_integer(object_index) ->
+        object = Enum.at(args, object_index)
+        AriaState.RelationalState.get_fact(state, "holding", "hand") == object
+
+      _ ->
+        # Unknown precondition, assume it passes
+        true
+    end
+  end
+
+  # Execute a domain action
+  defp execute_domain_action(action_def, state, args, _options) do
+    effects = Map.get(action_def, :effects, [])
+
+    # Apply all effects
+    new_state = Enum.reduce(effects, state, fn effect, current_state ->
+      apply_action_effect(effect, current_state, args)
+    end)
+
+    {:ok, new_state}
+  end
+
+  # Apply a single action effect
+  defp apply_action_effect(effect, state, args) do
+    case effect do
+      {:set_fact, predicate, subject_index, value} when is_integer(subject_index) ->
+        subject = Enum.at(args, subject_index)
+        AriaState.RelationalState.set_fact(state, predicate, subject, value)
+
+      {:set_fact, predicate, subject, value} ->
+        AriaState.RelationalState.set_fact(state, predicate, subject, value)
+
+      {:remove_fact, predicate, subject_index} when is_integer(subject_index) ->
+        subject = Enum.at(args, subject_index)
+        AriaState.RelationalState.remove_fact(state, predicate, subject)
+
+      _ ->
+        # Unknown effect, ignore
+        state
     end
   end
 
