@@ -137,7 +137,7 @@ defmodule AriaCharacterCore.MixProject do
 
       # Internal applications
       {:aria_backtracking_test, path: "apps/aria_backtracking_test"},
-      {:aria_blocks_world, path: "apps/aria_blocks_world"},
+      {:aria_blocks_world_test, path: "apps/aria_blocks_world_test"},
       {:aria_core, path: "apps/aria_core"},
       {:aria_engine_core, path: "apps/aria_engine_core"},
       {:aria_town, path: "apps/aria_town"},

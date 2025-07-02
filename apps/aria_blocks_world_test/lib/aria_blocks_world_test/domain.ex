@@ -1,7 +1,7 @@
 # Copyright (c) 2025-present K. S. Ernest (iFire) Lee
 # SPDX-License-Identifier: MIT
 
-defmodule AriaBlocksWorld.Domain do
+defmodule AriaBlocksWorldTest.Domain do
   @moduledoc """
   Blocks world domain implementation following R25W1398085 unified durative action specification.
 
