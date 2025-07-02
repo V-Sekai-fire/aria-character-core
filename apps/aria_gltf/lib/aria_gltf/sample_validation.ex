@@ -1,3 +1,6 @@
+# Copyright (c) 2025-present K. S. Ernest (iFire) Lee
+# SPDX-License-Identifier: MIT
+
 defmodule AriaGltf.SampleValidation do
   @moduledoc """
   Validation module for SimpleSkin/SimpleMorph sample assets.

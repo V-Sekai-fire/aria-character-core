@@ -16,17 +16,20 @@ This application provides:
 The blocks world domain includes:
 
 ### Predicates
+
 - `pos(block, location)`: Position of blocks (on table, on other blocks, or in hand)
 - `clear(block, boolean)`: Whether a block has nothing on top of it
 - `holding(hand, block_or_false)`: What the robot hand is holding
 
 ### Actions
+
 - `pickup(block)`: Pick up a block from the table
 - `putdown(block)`: Put down a held block on the table
 - `stack(block, target)`: Stack a held block on another block
 - `unstack(block, from)`: Remove a block from on top of another block
 
 ### Task Methods
+
 - `move_block(block, destination)`: High-level task to move a block
 - `achieve_position(block, location)`: Achieve a specific position goal
 - `achieve_clear(block, clear_state)`: Achieve a clear/not-clear state
@@ -34,19 +37,25 @@ The blocks world domain includes:
 ## Example Problems
 
 ### Simple Pickup
+
 Basic test of picking up a block from the table.
 
 ### Simple Stack
+
 Basic test of stacking one block on another.
 
 ### Sussman Anomaly
+
 The classic planning problem that demonstrates subgoal interaction:
+
 - Initial: A on C, B on table, C on table
 - Goal: A on B, B on C
 - Requires careful ordering to avoid undoing progress
 
 ### Complex Multiblock
+
 A more complex rearrangement problem:
+
 - Initial: A on B on C (stack of 3)
 - Goal: C on B on A (reverse the stack)
 
