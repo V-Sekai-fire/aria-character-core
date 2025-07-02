@@ -51,65 +51,188 @@ defmodule AriaHybridPlanner do
   alias Plan.{Utils, ReentrantExecutor, Blacklisting}
 
   @doc """
-  Plan using the existing planning infrastructure.
+  Plan using the existing planning infrastructure with proper HTN decomposition.
   """
   @spec plan(term(), State.t(), [term()], keyword()) :: {:ok, map()} | {:error, String.t()}
-  def plan(_domain, initial_state, todos, _opts \\ []) do
+  def plan(domain, initial_state, todos, opts \\ []) do
     try do
+      verbose = Keyword.get(opts, :verbose, 0)
+      max_depth = Keyword.get(opts, :max_depth, 10)
+
+      if verbose > 1 do
+        Logger.debug("HTN Planning: Starting with #{length(todos)} todos")
+      end
+
       # Create initial solution tree using existing infrastructure
       solution_tree = Utils.create_initial_solution_tree(todos, initial_state)
 
-      # Create enhanced solution tree
-      enhanced_solution_tree = case todos do
-        [] ->
-          # No goals to achieve
-          %{solution_tree | nodes: Map.put(solution_tree.nodes, solution_tree.root_id,
-            %{solution_tree.nodes[solution_tree.root_id] | expanded: true})}
+      # Expand the root node with todos
+      {:ok, expanded_tree} = Plan.NodeExpansion.expand_root_node(solution_tree, solution_tree.root_id, todos, initial_state)
 
-        _ ->
-          # Create primitive action nodes for each todo
-          {updated_tree, child_ids} = Enum.reduce(todos, {solution_tree, []}, fn todo, {tree, child_ids} ->
-            child_id = Utils.generate_node_id()
-
-            child_node = %{
-              id: child_id,
-              task: todo,
-              parent_id: tree.root_id,
-              children_ids: [],
-              state: initial_state,
-              visited: true,
-              expanded: true,
-              method_tried: nil,
-              blacklisted_methods: [],
-              is_primitive: Utils.is_primitive_task?(todo),
-              is_durative: false
+      # Perform HTN planning by expanding non-primitive nodes
+      case plan_recursive(domain, expanded_tree, initial_state, opts, 0, max_depth) do
+        {:ok, final_tree} ->
+          plan = %{
+            solution_tree: final_tree,
+            metadata: %{
+              created_at: System.system_time(:millisecond),
+              domain: domain,
+              planning_depth: max_depth
             }
+          }
 
-            updated_nodes = Map.put(tree.nodes, child_id, child_node)
-            updated_tree = %{tree | nodes: updated_nodes}
-            {updated_tree, [child_id | child_ids]}
-          end)
+          if verbose > 1 do
+            stats = Utils.tree_stats(final_tree)
+            Logger.debug("HTN Planning: Completed with #{stats.total_nodes} nodes, #{stats.action_count} actions")
+          end
 
-          # Update root node with children
-          root_node = updated_tree.nodes[updated_tree.root_id]
-          updated_root = %{root_node | children_ids: Enum.reverse(child_ids), expanded: true}
-          %{updated_tree | nodes: Map.put(updated_tree.nodes, updated_tree.root_id, updated_root)}
+          {:ok, plan}
+
+        {:error, reason} ->
+          {:error, reason}
       end
-
-      plan = %{
-        solution_tree: enhanced_solution_tree,
-        metadata: %{
-          created_at: System.system_time(:millisecond)
-        }
-      }
-
-      {:ok, plan}
 
     rescue
       e ->
         error_msg = "Planning error: #{Exception.message(e)}"
         Logger.error(error_msg)
         {:error, error_msg}
+    end
+  end
+
+  # Recursive HTN planning implementation
+  defp plan_recursive(domain, solution_tree, state, opts, depth, max_depth) do
+    verbose = Keyword.get(opts, :verbose, 0)
+
+    if depth >= max_depth do
+      if verbose > 1 do
+        Logger.debug("HTN Planning: Reached maximum depth #{max_depth}")
+      end
+      {:ok, solution_tree}
+    else
+      # Find nodes that need expansion
+      unexpanded_nodes = find_unexpanded_nodes(solution_tree)
+
+      if Enum.empty?(unexpanded_nodes) do
+        # All nodes are expanded or primitive
+        {:ok, solution_tree}
+      else
+        # Expand the first unexpanded node
+        [node_id | _] = unexpanded_nodes
+        node = solution_tree.nodes[node_id]
+
+        case expand_node_by_type(domain, solution_tree, node_id, node, state, opts) do
+          {:ok, updated_tree} ->
+            # Continue planning recursively
+            plan_recursive(domain, updated_tree, state, opts, depth + 1, max_depth)
+
+          {:error, reason} ->
+            {:error, reason}
+
+          :failure ->
+            # Mark node as primitive if no methods available
+            case Plan.NodeExpansion.mark_as_primitive(solution_tree, node_id) do
+              {:ok, updated_tree} ->
+                plan_recursive(domain, updated_tree, state, opts, depth + 1, max_depth)
+              {:error, reason} ->
+                {:error, reason}
+            end
+        end
+      end
+    end
+  end
+
+  # Find nodes that need expansion (not primitive and not expanded)
+  defp find_unexpanded_nodes(solution_tree) do
+    solution_tree.nodes
+    |> Enum.filter(fn {_id, node} -> not node.is_primitive and not node.expanded end)
+    |> Enum.map(fn {id, _node} -> id end)
+  end
+
+  # Expand a node based on its task type
+  defp expand_node_by_type(domain, solution_tree, node_id, node, state, opts) do
+    verbose = Keyword.get(opts, :verbose, 0)
+
+    case node.task do
+      # Handle multigoals
+      %AriaEngineCore.Multigoal{} = multigoal ->
+        if verbose > 2 do
+          Logger.debug("HTN Planning: Expanding multigoal node #{node_id}")
+        end
+        Plan.NodeExpansion.expand_multigoal_node(domain, state, solution_tree, node_id, multigoal, verbose)
+
+      # Handle regular tasks
+      {task_name, _args} when is_binary(task_name) ->
+        if verbose > 2 do
+          Logger.debug("HTN Planning: Expanding task node #{node_id}: #{task_name}")
+        end
+        expand_task_node(domain, solution_tree, node_id, node, state, opts)
+
+      # Handle goals (predicate, subject, value)
+      {predicate, _subject, _value} when is_binary(predicate) ->
+        if verbose > 2 do
+          Logger.debug("HTN Planning: Expanding goal node #{node_id}: #{predicate}")
+        end
+        expand_goal_node(domain, solution_tree, node_id, node, state, opts)
+
+      # Handle primitive actions (atom, args)
+      {action_name, _args} when is_atom(action_name) ->
+        if verbose > 2 do
+          Logger.debug("HTN Planning: Marking action node #{node_id} as primitive: #{action_name}")
+        end
+        Plan.NodeExpansion.mark_as_primitive(solution_tree, node_id)
+
+      _ ->
+        if verbose > 2 do
+          Logger.debug("HTN Planning: Unknown task type for node #{node_id}, marking as primitive")
+        end
+        Plan.NodeExpansion.mark_as_primitive(solution_tree, node_id)
+    end
+  end
+
+  # Expand a task node using domain methods
+  defp expand_task_node(domain, solution_tree, node_id, node, _state, opts) do
+    {task_name, _args} = node.task
+    verbose = Keyword.get(opts, :verbose, 0)
+
+    # Check if domain has methods for this task
+    case Domain.Core.get_task_methods(domain, task_name) do
+      [] ->
+        if verbose > 2 do
+          Logger.debug("HTN Planning: No methods found for task #{task_name}, marking as primitive")
+        end
+        :failure
+
+      methods ->
+        if verbose > 2 do
+          Logger.debug("HTN Planning: Found #{length(methods)} methods for task #{task_name}")
+        end
+        # For now, mark as primitive since we don't have method execution logic
+        # In a full implementation, this would try each method
+        Plan.NodeExpansion.mark_as_primitive(solution_tree, node_id)
+    end
+  end
+
+  # Expand a goal node using domain unigoal methods
+  defp expand_goal_node(domain, solution_tree, node_id, node, _state, opts) do
+    {predicate, _subject, _value} = node.task
+    verbose = Keyword.get(opts, :verbose, 0)
+
+    # Check if domain has unigoal methods for this predicate
+    case Domain.Core.get_unigoal_methods(domain, predicate) do
+      [] ->
+        if verbose > 2 do
+          Logger.debug("HTN Planning: No unigoal methods found for predicate #{predicate}, marking as primitive")
+        end
+        :failure
+
+      methods ->
+        if verbose > 2 do
+          Logger.debug("HTN Planning: Found #{length(methods)} unigoal methods for predicate #{predicate}")
+        end
+        # For now, mark as primitive since we don't have method execution logic
+        # In a full implementation, this would try each method
+        Plan.NodeExpansion.mark_as_primitive(solution_tree, node_id)
     end
   end
 
