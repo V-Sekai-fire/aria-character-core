@@ -197,7 +197,7 @@ defmodule AriaHybridPlanner do
     task_atom = if is_binary(task_name), do: String.to_atom(task_name), else: task_name
 
     # Check if domain has methods for this task
-    case Domain.Core.get_task_methods(domain, task_atom) do
+    case AriaCore.get_task_methods_from_domain(domain, task_atom) do
       [] ->
         if verbose > 2 do
           Logger.debug("HTN Planning: No methods found for task #{task_name}, marking as primitive")
@@ -223,7 +223,7 @@ defmodule AriaHybridPlanner do
     predicate_atom = if is_binary(predicate), do: String.to_atom(predicate), else: predicate
 
     # Check if domain has unigoal methods for this predicate
-    case Domain.Core.get_unigoal_methods(domain, predicate_atom) do
+    case AriaCore.get_unigoal_methods_from_domain(domain, predicate_atom) do
       [] ->
         if verbose > 2 do
           Logger.debug("HTN Planning: No unigoal methods found for predicate #{predicate}, marking as primitive")

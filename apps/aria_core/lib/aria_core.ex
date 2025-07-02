@@ -128,10 +128,7 @@ defmodule AriaCore do
   defdelegate add_porcelain_actions_to_domain(domain), to: AriaCore.DomainUtils, as: :add_porcelain_actions
   defdelegate create_complete_domain(name \\ "complete"), to: AriaCore.DomainUtils
 
-  # Planning and Execution API
-  defdelegate plan(domain, state, goals), to: AriaHybridPlanner, as: :plan
-  defdelegate run_lazy(domain, state, goals), to: AriaHybridPlanner, as: :run_lazy
-  defdelegate run_lazy_tree(domain, state, solution_tree), to: AriaHybridPlanner, as: :run_lazy_tree
+  # Action Execution API
   defdelegate execute_action(domain, state, action_name, args), to: AriaCore.ActionExecution
 
   # Legacy Domain Planning Mock Functions

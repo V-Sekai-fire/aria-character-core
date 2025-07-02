@@ -144,12 +144,12 @@ defmodule Plan.Utils do
   @doc """
   Validate a plan by executing it step by step.
   """
-  @spec validate_plan(Domain.Core.t(), State.t(), [plan_step()]) ::
+  @spec validate_plan(term(), State.t(), [plan_step()]) ::
     {:ok, State.t()} | {:error, String.t()}
   def validate_plan(domain, initial_state, plan_steps) do
     try do
       final_state = Enum.reduce_while(plan_steps, initial_state, fn {action, args}, current_state ->
-        case Domain.Core.execute_action(domain, current_state, action, args) do
+        case AriaCore.execute_action(domain, current_state, action, args) do
           {:ok, new_state} -> {:cont, new_state}
           {:error, reason} -> {:halt, {:error, reason}}
         end

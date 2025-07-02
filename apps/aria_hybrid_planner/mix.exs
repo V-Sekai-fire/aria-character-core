@@ -26,6 +26,7 @@ defmodule AriaHybridPlanner.MixProject do
 
   defp deps do
     [
+      {:aria_core, in_umbrella: true},
       {:aria_math, in_umbrella: true},
       {:aria_state, in_umbrella: true},
       {:aria_timeline, in_umbrella: true},

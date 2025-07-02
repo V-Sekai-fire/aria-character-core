@@ -32,14 +32,14 @@ defmodule AriaEngineCore.Domain do
   """
 
   # Type definitions for external API compatibility
-  @type t :: AriaEngineCore.Domain.Core.t()
-  @type action_name :: AriaEngineCore.Domain.Core.action_name()
-  @type task_name :: AriaEngineCore.Domain.Core.task_name()
-  @type method_name :: AriaEngineCore.Domain.Core.method_name()
-  @type action_fn :: AriaEngineCore.Domain.Core.action_fn()
-  @type task_method_fn :: AriaEngineCore.Domain.Core.task_method_fn()
-  @type goal_method_fn :: AriaEngineCore.Domain.Core.goal_method_fn()
-  @type named_method :: AriaEngineCore.Domain.Core.named_method()
-  @type durative_action_name :: AriaEngineCore.Domain.Core.durative_action_name()
-  @type durative_action :: AriaEngineCore.Domain.Core.durative_action()
+  @type t :: term()
+  @type action_name :: atom()
+  @type task_name :: String.t()
+  @type method_name :: String.t()
+  @type action_fn :: function()
+  @type task_method_fn :: function()
+  @type goal_method_fn :: function()
+  @type named_method :: {String.t(), function()}
+  @type durative_action_name :: atom()
+  @type durative_action :: map()
 end
