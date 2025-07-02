@@ -13,9 +13,9 @@ defmodule AriaHybridPlanner.PlanCore do
   @type plan_result :: Plan.Core.plan_result()
   @type node_id :: Plan.Core.node_id()
 
-  # Delegate execution functions to Plan.SimpleExecutor (IPyHOP pattern)
+  # Delegate execution functions to Plan.ReentrantExecutor (IPyHOP pattern)
   @spec run_lazy_refineahead(AriaEngine.Domain.Core.t(), AriaEngine.State.t(), term(), keyword()) ::
-          {:ok, AriaEngine.State.t()} | {:error, String.t()}
+          {:ok, AriaEngine.State.t(), term()} | {:error, String.t(), term()}
   def run_lazy_refineahead(domain, state, plan, opts \\ []),
-    do: Plan.SimpleExecutor.execute(domain, state, plan, opts)
+    do: Plan.ReentrantExecutor.execute_with_recovery(domain, state, plan, opts)
 end

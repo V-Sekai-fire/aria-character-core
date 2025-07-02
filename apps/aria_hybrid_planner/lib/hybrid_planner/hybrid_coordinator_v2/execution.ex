@@ -36,14 +36,14 @@ defmodule HybridPlanner.HybridCoordinatorV2.Execution do
 
         %Domain.Core{} = domain ->
           # Extract primitive actions from solution tree
-          primitive_actions = Plan.SimpleExecutor.extract_primitive_actions(solution_tree)
+          primitive_actions = Plan.ReentrantExecutor.extract_primitive_actions(solution_tree)
 
           if verbose > 1 do
             Logger.debug("IPyHOP execution: Executing #{length(primitive_actions)} primitive actions")
           end
 
-          # Execute using simple IPyHOP-style executor
-          case Plan.SimpleExecutor.execute(domain, initial_state, primitive_actions, opts) do
+          # Execute using reentrant IPyHOP-style executor with recovery
+          case Plan.ReentrantExecutor.execute_with_recovery(domain, initial_state, solution_tree, opts) do
             {:ok, final_state, execution_trace} ->
               if verbose > 1 do
                 Logger.debug("IPyHOP execution: Execution completed successfully")
@@ -52,6 +52,15 @@ defmodule HybridPlanner.HybridCoordinatorV2.Execution do
                 end
               end
               {:ok, final_state}
+
+            {:error, reason, execution_trace} ->
+              if verbose > 1 do
+                Logger.debug("IPyHOP execution: Execution failed with reason: #{reason}")
+                if verbose > 2 do
+                  Logger.debug("IPyHOP execution: Partial trace length: #{length(execution_trace)}")
+                end
+              end
+              {:error, reason}
           end
 
         _ ->
