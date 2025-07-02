@@ -22,10 +22,10 @@ defmodule HybridPlanner.HybridCoordinatorV2 do
 
   ## Usage
 
-      # Create coordinator (strategies parameter ignored for compatibility)
-      coordinator = HybridPlanner.HybridCoordinatorV2.new(%{})
+      # Create coordinator
+      coordinator = HybridPlanner.HybridCoordinatorV2.new()
 
-      # Use coordinator for planning with todo lists only
+      # Use coordinator for planning with todo lists
       case HybridPlanner.HybridCoordinatorV2.plan(coordinator, domain, state, todos) do
         {:ok, plan} ->
           HybridPlanner.HybridCoordinatorV2.execute(coordinator, domain, state, plan)
@@ -56,12 +56,9 @@ defmodule HybridPlanner.HybridCoordinatorV2 do
 
   @doc """
   Create a new hybrid coordinator.
-
-  The strategies parameter is maintained for backward compatibility but ignored.
-  All strategy logic is implemented directly in this module.
   """
-  @spec new(map(), keyword()) :: t()
-  def new(_strategies, opts \\ []) do
+  @spec new(keyword()) :: t()
+  def new(opts \\ []) do
     %__MODULE__{
       metadata: %{
         created_at: System.system_time(:millisecond),
@@ -81,7 +78,7 @@ defmodule HybridPlanner.HybridCoordinatorV2 do
   """
   @spec new_default(keyword()) :: t()
   def new_default(opts \\ []) do
-    new(%{}, opts)
+    new(opts)
   end
 
   # ==================== PLANNING FUNCTIONS ====================
@@ -194,11 +191,11 @@ defmodule HybridPlanner.HybridCoordinatorV2 do
   # ==================== STRATEGY MANAGEMENT (SIMPLIFIED) ====================
 
   @doc """
-  Replace a strategy in the coordinator (no-op for compatibility).
+  Replace a strategy in the coordinator (no-op since strategies are inlined).
   """
   @spec replace_strategy(t(), atom(), module()) :: t()
   def replace_strategy(coordinator, _strategy_type, _new_strategy) do
-    # No-op since strategies are inlined, but maintain API compatibility
+    # No-op since strategies are inlined in this monolithic implementation
     coordinator
   end
 

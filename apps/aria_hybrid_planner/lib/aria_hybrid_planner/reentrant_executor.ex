@@ -106,7 +106,7 @@ defmodule Plan.ReentrantExecutor do
         updated_blacklist_state = Blacklisting.blacklist_command(blacklist_state, failed_action)
 
         # Update solution tree with new blacklist state
-        updated_tree = Blacklisting.to_solution_tree(solution_tree, updated_blacklist_state)
+        updated_tree = Map.put(solution_tree, :blacklisted_commands, updated_blacklist_state.blacklisted_commands)
 
         # Re-extract actions with updated blacklist (may choose different methods)
         updated_actions = extract_primitive_actions(updated_tree)
@@ -205,8 +205,16 @@ defmodule Plan.ReentrantExecutor do
     # Check if blacklist state is provided in options first
     case Keyword.get(opts, :blacklist_state) do
       nil ->
-        # Try to extract from solution tree using existing infrastructure
-        Blacklisting.from_solution_tree(solution_tree)
+        # Create new blacklist state or extract from solution tree
+        blacklist_state = Blacklisting.new()
+        case Map.get(solution_tree, :blacklisted_commands) do
+          %MapSet{} = commands ->
+            %{blacklist_state | blacklisted_commands: commands}
+          nil ->
+            blacklist_state
+          _other ->
+            blacklist_state
+        end
 
       provided_blacklist_state ->
         provided_blacklist_state
