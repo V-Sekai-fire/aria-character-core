@@ -84,15 +84,13 @@ defmodule Timeline.Bridge do
 
   alias Timeline.Interval
   alias Timeline.Internal.STN
-  alias Timeline.Bridge.{Relations, Constraints}
+  alias Timeline.Bridge.{Relations, Constraints, Management, Queries}
 
   @type relation_code :: Relations.relation_code()
   @type temporal_constraint :: Constraints.temporal_constraint()
   @type constraint_result :: Constraints.constraint_result()
   @type bridge_type ::
           :decision | :condition | :synchronization | :resource_check | :auto_generated
-
-  @valid_types [:decision, :condition, :synchronization, :resource_check, :auto_generated]
 
   # ==================== BRIDGE MANAGEMENT FUNCTIONS ====================
 
@@ -124,34 +122,7 @@ defmodule Timeline.Bridge do
   """
   @spec new(id(), DateTime.t() | String.t() | semantic_position(), bridge_type(), keyword()) ::
           t()
-  def new(id, position, type, opts \\ [])
-
-  def new(id, %DateTime{} = position, type, opts) do
-    validate_bridge_type!(type)
-    metadata = Keyword.get(opts, :metadata, %{})
-    %__MODULE__{id: id, position: position, type: type, metadata: metadata}
-  end
-
-  def new(id, position, type, opts) when is_binary(position) do
-    {:ok, datetime, _} = DateTime.from_iso8601(position)
-    new(id, datetime, type, opts)
-  end
-
-  def new(id, position, type, opts) when is_atom(position) do
-    validate_bridge_type!(type)
-    validate_semantic_position!(position)
-    metadata = Keyword.get(opts, :metadata, %{})
-    reference_target = Keyword.get(opts, :reference_target, "timeline")
-
-    %__MODULE__{
-      id: id,
-      position: position,
-      type: type,
-      metadata: metadata,
-      semantic_relation: position,
-      reference_target: reference_target
-    }
-  end
+  defdelegate new(id, position, type, opts \\ []), to: Management
 
   @doc """
   Creates a new semantic bridge with explicit reference target.
@@ -176,20 +147,7 @@ defmodule Timeline.Bridge do
 
   """
   @spec new_semantic(id(), semantic_position(), String.t(), bridge_type(), keyword()) :: t()
-  def new_semantic(id, semantic_relation, reference_target, type, opts \\ []) do
-    validate_bridge_type!(type)
-    validate_semantic_position!(semantic_relation)
-    metadata = Keyword.get(opts, :metadata, %{})
-
-    %__MODULE__{
-      id: id,
-      position: semantic_relation,
-      type: type,
-      metadata: metadata,
-      semantic_relation: semantic_relation,
-      reference_target: reference_target
-    }
-  end
+  defdelegate new_semantic(id, semantic_relation, reference_target, type, opts \\ []), to: Management
 
   @doc """
   Checks if a bridge type is valid.
@@ -203,9 +161,7 @@ defmodule Timeline.Bridge do
 
   """
   @spec valid_type?(bridge_type()) :: boolean()
-  def valid_type?(type) do
-    type in @valid_types
-  end
+  defdelegate valid_type?(type), to: Management
 
   @doc """
   Checks if a bridge is a decision point.
@@ -219,29 +175,25 @@ defmodule Timeline.Bridge do
 
   """
   @spec decision?(t()) :: boolean()
-  def decision?(%__MODULE__{type: :decision}), do: true
-  def decision?(_), do: false
+  defdelegate decision?(bridge), to: Management
 
   @doc """
   Checks if a bridge is a condition point.
   """
   @spec condition?(t()) :: boolean()
-  def condition?(%__MODULE__{type: :condition}), do: true
-  def condition?(_), do: false
+  defdelegate condition?(bridge), to: Management
 
   @doc """
   Checks if a bridge is a synchronization point.
   """
   @spec synchronization?(t()) :: boolean()
-  def synchronization?(%__MODULE__{type: :synchronization}), do: true
-  def synchronization?(_), do: false
+  defdelegate synchronization?(bridge), to: Management
 
   @doc """
   Checks if a bridge is a resource check point.
   """
   @spec resource_check?(t()) :: boolean()
-  def resource_check?(%__MODULE__{type: :resource_check}), do: true
-  def resource_check?(_), do: false
+  defdelegate resource_check?(bridge), to: Management
 
   @doc """
   Updates the metadata of a bridge.
@@ -256,9 +208,7 @@ defmodule Timeline.Bridge do
 
   """
   @spec update_metadata(t(), map()) :: t()
-  def update_metadata(%__MODULE__{} = bridge, metadata) when is_map(metadata) do
-    %{bridge | metadata: Map.merge(bridge.metadata, metadata)}
-  end
+  defdelegate update_metadata(bridge, metadata), to: Management
 
   @doc """
   Checks if a bridge occurs before a given time.
@@ -273,28 +223,19 @@ defmodule Timeline.Bridge do
 
   """
   @spec before?(t(), DateTime.t() | String.t()) :: boolean()
-  def before?(%__MODULE__{position: position}, time) do
-    time_dt = parse_datetime(time)
-    DateTime.compare(position, time_dt) == :lt
-  end
+  defdelegate before?(bridge, time), to: Queries
 
   @doc """
   Checks if a bridge occurs after a given time.
   """
   @spec after?(t(), DateTime.t() | String.t()) :: boolean()
-  def after?(%__MODULE__{position: position}, time) do
-    time_dt = parse_datetime(time)
-    DateTime.compare(position, time_dt) == :gt
-  end
+  defdelegate after?(bridge, time), to: Queries
 
   @doc """
   Checks if a bridge occurs at exactly the given time.
   """
   @spec at?(t(), DateTime.t() | String.t()) :: boolean()
-  def at?(%__MODULE__{position: position}, time) do
-    time_dt = parse_datetime(time)
-    DateTime.compare(position, time_dt) == :eq
-  end
+  defdelegate at?(bridge, time), to: Queries
 
   @doc """
   Sorts a list of bridges by their temporal position.
@@ -311,9 +252,7 @@ defmodule Timeline.Bridge do
 
   """
   @spec sort_by_position([t()]) :: [t()]
-  def sort_by_position(bridges) when is_list(bridges) do
-    Enum.sort_by(bridges, & &1.position, DateTime)
-  end
+  defdelegate sort_by_position(bridges), to: Queries
 
   @doc """
   Filters bridges to those within a time range.
@@ -332,15 +271,7 @@ defmodule Timeline.Bridge do
 
   """
   @spec in_range([t()], DateTime.t() | String.t(), DateTime.t() | String.t()) :: [t()]
-  def in_range(bridges, start_time, end_time) when is_list(bridges) do
-    start_dt = parse_datetime(start_time)
-    end_dt = parse_datetime(end_time)
-
-    Enum.filter(bridges, fn bridge ->
-      DateTime.compare(bridge.position, start_dt) != :lt and
-        DateTime.compare(bridge.position, end_dt) != :gt
-    end)
-  end
+  defdelegate in_range(bridges, start_time, end_time), to: Queries
 
   # ==================== TEMPORAL RELATIONS FUNCTIONS ====================
 
@@ -441,40 +372,4 @@ defmodule Timeline.Bridge do
   @spec relation_description(relation_code()) :: String.t()
   defdelegate relation_description(relation_code), to: Relations
 
-  # ==================== PRIVATE HELPER FUNCTIONS ====================
-
-  defp validate_bridge_type!(type) do
-    unless valid_type?(type) do
-      raise ArgumentError,
-            "Invalid bridge type: #{inspect(type)}. Valid types: #{inspect(@valid_types)}"
-    end
-  end
-
-  defp validate_semantic_position!(position) do
-    valid_positions = [
-      :starts,
-      :finishes,
-      :meets,
-      :met_by,
-      :during,
-      :contains,
-      :overlaps,
-      :overlapped_by,
-      :before,
-      :after,
-      :equals
-    ]
-
-    unless position in valid_positions do
-      raise ArgumentError,
-            "Invalid semantic position: #{inspect(position)}. Valid positions: #{inspect(valid_positions)}"
-    end
-  end
-
-  defp parse_datetime(%DateTime{} = datetime), do: datetime
-
-  defp parse_datetime(iso8601_string) when is_binary(iso8601_string) do
-    {:ok, datetime, _} = DateTime.from_iso8601(iso8601_string)
-    datetime
-  end
 end

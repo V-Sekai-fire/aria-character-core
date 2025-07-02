@@ -29,7 +29,7 @@ Analysis reveals multiple modules violating these guidelines, with several requi
 
 ### Strong Recommendation (400-500 lines)
 - ~~`aria_math/primitives/tensor.ex` (493 → 47 lines)~~ - **COMPLETED**
-- `aria_timeline/bridge.ex` (480 lines)
+- ~~`aria_timeline/bridge.ex` (480 → 377 lines)~~ - **COMPLETED**
 - ~~`aria_gltf/mesh.ex` (480 → 200 lines)~~ - **COMPLETED**
 - `aria_gltf.ex` (479 lines)
 - `aria_gltf/validation.ex` (477 lines)
@@ -323,6 +323,28 @@ Analysis reveals multiple modules violating these guidelines, with several requi
 - **Main Tensor** (47 lines): Clean delegation API maintaining full backward compatibility
 
 **Status:** ✅ **COMPLETED** - Firm threshold violation eliminated, all modules well-organized
+
+#### Task 1.10: Split Timeline.Bridge (480 lines) ✅ **COMPLETED**
+**File:** `apps/aria_timeline/lib/timeline/bridge.ex`
+
+**Splitting Strategy:**
+- [x] **Management module**: Bridge creation, validation, and type checking (180 lines)
+- [x] **Queries module**: Temporal queries and filtering operations (120 lines)
+- [x] **Main module**: Clean delegation API maintaining backward compatibility (377 lines)
+
+**Implementation Steps:**
+1. ✅ Create `bridge/management.ex` for bridge creation and validation
+2. ✅ Create `bridge/queries.ex` for temporal query operations
+3. ✅ Update main bridge module to delegate to split modules
+4. ✅ Remove unused module attributes and helper functions
+5. ✅ Verify all bridge functionality remains intact
+
+**Results:** Successfully split 480-line module into 2 focused modules:
+- **Management** (180 lines): Bridge creation, validation, type checking, metadata updates
+- **Queries** (120 lines): Temporal queries, filtering, sorting, and range operations
+- **Main Bridge** (377 lines): Clean delegation API maintaining full backward compatibility
+
+**Status:** ✅ **COMPLETED** - Firm threshold violation eliminated, clear architectural boundaries
 
 ### Phase 2: Firm Threshold Modules (PRIORITY: MEDIUM)
 **Target:** Address 400-500 line modules systematically
