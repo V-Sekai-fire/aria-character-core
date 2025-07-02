@@ -138,24 +138,6 @@ defmodule AriaHybridPlanner.Coordinator do
     end
   end
 
-  @doc """
-  Validate a plan using the existing validation infrastructure.
-  """
-  @spec validate_plan(t(), Domain.Core.t(), State.t(), map()) ::
-          {:ok, State.t()} | {:error, String.t()}
-  def validate_plan(_coordinator, domain, initial_state, plan) do
-    try do
-      solution_tree = Map.get(plan, :solution_tree)
-
-      if is_nil(solution_tree) do
-        {:error, "Invalid plan format for validation - missing solution tree"}
-      else
-        Utils.validate_plan(domain, initial_state, Utils.get_primitive_actions_dfs(solution_tree))
-      end
-    rescue
-      e -> {:error, "Plan validation error: #{Exception.message(e)}"}
-    end
-  end
 
   # ==================== EXECUTION FUNCTIONS ====================
 

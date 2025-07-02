@@ -50,7 +50,6 @@ defmodule AriaHybridPlanner do
   defdelegate new_coordinator(opts \\ []), to: AriaHybridPlanner.Coordinator, as: :new_default
   defdelegate plan(coordinator, domain, state, todos, opts \\ []), to: AriaHybridPlanner.Coordinator
   defdelegate execute(coordinator, domain, state, plan, opts \\ []), to: AriaHybridPlanner.Coordinator
-  defdelegate validate_plan(coordinator, domain, state, plan), to: AriaHybridPlanner.Coordinator
 
   # Replan is not implemented in HybridCoordinatorV2 yet
   def replan(_coordinator, _domain, _state, _plan, _fail_node_id, _opts \\ []) do
