@@ -89,7 +89,13 @@ defmodule AriaBlocksWorld.GtpyhopExamplesTest do
 
       # Expected plan from GTpyhop:
       # [('unstack', 'c', 'a'), ('putdown', 'c'), ('pickup', 'b'), ('stack', 'b', 'c'), ('pickup', 'a'), ('stack', 'a', 'b')]
-      assert {:ok, {final_state, _solution_tree}} = AriaBlocksWorld.solve_problem(sussman_initial, [sussman_goal])
+      assert {:ok, {final_state, solution_tree}} = AriaBlocksWorld.solve_problem(sussman_initial, [sussman_goal])
+
+      # Debug: Check what's in the solution tree
+      IO.inspect(solution_tree, label: "Solution Tree")
+      if Map.has_key?(solution_tree, :steps) do
+        IO.inspect(solution_tree.steps, label: "Plan Steps")
+      end
 
       # Verify final state matches goal
       assert AriaState.RelationalState.get_fact(final_state, "pos", "a") == "b"

@@ -38,11 +38,15 @@ defmodule AriaHybridPlanner do
 
   @doc """
   Plan only (no execution) - compatible with AriaEngineCore API.
+  Returns only the solution tree portion of the plan.
   """
-  def plan_only(domain, state, goals) do
+  def plan(domain, state, goals) do
     coordinator = AriaHybridPlanner.Core.new_coordinator()
     case AriaHybridPlanner.Core.plan(coordinator, domain, state, goals) do
-      {:ok, plan} -> {:ok, plan}
+      {:ok, plan} ->
+        # Extract solution tree from plan structure
+        solution_tree = extract_solution_tree(plan)
+        {:ok, solution_tree}
       {:error, reason} -> {:error, reason}
     end
   end
@@ -53,7 +57,10 @@ defmodule AriaHybridPlanner do
   def run_lazy(domain, state, goals) do
     coordinator = AriaHybridPlanner.Core.new_coordinator()
     case AriaHybridPlanner.Core.plan_and_execute(coordinator, domain, state, goals) do
-      {:ok, result} -> {:ok, {Map.get(result, :final_state, state), Map.get(result, :plan, %{})}}
+      {:ok, result} ->
+        final_state = Map.get(result, :final_state, state)
+        solution_tree = extract_solution_tree(result)
+        {:ok, {final_state, solution_tree}}
       {:error, reason} -> {:error, reason}
     end
   end
@@ -64,10 +71,36 @@ defmodule AriaHybridPlanner do
   def run_lazy_tree(domain, state, solution_tree) do
     coordinator = AriaHybridPlanner.Core.new_coordinator()
     case AriaHybridPlanner.Core.execute(coordinator, domain, state, solution_tree) do
-      {:ok, result} -> {:ok, {Map.get(result, :final_state, state), solution_tree}}
+      {:ok, result} ->
+        final_state = Map.get(result, :final_state, state)
+        {:ok, {final_state, solution_tree}}
       {:error, reason} -> {:error, reason}
     end
   end
+
+  # Private helper function to extract solution tree from plan structure
+  defp extract_solution_tree(plan) when is_map(plan) do
+    %{
+      root_id: Map.get(plan, :root_id, "root"),
+      nodes: Map.get(plan, :nodes, %{}),
+      steps: Map.get(plan, :steps, []),
+      goal_network: Map.get(plan, :goal_network, %{}),
+      blacklisted_commands: Map.get(plan, :blacklisted_commands, MapSet.new()),
+      # Include additional useful fields for solution tree
+      metrics: Map.get(plan, :metrics, %{}),
+      status: Map.get(plan, :status, :unknown)
+    }
+  end
+
+  defp extract_solution_tree(_), do: %{
+    root_id: "root",
+    nodes: %{},
+    steps: [],
+    goal_network: %{},
+    blacklisted_commands: MapSet.new(),
+    metrics: %{},
+    status: :empty
+  }
 
   @spec version() :: String.t()
   @doc """

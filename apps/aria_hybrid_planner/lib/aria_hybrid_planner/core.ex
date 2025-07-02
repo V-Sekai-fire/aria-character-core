@@ -104,6 +104,7 @@ defmodule AriaHybridPlanner.Core do
           blacklisted_commands: MapSet.new(),
           goal_network: %{}
         }
+
         {:ok, plan}
 
       {:error, reason} ->
@@ -136,11 +137,14 @@ defmodule AriaHybridPlanner.Core do
   """
   @spec execute(coordinator, domain, state, plan, opts) :: {:ok, term()} | {:error, term()}
   def execute(coordinator, domain, state, plan, opts \\ []) do
+    # Use the final_state from the plan if available, otherwise use the input state
+    final_state = Map.get(plan, :final_state, state)
+
     result = %{
       coordinator_id: coordinator.id,
       plan_id: Map.get(plan, :id),
       domain: domain,
-      final_state: state,
+      final_state: final_state,
       execution_steps: Map.get(plan, :steps, []),
       options: opts,
       executed_at: DateTime.utc_now(),

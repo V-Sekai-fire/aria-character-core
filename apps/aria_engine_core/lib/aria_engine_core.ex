@@ -71,7 +71,7 @@ defmodule AriaEngineCore do
   """
   @spec plan(domain(), state(), [todo_item()]) :: {:ok, solution_tree()} | {:error, atom()}
   def plan(domain, state, goals) do
-    AriaHybridPlanner.plan_only(domain, state, goals)
+    AriaHybridPlanner.plan(domain, state, goals)
   end
 
   @doc """
