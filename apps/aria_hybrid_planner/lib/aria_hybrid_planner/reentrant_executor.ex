@@ -15,6 +15,7 @@ defmodule Plan.ReentrantExecutor do
   - Todo item failure recovery through existing blacklisting infrastructure
   - Maintains IPyHOP reentrant tree structure
   - Minimal replanning - only re-extract primitives with updated blacklist
+  - IPyHOP-style simple execution with blacklist state management
   """
 
   require Logger
@@ -25,6 +26,69 @@ defmodule Plan.ReentrantExecutor do
   @type execution_trace :: [execution_trace_entry()]
   @type execution_result :: {:ok, map(), execution_trace()} | {:error, String.t(), execution_trace()}
   @type solution_tree :: map()
+
+  @doc """
+  Execute a plan using IPyHOP-style simple execution.
+
+  This function integrates with the new blacklisting system following
+  the IPyHOP pattern where blacklisted commands are checked during execution.
+  """
+  @spec execute_plan_lazy(map(), map(), keyword()) ::
+          {:ok, map()} | {:error, String.t()}
+  def execute_plan_lazy(solution_tree, initial_state, opts) do
+    verbose = Keyword.get(opts, :verbose, 0)
+
+    if verbose > 1 do
+      action_count = Utils.plan_cost(solution_tree)
+      Logger.debug("IPyHOP execution: Starting execution of plan with #{action_count} actions")
+    end
+
+    try do
+      domain = Keyword.get(opts, :domain)
+
+      case domain do
+        nil ->
+          {:error, "Domain required for execution but not provided in options"}
+
+        domain when is_map(domain) ->
+          # Extract primitive actions from solution tree
+          primitive_actions = extract_primitive_actions(solution_tree)
+
+          if verbose > 1 do
+            Logger.debug("IPyHOP execution: Executing #{length(primitive_actions)} primitive actions")
+          end
+
+          # Execute using reentrant IPyHOP-style executor with recovery
+          case execute_with_recovery(domain, initial_state, solution_tree, opts) do
+            {:ok, final_state, execution_trace} ->
+              if verbose > 1 do
+                Logger.debug("IPyHOP execution: Execution completed successfully")
+                if verbose > 2 do
+                  Logger.debug("IPyHOP execution: Execution trace length: #{length(execution_trace)}")
+                end
+              end
+              {:ok, final_state}
+
+            {:error, reason, execution_trace} ->
+              if verbose > 1 do
+                Logger.debug("IPyHOP execution: Execution failed with reason: #{reason}")
+                if verbose > 2 do
+                  Logger.debug("IPyHOP execution: Partial trace length: #{length(execution_trace)}")
+                end
+              end
+              {:error, reason}
+          end
+
+        _ ->
+          {:error, "Invalid domain type provided for execution"}
+      end
+    rescue
+      e ->
+        error_msg = "IPyHOP execution error: #{Exception.message(e)}"
+        Logger.error(error_msg)
+        {:error, error_msg}
+    end
+  end
 
   @doc """
   Execute a solution tree with todo item failure recovery.

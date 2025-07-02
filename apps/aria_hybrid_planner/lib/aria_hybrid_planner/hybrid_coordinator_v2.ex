@@ -36,8 +36,8 @@ defmodule HybridPlanner.HybridCoordinatorV2 do
 
   require Logger
   alias AriaHybridPlanner.State
-  # alias Plan.Utils  # Currently unused
-  alias HybridPlanner.HybridCoordinatorV2.{Planning, Execution, Logging}
+  alias HybridPlanner.HybridCoordinatorV2.{Planning, Logging}
+  alias Plan.ReentrantExecutor
 
   defstruct [
     :metadata,
@@ -170,7 +170,7 @@ defmodule HybridPlanner.HybridCoordinatorV2 do
         |> Keyword.put(:domain, domain)
         |> Keyword.put(:blacklist_state, blacklist_state)
 
-        case Execution.execute_plan_lazy(solution_tree, initial_state, enhanced_opts) do
+        case ReentrantExecutor.execute_plan_lazy(solution_tree, initial_state, enhanced_opts) do
           {:ok, final_state} ->
             Logging.log_progress("execution", %{status: "completed_successfully"}, opts)
             {:ok, final_state}
@@ -318,21 +318,4 @@ defmodule HybridPlanner.HybridCoordinatorV2 do
         provided_blacklist_state
     end
   end
-
-  # Function currently unused but kept for future functionality
-  # defp extract_primitive_actions(solution_tree) do
-  #   case solution_tree do
-  #     %{children: children} when is_list(children) ->
-  #       Enum.flat_map(children, &extract_primitive_actions/1)
-
-  #     %{task: {action_name, args}, status: :primitive} ->
-  #       [{action_name, args}]
-
-  #     %{task: task} when is_tuple(task) ->
-  #       [task]
-
-  #     _ ->
-  #       []
-  #   end
-  # end
 end
