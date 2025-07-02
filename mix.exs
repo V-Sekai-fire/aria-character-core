@@ -138,7 +138,6 @@ defmodule AriaCharacterCore.MixProject do
       # Internal applications
       {:aria_blocks_world, path: "apps/aria_blocks_world"},
       {:aria_core, path: "apps/aria_core"},
-      {:aria_engine_core, path: "apps/aria_engine_core"},
       {:aria_town, path: "apps/aria_town"},
       {:aria_hybrid_planner, path: "apps/aria_hybrid_planner"},
       {:aria_membrane_pipeline, path: "apps/aria_membrane_pipeline"},

@@ -18,7 +18,7 @@ defmodule HybridPlanner.HybridCoordinatorV2 do
   - State management (from StateV2Strategy)
   - Domain queries (from DomainStrategy)
   - Logging operations (from LoggerStrategy)
-  - Plan execution (from LazyExecutionStrategy)
+  - Plan execution
 
   ## Usage
 

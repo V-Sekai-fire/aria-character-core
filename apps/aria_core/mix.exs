@@ -27,7 +27,7 @@ defmodule AriaCore.MixProject do
   defp deps do
     [
       # Internal dependencies
-      {:aria_engine_core, path: "../aria_engine_core"},
+      {:aria_hybrid_planner, path: "../aria_hybrid_planner"},
       {:aria_state, path: "../aria_state"},
       # External dependencies
       {:jason, "~> 1.4"},

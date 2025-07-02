@@ -1,12 +1,12 @@
 # Copyright (c) 2025-present K. S. Ernest (iFire) Lee
 # SPDX-License-Identifier: MIT
 
-defmodule AriaHybridPlanner.Plan do
+defmodule AriaEngineCore.Plan do
   @moduledoc """
-  Planning data structures and utilities for AriaHybridPlanner.
+  Planning data structures and utilities for AriaEngine Core.
 
   This module defines the authoritative solution tree structure and related
-  types used throughout the AriaHybridPlanner planning system, implementing the
+  types used throughout the AriaEngine planning system, implementing the
   R25W1398085 unified durative action specification.
 
   ## Key Types
@@ -18,20 +18,20 @@ defmodule AriaHybridPlanner.Plan do
   ## Usage
 
       # Create initial solution tree
-      tree = AriaHybridPlanner.Plan.create_initial_solution_tree(todos, initial_state)
+      tree = AriaEngineCore.Plan.create_initial_solution_tree(todos, initial_state)
 
       # Check if solution is complete
-      complete? = AriaHybridPlanner.Plan.solution_complete?(tree)
+      complete? = AriaEngineCore.Plan.solution_complete?(tree)
 
       # Extract primitive actions for execution
-      actions = AriaHybridPlanner.Plan.get_primitive_actions_dfs(tree)
+      actions = AriaEngineCore.Plan.get_primitive_actions_dfs(tree)
   """
 
-  alias AriaState.RelationalState, as: State
+  alias AriaEngineCore.State
 
   @type task :: {String.t(), list()}
   @type goal :: {String.t(), String.t(), State.fact_value()}
-  @type todo_item :: task() | goal() | any()
+  @type todo_item :: task() | goal() | AriaEngineCore.Multigoal.t()
   @type plan_step :: {atom(), list()}
   @type node_id :: String.t()
 
@@ -71,8 +71,8 @@ defmodule AriaHybridPlanner.Plan do
   ## Example
 
       todos = [{:cook_meal, ["pasta"]}, {"location", "chef", "kitchen"}]
-      state = AriaState.RelationalState.new()
-      tree = AriaHybridPlanner.Plan.create_initial_solution_tree(todos, state)
+      state = AriaEngineCore.State.new()
+      tree = AriaEngineCore.Plan.create_initial_solution_tree(todos, state)
   """
   @spec create_initial_solution_tree([todo_item()], State.t()) :: solution_tree()
   def create_initial_solution_tree(todos, initial_state) do
@@ -248,21 +248,6 @@ defmodule AriaHybridPlanner.Plan do
       ) when is_map(domain) do
     actions = get_primitive_actions_dfs(solution_tree)
     validate_plan(domain, initial_state, actions)
-  end
-
-  def validate_plan(domain, initial_state, plan) when is_map(domain) and is_list(plan) do
-    Enum.reduce_while(plan, {:ok, initial_state}, fn {action_name, args}, {:ok, state} ->
-      action_atom =
-        if is_binary(action_name) do
-          String.to_atom(action_name)
-        else
-          action_name
-        end
-
-      case AriaCore.execute_action(domain, state, action_atom, args) do
-        {:ok, new_state} -> {:cont, {:ok, new_state}}
-      end
-    end)
   end
 
   @doc """

@@ -88,7 +88,7 @@ defmodule AriaBlocksWorld.GtpyhopExamplesTest do
       })
 
       # Expected plan from GTpyhop:
-      # [('unstack', 'c', 'a'), ('putdown', 'c'), ('pickup', 'b'), ('stack', 'b', 'c'), ('pickup', 'a'), ('stack', 'a', 'b')]
+      # [{:unstack, ['c', 'a']}, {:putdown, ['c']}, {:pickup, ['b']), (:stack, ['b', 'c']}, {:pickup, ['a']}, {:stack, ['a', 'b']}]
       assert {:ok, {final_state, solution_tree}} = AriaBlocksWorld.solve_problem(sussman_initial, [sussman_goal])
 
       # Debug: Check what's in the solution tree

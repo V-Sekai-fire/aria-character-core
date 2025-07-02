@@ -1,249 +1,88 @@
 # Copyright (c) 2025-present K. S. Ernest (iFire) Lee
 # SPDX-License-Identifier: MIT
 
-defmodule AriaHybridPlanner.Core do
-  @moduledoc """
-  Core implementation for hybrid planning functionality.
-
-  This module provides the main API for creating coordinators and executing
-  planning operations in the hybrid planner system.
-  """
-
-  @type coordinator :: term()
-  @type domain :: term()
-  @type state :: term()
-  @type goals :: list()
-  @type plan :: term()
-  @type opts :: keyword()
-
-  @doc """
-  Creates a new coordinator for hybrid planning.
-
-  ## Parameters
-
-  - `opts`: Configuration options for the coordinator
-
-  ## Returns
-
-  A new coordinator instance.
-
-  ## Examples
-
-      iex> coordinator = AriaHybridPlanner.Core.new_coordinator([])
-      iex> is_map(coordinator)
-      true
-  """
-  @spec new_coordinator(opts) :: coordinator
-  def new_coordinator(opts \\ []) do
-    %{
-      id: System.unique_integer([:positive]),
-      options: opts,
-      created_at: DateTime.utc_now(),
-      status: :ready
-    }
-  end
-
-  @doc """
-  Creates a planning operation.
-
-  ## Parameters
-
-  - `coordinator`: The coordinator instance
-  - `domain`: The planning domain
-  - `state`: Current state
-  - `goals`: List of goals to achieve
-  - `opts`: Additional options
-
-  ## Returns
-
-  `{:ok, plan}` on success, `{:error, reason}` on failure.
-
-  ## Examples
-
-      iex> coordinator = AriaHybridPlanner.Core.new_coordinator([])
-      iex> {:ok, plan} = AriaHybridPlanner.Core.plan(coordinator, %{}, %{}, [], [])
-      iex> is_map(plan)
-      true
-  """
-  @spec plan(coordinator, domain, state, goals, opts) :: {:ok, plan} | {:error, term()}
-  def plan(coordinator, domain, state, goals, opts \\ []) do
-    # Convert goals to the format expected by LazyExecution
-    lazy_goals = convert_goals_to_lazy_format(goals)
-
-    case AriaEngine.Planning.LazyExecution.plan(domain, state, lazy_goals, Map.new(opts)) do
-      {:ok, lazy_plan} ->
-        # Convert LazyExecution plan to our format and add solution tree structure
-        plan = %{
-          coordinator_id: coordinator.id,
-          domain: domain,
-          initial_state: state,
-          goals: goals,
-          options: opts,
-          created_at: DateTime.utc_now(),
-          status: :planned,
-          steps: Map.get(lazy_plan, :actions, []),
-          final_state: Map.get(lazy_plan, :final_state, state),
-          metrics: Map.get(lazy_plan, :metrics, %{}),
-          # Add solution tree structure for compatibility
-          root_id: "root",
-          nodes: %{
-            "root" => %{
-              id: "root",
-              task: {:multigoal, goals},
-              parent_id: nil,
-              children_ids: [],
-              state: state,
-              visited: true,
-              expanded: true,
-              method_tried: "lazy_execution",
-              blacklisted_methods: [],
-              is_primitive: false,
-              is_durative: false
-            }
+defmodule AriaEngineCore.Core do
+  @moduledoc "Core components and types for the Aria Engine.\n"
+  @type domain :: AriaEngineCore.Domain.Core.t()
+  @type state :: AriaEngineCore.State.t()
+  @type multigoal :: AriaEngineCore.Multigoal.t()
+  @type solution_tree :: AriaEngineCore.Plan.solution_tree()
+  @type plan_step :: AriaEngineCore.Plan.plan_step()
+  @type goal :: {String.t(), String.t(), AriaEngineCore.State.fact_value()}
+  @type task :: {String.t(), list()}
+  @type todo_item :: AriaEngineCore.Plan.todo_item()
+  @type action_fn :: (AriaEngineCore.State.t(), list() -> AriaEngineCore.State.t() | false)
+  @type task_method_fn :: (AriaEngineCore.State.t(), list() -> list() | false)
+  @type goal_method_fn :: (AriaEngineCore.State.t(), list() -> list() | false)
+  @type status :: :pending | :planning | :executing | :completed | :failed | :cancelled
+  @type plan_result :: {:ok, solution_tree()} | {:error, String.t()}
+  @type execution_result :: {:ok, t()} | {:error, String.t()}
+  @type t :: %__MODULE__{
+          id: String.t(),
+          name: String.t(),
+          execution_id: reference() | nil,
+          actions: %{atom() => action_fn()},
+          task_methods: %{String.t() => [task_method_fn()]},
+          unigoal_methods: %{String.t() => [goal_method_fn()]},
+          multigoal_methods: [goal_method_fn()],
+          goals: [todo_item()],
+          current_state: AriaEngineCore.State.t(),
+          initial_state: AriaEngineCore.State.t(),
+          status: status(),
+          solution_tree: solution_tree() | nil,
+          progress: %{
+            total_steps: non_neg_integer(),
+            completed_steps: non_neg_integer(),
+            current_step: String.t() | nil
           },
-          blacklisted_commands: MapSet.new(),
-          goal_network: %{}
+          error: term() | nil,
+          documentation: %{atom() => String.t()},
+          metadata: %{atom() => term()},
+          created_at: DateTime.t(),
+          started_at: DateTime.t() | nil,
+          completed_at: DateTime.t() | nil
         }
+  defstruct [
+    :id,
+    :name,
+    execution_id: nil,
+    actions: %{},
+    task_methods: %{},
+    unigoal_methods: %{},
+    multigoal_methods: [],
+    goals: [],
+    current_state: nil,
+    initial_state: nil,
+    status: :pending,
+    solution_tree: nil,
+    progress: %{total_steps: 0, completed_steps: 0, current_step: nil},
+    error: nil,
+    documentation: %{},
+    metadata: %{},
+    created_at: nil,
+    started_at: nil,
+    completed_at: nil
+  ]
 
-        {:ok, plan}
+  @doc "Creates a new AriaEngine definition with capabilities and goals.\n"
+  @spec new(String.t(), map()) :: t()
+  def new(id, definition \\ %{}) do
+    now = DateTime.utc_now()
+    initial_state = Map.get(definition, :initial_state, AriaEngineCore.State.new())
 
-      {:error, reason} ->
-        {:error, reason}
-    end
-  end
-
-  @doc """
-  Executes a plan.
-
-  ## Parameters
-
-  - `coordinator`: The coordinator instance
-  - `domain`: The planning domain
-  - `state`: Current state
-  - `plan`: The plan to execute
-  - `opts`: Additional options
-
-  ## Returns
-
-  `{:ok, result}` on success, `{:error, reason}` on failure.
-
-  ## Examples
-
-      iex> coordinator = AriaHybridPlanner.Core.new_coordinator([])
-      iex> {:ok, plan} = AriaHybridPlanner.Core.plan(coordinator, %{}, %{}, [], [])
-      iex> {:ok, result} = AriaHybridPlanner.Core.execute(coordinator, %{}, %{}, plan, [])
-      iex> is_map(result)
-      true
-  """
-  @spec execute(coordinator, domain, state, plan, opts) :: {:ok, term()} | {:error, term()}
-  def execute(coordinator, domain, state, plan, opts \\ []) do
-    # Use the final_state from the plan if available, otherwise use the input state
-    final_state = Map.get(plan, :final_state, state)
-
-    result = %{
-      coordinator_id: coordinator.id,
-      plan_id: Map.get(plan, :id),
-      domain: domain,
-      final_state: final_state,
-      execution_steps: Map.get(plan, :steps, []),
-      options: opts,
-      executed_at: DateTime.utc_now(),
-      status: :completed
+    %__MODULE__{
+      id: id,
+      name: Map.get(definition, :name, id),
+      actions: Map.get(definition, :actions, %{}),
+      task_methods: Map.get(definition, :task_methods, %{}),
+      unigoal_methods: Map.get(definition, :unigoal_methods, %{}),
+      multigoal_methods: Map.get(definition, :multigoal_methods, []),
+      goals: Map.get(definition, :goals, []),
+      current_state: initial_state,
+      initial_state: initial_state,
+      documentation: Map.get(definition, :documentation, %{}),
+      metadata: Map.get(definition, :metadata, %{}),
+      created_at: now
     }
-
-    {:ok, result}
-  end
-
-  @doc """
-  Validates a plan against the current domain and state.
-
-  ## Parameters
-
-  - `coordinator`: The coordinator instance
-  - `domain`: The planning domain
-  - `state`: Current state
-  - `plan`: The plan to validate
-
-  ## Returns
-
-  `{:ok, :valid}` if the plan is valid, `{:error, reason}` otherwise.
-  """
-  @spec validate_plan(coordinator, domain, state, plan) :: {:ok, :valid} | {:error, term()}
-  def validate_plan(_coordinator, _domain, _state, _plan) do
-    {:ok, :valid}
-  end
-
-  @doc """
-  Replans when a failure occurs during execution.
-
-  ## Parameters
-
-  - `coordinator`: The coordinator instance
-  - `domain`: The planning domain
-  - `state`: Current state
-  - `plan`: The original plan
-  - `fail_node_id`: The ID of the failed node
-  - `opts`: Additional options
-
-  ## Returns
-
-  `{:ok, new_plan}` on success, `{:error, reason}` on failure.
-  """
-  @spec replan(coordinator, domain, state, plan, term(), opts) :: {:ok, plan} | {:error, term()}
-  def replan(coordinator, domain, state, _original_plan, _fail_node_id, opts \\ []) do
-    # Create a new plan as a fallback
-    plan(coordinator, domain, state, [], opts)
-  end
-
-  @doc """
-  Plans and executes in a single operation.
-
-  ## Parameters
-
-  - `coordinator`: The coordinator instance
-  - `domain`: The planning domain
-  - `state`: Current state
-  - `goals`: List of goals to achieve
-  - `opts`: Additional options
-
-  ## Returns
-
-  `{:ok, result}` on success, `{:error, reason}` on failure.
-  """
-  @spec plan_and_execute(coordinator, domain, state, goals, opts) :: {:ok, term()} | {:error, term()}
-  def plan_and_execute(coordinator, domain, state, goals, opts \\ []) do
-    with {:ok, plan} <- plan(coordinator, domain, state, goals, opts),
-         {:ok, result} <- execute(coordinator, domain, state, plan, opts) do
-      {:ok, result}
-    end
-  end
-
-  # Private helper functions
-
-  @spec convert_goals_to_lazy_format(goals) :: list()
-  defp convert_goals_to_lazy_format(goals) do
-    Enum.flat_map(goals, fn goal ->
-      case goal do
-        {:multigoal, multigoal_map} when is_map(multigoal_map) ->
-          # Convert multigoal map to list of {subject, predicate, value} tuples
-          Enum.flat_map(multigoal_map, fn {predicate, subject_value_map} ->
-            Enum.map(subject_value_map, fn {subject, value} ->
-              {to_string(subject), to_string(predicate), value}
-            end)
-          end)
-
-        {subject, predicate, value} when is_binary(predicate) ->
-          # Goal predicate format
-          [{to_string(subject), to_string(predicate), value}]
-
-        {action_name, args} when is_atom(action_name) and is_list(args) ->
-          # Action tuple format - convert to action execution goal
-          [{:action_tuple, action_name, args}]
-
-        _ ->
-          # Unknown goal format, skip
-          []
-      end
-    end)
   end
 end

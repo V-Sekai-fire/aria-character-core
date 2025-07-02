@@ -129,9 +129,9 @@ defmodule AriaCore do
   defdelegate create_complete_domain(name \\ "complete"), to: AriaCore.DomainUtils
 
   # Planning and Execution API
-  defdelegate plan(domain, state, goals), to: AriaEngineCore, as: :plan
-  defdelegate run_lazy(domain, state, goals), to: AriaEngineCore, as: :run_lazy
-  defdelegate run_lazy_tree(domain, state, solution_tree), to: AriaEngineCore, as: :run_lazy_tree
+  defdelegate plan(domain, state, goals), to: AriaHybridPlanner, as: :plan
+  defdelegate run_lazy(domain, state, goals), to: AriaHybridPlanner, as: :run_lazy
+  defdelegate run_lazy_tree(domain, state, solution_tree), to: AriaHybridPlanner, as: :run_lazy_tree
   defdelegate execute_action(domain, state, action_name, args), to: AriaCore.ActionExecution
 
   # Legacy Domain Planning Mock Functions

@@ -26,18 +26,23 @@ defmodule AriaHybridPlanner.MixProject do
 
   defp deps do
     [
-      # Internal dependencies
-      {:aria_state, path: "../aria_state"},
-      {:aria_timeline, path: "../aria_timeline"},
-      {:aria_minizinc_stn, path: "../aria_minizinc_stn"},
+      # Internal dependencies (merged from aria_engine_core)
+      {:aria_math, in_umbrella: true},
+      {:aria_state, in_umbrella: true},
+      {:aria_timeline, in_umbrella: true},
+      {:aria_ewbik, in_umbrella: true},
+      {:aria_minizinc_stn, in_umbrella: true},
+      {:aria_minizinc_goal, in_umbrella: true},
+      {:aria_minizinc_executor, in_umbrella: true},
 
       # External dependencies
-      {:libgraph, "~> 0.16"},
       {:jason, "~> 1.4"},
-      {:telemetry, "~> 1.0"},
+      {:libgraph, "~> 0.16"},
       {:porcelain, "~> 2.0"},
       {:timex, "~> 3.7"},
-      {:mox, "~> 1.0", only: :test}
+      {:telemetry, "~> 1.0"},
+      {:mox, "~> 1.0", only: :test},
+      {:ex_doc, "~> 0.31", only: :dev, runtime: false}
     ]
   end
 end

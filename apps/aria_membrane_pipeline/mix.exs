@@ -27,7 +27,6 @@ defmodule AriaMembranePipeline.MixProject do
   defp deps do
     [
       # Internal dependencies
-      {:aria_engine_core, path: "../aria_engine_core"},
       {:aria_hybrid_planner, path: "../aria_hybrid_planner"},
       {:aria_minizinc_goal, path: "../aria_minizinc_goal"},
 

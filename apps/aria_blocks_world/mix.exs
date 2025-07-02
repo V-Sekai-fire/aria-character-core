@@ -34,7 +34,7 @@ defmodule AriaBlocksWorld.MixProject do
     [
       # Internal dependencies
       {:aria_core, in_umbrella: true},
-      {:aria_engine_core, in_umbrella: true},
+      {:aria_hybrid_planner, in_umbrella: true},
       {:aria_state, in_umbrella: true},
       # External dependencies
       {:jason, "~> 1.4"},

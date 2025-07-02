@@ -1,12 +1,12 @@
 # Copyright (c) 2025-present K. S. Ernest (iFire) Lee
 # SPDX-License-Identifier: MIT
 
-defmodule AriaHybridPlanner.Plan.Utils do
+defmodule AriaEngineCore.Plan.Utils do
   @moduledoc "Utility functions for IPyHOP planning.\n"
-  alias AriaState.RelationalState, as: State
+  alias AriaEngineCore.State
   @type task :: {String.t(), list()}
   @type goal :: {String.t(), String.t(), State.fact_value()}
-  @type todo_item :: task() | goal() | any()
+  @type todo_item :: task() | goal() | AriaEngineCore.Multigoal.t()
   @type plan_step :: {atom(), list()}
   @type node_id :: String.t()
   @type solution_node :: %{
@@ -128,21 +128,6 @@ defmodule AriaHybridPlanner.Plan.Utils do
       ) when is_map(domain) do
     actions = get_primitive_actions_dfs(solution_tree)
     validate_plan(domain, initial_state, actions)
-  end
-
-  def validate_plan(domain, initial_state, plan) when is_map(domain) and is_list(plan) do
-    Enum.reduce_while(plan, {:ok, initial_state}, fn {action_name, args}, {:ok, state} ->
-      action_atom =
-        if is_binary(action_name) do
-          String.to_atom(action_name)
-        else
-          action_name
-        end
-
-      case AriaCore.execute_action(domain, state, action_atom, args) do
-        {:ok, new_state} -> {:cont, {:ok, new_state}}
-      end
-    end)
   end
 
   @doc "Estimates the cost of a plan (simple step count for now).\nFor compatibility with existing AriaEngineCore usage.\n"
