@@ -63,7 +63,7 @@ defmodule Timeline.IntervalOperations do
   @spec solve(timeline()) :: timeline()
   def solve(timeline) do
     require Logger
-    stn = STN.solve(timeline.stn)
+    stn = STN.solve_stn(timeline.stn)
     updated_timeline = %{timeline | stn: stn}
 
     case Map.get(stn.metadata, :solved_times) do
@@ -119,24 +119,6 @@ defmodule Timeline.IntervalOperations do
     solve(timeline)
   end
 
-  @doc "Computes the intersection of two Timelines.\n\nReturns a Timeline with constraints that satisfy both input Timelines.\n"
-  @spec intersection(timeline(), timeline()) :: timeline()
-  def intersection(timeline1, timeline2) do
-    intersected_stn = STN.intersection(timeline1.stn, timeline2.stn)
-    merged_intervals = Map.merge(timeline1.intervals, timeline2.intervals)
-    merged_metadata = Map.merge(timeline1.metadata, timeline2.metadata)
-    %{intervals: merged_intervals, bridges: %{}, stn: intersected_stn, metadata: merged_metadata}
-  end
-
-  @doc "Computes the union of two Timelines.\n\nReturns a Timeline with constraints that allow either input Timeline to be satisfied.\n"
-  @spec union(timeline(), timeline()) :: timeline()
-  def union(timeline1, timeline2) do
-    union_stn = STN.union(timeline1.stn, timeline2.stn)
-    merged_intervals = Map.merge(timeline1.intervals, timeline2.intervals)
-    merged_metadata = Map.merge(timeline1.metadata, timeline2.metadata)
-    %{intervals: merged_intervals, bridges: %{}, stn: union_stn, metadata: merged_metadata}
-  end
-
   @doc "Chains multiple Timelines sequentially.\n\nReturns a Timeline where the Timelines are executed in sequence.\n"
   @spec chain([timeline()]) :: timeline()
   def chain([]) do
@@ -145,55 +127,6 @@ defmodule Timeline.IntervalOperations do
 
   def chain([single_timeline]) do
     single_timeline
-  end
-
-  def chain(timelines) when is_list(timelines) do
-    stns = Enum.map(timelines, & &1.stn)
-    chained_stn = STN.chain(stns)
-    merged_intervals = timelines |> Enum.map(& &1.intervals) |> Enum.reduce(%{}, &Map.merge/2)
-    merged_metadata = timelines |> Enum.map(& &1.metadata) |> Enum.reduce(%{}, &Map.merge/2)
-    %{intervals: merged_intervals, bridges: %{}, stn: chained_stn, metadata: merged_metadata}
-  end
-
-  @doc "Joins multiple Timelines in parallel.\n\nReturns a Timeline where the Timelines can be executed concurrently.\n"
-  @spec parallel_join([timeline()]) :: timeline()
-  def parallel_join([]) do
-    new()
-  end
-
-  def parallel_join([single_timeline]) do
-    single_timeline
-  end
-
-  def parallel_join(timelines) when is_list(timelines) do
-    stns = Enum.map(timelines, & &1.stn)
-    parallel_stn = STN.parallel_join(stns)
-    merged_intervals = timelines |> Enum.map(& &1.intervals) |> Enum.reduce(%{}, &Map.merge/2)
-    merged_metadata = timelines |> Enum.map(& &1.metadata) |> Enum.reduce(%{}, &Map.merge/2)
-    %{intervals: merged_intervals, bridges: %{}, stn: parallel_stn, metadata: merged_metadata}
-  end
-
-  @doc "Composes two Timelines.\n\nReturns a Timeline representing the composition of the two input Timelines.\n"
-  @spec compose(timeline(), timeline()) :: timeline()
-  def compose(timeline1, timeline2) do
-    composed_stn = STN.compose(timeline1.stn, timeline2.stn)
-    merged_intervals = Map.merge(timeline1.intervals, timeline2.intervals)
-    merged_metadata = Map.merge(timeline1.metadata, timeline2.metadata)
-    %{intervals: merged_intervals, bridges: %{}, stn: composed_stn, metadata: merged_metadata}
-  end
-
-  @doc "Segments a Timeline for parallel processing.\n"
-  @spec segment(timeline(), pos_integer()) :: timeline()
-  def segment(timeline, max_segments) do
-    segmented_stn = STN.segment(timeline.stn, max_segments)
-    %{timeline | stn: segmented_stn}
-  end
-
-  @doc "Solves a Timeline using parallel processing.\n"
-  @spec parallel_solve(timeline(), pos_integer()) :: timeline()
-  def parallel_solve(timeline, max_segments) do
-    solved_stn = STN.parallel_solve(timeline.stn, max_segments)
-    %{timeline | stn: solved_stn}
   end
 
   @doc "Gets the underlying STN for compatibility during migration.\n\nThis function should only be used during the migration period and will be\nremoved once all external modules use the Timeline API.\n"

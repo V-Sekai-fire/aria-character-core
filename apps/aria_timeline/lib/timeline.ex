@@ -139,90 +139,7 @@ defmodule Timeline do
     STN.consistent?(timeline.stn)
   end
 
-  @doc """
-  Chain multiple timelines sequentially.
-  """
-  @spec chain([t()]) :: t()
-  def chain(timelines) when is_list(timelines) do
-    stns = Enum.map(timelines, & &1.stn)
-    all_intervals = Enum.flat_map(timelines, & &1.intervals)
-
-    chained_stn = STN.chain(stns)
-
-    %__MODULE__{
-      stn: chained_stn,
-      intervals: all_intervals,
-      metadata: %{operation: :chain, source_count: length(timelines)}
-    }
-  end
-
-  @doc """
-  Join multiple timelines in parallel.
-  """
-  @spec parallel_join([t()]) :: t()
-  def parallel_join(timelines) when is_list(timelines) do
-    stns = Enum.map(timelines, & &1.stn)
-    all_intervals = Enum.flat_map(timelines, & &1.intervals)
-
-    joined_stn = STN.parallel_join(stns)
-
-    %__MODULE__{
-      stn: joined_stn,
-      intervals: all_intervals,
-      metadata: %{operation: :parallel_join, source_count: length(timelines)}
-    }
-  end
-
-  @doc """
-  Find intersection of two timelines.
-  """
-  @spec intersection(t(), t()) :: t()
-  def intersection(%__MODULE__{} = timeline1, %__MODULE__{} = timeline2) do
-    intersected_stn = STN.intersection(timeline1.stn, timeline2.stn)
-
-    # Find intervals that exist in both timelines
-    common_intervals = Enum.filter(timeline1.intervals, fn interval1 ->
-      Enum.any?(timeline2.intervals, fn interval2 ->
-        interval1.id == interval2.id
-      end)
-    end)
-
-    %__MODULE__{
-      stn: intersected_stn,
-      intervals: common_intervals,
-      metadata: %{operation: :intersection}
-    }
-  end
-
-  @doc """
-  Find union of two timelines.
-  """
-  @spec union(t(), t()) :: t()
-  def union(%__MODULE__{} = timeline1, %__MODULE__{} = timeline2) do
-    union_stn = STN.union(timeline1.stn, timeline2.stn)
-
-    # Combine all intervals, removing duplicates by ID
-    all_intervals = timeline1.intervals ++ timeline2.intervals
-    unique_intervals = Enum.uniq_by(all_intervals, & &1.id)
-
-    %__MODULE__{
-      stn: union_stn,
-      intervals: unique_intervals,
-      metadata: %{operation: :union}
-    }
-  end
-
-  @doc """
-  Apply PC-2 algorithm to the timeline for constraint propagation.
-  """
-  @spec apply_pc2(t()) :: t()
-  def apply_pc2(%__MODULE__{} = timeline) do
-    # PC-2 is handled internally by the STN solve operation
-    solved_stn = STN.solve(timeline.stn)
-    %{timeline | stn: solved_stn}
-  end
-
-  @doc """
+@doc """
   Get all intervals from the timeline.
   """
   @spec get_intervals(t()) :: [Interval.t()]
@@ -267,7 +184,7 @@ defmodule Timeline do
   """
   @spec solve(t()) :: t()
   def solve(%__MODULE__{} = timeline) do
-    solved_stn = STN.solve(timeline.stn)
+    solved_stn = STN.solve_stn(timeline.stn)
     %{timeline | stn: solved_stn}
   end
 

@@ -6,7 +6,6 @@ defmodule Timeline.Internal.STN do
   alias Timeline.Internal.STN.Core
   alias AriaMinizincStn
   alias Timeline.Internal.STN.Units
-  alias Timeline.Internal.STN.Operations
   @type constraint :: {number(), number()}
   @type time_point :: String.t()
   @type constraint_matrix :: %{optional({time_point(), time_point()}) => constraint()}
@@ -105,19 +104,9 @@ defmodule Timeline.Internal.STN do
   defdelegate check_interval_conflicts(stn, new_start, new_end), to: Core
   defdelegate find_next_available_slot(stn, duration, earliest_start), to: Core
   defdelegate solve_stn(stn), to: AriaMinizincStn
-  defdelegate solve(stn), to: Operations
   defdelegate rescale_lod(stn, new_lod_level), to: Units
   defdelegate convert_units(stn, new_unit), to: Units
   defdelegate from_datetime_intervals(intervals, opts), to: Units
-  defdelegate intersection(stn1, stn2), to: Operations
-  defdelegate difference(stn1, stn2), to: Operations
-  defdelegate split(stn, num_segments), to: Operations
-  defdelegate chain(stns), to: Operations
-  defdelegate union(stn1, stn2), to: Operations
-  defdelegate compose(stn1, stn2), to: Operations
-  defdelegate parallel_join(stns), to: Operations
-  defdelegate segment(stn, max_segments), to: Operations
-  defdelegate parallel_solve(stn, max_segments), to: Operations
 
   defp initialize_constant_work_structure(stn) do
     dummy_points =

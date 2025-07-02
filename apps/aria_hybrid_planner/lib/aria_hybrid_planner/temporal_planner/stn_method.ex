@@ -44,8 +44,6 @@ defmodule AriaHybridPlanner.TemporalPlanner.STNMethod do
     preconditions = Keyword.get(opts, :preconditions, [])
     effects = Keyword.get(opts, :effects, [])
     metadata = Keyword.get(opts, :metadata, %{})
-    method_stn = compute_method_stn(pattern, stn_actions, bridge_actions)
-    temporal_segments = create_temporal_segments(stn_actions, bridge_actions, pattern)
     estimated_duration = estimate_method_duration(pattern, stn_actions, bridge_actions)
 
     %__MODULE__{
@@ -53,8 +51,6 @@ defmodule AriaHybridPlanner.TemporalPlanner.STNMethod do
       decomposition_pattern: pattern,
       stn_actions: stn_actions,
       bridge_actions: bridge_actions,
-      method_stn: method_stn,
-      temporal_segments: temporal_segments,
       preconditions: preconditions,
       effects: effects,
       estimated_duration: estimated_duration,
@@ -67,25 +63,9 @@ defmodule AriaHybridPlanner.TemporalPlanner.STNMethod do
   def add_bridge_action(%__MODULE__{} = method, bridge_action) do
     updated_bridges = method.bridge_actions ++ [bridge_action]
 
-    updated_method_stn =
-      compute_method_stn(
-        method.decomposition_pattern,
-        method.stn_actions,
-        updated_bridges
-      )
-
-    updated_segments =
-      create_temporal_segments(
-        method.stn_actions,
-        updated_bridges,
-        method.decomposition_pattern
-      )
-
     %{
       method
       | bridge_actions: updated_bridges,
-        method_stn: updated_method_stn,
-        temporal_segments: updated_segments
     }
   end
 
@@ -99,41 +79,6 @@ defmodule AriaHybridPlanner.TemporalPlanner.STNMethod do
   @spec to_stn(t()) :: Timeline.t()
   def to_stn(%__MODULE__{} = method) do
     to_timeline(method)
-  end
-
-  @doc "Creates a sequential chain of STN methods using Timeline chain operation.\n\n## Examples\n\n    iex> method1 = STNMethod.new(\"setup\", :sequential, [])\n    iex> method2 = STNMethod.new(\"execute\", :parallel, [])\n    iex> chained_timeline = STNMethod.chain([method1, method2])\n    iex> Timeline.consistent?(chained_timeline)\n    true\n\n"
-  @spec chain([t()]) :: Timeline.t()
-  def chain(methods) when is_list(methods) do
-    methods |> Enum.map(&to_timeline/1) |> Timeline.chain()
-  end
-
-  @doc "Creates parallel execution of STN methods using Timeline parallel_join operation.\n\n## Examples\n\n    iex> method1 = STNMethod.new(\"surveillance\", :sequential, [])\n    iex> method2 = STNMethod.new(\"communication\", :parallel, [])\n    iex> parallel_timeline = STNMethod.parallel([method1, method2])\n    iex> Timeline.consistent?(parallel_timeline)\n    true\n\n"
-  @spec parallel([t()]) :: Timeline.t()
-  def parallel(methods) when is_list(methods) do
-    methods |> Enum.map(&to_timeline/1) |> Timeline.parallel_join()
-  end
-
-  @doc "Creates alternative method choices using Timeline union operation.\n\n## Examples\n\n    iex> method1 = STNMethod.new(\"approach_a\", :sequential, [])\n    iex> method2 = STNMethod.new(\"approach_b\", :parallel, [])\n    iex> alternative_timeline = STNMethod.alternative([method1, method2])\n    iex> Timeline.consistent?(alternative_timeline)\n    true\n\n"
-  @spec alternative([t()]) :: Timeline.t()
-  def alternative(methods) when is_list(methods) do
-    methods |> Enum.map(&to_timeline/1) |> Enum.reduce(&Timeline.union/2)
-  end
-
-  @doc "Solves method segments in parallel and composes results.\n\nThis enables O(k * (n/k)³) complexity reduction by solving each temporal\nsegment independently and then composing results.\n\n## Examples\n\n    iex> method = STNMethod.new(\"complex_method\", :sequential, actions)\n    iex> solved_timeline = STNMethod.solve_parallel(method)\n    iex> Timeline.consistent?(solved_timeline)\n    true\n\n"
-  @spec solve_parallel(t()) :: Timeline.t()
-  def solve_parallel(%__MODULE__{temporal_segments: segments, decomposition_pattern: _pattern}) do
-    case length(segments) do
-      0 -> Timeline.new()
-      1 -> hd(segments) |> Timeline.apply_pc2()
-      _segment_count -> :not_implemented
-    end
-  end
-
-  @doc "Checks if a method can execute given current temporal constraints.\n\n## Examples\n\n    iex> method = STNMethod.new(\"example\", :sequential, [])\n    iex> world_timeline = Timeline.new()\n    iex> STNMethod.can_execute?(method, world_timeline)\n    true\n\n"
-  @spec can_execute?(t(), Timeline.t()) :: boolean()
-  def can_execute?(%__MODULE__{method_stn: method_stn}, world_timeline) do
-    merged_timeline = Timeline.intersection(method_stn, world_timeline)
-    Timeline.consistent?(merged_timeline)
   end
 
   @doc "Updates method timing based on execution results.\n\n## Examples\n\n    iex> method = STNMethod.new(\"example\", :sequential, [])\n    iex> updated = STNMethod.update_timing(method, actual_duration: 5000)\n    iex> is_map(updated.metadata.execution_history)\n    true\n\n"
@@ -157,89 +102,6 @@ defmodule AriaHybridPlanner.TemporalPlanner.STNMethod do
       })
 
     %{method | metadata: updated_metadata}
-  end
-
-  defp compute_method_stn(pattern, stn_actions, bridge_actions) do
-    action_timelines = Enum.map(stn_actions, &STNAction.to_timeline/1)
-
-    composed_timeline =
-      case pattern do
-        :sequential ->
-          Timeline.chain(action_timelines)
-
-        :parallel ->
-          Timeline.parallel_join(action_timelines)
-
-        :alternative ->
-          case action_timelines do
-            [] -> Timeline.new()
-            [single] -> single
-            multiple -> Enum.reduce(multiple, &Timeline.union/2)
-          end
-
-        :conditional ->
-          case action_timelines do
-            [] -> Timeline.new()
-            [single] -> single
-            multiple -> Enum.reduce(multiple, &Timeline.intersection/2)
-          end
-      end
-
-    add_bridge_constraints(composed_timeline, bridge_actions)
-  end
-
-  defp create_temporal_segments(stn_actions, bridge_actions, pattern) do
-    if Enum.empty?(bridge_actions) do
-      case stn_actions do
-        [] -> []
-        actions -> [compute_actions_stn(actions, pattern)]
-      end
-    else
-      split_actions_by_bridges(stn_actions, bridge_actions, pattern)
-    end
-  end
-
-  defp compute_actions_stn(actions, pattern) do
-    action_timelines = Enum.map(actions, &STNAction.to_timeline/1)
-
-    case pattern do
-      :sequential ->
-        Timeline.chain(action_timelines)
-
-      :parallel ->
-        Timeline.parallel_join(action_timelines)
-
-      :alternative ->
-        case action_timelines do
-          [] -> Timeline.new()
-          [single] -> single
-          multiple -> Enum.reduce(multiple, &Timeline.union/2)
-        end
-
-      :conditional ->
-        case action_timelines do
-          [] -> Timeline.new()
-          [single] -> single
-          multiple -> Enum.reduce(multiple, &Timeline.intersection/2)
-        end
-    end
-  end
-
-  defp split_actions_by_bridges(stn_actions, _bridge_actions, pattern) do
-    case stn_actions do
-      [] -> []
-      actions -> [compute_actions_stn(actions, pattern)]
-    end
-  end
-
-  defp add_bridge_constraints(timeline, bridge_actions) do
-    Enum.reduce(bridge_actions, timeline, fn bridge, acc_timeline ->
-      bridge_timepoint = "#{bridge.action_id}_bridge"
-
-      acc_timeline
-      |> Timeline.add_time_point(bridge_timepoint)
-      |> Timeline.add_constraint(bridge_timepoint, bridge_timepoint, {-1, 1})
-    end)
   end
 
   defp estimate_method_duration(pattern, stn_actions, _bridge_actions) do

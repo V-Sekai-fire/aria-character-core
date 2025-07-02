@@ -81,11 +81,6 @@ defmodule AriaTimeline do
   defdelegate time_points(timeline), to: Timeline
   defdelegate get_stn(timeline), to: Timeline
   defdelegate consistent?(timeline), to: Timeline
-  defdelegate chain(timelines), to: Timeline
-  defdelegate parallel_join(timelines), to: Timeline
-  defdelegate intersection(timeline1, timeline2), to: Timeline
-  defdelegate union(timeline1, timeline2), to: Timeline
-  defdelegate apply_pc2(timeline), to: Timeline
 
   # Interval Creation and Management API
   defdelegate create_interval(start_time, end_time), to: Timeline.Interval, as: :new

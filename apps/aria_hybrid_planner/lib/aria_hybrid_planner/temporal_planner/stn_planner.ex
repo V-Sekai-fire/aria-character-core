@@ -113,19 +113,6 @@ defmodule AriaHybridPlanner.TemporalPlanner.STNPlanner do
     %{planner | execution_status: :executing}
   end
 
-  @doc "Checks if the current plan is consistent with world constraints.\n\n## Examples\n\n    iex> planner = STNPlanner.new(\"mission\", :hierarchical)\n    iex> STNPlanner.consistent?(planner)\n    true\n\n"
-  @spec consistent?(t()) :: boolean()
-  def consistent?(%__MODULE__{goal_stn: goal_stn, world_constraints: world_constraints}) do
-    combined_timeline = Timeline.intersection(goal_stn, world_constraints)
-    Timeline.consistent?(combined_timeline)
-  end
-
-  @doc "Gets the current execution timeline with all temporal constraints.\n\n## Examples\n\n    iex> planner = STNPlanner.new(\"mission\", :hierarchical)\n    iex> timeline = STNPlanner.get_timeline(planner)\n    iex> is_map(timeline.constraints)\n    true\n\n"
-  @spec get_timeline(t()) :: Timeline.t()
-  def get_timeline(%__MODULE__{goal_stn: goal_stn, world_constraints: world_timeline}) do
-    Timeline.intersection(goal_stn, world_timeline)
-  end
-
   @doc "Estimates the total plan execution duration.\n\n## Examples\n\n    iex> planner = STNPlanner.new(\"mission\", :hierarchical)\n    iex> {min_duration, max_duration} = STNPlanner.estimate_duration(planner)\n    iex> is_number(min_duration)\n    true\n\n"
   @spec estimate_duration(t()) :: STNAction.duration_constraint()
   def estimate_duration(%__MODULE__{methods: methods, planning_strategy: strategy}) do
@@ -168,9 +155,6 @@ defmodule AriaHybridPlanner.TemporalPlanner.STNPlanner do
     method_timelines = Enum.map(methods, &STNMethod.to_timeline/1)
 
     case strategy do
-      :sequential -> Timeline.chain(method_timelines)
-      :parallel -> Timeline.parallel_join(method_timelines)
-      :hierarchical -> compose_hierarchical(method_timelines)
       :adaptive -> compose_adaptive(method_timelines)
     end
   end
@@ -179,18 +163,6 @@ defmodule AriaHybridPlanner.TemporalPlanner.STNPlanner do
     case strategy do
       :sequential ->
         Enum.map(methods, &STNMethod.to_timeline/1)
-
-      :parallel ->
-        case methods do
-          [] -> []
-          methods -> [STNMethod.parallel(methods)]
-        end
-
-      :hierarchical ->
-        create_hierarchical_segments(methods)
-
-      :adaptive ->
-        create_adaptive_segments(methods)
     end
   end
 
@@ -199,41 +171,11 @@ defmodule AriaHybridPlanner.TemporalPlanner.STNPlanner do
     %{planner | execution_status: :replanning, goal_stn: updated_goal_stn}
   end
 
-  defp compose_hierarchical(method_timelines) do
-    case method_timelines do
-      [] ->
-        Timeline.new()
-
-      [single] ->
-        single
-
-      multiple ->
-        multiple
-        |> Enum.chunk_every(2)
-        |> Enum.map(fn
-          [single] -> single
-          chunk -> Timeline.parallel_join(chunk)
-        end)
-        |> Timeline.chain()
-    end
-  end
-
   defp compose_adaptive(method_timelines) do
     case method_timelines do
       [] -> Timeline.new()
       [single] -> single
-      multiple -> compose_hierarchical(multiple)
     end
-  end
-
-  defp create_hierarchical_segments(methods) do
-    methods
-    |> Enum.chunk_every(3)
-    |> Enum.map(fn method_chunk -> STNMethod.parallel(method_chunk) end)
-  end
-
-  defp create_adaptive_segments(methods) do
-    create_hierarchical_segments(methods)
   end
 
   defp estimate_hierarchical_duration(method_durations) do

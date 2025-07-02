@@ -114,31 +114,6 @@ defmodule AriaHybridPlanner.TemporalPlanner.STNAction do
     timeline
   end
 
-  @doc "Creates a sequential chain of STN actions using Timeline chain operation.\n\n## Examples\n\n    iex> action1 = STNAction.new(\"first\")  \n    iex> action2 = STNAction.new(\"second\")\n    iex> chained_timeline = STNAction.chain([action1, action2])\n    iex> Timeline.consistent?(chained_timeline)\n    true\n\n"
-  @spec chain([t()]) :: Timeline.t()
-  def chain(actions) when is_list(actions) do
-    actions |> Enum.map(&to_timeline/1) |> Timeline.chain()
-  end
-
-  @doc "Creates parallel execution of STN actions using Timeline parallel_join operation.\n\n## Examples\n\n    iex> action1 = STNAction.new(\"parallel_1\")\n    iex> action2 = STNAction.new(\"parallel_2\") \n    iex> parallel_timeline = STNAction.parallel([action1, action2])\n    iex> Timeline.consistent?(parallel_timeline)\n    true\n\n"
-  @spec parallel([t()]) :: Timeline.t()
-  def parallel(actions) when is_list(actions) do
-    actions |> Enum.map(&to_timeline/1) |> Timeline.parallel_join()
-  end
-
-  @doc "Creates alternative action choices using Timeline union operation.\n\n## Examples\n\n    iex> action1 = STNAction.new(\"option_1\")\n    iex> action2 = STNAction.new(\"option_2\")\n    iex> alternative_timeline = STNAction.alternative([action1, action2])\n    iex> Timeline.consistent?(alternative_timeline)\n    true\n\n"
-  @spec alternative([t()]) :: Timeline.t()
-  def alternative(actions) when is_list(actions) do
-    actions |> Enum.map(&to_timeline/1) |> Enum.reduce(&Timeline.union/2)
-  end
-
-  @doc "Checks if an action can execute given current temporal constraints.\n\n"
-  @spec can_execute?(t(), Timeline.t()) :: boolean()
-  def can_execute?(%__MODULE__{base_stn: action_timeline}, world_timeline) do
-    merged_timeline = Timeline.intersection(action_timeline, world_timeline)
-    Timeline.consistent?(merged_timeline)
-  end
-
   @doc "Updates action timing based on execution results.\n\n"
   @spec update_timing(t(), keyword()) :: t()
   def update_timing(%__MODULE__{} = action, opts) do

@@ -104,46 +104,6 @@ defmodule AriaTimeline.TimelineCore do
   end
 
   @doc """
-  Chain multiple timelines sequentially.
-  """
-  @spec chain([t()]) :: t()
-  def chain(timelines) when is_list(timelines) do
-    Timeline.chain(timelines)
-  end
-
-  @doc """
-  Join multiple timelines in parallel.
-  """
-  @spec parallel_join([t()]) :: t()
-  def parallel_join(timelines) when is_list(timelines) do
-    Timeline.parallel_join(timelines)
-  end
-
-  @doc """
-  Find intersection of two timelines.
-  """
-  @spec intersection(t(), t()) :: t()
-  def intersection(timeline1, timeline2) do
-    Timeline.intersection(timeline1, timeline2)
-  end
-
-  @doc """
-  Find union of two timelines.
-  """
-  @spec union(t(), t()) :: t()
-  def union(timeline1, timeline2) do
-    Timeline.union(timeline1, timeline2)
-  end
-
-  @doc """
-  Apply PC-2 algorithm to timeline.
-  """
-  @spec apply_pc2(t()) :: t()
-  def apply_pc2(timeline) do
-    Timeline.apply_pc2(timeline)
-  end
-
-  @doc """
   Get all intervals from the timeline.
   """
   @spec get_intervals(t()) :: [Interval.t()]
