@@ -3,7 +3,7 @@
 
 defmodule AriaBlocksWorld do
   @moduledoc """
-  AriaBlocksWorld provides a blocks world planning domain implementation using AriaEngineCore.
+  AriaBlocksWorld provides a blocks world planning domain implementation using AriaHybridPlanner.
 
   This module implements the classic blocks world planning domain based on the GTpyhop
   blocks_gtn example, which uses the near-optimal planning algorithm described in:
@@ -63,7 +63,7 @@ defmodule AriaBlocksWorld do
 
   ## Returns
 
-  - `AriaEngineCore.State.t()` - Initialized state
+  - `AriaHybridPlanner.State.t()` - Initialized state
 
   ## Examples
 
@@ -79,7 +79,7 @@ defmodule AriaBlocksWorld do
       iex> AriaState.RelationalState.get_fact(state, "holding", "hand")
       false
   """
-  @spec create_state(state_data()) :: AriaEngineCore.State.t()
+  @spec create_state(state_data()) :: AriaHybridPlanner.State.t()
   def create_state(data) do
     State.create(data)
   end
@@ -93,7 +93,7 @@ defmodule AriaBlocksWorld do
 
   ## Returns
 
-  - `AriaEngineCore.Multigoal.t()` - Goal specification
+  - `AriaHybridPlanner.Multigoal.t()` - Goal specification
 
   ## Examples
 
@@ -126,11 +126,11 @@ defmodule AriaBlocksWorld do
 
       {:ok, {final_state, solution_tree}} = AriaBlocksWorld.solve_problem(state, [goal])
   """
-  @spec solve_problem(AriaState.t(), [term()]) ::
-    {:ok, {AriaState.t(), term()}} | {:error, atom()}
+  @spec solve_problem(AriaHybridPlanner.State.t(), [term()]) ::
+    {:ok, {AriaHybridPlanner.State.t(), term()}} | {:error, atom()}
   def solve_problem(initial_state, goals) do
     domain = Domain.create()
-    AriaEngineCore.run_lazy(domain, initial_state, goals)
+    AriaHybridPlanner.run_lazy(domain, initial_state, goals)
   end
 
   @doc """
@@ -150,11 +150,11 @@ defmodule AriaBlocksWorld do
 
       {:ok, solution_tree} = AriaBlocksWorld.plan_problem(state, [goal])
   """
-  @spec plan_problem(AriaState.t(), [term()]) ::
+  @spec plan_problem(AriaHybridPlanner.State.t(), [term()]) ::
     {:ok, term()} | {:error, atom()}
   def plan_problem(initial_state, goals) do
     domain = Domain.create()
-    AriaEngineCore.plan(domain, initial_state, goals)
+    AriaHybridPlanner.plan(domain, initial_state, goals, [])
   end
 
   @doc """
@@ -237,8 +237,8 @@ defmodule AriaBlocksWorld do
 
       {:ok, final_state} = AriaBlocksWorld.validate_plan(state, plan, goals)
   """
-  @spec validate_plan(AriaEngineCore.State.t(), [term()], [term()]) ::
-    {:ok, AriaEngineCore.State.t()} | {:error, atom()}
+  @spec validate_plan(AriaHybridPlanner.State.t(), [term()], [term()]) ::
+    {:ok, AriaHybridPlanner.State.t()} | {:error, atom()}
   def validate_plan(initial_state, plan, goals) do
     State.validate_plan(initial_state, plan, goals)
   end

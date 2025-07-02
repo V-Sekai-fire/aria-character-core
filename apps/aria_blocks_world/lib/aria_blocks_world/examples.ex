@@ -72,7 +72,7 @@ defmodule AriaBlocksWorld.Examples do
     # Setup domain and solve
     domain = Domain.create()
 
-    case AriaEngineCore.run_lazy(domain, initial_state, goals) do
+    case AriaHybridPlanner.run_lazy(domain, initial_state, goals) do
       {:ok, {final_state, solution_tree}} ->
         {:ok, %{
           name: "Sussman Anomaly",
@@ -109,7 +109,7 @@ defmodule AriaBlocksWorld.Examples do
     # Setup domain and solve
     domain = Domain.create()
 
-    case AriaEngineCore.run_lazy(domain, initial_state, goals) do
+    case AriaHybridPlanner.run_lazy(domain, initial_state, goals) do
       {:ok, {final_state, solution_tree}} ->
         {:ok, %{
           name: "Simple Pickup",
@@ -146,7 +146,7 @@ defmodule AriaBlocksWorld.Examples do
     # Setup domain and solve
     domain = Domain.create()
 
-    case AriaEngineCore.run_lazy(domain, initial_state, goals) do
+    case AriaHybridPlanner.run_lazy(domain, initial_state, goals) do
       {:ok, {final_state, solution_tree}} ->
         {:ok, %{
           name: "Simple Stack",
@@ -187,7 +187,7 @@ defmodule AriaBlocksWorld.Examples do
     # Setup domain and solve
     domain = Domain.create()
 
-    case AriaEngineCore.run_lazy(domain, initial_state, goals) do
+    case AriaHybridPlanner.run_lazy(domain, initial_state, goals) do
       {:ok, {final_state, solution_tree}} ->
         {:ok, %{
           name: "Complex Multiblock",

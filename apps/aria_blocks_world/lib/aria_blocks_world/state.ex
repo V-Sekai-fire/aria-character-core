@@ -49,21 +49,21 @@ defmodule AriaBlocksWorld.State do
   """
   @spec create(map()) :: AriaState.t()
   def create(data) do
-    state = AriaEngineCore.new_state()
+    state = AriaHybridPlanner.new_state()
 
-    # Set position facts using AriaEngineCore
+    # Set position facts using AriaHybridPlanner
     state = Enum.reduce(data.pos || %{}, state, fn {block, position}, acc ->
-      AriaEngineCore.set_fact(acc, "pos", block, position)
+      AriaHybridPlanner.set_fact(acc, "pos", block, position)
     end)
 
     # Set clear facts
     state = Enum.reduce(data.clear || %{}, state, fn {block, is_clear}, acc ->
-      AriaEngineCore.set_fact(acc, "clear", block, is_clear)
+      AriaHybridPlanner.set_fact(acc, "clear", block, is_clear)
     end)
 
     # Set holding facts
     state = Enum.reduce(data.holding || %{}, state, fn {entity, held_item}, acc ->
-      AriaEngineCore.set_fact(acc, "holding", entity, held_item)
+      AriaHybridPlanner.set_fact(acc, "holding", entity, held_item)
     end)
 
     state
@@ -109,9 +109,9 @@ defmodule AriaBlocksWorld.State do
 
       pos = AriaBlocksWorld.State.get_position(state, "a")
   """
-  @spec get_position(AriaEngineCore.State.t(), block()) :: position()
+  @spec get_position(AriaHybridPlanner.State.t(), block()) :: position()
   def get_position(state, block) do
-    AriaEngineCore.get_fact(state, "pos", block)
+    AriaHybridPlanner.get_fact(state, "pos", block)
   end
 
   @doc """
@@ -130,9 +130,9 @@ defmodule AriaBlocksWorld.State do
 
       is_clear = AriaBlocksWorld.State.is_clear?(state, "a")
   """
-  @spec is_clear?(AriaEngineCore.State.t(), block()) :: boolean()
+  @spec is_clear?(AriaHybridPlanner.State.t(), block()) :: boolean()
   def is_clear?(state, block) do
-    AriaEngineCore.get_fact(state, "clear", block) == true
+    AriaHybridPlanner.get_fact(state, "clear", block) == true
   end
 
   @doc """
@@ -150,9 +150,9 @@ defmodule AriaBlocksWorld.State do
 
       held = AriaBlocksWorld.State.get_holding(state)
   """
-  @spec get_holding(AriaEngineCore.State.t()) :: block() | false
+  @spec get_holding(AriaHybridPlanner.State.t()) :: block() | false
   def get_holding(state) do
-    AriaEngineCore.get_fact(state, "holding", "hand")
+    AriaHybridPlanner.get_fact(state, "holding", "hand")
   end
 
   @doc """
@@ -172,9 +172,9 @@ defmodule AriaBlocksWorld.State do
 
       new_state = AriaBlocksWorld.State.set_position(state, "a", "table")
   """
-  @spec set_position(AriaEngineCore.State.t(), block(), position()) :: AriaEngineCore.State.t()
+  @spec set_position(AriaHybridPlanner.State.t(), block(), position()) :: AriaHybridPlanner.State.t()
   def set_position(state, block, position) do
-    AriaEngineCore.set_fact(state, "pos", block, position)
+    AriaHybridPlanner.set_fact(state, "pos", block, position)
   end
 
   @doc """
@@ -194,9 +194,9 @@ defmodule AriaBlocksWorld.State do
 
       new_state = AriaBlocksWorld.State.set_clear(state, "a", true)
   """
-  @spec set_clear(AriaEngineCore.State.t(), block(), boolean()) :: AriaEngineCore.State.t()
+  @spec set_clear(AriaHybridPlanner.State.t(), block(), boolean()) :: AriaHybridPlanner.State.t()
   def set_clear(state, block, is_clear) do
-    AriaEngineCore.set_fact(state, "clear", block, is_clear)
+    AriaHybridPlanner.set_fact(state, "clear", block, is_clear)
   end
 
   @doc """
@@ -215,9 +215,9 @@ defmodule AriaBlocksWorld.State do
 
       new_state = AriaBlocksWorld.State.set_holding(state, "a")
   """
-  @spec set_holding(AriaEngineCore.State.t(), block() | false) :: AriaEngineCore.State.t()
+  @spec set_holding(AriaHybridPlanner.State.t(), block() | false) :: AriaHybridPlanner.State.t()
   def set_holding(state, item) do
-    AriaEngineCore.set_fact(state, "holding", "hand", item)
+    AriaHybridPlanner.set_fact(state, "holding", "hand", item)
   end
 
   @doc """
@@ -235,11 +235,11 @@ defmodule AriaBlocksWorld.State do
 
       blocks = AriaBlocksWorld.State.all_blocks(state)
   """
-  @spec all_blocks(AriaEngineCore.State.t()) :: [block()]
+  @spec all_blocks(AriaHybridPlanner.State.t()) :: [block()]
   def all_blocks(state) do
     # Get all subjects that have a "clear" predicate
-    AriaEngineCore.get_subjects_with_fact(state, "clear", true) ++
-    AriaEngineCore.get_subjects_with_fact(state, "clear", false)
+    AriaHybridPlanner.get_subjects_with_fact(state, "clear", true) ++
+    AriaHybridPlanner.get_subjects_with_fact(state, "clear", false)
     |> Enum.uniq()
   end
 
@@ -258,9 +258,9 @@ defmodule AriaBlocksWorld.State do
 
       clear_blocks = AriaBlocksWorld.State.all_clear_blocks(state)
   """
-  @spec all_clear_blocks(AriaEngineCore.State.t()) :: [block()]
+  @spec all_clear_blocks(AriaHybridPlanner.State.t()) :: [block()]
   def all_clear_blocks(state) do
-    AriaEngineCore.get_subjects_with_fact(state, "clear", true)
+    AriaHybridPlanner.get_subjects_with_fact(state, "clear", true)
   end
 
   @doc """
@@ -277,8 +277,8 @@ defmodule AriaBlocksWorld.State do
   - `{:ok, final_state}` - Plan is valid, returns final state
   - `{:error, reason}` - Plan is invalid with error description
   """
-  @spec validate_plan(AriaEngineCore.State.t(), [term()], [term()]) ::
-    {:ok, AriaEngineCore.State.t()} | {:error, atom()}
+  @spec validate_plan(AriaHybridPlanner.State.t(), [term()], [term()]) ::
+    {:ok, AriaHybridPlanner.State.t()} | {:error, atom()}
   def validate_plan(_initial_state, _plan, _goals) do
     # TODO: Implement plan validation
     {:error, :not_implemented}
@@ -296,7 +296,7 @@ defmodule AriaBlocksWorld.State do
 
       AriaBlocksWorld.State.display(state, "Initial state")
   """
-  @spec display(AriaEngineCore.State.t(), String.t()) :: :ok
+  @spec display(AriaHybridPlanner.State.t(), String.t()) :: :ok
   def display(state, label \\ "State") do
     IO.puts("\n#{label}:")
 
