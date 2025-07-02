@@ -1,7 +1,7 @@
 # Copyright (c) 2025-present K. S. Ernest (iFire) Lee
 # SPDX-License-Identifier: MIT
 
-defmodule AriaEngineCore.Core do
+defmodule AriaHybridPlanner.Core do
   @moduledoc "Core components and types for the Aria Engine.\n"
   @type domain :: AriaEngineCore.Domain.Core.t()
   @type state :: AriaEngineCore.State.t()
@@ -85,4 +85,31 @@ defmodule AriaEngineCore.Core do
       created_at: now
     }
   end
+
+  @doc "Creates a new coordinator with default settings."
+  @spec new_coordinator() :: t()
+  def new_coordinator do
+    new("default_coordinator", %{})
+  end
+
+  @doc "Creates a new coordinator with custom options."
+  @spec new_coordinator(map()) :: t()
+  def new_coordinator(opts) when is_map(opts) do
+    id = Map.get(opts, :id, "coordinator_#{System.unique_integer([:positive])}")
+    new(id, opts)
+  end
+
+  def new_coordinator(opts) when is_list(opts) do
+    new_coordinator(Map.new(opts))
+  end
+
+  # Stub functions for planning operations (to be implemented)
+  def plan(_coordinator, _domain, _state, _goals), do: {:error, "Planning not yet implemented"}
+  def plan(_coordinator, _domain, _state, _goals, _opts), do: {:error, "Planning not yet implemented"}
+  def execute(_coordinator, _domain, _state, _plan), do: {:error, "Execution not yet implemented"}
+  def execute(_coordinator, _domain, _state, _plan, _opts), do: {:error, "Execution not yet implemented"}
+  def plan_and_execute(_coordinator, _domain, _state, _goals), do: {:error, "Plan and execute not yet implemented"}
+  def plan_and_execute(_coordinator, _domain, _state, _goals, _opts), do: {:error, "Plan and execute not yet implemented"}
+  def validate_plan(_coordinator, _domain, _state, _plan), do: {:error, "Plan validation not yet implemented"}
+  def replan(_coordinator, _domain, _state, _plan, _fail_node_id, _opts \\ []), do: {:error, "Replanning not yet implemented"}
 end

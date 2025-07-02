@@ -65,4 +65,32 @@ defmodule AriaEngineCore do
     This compatibility module will be removed in a future version.
     """
   end
+
+  # State module for backward compatibility
+  defmodule State do
+    @moduledoc """
+    Backward compatibility module for AriaEngineCore.State.
+    All functions delegate to AriaHybridPlanner.State.
+    """
+
+    defdelegate new(), to: AriaHybridPlanner.State
+    defdelegate new(data), to: AriaHybridPlanner.State
+    defdelegate get_fact(state, predicate, subject), to: AriaHybridPlanner.State
+    defdelegate set_fact(state, predicate, subject, value), to: AriaHybridPlanner.State
+    defdelegate has_subject?(state, predicate, subject), to: AriaHybridPlanner.State
+    defdelegate remove_fact(state, predicate, subject), to: AriaHybridPlanner.State
+    defdelegate get_subjects_with_fact(state, predicate, value), to: AriaHybridPlanner.State
+    defdelegate has_subject_variable?(state, subject), to: AriaHybridPlanner.State
+    defdelegate get_subjects(state), to: AriaHybridPlanner.State
+    defdelegate get_subject_properties(state, subject), to: AriaHybridPlanner.State
+    defdelegate to_triples(state), to: AriaHybridPlanner.State
+    defdelegate from_triples(triples), to: AriaHybridPlanner.State
+    defdelegate merge(state1, state2), to: AriaHybridPlanner.State
+    defdelegate copy(state), to: AriaHybridPlanner.State
+    defdelegate matches?(state, predicate, subject, fact_value), to: AriaHybridPlanner.State
+    defdelegate exists?(state, predicate, fact_value, subject_filter \\ nil), to: AriaHybridPlanner.State
+    defdelegate forall?(state, predicate, fact_value, subject_filter), to: AriaHybridPlanner.State
+    defdelegate get_subjects_with_predicate(state, predicate), to: AriaHybridPlanner.State
+    defdelegate evaluate_condition(state, condition), to: AriaHybridPlanner.State
+  end
 end

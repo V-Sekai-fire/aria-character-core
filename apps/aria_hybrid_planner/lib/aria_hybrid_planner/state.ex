@@ -1,7 +1,7 @@
 # Copyright (c) 2025-present K. S. Ernest (iFire) Lee
 # SPDX-License-Identifier: MIT
 
-defmodule AriaEngineCore.State do
+defmodule AriaHybridPlanner.State do
   @moduledoc """
   Represents the state of a planning problem using predicate-subject-fact triples.
 
