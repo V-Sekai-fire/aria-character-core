@@ -30,7 +30,7 @@ Analysis reveals multiple modules violating these guidelines, with several requi
 ### Strong Recommendation (400-500 lines)
 - ~~`aria_math/primitives/tensor.ex` (493 → 47 lines)~~ - **COMPLETED**
 - `aria_timeline/bridge.ex` (480 lines)
-- `aria_gltf/mesh.ex` (480 lines)
+- ~~`aria_gltf/mesh.ex` (480 → 200 lines)~~ - **COMPLETED**
 - `aria_gltf.ex` (479 lines)
 - `aria_gltf/validation.ex` (477 lines)
 - `aria_core/state/relational.ex` (477 lines)
@@ -326,6 +326,26 @@ Analysis reveals multiple modules violating these guidelines, with several requi
 
 ### Phase 2: Firm Threshold Modules (PRIORITY: MEDIUM)
 **Target:** Address 400-500 line modules systematically
+
+#### Task 2.1: Split AriaGltf.Mesh (480 lines) ✅ **COMPLETED**
+**File:** `apps/aria_gltf/lib/aria_gltf/mesh.ex`
+
+**Splitting Strategy:**
+- [x] **Primitive module**: Extract `AriaGltf.Mesh.Primitive` to separate file (280 lines)
+- [x] **Main mesh module**: Keep mesh management and validation logic (200 lines)
+
+**Implementation Steps:**
+1. ✅ Create `mesh/primitive.ex` for primitive struct and operations
+2. ✅ Remove Primitive module from main mesh file
+3. ✅ Add proper alias to reference extracted module
+4. ✅ Verify compilation and functionality preservation
+
+**Results:** Successfully split 480-line module into 2 focused modules:
+- **Primitive** (280 lines): Complete primitive struct, validation, JSON conversion
+- **Main Mesh** (200 lines): Mesh management, primitive coordination, validation
+- **Clean separation**: Primitive is self-contained with its own validation and creation
+
+**Status:** ✅ **COMPLETED** - Firm threshold violation eliminated, clear architectural boundaries
 
 #### Planning Approach:
 - [ ] Analyze each 400+ line module for logical splitting points
