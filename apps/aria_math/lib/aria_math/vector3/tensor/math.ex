@@ -120,6 +120,30 @@ defmodule AriaMath.Vector3.Tensor.Math do
     Nx.concatenate([cx, cy, cz], axis: 0)
   end
 
+  @doc """
+  Vector subtraction using Nx operations.
+
+  Implements `math/subtract` operation from KHR Interactivity spec.
+
+  ## Examples
+
+      iex> a = AriaMath.Vector3.Tensor.Core.new(5.0, 7.0, 9.0)
+      iex> b = AriaMath.Vector3.Tensor.Core.new(1.0, 2.0, 3.0)
+      iex> result = AriaMath.Vector3.Tensor.Math.subtract(a, b)
+      iex> AriaMath.Vector3.Tensor.Core.to_tuple(result)
+      {4.0, 5.0, 6.0}
+
+      iex> a = AriaMath.Vector3.Tensor.Core.new(0.0, 0.0, 0.0)
+      iex> b = AriaMath.Vector3.Tensor.Core.new(1.0, 1.0, 1.0)
+      iex> result = AriaMath.Vector3.Tensor.Math.subtract(a, b)
+      iex> AriaMath.Vector3.Tensor.Core.to_tuple(result)
+      {-1.0, -1.0, -1.0}
+  """
+  @spec subtract(vector3_tensor(), vector3_tensor()) :: vector3_tensor()
+  def subtract(a, b) do
+    Nx.subtract(a, b)
+  end
+
   # Helper functions
 
   defp is_finite_float(x) when is_float(x) do

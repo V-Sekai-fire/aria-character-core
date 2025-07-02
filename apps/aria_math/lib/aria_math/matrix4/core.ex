@@ -213,6 +213,25 @@ defmodule AriaMath.Matrix4.Core do
   end
 
   @doc """
+  Matrix inversion using Nx operations (KHR Interactivity compatible).
+
+  Returns the inverse matrix if invertible, or identity matrix if singular.
+  This is a convenience wrapper around invert/1 that returns only the matrix.
+
+  ## Examples
+
+      iex> matrix = AriaMath.Matrix4.Core.identity()
+      iex> inverse = AriaMath.Matrix4.Core.inverse(matrix)
+      iex> AriaMath.Matrix4.Core.equal?(inverse, AriaMath.Matrix4.Core.identity())
+      true
+  """
+  @spec inverse(matrix4_tensor()) :: matrix4_tensor()
+  def inverse(matrix) do
+    {inverse_matrix, _is_valid} = invert(matrix)
+    inverse_matrix
+  end
+
+  @doc """
   Checks if two matrices are approximately equal within a tolerance.
 
   ## Examples

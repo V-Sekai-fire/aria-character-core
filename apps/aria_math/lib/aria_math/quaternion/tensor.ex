@@ -442,4 +442,105 @@ defmodule AriaMath.Quaternion.Tensor do
     max_diff_per_quat = Nx.abs(diff) |> Nx.reduce_max(axes: [1])
     Nx.less_equal(max_diff_per_quat, tolerance)
   end
+
+  @doc """
+  Converts a quaternion to a 3x3 rotation matrix.
+
+  Implements the standard quaternion to rotation matrix conversion formula.
+  The quaternion is assumed to be normalized.
+
+  ## Examples
+
+      iex> quat = AriaMath.Quaternion.Tensor.identity()
+      iex> matrix = AriaMath.Quaternion.Tensor.to_rotation_matrix(quat)
+      iex> Nx.shape(matrix)
+      {3, 3}
+  """
+  @spec to_rotation_matrix(quaternion_tensor()) :: Nx.Tensor.t()
+  def to_rotation_matrix(quaternion) do
+    # Normalize the quaternion to ensure it's a unit quaternion
+    q = normalize(quaternion)
+    [x, y, z, w] = Nx.to_list(q)
+
+    # Precompute repeated values
+    x2 = x + x
+    y2 = y + y
+    z2 = z + z
+    xx = x * x2
+    xy = x * y2
+    xz = x * z2
+    yy = y * y2
+    yz = y * z2
+    zz = z * z2
+    wx = w * x2
+    wy = w * y2
+    wz = w * z2
+
+    # Build the 3x3 rotation matrix
+    Nx.tensor([
+      [1.0 - (yy + zz), xy - wz, xz + wy],
+      [xy + wz, 1.0 - (xx + zz), yz - wx],
+      [xz - wy, yz + wx, 1.0 - (xx + yy)]
+    ], type: :f32)
+  end
+
+  @doc """
+  Converts a 3x3 rotation matrix to a quaternion.
+
+  Uses Shepperd's method for numerical stability.
+  The input matrix is assumed to be a valid rotation matrix.
+
+  ## Examples
+
+      iex> matrix = Nx.eye(3, type: :f32)
+      iex> quat = AriaMath.Quaternion.Tensor.from_rotation_matrix(matrix)
+      iex> AriaMath.Quaternion.Tensor.equal?(quat, AriaMath.Quaternion.Tensor.identity())
+      true
+  """
+  @spec from_rotation_matrix(Nx.Tensor.t()) :: quaternion_tensor()
+  def from_rotation_matrix(matrix) do
+    # Extract matrix elements
+    [[m00, m01, m02], [m10, m11, m12], [m20, m21, m22]] = Nx.to_list(matrix)
+
+    # Compute the trace
+    trace = m00 + m11 + m22
+
+    cond do
+      # Case 1: trace > 0 (most common case)
+      trace > 0.0 ->
+        s = :math.sqrt(trace + 1.0) * 2.0  # s = 4 * w
+        w = 0.25 * s
+        x = (m21 - m12) / s
+        y = (m02 - m20) / s
+        z = (m10 - m01) / s
+        new(x, y, z, w)
+
+      # Case 2: m00 > m11 && m00 > m22
+      m00 > m11 and m00 > m22 ->
+        s = :math.sqrt(1.0 + m00 - m11 - m22) * 2.0  # s = 4 * x
+        w = (m21 - m12) / s
+        x = 0.25 * s
+        y = (m01 + m10) / s
+        z = (m02 + m20) / s
+        new(x, y, z, w)
+
+      # Case 3: m11 > m22
+      m11 > m22 ->
+        s = :math.sqrt(1.0 + m11 - m00 - m22) * 2.0  # s = 4 * y
+        w = (m02 - m20) / s
+        x = (m01 + m10) / s
+        y = 0.25 * s
+        z = (m12 + m21) / s
+        new(x, y, z, w)
+
+      # Case 4: default (m22 is largest)
+      true ->
+        s = :math.sqrt(1.0 + m22 - m00 - m11) * 2.0  # s = 4 * z
+        w = (m10 - m01) / s
+        x = (m02 + m20) / s
+        y = (m12 + m21) / s
+        z = 0.25 * s
+        new(x, y, z, w)
+    end
+  end
 end

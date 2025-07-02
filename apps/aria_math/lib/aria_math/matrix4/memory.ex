@@ -10,7 +10,7 @@ defmodule AriaMath.Matrix4.Memory do
   """
 
   alias AriaMath.Memory
-  alias AriaMath.Matrix4.{Core, Batch}
+  alias AriaMath.Matrix4.Batch
 
   @doc """
   Memory-optimized batch matrix multiplication with automatic chunking.

@@ -40,6 +40,7 @@ defmodule AriaMath.Vector3.Tensor do
   defdelegate normalize(vec), to: Math
   defdelegate dot(a, b), to: Math
   defdelegate cross(a, b), to: Math
+  defdelegate subtract(a, b), to: Math
 
   # Batch operations - delegate to Batch module
   defdelegate cross_batch(v1_batch, v2_batch), to: Batch

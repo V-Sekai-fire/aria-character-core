@@ -259,7 +259,7 @@ defmodule AriaMath.Matrix4.Transformations do
     [fx, fy, fz] = Nx.to_list(forward)
     [rx, ry, rz] = Nx.to_list(right)
     [ux, uy, uz] = Nx.to_list(new_up)
-    [ex, ey, ez] = Nx.to_list(eye)
+    [_ex, _ey, _ez] = Nx.to_list(eye)
 
     # Create view matrix
     Core.new(
@@ -388,5 +388,145 @@ defmodule AriaMath.Matrix4.Transformations do
 
     # Extract x, y, z components (ignore w)
     Nx.slice(transformed, [0], [3])
+  end
+
+  @doc """
+  Extracts the translation vector from a transformation matrix.
+
+  ## Examples
+
+      iex> matrix = AriaMath.Matrix4.Transformations.translation_xyz(1.0, 2.0, 3.0)
+      iex> translation = AriaMath.Matrix4.Transformations.get_translation(matrix)
+      iex> Nx.to_list(translation)
+      [1.0, 2.0, 3.0]
+  """
+  @spec get_translation(Nx.Tensor.t()) :: Nx.Tensor.t()
+  def get_translation(matrix) do
+    # Extract translation (last column, first 3 rows)
+    Nx.slice(matrix, [0, 3], [3, 1]) |> Nx.reshape({3})
+  end
+
+  @doc """
+  Creates a rotation matrix from a quaternion (KHR Interactivity compatible).
+
+  This is a convenience wrapper around rotation_from_quaternion/1.
+
+  ## Examples
+
+      iex> quat = AriaMath.Quaternion.Tensor.identity()
+      iex> matrix = AriaMath.Matrix4.Transformations.rotation(quat)
+      iex> AriaMath.Matrix4.Core.equal?(matrix, AriaMath.Matrix4.Core.identity())
+      true
+  """
+  @spec rotation(Nx.Tensor.t()) :: Nx.Tensor.t()
+  def rotation(quaternion) do
+    rotation_from_quaternion(quaternion)
+  end
+
+  @doc """
+  Creates a transformation matrix from translation, rotation, and scale (KHR Interactivity compatible).
+
+  This is a convenience wrapper around compose_trs/3.
+
+  ## Examples
+
+      iex> translation = AriaMath.Vector3.Tensor.new(1.0, 2.0, 3.0)
+      iex> rotation = AriaMath.Quaternion.Tensor.identity()
+      iex> scale = AriaMath.Vector3.Tensor.new(2.0, 2.0, 2.0)
+      iex> matrix = AriaMath.Matrix4.Transformations.compose(translation, rotation, scale)
+      iex> Nx.shape(matrix)
+      {4, 4}
+  """
+  @spec compose(Nx.Tensor.t(), Nx.Tensor.t(), Nx.Tensor.t()) :: Nx.Tensor.t()
+  def compose(translation, rotation, scale) do
+    compose_trs(translation, rotation, scale)
+  end
+
+  @doc """
+  Decomposes a transformation matrix into translation, rotation, and scale (KHR Interactivity compatible).
+
+  This is a convenience wrapper around decompose_trs/1.
+
+  ## Examples
+
+      iex> translation = AriaMath.Vector3.Tensor.new(1.0, 2.0, 3.0)
+      iex> rotation = AriaMath.Quaternion.Tensor.identity()
+      iex> scale = AriaMath.Vector3.Tensor.new(2.0, 2.0, 2.0)
+      iex> matrix = AriaMath.Matrix4.Transformations.compose_trs(translation, rotation, scale)
+      iex> {t, r, s} = AriaMath.Matrix4.Transformations.decompose(matrix)
+      iex> Vector3.equal?(t, translation)
+      true
+  """
+  @spec decompose(Nx.Tensor.t()) :: {Nx.Tensor.t(), Nx.Tensor.t(), Nx.Tensor.t()}
+  def decompose(matrix) do
+    decompose_trs(matrix)
+  end
+
+  @doc """
+  Extracts the upper-left 3x3 basis matrix (rotation and scale components).
+
+  ## Examples
+
+      iex> matrix = AriaMath.Matrix4.Transformations.scaling(AriaMath.Vector3.Tensor.new(2.0, 3.0, 4.0))
+      iex> basis = AriaMath.Matrix4.Transformations.extract_basis(matrix)
+      iex> Nx.shape(basis)
+      {3, 3}
+  """
+  @spec extract_basis(Nx.Tensor.t()) :: Nx.Tensor.t()
+  def extract_basis(matrix) do
+    # Extract upper-left 3x3 matrix
+    Nx.slice(matrix, [0, 0], [3, 3])
+  end
+
+  @doc """
+  Orthogonalizes a matrix using the Gram-Schmidt process.
+
+  This ensures the matrix represents a valid rotation by making the basis vectors orthonormal.
+
+  ## Examples
+
+      iex> matrix = AriaMath.Matrix4.Core.identity()
+      iex> orthogonal = AriaMath.Matrix4.Transformations.orthogonalize(matrix)
+      iex> AriaMath.Matrix4.Core.equal?(orthogonal, matrix)
+      true
+  """
+  @spec orthogonalize(Nx.Tensor.t()) :: Nx.Tensor.t()
+  def orthogonalize(matrix) do
+    # Extract the upper-left 3x3 basis matrix
+    basis = extract_basis(matrix)
+
+    # Extract column vectors
+    col0 = basis[[.., 0]]
+    col1 = basis[[.., 1]]
+    col2 = basis[[.., 2]]
+
+    # Gram-Schmidt orthogonalization
+    # First vector: normalize
+    u0 = Vector3.normalize(col0)
+
+    # Second vector: subtract projection onto first, then normalize
+    proj1 = Nx.multiply(u0, Vector3.dot(col1, u0))
+    u1 = Vector3.subtract(col1, proj1) |> Vector3.normalize()
+
+    # Third vector: subtract projections onto first two, then normalize
+    proj2_0 = Nx.multiply(u0, Vector3.dot(col2, u0))
+    proj2_1 = Nx.multiply(u1, Vector3.dot(col2, u1))
+    u2 = Vector3.subtract(col2, Nx.add(proj2_0, proj2_1)) |> Vector3.normalize()
+
+    # Reconstruct the orthogonal basis matrix
+    orthogonal_basis = Nx.stack([u0, u1, u2], axis: 1)
+
+    # Embed back into 4x4 matrix, preserving translation
+    translation = get_translation(matrix)
+    [tx, ty, tz] = Nx.to_list(translation)
+
+    [[r00, r01, r02], [r10, r11, r12], [r20, r21, r22]] = Nx.to_list(orthogonal_basis)
+
+    Core.new(
+      r00, r01, r02, tx,
+      r10, r11, r12, ty,
+      r20, r21, r22, tz,
+      0.0, 0.0, 0.0, 1.0
+    )
   end
 end
