@@ -249,18 +249,46 @@ defmodule Plan.ReentrantExecutor do
       string when is_binary(string) -> String.to_atom(string)
     end
 
-    # Try to execute the todo item - any function that takes (state, args) and returns {:ok, state} | {:error, reason}
+    # Try to execute the todo item using domain actions
     cond do
-      # Check if function exists in domain
-      function_exported?(domain, action_atom, 2) ->
-        if verbose > 2 do
-          Logger.debug("ReentrantExecutor: Executing domain function: #{action_atom}")
+      # Check if domain is a struct with actions
+      is_map(domain) and Map.has_key?(domain, :actions) ->
+        case Map.get(domain.actions, action_atom) do
+          nil ->
+            {:error, "Todo item action not found in domain: #{action_name}"}
+          action_def when is_map(action_def) ->
+            if verbose > 2 do
+              Logger.debug("ReentrantExecutor: Executing domain action: #{action_atom}")
+            end
+            # Execute action using its effects function
+            case Map.get(action_def, :effects) do
+              effects_fn when is_function(effects_fn, 2) ->
+                try do
+                  new_state = effects_fn.(state, args)
+                  {:ok, new_state}
+                rescue
+                  e ->
+                    {:error, "Action execution failed: #{Exception.message(e)}"}
+                end
+              _ ->
+                {:error, "Action #{action_name} has no valid effects function"}
+            end
         end
-        apply(domain, action_atom, [state, args])
 
-      # Function not found
+      # Domain is a module - try direct function call
+      is_atom(domain) ->
+        if function_exported?(domain, action_atom, 2) do
+          if verbose > 2 do
+            Logger.debug("ReentrantExecutor: Executing domain function: #{action_atom}")
+          end
+          apply(domain, action_atom, [state, args])
+        else
+          {:error, "Todo item function not found: #{action_name}"}
+        end
+
+      # Unknown domain type
       true ->
-        {:error, "Todo item function not found: #{action_name}"}
+        {:error, "Invalid domain type for execution: #{inspect(domain)}"}
     end
   end
 
