@@ -193,8 +193,11 @@ defmodule AriaHybridPlanner do
     {task_name, _args} = node.task
     verbose = Keyword.get(opts, :verbose, 0)
 
+    # Convert string task name to atom for domain lookup
+    task_atom = if is_binary(task_name), do: String.to_atom(task_name), else: task_name
+
     # Check if domain has methods for this task
-    case Domain.Core.get_task_methods(domain, task_name) do
+    case Domain.Core.get_task_methods(domain, task_atom) do
       [] ->
         if verbose > 2 do
           Logger.debug("HTN Planning: No methods found for task #{task_name}, marking as primitive")
@@ -216,8 +219,11 @@ defmodule AriaHybridPlanner do
     {predicate, _subject, _value} = node.task
     verbose = Keyword.get(opts, :verbose, 0)
 
+    # Convert string predicate to atom for domain lookup
+    predicate_atom = if is_binary(predicate), do: String.to_atom(predicate), else: predicate
+
     # Check if domain has unigoal methods for this predicate
-    case Domain.Core.get_unigoal_methods(domain, predicate) do
+    case Domain.Core.get_unigoal_methods(domain, predicate_atom) do
       [] ->
         if verbose > 2 do
           Logger.debug("HTN Planning: No unigoal methods found for predicate #{predicate}, marking as primitive")
@@ -243,6 +249,9 @@ defmodule AriaHybridPlanner do
       if is_nil(solution_tree) do
         {:error, "Invalid plan format - missing solution tree"}
       else
+        # Convert string task names to atoms in solution tree before execution
+        normalized_tree = normalize_solution_tree_task_names(solution_tree)
+
         # Extract or create blacklist state from plan metadata
         blacklist_state = case Keyword.get(opts, :blacklist_state) do
           nil ->
@@ -257,7 +266,7 @@ defmodule AriaHybridPlanner do
         |> Keyword.put(:domain, domain)
         |> Keyword.put(:blacklist_state, blacklist_state)
 
-        case ReentrantExecutor.execute_plan_lazy(solution_tree, initial_state, enhanced_opts) do
+        case ReentrantExecutor.execute_plan_lazy(normalized_tree, initial_state, enhanced_opts) do
           {:ok, final_state} ->
             {:ok, final_state}
           {:error, reason} ->
@@ -271,6 +280,23 @@ defmodule AriaHybridPlanner do
         Logger.error(error_msg)
         {:error, error_msg}
     end
+  end
+
+  # Normalize task names in solution tree from strings to atoms
+  defp normalize_solution_tree_task_names(solution_tree) do
+    normalized_nodes = solution_tree.nodes
+    |> Enum.map(fn {node_id, node} ->
+      normalized_task = case node.task do
+        {task_name, args} when is_binary(task_name) ->
+          {String.to_atom(task_name), args}
+        other ->
+          other
+      end
+      {node_id, %{node | task: normalized_task}}
+    end)
+    |> Enum.into(%{})
+
+    %{solution_tree | nodes: normalized_nodes}
   end
 
   # Plan and execute in one step.
@@ -308,10 +334,12 @@ defmodule AriaHybridPlanner do
   Execute a pre-made solution tree.
   """
   def run_lazy_tree(domain, state, solution_tree) do
-    plan = %{solution_tree: solution_tree}
+    # Normalize the solution tree before execution
+    normalized_tree = normalize_solution_tree_task_names(solution_tree)
+    plan = %{solution_tree: normalized_tree}
     case execute(domain, state, plan) do
       {:ok, final_state} ->
-        {:ok, {final_state, solution_tree}}
+        {:ok, {final_state, normalized_tree}}
       {:error, reason} -> {:error, reason}
     end
   end
