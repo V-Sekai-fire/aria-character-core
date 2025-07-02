@@ -35,7 +35,7 @@ defmodule HybridPlanner.HybridCoordinatorV2 do
   """
 
   require Logger
-  alias State
+  alias AriaHybridPlanner.State
   # alias Plan.Utils  # Currently unused
   alias HybridPlanner.HybridCoordinatorV2.{Planning, Execution, Logging}
 
@@ -251,7 +251,7 @@ defmodule HybridPlanner.HybridCoordinatorV2 do
   # ==================== PRIVATE UTILITY FUNCTIONS ====================
 
   # HTN planning implementation
-  defp htn_plan(domain, initial_state, todos, opts) do
+  defp htn_plan(domain, initial_state, todos, _opts) do
     try do
       # Simple HTN planning implementation
       # For now, create a basic solution tree structure

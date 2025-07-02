@@ -1,0 +1,1 @@
+Do not convert goal lists to todo lists. We should only support todo lists.

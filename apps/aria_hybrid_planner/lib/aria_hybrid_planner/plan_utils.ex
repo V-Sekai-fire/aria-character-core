@@ -132,7 +132,7 @@ defmodule Plan.Utils do
     false
   end
 
-  def is_primitive_task?(%Multigoal{}) do
+  def is_primitive_task?(%AriaEngineCore.Multigoal{}) do
     # Multigoals are not primitive
     false
   end
@@ -264,7 +264,7 @@ defmodule Plan.Utils do
             Map.update!(acc, :task, &(&1 + 1))
           {_predicate, _subject, _value} ->
             Map.update!(acc, :goal, &(&1 + 1))
-          %Multigoal{} ->
+          %AriaEngineCore.Multigoal{} ->
             Map.update!(acc, :multigoal, &(&1 + 1))
           _ ->
             acc

@@ -70,12 +70,12 @@ defmodule Plan.NodeExpansion do
   def expand_multigoal_node(_domain, _state, solution_tree, node_id, multigoal, verbose) do
     node = solution_tree.nodes[node_id]
 
-    if Multigoal.satisfied?(multigoal, node.state) do
+    if AriaEngineCore.Multigoal.satisfied?(multigoal, node.state) do
       updated_node = %{node | expanded: true, is_primitive: true}
       final_tree = put_in(solution_tree.nodes[node_id], updated_node)
       {:ok, final_tree}
     else
-      unsatisfied = Multigoal.unsatisfied_goals(multigoal, node.state)
+      unsatisfied = AriaEngineCore.Multigoal.unsatisfied_goals(multigoal, node.state)
 
       if verbose > 2 do
         Logger.debug("Multigoal has #{length(unsatisfied)} unsatisfied goals")

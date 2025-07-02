@@ -51,7 +51,7 @@ defmodule HybridPlanner.HybridCoordinatorV2.Planning do
     {predicate, subject, value}
   end
 
-  defp convert_goal_to_todo(%Multigoal{} = multigoal) do
+  defp convert_goal_to_todo(%AriaEngineCore.Multigoal{} = multigoal) do
     multigoal
   end
 

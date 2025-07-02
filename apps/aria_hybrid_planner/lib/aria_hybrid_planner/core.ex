@@ -276,7 +276,7 @@ defmodule Domain.Core do
     case effect do
       {predicate, subject, value} when is_binary(predicate) and is_binary(subject) ->
         # Apply fact change to state
-        State.set_fact(state, predicate, subject, value)
+        AriaHybridPlanner.State.set_fact(state, predicate, subject, value)
 
       effect_func when is_function(effect_func) ->
         try do

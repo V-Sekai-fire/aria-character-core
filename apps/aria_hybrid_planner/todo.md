@@ -1,67 +1,53 @@
-## Detailed Cleanup Plan
+# Major Redundancies Found:
 
-### Phase 1: Identify Redundant Files to Remove
+### 1. **State Module Duplication**
 
-**Files to DELETE (redundant/incomplete stubs):**
+- `lib/state.ex` - Generic state interface (delegates to actual implementation)
+- `lib/aria_hybrid_planner/state.ex` - Actual state implementation
 
-1. `lib/aria_hybrid_planner/core.ex` - Unnecessary delegation layer to HybridCoordinatorV2
-2. `lib/planning/core_interface.ex` - Incomplete stub with TODOs
-3. `lib/planning/internal.ex` - Simple helper only used by core_interface.ex
-4. `lib/core.ex` - Root-level duplicate (if it exists)
-5. `lib/stubs.ex` - Appears to be placeholder/stub code
+### 2. **Multigoal Module Duplication**
 
-**Potentially redundant files to investigate:**
+- `lib/multigoal.ex` - Simple local Multigoal module (basic struct)
+- `lib/aria_hybrid_planner/multigoal.ex` - Full AriaEngineCore.Multigoal implementation (comprehensive)
 
-- Files in `lib/aria_hybrid_planner/` that duplicate functionality from `lib/hybrid_planner/`
-- Root-level files like `lib/multigoal.ex`, `lib/state.ex` that may duplicate `lib/aria_hybrid_planner/` versions
+### 3. **Core Module Duplication**
 
-### Phase 2: Update AriaHybridPlanner Direct Delegation
+- `lib/core.ex` - Simple local Core module (basic struct)
+- `lib/aria_hybrid_planner/core.ex` - More comprehensive core implementation
 
-**Current problematic flow:**
+### 4. **Planning Infrastructure Overlap**
 
-```
-AriaHybridPlanner → AriaHybridPlanner.Core → HybridCoordinatorV2
-```
+- Multiple planning-related modules that likely have overlapping functionality
+- Old AriaEngine compatibility shims alongside new implementations
 
-**Target simplified flow:**
+## Consolidation Plan:
 
-```
-AriaHybridPlanner → HybridCoordinatorV2
-AriaEngineCore (compatibility) → AriaHybridPlanner
-```
+### Phase 1: **Identify Usage Patterns**
 
-**Changes needed in `lib/aria_hybrid_planner.ex`:**
+- Analyze which versions of each module are actually being used
+- Map dependencies to understand which implementations are active
+- Identify dead code that can be safely removed
 
-1. Remove all references to `AriaHybridPlanner.Core`
-2. Update delegation functions to call `HybridPlanner.HybridCoordinatorV2` directly
-3. Update type definitions to reference the correct modules
-4. Maintain the same public API (no breaking changes)
+### Phase 2: **Consolidate State Management**
 
-### Phase 3: Test Validation Strategy
+- Keep the comprehensive `AriaHybridPlanner.State` implementation
+- Remove the generic `State` interface wrapper
+- Update all references to use the consolidated version
 
-**Pre-cleanup verification:**
+### Phase 3: **Consolidate Multigoal Handling**
 
-1. Run existing test suite: `mix test apps/aria_hybrid_planner`
-2. Compile entire umbrella: `mix compile`
-3. Check cross-app usage: Search for imports of modules we're removing
+- Keep the full-featured `AriaEngineCore.Multigoal` implementation
+- Remove the simple `Multigoal` stub
+- Ensure all multigoal operations use the comprehensive version
 
-**Post-cleanup verification:**
+### Phase 4: **Consolidate Core Functionality**
 
-1. Ensure all tests still pass
-2. Verify no compilation errors
-3. Check that public API behavior is unchanged
+- Merge or choose between the Core implementations
+- Remove redundant AriaEngine compatibility layers
+- Streamline the module hierarchy
 
-### Phase 4: Implementation Steps
+### Phase 5: **Clean Architecture**
 
-1. **First**: Remove unused stub modules (Planning.\*, stubs.ex)
-2. **Second**: Update AriaHybridPlanner to delegate directly to HybridCoordinatorV2
-3. **Third**: Remove AriaHybridPlanner.Core after updating main module
-4. **Fourth**: Clean up any remaining duplicate files
-5. **Finally**: Run comprehensive tests
-
-### Risk Mitigation
-
-- Keep AriaEngineCore compatibility layer intact (no breaking changes)
-- Maintain exact same public API in AriaHybridPlanner
-- Test after each major change rather than all at once
-- Use git commits at each phase for easy rollback
+- Establish clear module boundaries
+- Remove duplicate planning utilities
+- Consolidate similar functionality into single modules
