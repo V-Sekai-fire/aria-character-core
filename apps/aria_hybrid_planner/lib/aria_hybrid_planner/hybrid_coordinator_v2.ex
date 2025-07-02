@@ -25,8 +25,8 @@ defmodule HybridPlanner.HybridCoordinatorV2 do
       # Create coordinator (strategies parameter ignored for compatibility)
       coordinator = HybridPlanner.HybridCoordinatorV2.new(%{})
 
-      # Use coordinator for planning
-      case HybridPlanner.HybridCoordinatorV2.plan(coordinator, domain, state, goals) do
+      # Use coordinator for planning with todo lists only
+      case HybridPlanner.HybridCoordinatorV2.plan(coordinator, domain, state, todos) do
         {:ok, plan} ->
           HybridPlanner.HybridCoordinatorV2.execute(coordinator, domain, state, plan)
         {:error, reason} ->
@@ -90,13 +90,10 @@ defmodule HybridPlanner.HybridCoordinatorV2 do
   Plan using HTN planning algorithm.
   """
   @spec plan(t(), Domain.Core.t(), State.t(), [term()], keyword()) :: plan_result()
-  def plan(coordinator, domain, initial_state, goals, opts \\ []) do
+  def plan(coordinator, domain, initial_state, todos, opts \\ []) do
     Logging.log_progress("planning", %{status: "started"}, opts)
 
     try do
-      # Convert goals to todos for HTN planning
-      todos = Planning.convert_goals_to_todos(goals)
-
       # Create initial blacklist state
       blacklist_state = Plan.Blacklisting.new()
 

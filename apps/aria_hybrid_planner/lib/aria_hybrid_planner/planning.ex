@@ -5,7 +5,8 @@ defmodule HybridPlanner.HybridCoordinatorV2.Planning do
   @moduledoc """
   HTN planning functions for HybridCoordinatorV2.
 
-  Handles goal-to-todo conversion, HTN planning, replanning, and plan validation.
+  Handles HTN planning, replanning, and plan validation for todo lists only.
+  This module does not support goal-to-todo conversion - only todo lists are accepted.
   """
 
   require Logger
@@ -32,31 +33,5 @@ defmodule HybridPlanner.HybridCoordinatorV2.Planning do
     end
   end
 
-  @doc """
-  Convert goals to todos for HTN planning.
-  """
-  @spec convert_goals_to_todos([term()]) :: [term()]
-  def convert_goals_to_todos(goals) when is_list(goals) do
-    Enum.map(goals, &convert_goal_to_todo/1)
-  end
-
   # ==================== PRIVATE FUNCTIONS ====================
-
-  defp convert_goal_to_todo({task_name, args}) when is_binary(task_name) and is_list(args) do
-    {task_name, args}
-  end
-
-  defp convert_goal_to_todo({predicate, subject, value})
-       when is_binary(predicate) and is_binary(subject) do
-    {predicate, subject, value}
-  end
-
-  defp convert_goal_to_todo(%AriaEngineCore.Multigoal{} = multigoal) do
-    multigoal
-  end
-
-  defp convert_goal_to_todo(other) do
-    Logger.warning("HTN Planning: Unknown goal format #{inspect(other)}, passing through")
-    other
-  end
 end
