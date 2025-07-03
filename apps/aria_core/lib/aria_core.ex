@@ -232,19 +232,119 @@ defmodule AriaCore do
   defdelegate is_legacy_durative_action?(action_spec), to: AriaCore.TemporalConverter
   defdelegate convert_batch(legacy_actions), to: AriaCore.TemporalConverter
 
-  # State Management API
-  defdelegate new_state(), to: AriaCore.State.Relational, as: :new
-  defdelegate set_fact(state, predicate, subject, value), to: AriaCore.State.Relational
-  defdelegate get_fact(state, predicate, subject), to: AriaCore.State.Relational
-  defdelegate remove_fact(state, predicate, subject), to: AriaCore.State.Relational
-  defdelegate satisfies_goal?(state, goal), to: AriaCore.State.Relational
-  defdelegate satisfies_goals?(state, goals), to: AriaCore.State.Relational
-  defdelegate apply_changes(state, changes), to: AriaCore.State.Relational
-  defdelegate query_state(state, pattern), to: AriaCore.State.Relational, as: :query
-  defdelegate all_facts(state), to: AriaCore.State.Relational
-  defdelegate set_temporal_fact(state, predicate, subject, value), to: AriaCore.State.Relational
-  defdelegate get_fact_history(state, predicate, subject), to: AriaCore.State.Relational
-  defdelegate copy_state(state), to: AriaCore.State.Relational, as: :copy
+  # State Management API - Using canonical AriaState.RelationalState
+  defdelegate new_state(), to: AriaState.RelationalState, as: :new
+  defdelegate set_fact(state, predicate, subject, value), to: AriaState.RelationalState
+  defdelegate get_fact(state, predicate, subject), to: AriaState.RelationalState
+  defdelegate remove_fact(state, predicate, subject), to: AriaState.RelationalState
+  defdelegate copy_state(state), to: AriaState.RelationalState, as: :copy
+
+  # Additional state operations using AriaState.RelationalState
+  defdelegate has_subject?(state, predicate, subject), to: AriaState.RelationalState
+  defdelegate get_subjects_with_fact(state, predicate, value), to: AriaState.RelationalState
+  defdelegate get_subjects_with_predicate(state, predicate), to: AriaState.RelationalState
+  defdelegate to_triples(state), to: AriaState.RelationalState
+  defdelegate from_triples(triples), to: AriaState.RelationalState
+  defdelegate merge(state1, state2), to: AriaState.RelationalState
+  defdelegate matches?(state, predicate, subject, value), to: AriaState.RelationalState
+  defdelegate exists?(state, predicate, value, subject_filter \\ nil), to: AriaState.RelationalState
+  defdelegate forall?(state, predicate, value, subject_filter), to: AriaState.RelationalState
+  defdelegate evaluate_condition(state, condition), to: AriaState.RelationalState
+
+  # Compatibility functions for AriaCore.State.Relational API
+  @doc """
+  Checks if a goal is satisfied by the current state.
+  Provides compatibility with AriaCore.State.Relational API.
+  """
+  def satisfies_goal?(state, goal) do
+    case goal do
+      {predicate, subject, value} ->
+        AriaState.RelationalState.matches?(state, predicate, subject, value)
+      _ ->
+        false
+    end
+  end
+
+  @doc """
+  Checks if multiple goals are all satisfied.
+  Provides compatibility with AriaCore.State.Relational API.
+  """
+  def satisfies_goals?(state, goals) when is_list(goals) do
+    Enum.all?(goals, &satisfies_goal?(state, &1))
+  end
+
+  @doc """
+  Applies multiple state changes atomically.
+  Provides compatibility with AriaCore.State.Relational API.
+  """
+  def apply_changes(state, changes) when is_list(changes) do
+    Enum.reduce(changes, state, fn {predicate, subject, value}, acc ->
+      AriaState.RelationalState.set_fact(acc, predicate, subject, value)
+    end)
+  end
+
+  @doc """
+  Queries facts using pattern matching.
+  Provides compatibility with AriaCore.State.Relational API.
+  """
+  def query_state(state, pattern) do
+    case pattern do
+      {predicate, :_, :_} ->
+        # Get all facts with this predicate
+        state
+        |> AriaState.RelationalState.to_triples()
+        |> Enum.filter(fn {pred, _subj, _val} -> pred == predicate end)
+
+      {:_, subject, :_} ->
+        # Get all facts about this subject
+        state
+        |> AriaState.RelationalState.to_triples()
+        |> Enum.filter(fn {_pred, subj, _val} -> subj == subject end)
+
+      {predicate, subject, :_} ->
+        # Get the value for this predicate/subject pair
+        case AriaState.RelationalState.get_fact(state, predicate, subject) do
+          nil -> []
+          value -> [{predicate, subject, value}]
+        end
+
+      {predicate, subject, value} ->
+        # Check if this exact triple exists
+        case AriaState.RelationalState.matches?(state, predicate, subject, value) do
+          true -> [{predicate, subject, value}]
+          false -> []
+        end
+
+      _ ->
+        []
+    end
+  end
+
+  @doc """
+  Gets all facts in the state.
+  Provides compatibility with AriaCore.State.Relational API.
+  """
+  def all_facts(state) do
+    AriaState.RelationalState.to_triples(state)
+  end
+
+  @doc """
+  Sets a temporal fact with timestamp (compatibility function).
+  Note: AriaState.RelationalState doesn't support temporal facts yet,
+  so this just sets a regular fact for now.
+  """
+  def set_temporal_fact(state, predicate, subject, value, _timestamp \\ nil) do
+    AriaState.RelationalState.set_fact(state, predicate, subject, value)
+  end
+
+  @doc """
+  Gets the history of changes for a fact (compatibility function).
+  Note: AriaState.RelationalState doesn't support temporal facts yet,
+  so this returns empty list for now.
+  """
+  def get_fact_history(_state, _predicate, _subject) do
+    []
+  end
 
   # Unified Domain API
   defdelegate create_domain_from_module(domain_module), to: AriaCore.UnifiedDomain, as: :create_from_module
@@ -405,6 +505,7 @@ defmodule AriaCore do
       nil -> domain_with_methods
       unigoal_specs ->
         Enum.reduce(unigoal_specs, domain_with_methods, fn {method_name, spec}, acc_domain ->
+          # Register the unigoal method with the full spec (not just the function)
           add_unigoal_method(acc_domain, method_name, spec)
         end)
     end

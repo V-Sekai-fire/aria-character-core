@@ -255,56 +255,65 @@ defmodule AriaHybridPlanner do
     {predicate, subject, value} = node.task
     verbose = Keyword.get(opts, :verbose, 0)
 
+    Logger.debug("HTN Goal Expansion: Starting expansion for goal #{predicate}(#{subject}, #{value}) in node #{node_id}")
+
     # Convert string predicate to atom for domain lookup
     predicate_atom = if is_binary(predicate), do: String.to_atom(predicate), else: predicate
 
-    # Check if domain has unigoal methods for this predicate
-    case AriaCore.get_unigoal_methods_for_predicate(domain, Atom.to_string(predicate_atom)) do
-      methods when map_size(methods) == 0 ->
-        if verbose > 2 do
-          Logger.debug("HTN Planning: No unigoal methods found for predicate #{predicate}, expansion failed")
-        end
-        :failure
+    # First check if the goal is already satisfied in the current state
+    current_value = AriaHybridPlanner.State.get_fact(state, Atom.to_string(predicate_atom), subject)
+    Logger.debug("HTN Goal Expansion: Current value for #{predicate}(#{subject}): #{inspect(current_value)}, target: #{inspect(value)}")
 
-      methods when is_map(methods) ->
-        if verbose > 2 do
-          Logger.debug("HTN Planning: Found #{map_size(methods)} unigoal methods for predicate #{predicate}")
-        end
+    if current_value == value do
+      # Goal already satisfied - mark as completed primitive
+      Logger.debug("HTN Goal Expansion: Goal #{predicate}(#{subject}, #{value}) already satisfied, marking as primitive")
+      Plan.NodeExpansion.mark_as_primitive(solution_tree, node_id)
+    else
+      Logger.debug("HTN Goal Expansion: Goal not satisfied, looking for unigoal methods for predicate #{predicate}")
 
-        # Get the first available method from the map
-        case Enum.take(methods, 1) do
-          [] ->
-            if verbose > 2 do
-              Logger.debug("HTN Planning: No unigoal methods available for predicate #{predicate}")
-            end
-            :failure
+      # Goal not satisfied - try to find unigoal methods
+      case AriaCore.get_unigoal_methods_for_predicate(domain, Atom.to_string(predicate_atom)) do
+        methods when map_size(methods) == 0 ->
+          Logger.debug("HTN Goal Expansion: No unigoal methods found for predicate #{predicate}, goal cannot be achieved")
+          :failure
 
-          [{method_name, _method_spec}] ->
-            case execute_unigoal_method_for_planning(domain, state, predicate_atom, {subject, value}, method_name, opts) do
-              {:ok, []} ->
-                # Goal already satisfied - mark as completed primitive
-                if verbose > 2 do
-                  Logger.debug("HTN Planning: Goal #{predicate}(#{subject}, #{value}) already satisfied")
-                end
-                Plan.NodeExpansion.mark_as_primitive(solution_tree, node_id)
+        methods when is_map(methods) ->
+          Logger.debug("HTN Goal Expansion: Found #{map_size(methods)} unigoal methods for predicate #{predicate}: #{inspect(Map.keys(methods))}")
 
-              {:ok, subtasks} ->
-                # Method returned subtasks - create child nodes
-                if verbose > 2 do
-                  Logger.debug("HTN Planning: Unigoal method #{method_name} returned #{length(subtasks)} subtasks")
-                end
-                case create_child_nodes_for_planning(solution_tree, node_id, subtasks, method_name, opts) do
-                  {:ok, updated_tree} -> {:ok, updated_tree}
-                  {:error, reason} -> {:error, "Failed to create child nodes: #{reason}"}
-                end
+          # Get the first available method from the map
+          case Enum.take(methods, 1) do
+            [] ->
+              Logger.debug("HTN Goal Expansion: No unigoal methods available for predicate #{predicate}")
+              :failure
 
-              {:error, reason} ->
-                if verbose > 2 do
-                  Logger.debug("HTN Planning: Unigoal method #{method_name} failed: #{reason}")
-                end
-                :failure
-            end
-        end
+            [{method_name, method_spec}] ->
+              Logger.debug("HTN Goal Expansion: Trying unigoal method #{method_name} for goal #{predicate}(#{subject}, #{value})")
+              Logger.debug("HTN Goal Expansion: Method spec: #{inspect(method_spec)}")
+
+              case execute_unigoal_method_for_planning(domain, state, predicate_atom, {subject, value}, method_name, opts) do
+                {:ok, []} ->
+                  # Method returned empty list - goal already satisfied
+                  Logger.debug("HTN Goal Expansion: Unigoal method #{method_name} returned empty list, marking as primitive")
+                  Plan.NodeExpansion.mark_as_primitive(solution_tree, node_id)
+
+                {:ok, subtasks} ->
+                  # Method returned subtasks - create child nodes
+                  Logger.debug("HTN Goal Expansion: Unigoal method #{method_name} returned #{length(subtasks)} subtasks: #{inspect(subtasks)}")
+                  case create_child_nodes_for_planning(solution_tree, node_id, subtasks, method_name, opts) do
+                    {:ok, updated_tree} ->
+                      Logger.debug("HTN Goal Expansion: Successfully created child nodes for goal #{predicate}(#{subject}, #{value})")
+                      {:ok, updated_tree}
+                    {:error, reason} ->
+                      Logger.debug("HTN Goal Expansion: Failed to create child nodes: #{reason}")
+                      {:error, "Failed to create child nodes: #{reason}"}
+                  end
+
+                {:error, reason} ->
+                  Logger.debug("HTN Goal Expansion: Unigoal method #{method_name} failed: #{reason}")
+                  :failure
+              end
+          end
+      end
     end
   end
 

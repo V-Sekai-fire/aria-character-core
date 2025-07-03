@@ -2,9 +2,9 @@
 # SPDX-License-Identifier: MIT
 
 defmodule AriaEngineCore.Multigoal do
-  @moduledoc "Represents a collection of goals in the GTPyhop planner.\n\nA multigoal is essentially a desired state represented as a collection of\npredicate-subject-fact triples that should be true in the world state.\n\nExample:\n```elixir\nmultigoal = AriaEngineCore.Multigoal.new()\n|> AriaEngineCore.Multigoal.add_goal(\"player\", \"location\", \"treasure_room\")\n|> AriaEngineCore.Multigoal.add_goal(\"player\", \"has\", \"treasure\")\n\n# Check if goals are satisfied in current state\nsatisfied? = AriaEngineCore.Multigoal.satisfied?(multigoal, current_state)\n```\n"
+  @moduledoc "Represents a collection of goals in the GTPyhop planner.\n\nA multigoal is essentially a desired state represented as a collection of\npredicate-subject-fact triples that should be true in the world state.\n\nExample:\n```elixir\nmultigoal = AriaEngineCore.Multigoal.new()\n|> AriaEngineCore.Multigoal.add_goal(\"location\", \"player\", \"treasure_room\")\n|> AriaEngineCore.Multigoal.add_goal(\"has\", \"player\", \"treasure\")\n\n# Check if goals are satisfied in current state\nsatisfied? = AriaEngineCore.Multigoal.satisfied?(multigoal, current_state)\n```\n"
   alias AriaHybridPlanner.State
-  @type goal :: {State.subject(), State.predicate(), State.fact_value()}
+  @type goal :: {State.predicate(), State.subject(), State.fact_value()}
   @type t :: %__MODULE__{goals: [goal()]}
   defstruct goals: []
   @doc "Creates a new empty multigoal.\n"
@@ -27,9 +27,9 @@ defmodule AriaEngineCore.Multigoal do
   end
 
   @doc "Adds a single goal to the multigoal.\n"
-  @spec add_goal(t(), State.subject(), State.predicate(), State.fact_value()) :: t()
-  def add_goal(%__MODULE__{goals: goals} = multigoal, subject, predicate, fact_value) do
-    new_goal = {subject, predicate, fact_value}
+  @spec add_goal(t(), State.predicate(), State.subject(), State.fact_value()) :: t()
+  def add_goal(%__MODULE__{goals: goals} = multigoal, predicate, subject, fact_value) do
+    new_goal = {predicate, subject, fact_value}
     %{multigoal | goals: [new_goal | goals]}
   end
 
@@ -40,9 +40,9 @@ defmodule AriaEngineCore.Multigoal do
   end
 
   @doc "Removes a goal from the multigoal.\n"
-  @spec remove_goal(t(), State.subject(), State.predicate(), State.fact_value()) :: t()
-  def remove_goal(%__MODULE__{goals: goals} = multigoal, subject, predicate, fact_value) do
-    target_goal = {subject, predicate, fact_value}
+  @spec remove_goal(t(), State.predicate(), State.subject(), State.fact_value()) :: t()
+  def remove_goal(%__MODULE__{goals: goals} = multigoal, predicate, subject, fact_value) do
+    target_goal = {predicate, subject, fact_value}
     filtered_goals = Enum.reject(goals, fn goal -> goal == target_goal end)
     %{multigoal | goals: filtered_goals}
   end
@@ -50,24 +50,24 @@ defmodule AriaEngineCore.Multigoal do
   @doc "Checks if all goals in the multigoal are satisfied by the given state.\n"
   @spec satisfied?(t(), State.t()) :: boolean()
   def satisfied?(%__MODULE__{goals: goals}, state) do
-    Enum.all?(goals, fn {subject, predicate, fact_value} ->
-      State.get_fact(state, subject, predicate) == fact_value
+    Enum.all?(goals, fn {predicate, subject, fact_value} ->
+      State.get_fact(state, predicate, subject) == fact_value
     end)
   end
 
   @doc "Returns goals that are not yet satisfied in the given state.\n"
   @spec unsatisfied_goals(t(), State.t()) :: [goal()]
   def unsatisfied_goals(%__MODULE__{goals: goals}, state) do
-    Enum.reject(goals, fn {subject, predicate, fact_value} ->
-      State.get_fact(state, subject, predicate) == fact_value
+    Enum.reject(goals, fn {predicate, subject, fact_value} ->
+      State.get_fact(state, predicate, subject) == fact_value
     end)
   end
 
   @doc "Returns goals that are satisfied in the given state.\n"
   @spec satisfied_goals(t(), State.t()) :: [goal()]
   def satisfied_goals(%__MODULE__{goals: goals}, state) do
-    Enum.filter(goals, fn {subject, predicate, fact_value} ->
-      State.get_fact(state, subject, predicate) == fact_value
+    Enum.filter(goals, fn {predicate, subject, fact_value} ->
+      State.get_fact(state, predicate, subject) == fact_value
     end)
   end
 

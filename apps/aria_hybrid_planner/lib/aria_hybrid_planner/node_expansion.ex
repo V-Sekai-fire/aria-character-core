@@ -67,46 +67,115 @@ defmodule Plan.NodeExpansion do
           Multigoal.t(),
           integer()
         ) :: {:ok, solution_tree()} | {:error, String.t()} | :failure
-  def expand_multigoal_node(_domain, _state, solution_tree, node_id, multigoal, verbose) do
+  def expand_multigoal_node(domain, state, solution_tree, node_id, multigoal, verbose) do
     node = solution_tree.nodes[node_id]
 
-    if AriaEngineCore.Multigoal.satisfied?(multigoal, node.state) do
+    if AriaEngineCore.Multigoal.satisfied?(multigoal, state) do
       updated_node = %{node | expanded: true, is_primitive: true}
       final_tree = put_in(solution_tree.nodes[node_id], updated_node)
       {:ok, final_tree}
     else
-      unsatisfied = AriaEngineCore.Multigoal.unsatisfied_goals(multigoal, node.state)
+      # Try to use domain's multigoal methods first
+      multigoal_methods = AriaCore.get_multigoal_methods_from_domain(domain)
 
-      if verbose > 2 do
-        Logger.debug("Multigoal has #{length(unsatisfied)} unsatisfied goals")
+      case try_multigoal_methods(multigoal_methods, state, multigoal, verbose) do
+        {:ok, todo_list} ->
+          # Create child nodes for the todo list returned by the multigoal method
+          {new_tree, child_ids} =
+            Enum.reduce(todo_list, {solution_tree, []}, fn todo_item, {tree, ids} ->
+              child_id = Plan.Utils.generate_node_id()
+
+              child_node = %{
+                id: child_id,
+                task: todo_item,
+                parent_id: node_id,
+                children_ids: [],
+                state: node.state,
+                visited: false,
+                expanded: false,
+                method_tried: nil,
+                blacklisted_methods: [],
+                is_primitive: false,
+                is_durative: false
+              }
+
+              new_tree = put_in(tree.nodes[child_id], child_node)
+              {new_tree, [child_id | ids]}
+            end)
+
+          child_ids = Enum.reverse(child_ids)
+          updated_node = %{node | children_ids: child_ids, expanded: true, method_tried: :multigoal_method}
+          final_tree = put_in(new_tree.nodes[node_id], updated_node)
+          {:ok, final_tree}
+
+        :no_methods ->
+          # Fallback to simple unsatisfied goal expansion
+          unsatisfied = AriaEngineCore.Multigoal.unsatisfied_goals(multigoal, node.state)
+
+          if verbose > 2 do
+            Logger.debug("Multigoal has #{length(unsatisfied)} unsatisfied goals (no domain methods)")
+          end
+
+          {new_tree, child_ids} =
+            Enum.reduce(unsatisfied, {solution_tree, []}, fn goal, {tree, ids} ->
+              child_id = Plan.Utils.generate_node_id()
+
+              child_node = %{
+                id: child_id,
+                task: goal,
+                parent_id: node_id,
+                children_ids: [],
+                state: node.state,
+                visited: false,
+                expanded: false,
+                method_tried: nil,
+                blacklisted_methods: [],
+                is_primitive: false,
+                is_durative: false
+              }
+
+              new_tree = put_in(tree.nodes[child_id], child_node)
+              {new_tree, [child_id | ids]}
+            end)
+
+          child_ids = Enum.reverse(child_ids)
+          updated_node = %{node | children_ids: child_ids, expanded: true, method_tried: :multigoal_expansion}
+          final_tree = put_in(new_tree.nodes[node_id], updated_node)
+          {:ok, final_tree}
+
+        {:error, reason} ->
+          {:error, reason}
       end
+    end
+  end
 
-      {new_tree, child_ids} =
-        Enum.reduce(unsatisfied, {solution_tree, []}, fn goal, {tree, ids} ->
-          child_id = Plan.Utils.generate_node_id()
-
-          child_node = %{
-            id: child_id,
-            task: goal,
-            parent_id: node_id,
-            children_ids: [],
-            state: node.state,
-            visited: false,
-            expanded: false,
-            method_tried: nil,
-            blacklisted_methods: [],
-            is_primitive: false,
-            is_durative: false
-          }
-
-          new_tree = put_in(tree.nodes[child_id], child_node)
-          {new_tree, [child_id | ids]}
-        end)
-
-      child_ids = Enum.reverse(child_ids)
-      updated_node = %{node | children_ids: child_ids, expanded: true, method_tried: :multigoal_expansion}
-      final_tree = put_in(new_tree.nodes[node_id], updated_node)
-      {:ok, final_tree}
+  # Helper function to try multigoal methods
+  defp try_multigoal_methods([], _state, _multigoal, _verbose), do: :no_methods
+  defp try_multigoal_methods([{_method_name, method_fn} | rest], state, multigoal, verbose) do
+    try do
+      case method_fn.(state, multigoal) do
+        {:ok, todo_list} when is_list(todo_list) ->
+          if verbose > 2 do
+            Logger.debug("Multigoal method succeeded, returned #{length(todo_list)} todo items")
+          end
+          {:ok, todo_list}
+        {:error, reason} ->
+          if verbose > 2 do
+            Logger.debug("Multigoal method failed: #{inspect(reason)}")
+          end
+          try_multigoal_methods(rest, state, multigoal, verbose)
+        _other ->
+          if verbose > 2 do
+            Logger.debug("Multigoal method returned unexpected result")
+          end
+          try_multigoal_methods(rest, state, multigoal, verbose)
+      end
+    rescue
+      error ->
+        if verbose > 2 do
+          Logger.debug("Multigoal method raised error: #{inspect(error)}")
+        end
+        try_multigoal_methods(rest, state, multigoal, verbose)
     end
   end
 
