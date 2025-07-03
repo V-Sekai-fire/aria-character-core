@@ -10,10 +10,18 @@ defmodule AriaHybridPlanner.Execution do
 
   alias Plan.ReentrantExecutor
 
+  # Type definitions
+  @type domain :: AriaCore.Domain.t() | map()
+  @type state :: AriaState.t()
+  @type todo_item :: AriaEngineCore.Plan.todo_item()
+  @type solution_tree :: AriaEngineCore.Plan.solution_tree()
+  @type execution_result :: {:ok, {state(), solution_tree()}} | {:error, String.t()}
+  @type lazy_execution_result :: {:ok, state()} | {:error, String.t()}
+
   @doc """
   Plan and execute in one step using lazy execution.
   """
-  @spec run_lazy(term(), term(), [term()], keyword()) :: {:ok, {term(), map()}} | {:error, String.t()}
+  @spec run_lazy(domain(), state(), [todo_item()], keyword()) :: execution_result()
   def run_lazy(domain, initial_state, todos, opts \\ []) do
     case AriaHybridPlanner.Planner.plan(domain, initial_state, todos, opts) do
       {:ok, plan} ->
@@ -31,7 +39,7 @@ defmodule AriaHybridPlanner.Execution do
   @doc """
   Execute a solution tree using lazy execution.
   """
-  @spec run_lazy_tree(term(), term(), map(), keyword()) :: {:ok, term()} | {:error, String.t()}
+  @spec run_lazy_tree(domain(), state(), solution_tree(), keyword()) :: lazy_execution_result()
   def run_lazy_tree(domain, initial_state, solution_tree, opts \\ []) do
     # Add domain to options for executor
     execution_opts = Keyword.put(opts, :domain, domain)

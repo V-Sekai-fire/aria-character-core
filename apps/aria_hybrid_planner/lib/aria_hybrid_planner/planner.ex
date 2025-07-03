@@ -10,6 +10,15 @@ defmodule AriaHybridPlanner.Planner do
 
   require Logger
 
+  # Type definitions
+  @type domain :: AriaCore.Domain.t() | map()
+  @type state :: AriaState.t()
+  @type todo_item :: AriaEngineCore.Plan.todo_item()
+  @type solution_tree :: AriaEngineCore.Plan.solution_tree()
+  @type node_id :: String.t()
+  @type method_name :: String.t()
+  @type plan_result :: {:ok, map()} | {:error, String.t()}
+
   @doc """
   Plan using IPyHOP-style HTN planning with proper backtracking support.
   Uses iterative refinement with state save/restore for backtracking.
@@ -74,6 +83,8 @@ defmodule AriaHybridPlanner.Planner do
   end
 
   # Breadth-first HTN planning implementation with IPyHOP-style state management
+  @spec plan_recursive_bfs(domain(), solution_tree(), state(), keyword(), non_neg_integer(), non_neg_integer()) ::
+    {:ok, solution_tree(), state()} | {:error, String.t()}
   defp plan_recursive_bfs(domain, solution_tree, planning_state, opts, depth, max_depth) do
     verbose = Keyword.get(opts, :verbose, 0)
 
@@ -107,6 +118,7 @@ defmodule AriaHybridPlanner.Planner do
   end
 
   # Find the next unexpanded node (natural order from map iteration)
+  @spec find_next_unexpanded_node(solution_tree()) :: node_id() | nil
   defp find_next_unexpanded_node(solution_tree) do
     Enum.find_value(solution_tree.nodes, fn {id, node} ->
       if not node.expanded and not node.is_primitive do

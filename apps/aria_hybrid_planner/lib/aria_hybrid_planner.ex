@@ -34,14 +34,22 @@ defmodule AriaHybridPlanner do
   """
 
   # Type definitions
-  @type domain :: term()
-  @type state :: term()
-  @type todo_item :: term()
-  @type solution_tree :: map()
+  @type domain :: AriaCore.Domain.t() | map()
+  @type state :: AriaState.t()
+  @type todo_item :: AriaEngineCore.Plan.todo_item()
+  @type solution_tree :: AriaEngineCore.Plan.solution_tree()
+  @type plan_result :: {:ok, map()} | {:error, String.t()}
+  @type execution_result :: {:ok, {state(), solution_tree()}} | {:error, String.t()}
+  @type lazy_execution_result :: {:ok, state()} | {:error, String.t()}
 
   # Delegate to internal modules
+  @spec plan(domain(), state(), [todo_item()], keyword()) :: plan_result()
   defdelegate plan(domain, initial_state, todos, opts \\ []), to: AriaHybridPlanner.Planner
+
+  @spec run_lazy(domain(), state(), [todo_item()], keyword()) :: execution_result()
   defdelegate run_lazy(domain, initial_state, todos, opts \\ []), to: AriaHybridPlanner.Execution
+
+  @spec run_lazy_tree(domain(), state(), solution_tree(), keyword()) :: lazy_execution_result()
   defdelegate run_lazy_tree(domain, initial_state, solution_tree, opts \\ []), to: AriaHybridPlanner.Execution
 
   @spec version() :: String.t()
