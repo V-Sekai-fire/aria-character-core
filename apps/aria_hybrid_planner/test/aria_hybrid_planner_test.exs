@@ -172,7 +172,7 @@ defmodule AriaHybridPlannerTest do
 
     test "new_state/1 creates state with data" do
       data = %{"test" => "value"}
-      state = AriaHybridPlanner.new_state(data)
+      state = AriaState.new(data)
       assert is_map(state)
     end
 
@@ -180,18 +180,18 @@ defmodule AriaHybridPlannerTest do
       state = AriaState.new()
 
       # Set a fact
-      updated_state = AriaHybridPlanner.set_fact(state, "location", "a", "room1")
+      updated_state = AriaState.set_fact(state, "location", "a", "room1")
 
       # Get the fact
-      assert "room1" = AriaHybridPlanner.get_fact(updated_state, "location", "a")
+      assert "room1" = AriaState.get_fact(updated_state, "location", "a")
 
       # Check if subject exists
-      assert AriaHybridPlanner.has_subject?(updated_state, "location", "a")
-      assert not AriaHybridPlanner.has_subject?(updated_state, "location", "b")
+      assert AriaState.has_subject?(updated_state, "location", "a")
+      assert not AriaState.has_subject?(updated_state, "location", "b")
 
       # Remove the fact
-      final_state = AriaHybridPlanner.remove_fact(updated_state, "location", "a")
-      assert not AriaHybridPlanner.has_subject?(final_state, "location", "a")
+      final_state = AriaState.remove_fact(updated_state, "location", "a")
+      assert not AriaState.has_subject?(final_state, "location", "a")
     end
   end
 
