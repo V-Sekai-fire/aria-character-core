@@ -13,7 +13,39 @@ defmodule AriaBlocksWorld.GtpyhopExamplesTest do
   """
 
   use ExUnit.Case, async: true
+  require Logger
   doctest AriaBlocksWorld
+
+  # Helper function to log state in readable format
+  defp log_state(state, label) do
+    all_facts = AriaState.RelationalState.get_all_facts(state)
+
+    pos_facts = Enum.filter(all_facts, fn {{pred, _}, _} -> pred == "pos" end)
+    clear_facts = Enum.filter(all_facts, fn {{pred, _}, _} -> pred == "clear" end)
+    holding_facts = Enum.filter(all_facts, fn {{pred, _}, _} -> pred == "holding" end)
+
+    Logger.debug("#{label}:")
+    Logger.debug("  pos: #{inspect(pos_facts)}")
+    Logger.debug("  clear: #{inspect(clear_facts)}")
+    Logger.debug("  holding: #{inspect(holding_facts)}")
+  end
+
+  # Helper function to log primitive actions from solution tree
+  defp log_primitive_actions(solution_tree) do
+    case solution_tree do
+      %{solution_tree: tree} ->
+        actions = AriaEngineCore.Plan.get_primitive_actions_dfs(tree)
+        Logger.debug("Primitive Actions: #{inspect(actions)}")
+        actions
+      tree when is_map(tree) ->
+        actions = AriaEngineCore.Plan.get_primitive_actions_dfs(tree)
+        Logger.debug("Primitive Actions: #{inspect(actions)}")
+        actions
+      _ ->
+        Logger.debug("No solution tree available for primitive action extraction")
+        []
+    end
+  end
 
   describe "GTpyhop blocks_gtn examples" do
     test "simple pickup operations that should fail" do
@@ -51,20 +83,35 @@ defmodule AriaBlocksWorld.GtpyhopExamplesTest do
     end
 
     test "multigoal: c on b, b on a, a on table" do
+      Logger.debug("=== Test: multigoal: c on b, b on a, a on table ===")
+
       state1 = AriaBlocksWorld.create_state(%{
         pos: %{"a" => "b", "b" => "table", "c" => "table"},
         clear: %{"a" => true, "b" => false, "c" => true},
         holding: %{"hand" => false}
       })
 
+      log_state(state1, "Initial State")
+
       # Goal: c on b, b on a, a on table
       goal1a = AriaBlocksWorld.create_multigoal(%{
         pos: %{"c" => "b", "b" => "a", "a" => "table"}
       })
 
+      Logger.debug("Goals: #{inspect(goal1a.goals)}")
+      Logger.debug("Expected GTpyhop plan: [('unstack', 'a', 'b'), ('putdown', 'a'), ('pickup', 'b'), ('stack', 'b', 'a'), ('pickup', 'c'), ('stack', 'c', 'b')]")
+
       # Expected plan from GTpyhop:
       # [('unstack', 'a', 'b'), ('putdown', 'a'), ('pickup', 'b'), ('stack', 'b', 'a'), ('pickup', 'c'), ('stack', 'c', 'b')]
-      assert {:ok, {final_state, _solution_tree}} = AriaBlocksWorld.solve_problem(state1, [goal1a])
+      result = AriaBlocksWorld.solve_problem(state1, [goal1a])
+      Logger.debug("Planning result: #{inspect(elem(result, 0))}")
+
+      assert {:ok, {final_state, solution_tree}} = result
+
+      # Log primitive actions
+      log_primitive_actions(solution_tree)
+
+      log_state(final_state, "Final State")
 
       # Verify final state matches goal
       assert AriaState.RelationalState.get_fact(final_state, "pos", "c") == "b"
@@ -73,6 +120,8 @@ defmodule AriaBlocksWorld.GtpyhopExamplesTest do
     end
 
     test "Sussman anomaly" do
+      Logger.debug("=== Test: Sussman anomaly ===")
+
       # sus_s0.pos={'c':'a', 'a':'table', 'b':'table'}
       # sus_s0.clear={'c':True, 'a':False,'b':True}
       # sus_s0.holding={'hand':False}
@@ -82,20 +131,27 @@ defmodule AriaBlocksWorld.GtpyhopExamplesTest do
         holding: %{"hand" => false}
       })
 
+      log_state(sussman_initial, "Initial State")
+
       # Goal: a on b, b on c
       sussman_goal = AriaBlocksWorld.create_multigoal(%{
         pos: %{"a" => "b", "b" => "c"}
       })
 
+      Logger.debug("Goals: #{inspect(sussman_goal.goals)}")
+      Logger.debug("Expected GTpyhop plan: [('unstack', 'c', 'a'), ('putdown', 'c'), ('pickup', 'b'), ('stack', 'b', 'c'), ('pickup', 'a'), ('stack', 'a', 'b')]")
+
       # Expected plan from GTpyhop:
       # [{:unstack, ['c', 'a']}, {:putdown, ['c']}, {:pickup, ['b']), (:stack, ['b', 'c']}, {:pickup, ['a']}, {:stack, ['a', 'b']}]
-      assert {:ok, {final_state, solution_tree}} = AriaBlocksWorld.solve_problem(sussman_initial, [sussman_goal])
+      result = AriaBlocksWorld.solve_problem(sussman_initial, [sussman_goal])
+      Logger.debug("Planning result: #{inspect(elem(result, 0))}")
 
-      # Debug: Check what's in the solution tree
-      IO.inspect(solution_tree, label: "Solution Tree")
-      if Map.has_key?(solution_tree, :steps) do
-        IO.inspect(solution_tree.steps, label: "Plan Steps")
-      end
+      assert {:ok, {final_state, solution_tree}} = result
+
+      # Log primitive actions
+      log_primitive_actions(solution_tree)
+
+      log_state(final_state, "Final State")
 
       # Verify final state matches goal
       assert AriaState.RelationalState.get_fact(final_state, "pos", "a") == "b"
@@ -103,6 +159,8 @@ defmodule AriaBlocksWorld.GtpyhopExamplesTest do
     end
 
     test "complex rearrangement problem" do
+      Logger.debug("=== Test: complex rearrangement problem ===")
+
       # state2.pos={'a':'c', 'b':'d', 'c':'table', 'd':'table'}
       # state2.clear={'a':True, 'c':False,'b':True, 'd':False}
       # state2.holding={'hand':False}
@@ -112,14 +170,27 @@ defmodule AriaBlocksWorld.GtpyhopExamplesTest do
         holding: %{"hand" => false}
       })
 
+      log_state(state2, "Initial State")
+
       # Goal: b on c, a on d
       goal2 = AriaBlocksWorld.create_multigoal(%{
         pos: %{"b" => "c", "a" => "d"}
       })
 
+      Logger.debug("Goals: #{inspect(goal2.goals)}")
+      Logger.debug("Expected GTpyhop plan: [('unstack', 'a', 'c'), ('putdown', 'a'), ('unstack', 'b', 'd'), ('stack', 'b', 'c'), ('pickup', 'a'), ('stack', 'a', 'd')]")
+
       # Expected plan from GTpyhop:
       # [('unstack', 'a', 'c'), ('putdown', 'a'), ('unstack', 'b', 'd'), ('stack', 'b', 'c'), ('pickup', 'a'), ('stack', 'a', 'd')]
-      assert {:ok, {final_state, _solution_tree}} = AriaBlocksWorld.solve_problem(state2, [goal2])
+      result = AriaBlocksWorld.solve_problem(state2, [goal2])
+      Logger.debug("Planning result: #{inspect(elem(result, 0))}")
+
+      assert {:ok, {final_state, solution_tree}} = result
+
+      # Log primitive actions
+      log_primitive_actions(solution_tree)
+
+      log_state(final_state, "Final State")
 
       # Verify final state matches goal
       assert AriaState.RelationalState.get_fact(final_state, "pos", "b") == "c"
