@@ -253,7 +253,6 @@ defmodule AriaHybridPlanner do
   # Expand a goal node using domain unigoal methods
   defp expand_goal_node(domain, solution_tree, node_id, node, state, opts) do
     {predicate, subject, value} = node.task
-    verbose = Keyword.get(opts, :verbose, 0)
 
     Logger.debug("HTN Goal Expansion: Starting expansion for goal #{predicate}(#{subject}, #{value}) in node #{node_id}")
 

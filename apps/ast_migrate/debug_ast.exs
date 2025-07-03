@@ -14,25 +14,25 @@ end
 
 {:ok, ast} = Code.string_to_quoted(test_code)
 
-IO.puts("=== Full AST ===")
+Logger.debug("=== Full AST ===")
 IO.inspect(ast, pretty: true, limit: :infinity)
 
-IO.puts("\n=== Walking through AST nodes ===")
+Logger.debug("\n=== Walking through AST nodes ===")
 defmodule ASTWalker do
   def walk(ast) do
     case ast do
       {:defmodule, _, [{:__aliases__, _, [:AriaEngine, :Membrane | rest]}, _]} = node ->
-        IO.puts("Found defmodule: #{inspect(node)}")
-        IO.puts("  - Rest: #{inspect(rest)}")
+        Logger.debug("Found defmodule: #{inspect(node)}")
+        Logger.debug("  - Rest: #{inspect(rest)}")
 
       {:alias, _, [{:__aliases__, _, [:AriaEngine, :Membrane | rest]} | _]} = node ->
-        IO.puts("Found alias: #{inspect(node)}")
-        IO.puts("  - Rest: #{inspect(rest)}")
+        Logger.debug("Found alias: #{inspect(node)}")
+        Logger.debug("  - Rest: #{inspect(rest)}")
 
       {{:., _, [{:__aliases__, _, [:AriaEngine, :Membrane | rest]}, func]}, _, args} = node ->
-        IO.puts("Found function call: #{inspect(node)}")
-        IO.puts("  - Rest: #{inspect(rest)}")
-        IO.puts("  - Function: #{inspect(func)}")
+        Logger.debug("Found function call: #{inspect(node)}")
+        Logger.debug("  - Rest: #{inspect(rest)}")
+        Logger.debug("  - Function: #{inspect(func)}")
 
       {_tag, _, children} when is_list(children) ->
         Enum.each(children, &walk/1)
@@ -51,4 +51,4 @@ end
 
 ASTWalker.walk(ast)
 
-IO.puts("\n=== Done ===")
+Logger.debug("\n=== Done ===")

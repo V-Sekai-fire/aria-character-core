@@ -220,30 +220,6 @@ defmodule AriaBlocksWorld do
   end
 
   @doc """
-  Validate that a plan solves the given problem.
-
-  ## Parameters
-
-  - `initial_state` - Starting state
-  - `plan` - List of actions to validate
-  - `goals` - Goals that should be achieved
-
-  ## Returns
-
-  - `{:ok, final_state}` - Plan is valid, returns final state
-  - `{:error, reason}` - Plan is invalid with error description
-
-  ## Example
-
-      {:ok, final_state} = AriaBlocksWorld.validate_plan(state, plan, goals)
-  """
-  @spec validate_plan(AriaHybridPlanner.State.t(), [term()], [term()]) ::
-    {:ok, AriaHybridPlanner.State.t()} | {:error, atom()}
-  def validate_plan(initial_state, plan, goals) do
-    State.validate_plan(initial_state, plan, goals)
-  end
-
-  @doc """
   Get information about the blocks world domain.
 
   ## Returns

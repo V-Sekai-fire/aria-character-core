@@ -15,7 +15,7 @@ defmodule TestOutput do
   """
   def trace_puts(message) when is_binary(message) do
     if System.get_env("TEST_TRACE") == "true" do
-      IO.puts(message)
+      Logger.debug(message)
     end
     :ok
   end

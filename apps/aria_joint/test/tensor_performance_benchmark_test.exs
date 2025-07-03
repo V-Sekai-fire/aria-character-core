@@ -20,7 +20,7 @@ defmodule AriaJoint.TensorPerformanceBenchmarkTest do
         optimal_batch = AriaMath.Memory.optimal_batch_size(:hierarchy_propagation, {size, 4, 4})
         actual_size = min(size, optimal_batch)
 
-        IO.puts("\n=== Batch Transform Operations (#{actual_size} bones, optimal batch: #{optimal_batch}) ===")
+        Logger.debug("\n=== Batch Transform Operations (#{actual_size} bones, optimal batch: #{optimal_batch}) ===")
 
         # Pre-allocate tensors on GPU to minimize transfers
         {tensor_time_us, _} = :timer.tc(fn ->
@@ -41,15 +41,15 @@ defmodule AriaJoint.TensorPerformanceBenchmarkTest do
 
         speedup = scalar_time_us / tensor_time_us
 
-        IO.puts("Tensor time: #{tensor_time_us / 1000} ms")
-        IO.puts("Scalar time: #{scalar_time_us / 1000} ms")
-        IO.puts("Speedup: #{Float.round(speedup, 2)}x")
-        IO.puts("Memory utilization: #{if actual_size == size, do: "✅ Full", else: "⚠️  Limited by GPU memory"}")
+        Logger.debug("Tensor time: #{tensor_time_us / 1000} ms")
+        Logger.debug("Scalar time: #{scalar_time_us / 1000} ms")
+        Logger.debug("Speedup: #{Float.round(speedup, 2)}x")
+        Logger.debug("Memory utilization: #{if actual_size == size, do: "✅ Full", else: "⚠️  Limited by GPU memory"}")
 
         if speedup > 1.0 do
-          IO.puts("✅ Tensor is #{Float.round(speedup, 2)}x faster!")
+          Logger.debug("✅ Tensor is #{Float.round(speedup, 2)}x faster!")
         else
-          IO.puts("❌ Scalar still faster at #{actual_size} bones")
+          Logger.debug("❌ Scalar still faster at #{actual_size} bones")
         end
       end
     end
@@ -67,11 +67,11 @@ defmodule AriaJoint.TensorPerformanceBenchmarkTest do
             Tensor.compute_global_transforms_batch(joints_data)
           end)
 
-          IO.puts("\n=== Hierarchy Propagation Tensor (#{size} bones) ===")
-          IO.puts("Time: #{time_us / 1000} ms")
-          IO.puts("Bones per second: #{size * 1_000_000 / time_us |> Float.round(2)}")
-          IO.puts("Performance: #{if time_us < 5_000, do: "🚀 Excellent", else: "⚡ Good"}")
-          IO.puts("GPU Memory: ✅ Optimized")
+          Logger.debug("\n=== Hierarchy Propagation Tensor (#{size} bones) ===")
+          Logger.debug("Time: #{time_us / 1000} ms")
+          Logger.debug("Bones per second: #{size * 1_000_000 / time_us |> Float.round(2)}")
+          Logger.debug("Performance: #{if time_us < 5_000, do: "🚀 Excellent", else: "⚡ Good"}")
+          Logger.debug("GPU Memory: ✅ Optimized")
         else
           # Use chunked processing for oversized operations
           optimal_chunk = AriaMath.Memory.optimal_batch_size(:hierarchy_propagation, {size, 4, 4})
@@ -81,10 +81,10 @@ defmodule AriaJoint.TensorPerformanceBenchmarkTest do
             Tensor.compute_global_transforms_batch(joints_data)
           end)
 
-          IO.puts("\n=== Hierarchy Propagation Tensor (#{optimal_chunk}/#{size} bones) ===")
-          IO.puts("Time: #{time_us / 1000} ms (chunked)")
-          IO.puts("Bones per second: #{optimal_chunk * 1_000_000 / time_us |> Float.round(2)}")
-          IO.puts("GPU Memory: ⚠️  Chunked due to size")
+          Logger.debug("\n=== Hierarchy Propagation Tensor (#{optimal_chunk}/#{size} bones) ===")
+          Logger.debug("Time: #{time_us / 1000} ms (chunked)")
+          Logger.debug("Bones per second: #{optimal_chunk * 1_000_000 / time_us |> Float.round(2)}")
+          Logger.debug("GPU Memory: ⚠️  Chunked due to size")
         end
       end
     end
@@ -101,10 +101,10 @@ defmodule AriaJoint.TensorPerformanceBenchmarkTest do
 
         {shape_bones, _} = Nx.shape(positions)
 
-        IO.puts("\n=== Position Extraction (#{size} bones) ===")
-        IO.puts("Time: #{time_us / 1000} ms")
-        IO.puts("Positions extracted: #{shape_bones}")
-        IO.puts("Extractions per second: #{size * 1_000_000 / time_us |> Float.round(2)}")
+        Logger.debug("\n=== Position Extraction (#{size} bones) ===")
+        Logger.debug("Time: #{time_us / 1000} ms")
+        Logger.debug("Positions extracted: #{shape_bones}")
+        Logger.debug("Extractions per second: #{size * 1_000_000 / time_us |> Float.round(2)}")
       end
     end
 
@@ -138,12 +138,12 @@ defmodule AriaJoint.TensorPerformanceBenchmarkTest do
 
             total_points = size * num_points
 
-            IO.puts("\n=== Coordinate Transform (#{size} bones, #{num_points} points/bone) ===")
-            IO.puts("Time: #{time_us / 1000} ms")
-            IO.puts("Total points: #{total_points}")
-            IO.puts("Points per second: #{total_points * 1_000_000 / time_us |> Float.round(2)}")
+            Logger.debug("\n=== Coordinate Transform (#{size} bones, #{num_points} points/bone) ===")
+            Logger.debug("Time: #{time_us / 1000} ms")
+            Logger.debug("Total points: #{total_points}")
+            Logger.debug("Points per second: #{total_points * 1_000_000 / time_us |> Float.round(2)}")
           else
-            IO.puts("\n❌ Shape mismatch: expected #{inspect expected_shape}, got #{inspect actual_shape}")
+            Logger.debug("\n❌ Shape mismatch: expected #{inspect expected_shape}, got #{inspect actual_shape}")
           end
         end
       end
@@ -170,10 +170,10 @@ defmodule AriaJoint.TensorPerformanceBenchmarkTest do
 
         operations_per_sec = 3 * size * 1_000_000 / time_us
 
-        IO.puts("\n=== Memory Efficiency Test (#{size} bones, 3 operations) ===")
-        IO.puts("Time: #{time_us / 1000} ms")
-        IO.puts("Operations per second: #{Float.round(operations_per_sec, 2)}")
-        IO.puts("Memory efficiency: #{if time_us < size * 10, do: "🎯 Excellent", else: "📊 Good"}")
+        Logger.debug("\n=== Memory Efficiency Test (#{size} bones, 3 operations) ===")
+        Logger.debug("Time: #{time_us / 1000} ms")
+        Logger.debug("Operations per second: #{Float.round(operations_per_sec, 2)}")
+        Logger.debug("Memory efficiency: #{if time_us < size * 10, do: "🎯 Excellent", else: "📊 Good"}")
       end
     end
 
@@ -202,15 +202,15 @@ defmodule AriaJoint.TensorPerformanceBenchmarkTest do
 
         speedup = tensor_time_us / gpu_time_us
 
-        IO.puts("\n=== GPU Optimization Test (#{size} bones) ===")
-        IO.puts("Old Tensor time: #{tensor_time_us / 1000} ms")
-        IO.puts("GPU Tensor time: #{gpu_time_us / 1000} ms")
-        IO.puts("GPU Speedup: #{Float.round(speedup, 2)}x")
+        Logger.debug("\n=== GPU Optimization Test (#{size} bones) ===")
+        Logger.debug("Old Tensor time: #{tensor_time_us / 1000} ms")
+        Logger.debug("GPU Tensor time: #{gpu_time_us / 1000} ms")
+        Logger.debug("GPU Speedup: #{Float.round(speedup, 2)}x")
 
         if speedup > 1.0 do
-          IO.puts("✅ GPU implementation is #{Float.round(speedup, 2)}x faster!")
+          Logger.debug("✅ GPU implementation is #{Float.round(speedup, 2)}x faster!")
         else
-          IO.puts("⚠️  GPU implementation is slower at #{size} bones")
+          Logger.debug("⚠️  GPU implementation is slower at #{size} bones")
         end
       end
     end
@@ -240,16 +240,16 @@ defmodule AriaJoint.TensorPerformanceBenchmarkTest do
 
         speedup = cpu_time_us / gpu_time_us
 
-        IO.puts("\n=== Complete Pipeline Test (#{size} bones) ===")
-        IO.puts("CPU pipeline time: #{cpu_time_us / 1000} ms")
-        IO.puts("GPU pipeline time: #{gpu_time_us / 1000} ms")
-        IO.puts("Pipeline speedup: #{Float.round(speedup, 2)}x")
-        IO.puts("Bones per second (GPU): #{size * 1_000_000 / gpu_time_us |> Float.round(2)}")
+        Logger.debug("\n=== Complete Pipeline Test (#{size} bones) ===")
+        Logger.debug("CPU pipeline time: #{cpu_time_us / 1000} ms")
+        Logger.debug("GPU pipeline time: #{gpu_time_us / 1000} ms")
+        Logger.debug("Pipeline speedup: #{Float.round(speedup, 2)}x")
+        Logger.debug("Bones per second (GPU): #{size * 1_000_000 / gpu_time_us |> Float.round(2)}")
 
         if speedup > 1.0 do
-          IO.puts("🚀 GPU pipeline is #{Float.round(speedup, 2)}x faster!")
+          Logger.debug("🚀 GPU pipeline is #{Float.round(speedup, 2)}x faster!")
         else
-          IO.puts("⚠️  GPU pipeline needs optimization")
+          Logger.debug("⚠️  GPU pipeline needs optimization")
         end
       end
     end

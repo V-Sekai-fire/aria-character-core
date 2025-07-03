@@ -17,15 +17,15 @@ defmodule AriaJoint.PerformanceBenchmarkTest do
       for size <- hierarchy_sizes do
         case create_chain_hierarchy(size) do
           {:error, reason} ->
-            IO.puts("\n=== Create Chain Hierarchy (#{size} bones) FAILED ===")
-            IO.puts("Error: #{reason}")
+            Logger.debug("\n=== Create Chain Hierarchy (#{size} bones) FAILED ===")
+            Logger.debug("Error: #{reason}")
 
           hierarchy ->
             {time_us, _} = :timer.tc(fn -> length(hierarchy) end)
 
-            IO.puts("\n=== Create Chain Hierarchy (#{size} bones) ===")
-            IO.puts("Time: #{time_us / 1000} ms")
-            IO.puts("Nodes created: #{length(hierarchy)}")
+            Logger.debug("\n=== Create Chain Hierarchy (#{size} bones) ===")
+            Logger.debug("Time: #{time_us / 1000} ms")
+            Logger.debug("Nodes created: #{length(hierarchy)}")
 
             # Cleanup
             hierarchy |> Enum.each(&Joint.cleanup/1)
@@ -39,8 +39,8 @@ defmodule AriaJoint.PerformanceBenchmarkTest do
       for size <- sizes do
         case create_chain_hierarchy(size) do
           {:error, reason} ->
-            IO.puts("\n=== Get Global Poses Forward (#{size} bones) FAILED ===")
-            IO.puts("Error: #{reason}")
+            Logger.debug("\n=== Get Global Poses Forward (#{size} bones) FAILED ===")
+            Logger.debug("Error: #{reason}")
 
           hierarchy ->
             # Benchmark getting all global poses in forward order
@@ -48,9 +48,9 @@ defmodule AriaJoint.PerformanceBenchmarkTest do
               Enum.map(hierarchy, &Joint.get_global_transform/1)
             end)
 
-            IO.puts("\n=== Get Global Poses Forward (#{size} bones) ===")
-            IO.puts("Time: #{time_us / 1000} ms")
-            IO.puts("Poses per second: #{size * 1_000_000 / time_us |> Float.round(2)}")
+            Logger.debug("\n=== Get Global Poses Forward (#{size} bones) ===")
+            Logger.debug("Time: #{time_us / 1000} ms")
+            Logger.debug("Poses per second: #{size * 1_000_000 / time_us |> Float.round(2)}")
 
             # Cleanup
             hierarchy |> Enum.each(&Joint.cleanup/1)
@@ -64,8 +64,8 @@ defmodule AriaJoint.PerformanceBenchmarkTest do
       for size <- sizes do
         case create_chain_hierarchy(size) do
           {:error, reason} ->
-            IO.puts("\n=== Get Global Poses Reverse (#{size} bones) FAILED ===")
-            IO.puts("Error: #{reason}")
+            Logger.debug("\n=== Get Global Poses Reverse (#{size} bones) FAILED ===")
+            Logger.debug("Error: #{reason}")
 
           hierarchy ->
             # Benchmark getting all global poses in reverse order (worst case)
@@ -75,9 +75,9 @@ defmodule AriaJoint.PerformanceBenchmarkTest do
               |> Enum.map(&Joint.get_global_transform/1)
             end)
 
-            IO.puts("\n=== Get Global Poses Reverse (#{size} bones) ===")
-            IO.puts("Time: #{time_us / 1000} ms")
-            IO.puts("Poses per second: #{size * 1_000_000 / time_us |> Float.round(2)}")
+            Logger.debug("\n=== Get Global Poses Reverse (#{size} bones) ===")
+            Logger.debug("Time: #{time_us / 1000} ms")
+            Logger.debug("Poses per second: #{size * 1_000_000 / time_us |> Float.round(2)}")
 
             # Cleanup
             hierarchy |> Enum.each(&Joint.cleanup/1)
@@ -91,8 +91,8 @@ defmodule AriaJoint.PerformanceBenchmarkTest do
       for size <- sizes do
         case create_chain_hierarchy(size) do
           {:error, reason} ->
-            IO.puts("\n=== Set All Poses + Get Global Poses (#{size} bones) FAILED ===")
-            IO.puts("Error: #{reason}")
+            Logger.debug("\n=== Set All Poses + Get Global Poses (#{size} bones) FAILED ===")
+            Logger.debug("Error: #{reason}")
 
           hierarchy ->
             # Generate random transforms
@@ -113,9 +113,9 @@ defmodule AriaJoint.PerformanceBenchmarkTest do
               Enum.map(updated_hierarchy, &Joint.get_global_transform/1)
             end)
 
-            IO.puts("\n=== Set All Poses + Get Global Poses (#{size} bones) ===")
-            IO.puts("Time: #{time_us / 1000} ms")
-            IO.puts("Operations per second: #{size * 2 * 1_000_000 / time_us |> Float.round(2)}")
+            Logger.debug("\n=== Set All Poses + Get Global Poses (#{size} bones) ===")
+            Logger.debug("Time: #{time_us / 1000} ms")
+            Logger.debug("Operations per second: #{size * 2 * 1_000_000 / time_us |> Float.round(2)}")
 
             # Cleanup
             hierarchy |> Enum.each(&Joint.cleanup/1)
@@ -129,8 +129,8 @@ defmodule AriaJoint.PerformanceBenchmarkTest do
       for size <- sizes do
         case create_chain_hierarchy(size) do
           {:error, reason} ->
-            IO.puts("\n=== Set Root + Get All Global Poses (#{size} bones) FAILED ===")
-            IO.puts("Error: #{reason}")
+            Logger.debug("\n=== Set Root + Get All Global Poses (#{size} bones) FAILED ===")
+            Logger.debug("Error: #{reason}")
 
           hierarchy ->
             [root | _] = hierarchy
@@ -146,9 +146,9 @@ defmodule AriaJoint.PerformanceBenchmarkTest do
               Enum.map(hierarchy, &Joint.get_global_transform/1)
             end)
 
-            IO.puts("\n=== Set Root + Get All Global Poses (#{size} bones) ===")
-            IO.puts("Time: #{time_us / 1000} ms")
-            IO.puts("Propagation efficiency: #{size * 1_000_000 / time_us |> Float.round(2)} bones/sec")
+            Logger.debug("\n=== Set Root + Get All Global Poses (#{size} bones) ===")
+            Logger.debug("Time: #{time_us / 1000} ms")
+            Logger.debug("Propagation efficiency: #{size * 1_000_000 / time_us |> Float.round(2)} bones/sec")
 
             # Cleanup
             hierarchy |> Enum.each(&Joint.cleanup/1)
@@ -163,16 +163,16 @@ defmodule AriaJoint.PerformanceBenchmarkTest do
       hierarchy = create_tree_hierarchy(depth, branching_factor)
       node_count = length(hierarchy)
 
-      IO.puts("\n=== Complex Tree Hierarchy (depth: #{depth}, branching: #{branching_factor}) ===")
-      IO.puts("Total nodes: #{node_count}")
+      Logger.debug("\n=== Complex Tree Hierarchy (depth: #{depth}, branching: #{branching_factor}) ===")
+      Logger.debug("Total nodes: #{node_count}")
 
       # Benchmark getting all global poses
       {time_us, _results} = :timer.tc(fn ->
         Enum.map(hierarchy, &Joint.get_global_transform/1)
       end)
 
-      IO.puts("Get all global poses: #{time_us / 1000} ms")
-      IO.puts("Poses per second: #{node_count * 1_000_000 / time_us |> Float.round(2)}")
+      Logger.debug("Get all global poses: #{time_us / 1000} ms")
+      Logger.debug("Poses per second: #{node_count * 1_000_000 / time_us |> Float.round(2)}")
 
       # Cleanup
       hierarchy |> Enum.each(&Joint.cleanup/1)
@@ -185,8 +185,8 @@ defmodule AriaJoint.PerformanceBenchmarkTest do
 
       case create_chain_hierarchy(size) do
         {:error, reason} ->
-          IO.puts("\n=== Memory Pressure Test FAILED ===")
-          IO.puts("Error: #{reason}")
+          Logger.debug("\n=== Memory Pressure Test FAILED ===")
+          Logger.debug("Error: #{reason}")
 
         hierarchy ->
           {time_us, _} = :timer.tc(fn ->
@@ -197,10 +197,10 @@ defmodule AriaJoint.PerformanceBenchmarkTest do
 
           total_operations = size * iterations
 
-          IO.puts("\n=== Memory Pressure Test (#{size} bones, #{iterations} iterations) ===")
-          IO.puts("Time: #{time_us / 1000} ms")
-          IO.puts("Total operations: #{total_operations}")
-          IO.puts("Operations per second: #{total_operations * 1_000_000 / time_us |> Float.round(2)}")
+          Logger.debug("\n=== Memory Pressure Test (#{size} bones, #{iterations} iterations) ===")
+          Logger.debug("Time: #{time_us / 1000} ms")
+          Logger.debug("Total operations: #{total_operations}")
+          Logger.debug("Operations per second: #{total_operations * 1_000_000 / time_us |> Float.round(2)}")
 
           # Cleanup
           hierarchy |> Enum.each(&Joint.cleanup/1)

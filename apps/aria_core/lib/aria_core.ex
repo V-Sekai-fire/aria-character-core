@@ -494,9 +494,8 @@ defmodule AriaCore do
       nil -> domain_with_actions
       method_specs ->
         Enum.reduce(method_specs, domain_with_actions, fn {method_name, method_fn}, acc_domain ->
-          # Use method name as task name in unified namespace
-          task_name = Atom.to_string(method_name)
-          add_task_method_to_domain(acc_domain, task_name, method_name, method_fn)
+          # Use method name as atom (not string) for consistent lookup
+          add_task_method_to_domain(acc_domain, method_name, method_name, method_fn)
         end)
     end
 

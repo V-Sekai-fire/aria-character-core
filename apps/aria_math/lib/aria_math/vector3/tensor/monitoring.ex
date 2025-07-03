@@ -22,7 +22,7 @@ defmodule AriaMath.Vector3.Tensor.Monitoring do
         AriaMath.Vector3.Tensor.Batch.cross_batch(large_a, large_b)
       end)
 
-      IO.puts("Memory used: \#{memory_stats.memory_used} bytes")
+      Logger.debug("Memory used: \#{memory_stats.memory_used} bytes")
   """
   @spec with_memory_monitoring(function()) :: {any(), map()}
   def with_memory_monitoring(operation_fn) when is_function(operation_fn, 0) do
@@ -35,7 +35,7 @@ defmodule AriaMath.Vector3.Tensor.Monitoring do
   ## Examples
 
       batch_size = AriaMath.Vector3.Tensor.Monitoring.optimal_batch_size({100000, 3})
-      IO.puts("Process \#{batch_size} vectors at a time for optimal memory usage")
+      Logger.debug("Process \#{batch_size} vectors at a time for optimal memory usage")
   """
   @spec optimal_batch_size(tuple()) :: integer()
   def optimal_batch_size(tensor_shape) do
@@ -66,8 +66,8 @@ defmodule AriaMath.Vector3.Tensor.Monitoring do
   ## Examples
 
       stats = AriaMath.Vector3.Tensor.Monitoring.memory_stats()
-      IO.puts("Available memory: \#{stats.available_memory} bytes")
-      IO.puts("Memory pressure: \#{stats.memory_pressure}")
+      Logger.debug("Available memory: \#{stats.available_memory} bytes")
+      Logger.debug("Memory pressure: \#{stats.memory_pressure}")
   """
   @spec memory_stats() :: map()
   def memory_stats do
@@ -80,7 +80,7 @@ defmodule AriaMath.Vector3.Tensor.Monitoring do
   ## Examples
 
       memory_needed = AriaMath.Vector3.Tensor.Monitoring.estimate_memory_usage(:cross_batch, {100000, 3})
-      IO.puts("Cross product will need approximately \#{memory_needed} bytes")
+      Logger.debug("Cross product will need approximately \#{memory_needed} bytes")
   """
   @spec estimate_memory_usage(atom(), tuple()) :: integer()
   def estimate_memory_usage(operation, tensor_shape) do

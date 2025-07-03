@@ -2,6 +2,8 @@
 # SPDX-License-Identifier: MIT
 
 defmodule AriaBlocksWorld.State do
+  require Logger
+
   @moduledoc """
   State management for the blocks world domain following R25W1398085.
 
@@ -295,27 +297,6 @@ defmodule AriaBlocksWorld.State do
   end
 
   @doc """
-  Validate that a plan solves the given problem.
-
-  ## Parameters
-
-  - `initial_state` - Starting state
-  - `plan` - List of actions to validate
-  - `goals` - Goals that should be achieved
-
-  ## Returns
-
-  - `{:ok, final_state}` - Plan is valid, returns final state
-  - `{:error, reason}` - Plan is invalid with error description
-  """
-  @spec validate_plan(AriaHybridPlanner.State.t(), [term()], [term()]) ::
-    {:ok, AriaHybridPlanner.State.t()} | {:error, atom()}
-  def validate_plan(_initial_state, _plan, _goals) do
-    # TODO: Implement plan validation
-    {:error, :not_implemented}
-  end
-
-  @doc """
   Display the current state in a human-readable format.
 
   ## Parameters
@@ -329,24 +310,24 @@ defmodule AriaBlocksWorld.State do
   """
   @spec display(AriaHybridPlanner.State.t(), String.t()) :: :ok
   def display(state, label \\ "State") do
-    IO.puts("\n#{label}:")
+    Logger.debug("\n#{label}:")
 
     blocks = all_blocks(state)
 
-    IO.puts("  Positions:")
+    Logger.debug("  Positions:")
     Enum.each(blocks, fn block ->
       pos = get_position(state, block)
-      IO.puts("    #{block} -> #{inspect(pos)}")
+      Logger.debug("    #{block} -> #{inspect(pos)}")
     end)
 
-    IO.puts("  Clear:")
+    Logger.debug("  Clear:")
     Enum.each(blocks, fn block ->
       clear = is_clear?(state, block)
-      IO.puts("    #{block} -> #{clear}")
+      Logger.debug("    #{block} -> #{clear}")
     end)
 
     holding = get_holding(state)
-    IO.puts("  Holding: hand -> #{inspect(holding)}")
+    Logger.debug("  Holding: hand -> #{inspect(holding)}")
 
     :ok
   end

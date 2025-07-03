@@ -12,7 +12,7 @@ defmodule Mix.Tasks.DetectViolations do
   def run(args) do
     {_opts, _, _} = OptionParser.parse(args, switches: [verbose: :boolean])
 
-    IO.puts("=== Cross-App Dependency Violation Detection ===")
+    Logger.debug("=== Cross-App Dependency Violation Detection ===")
 
     file_patterns = [
       "apps/*/lib/**/*.ex",
@@ -27,26 +27,26 @@ defmodule Mix.Tasks.DetectViolations do
       |> Enum.filter(&File.exists?/1)
       |> Enum.filter(&is_elixir_file?/1)
 
-    IO.puts("Scanning #{length(files)} files...")
+    Logger.debug("Scanning #{length(files)} files...")
 
     total_violations =
       files
       |> Enum.map(fn file ->
         violations = detect_violations_in_file(file)
         if not Enum.empty?(violations) do
-          IO.puts("\n📁 #{file}")
+          Logger.debug("\n📁 #{file}")
           Enum.each(violations, fn violation ->
-            IO.puts("  ❌ #{violation.type}: #{violation.alias}")
-            IO.puts("     #{violation.description}")
-            IO.puts("     💡 #{violation.suggested_fix}")
+            Logger.debug("  ❌ #{violation.type}: #{violation.alias}")
+            Logger.debug("     #{violation.description}")
+            Logger.debug("     💡 #{violation.suggested_fix}")
           end)
         end
         length(violations)
       end)
       |> Enum.sum()
 
-    IO.puts("\n=== Summary ===")
-    IO.puts("Total violations found: #{total_violations}")
+    Logger.debug("\n=== Summary ===")
+    Logger.debug("Total violations found: #{total_violations}")
   end
 
   defp is_elixir_file?(file_path) do

@@ -47,7 +47,7 @@ defmodule AriaBlocksWorld.Domain do
   """
   @action true
   @spec pickup(AriaHybridPlanner.State.t(), [block()]) :: {:ok, AriaHybridPlanner.State.t()} | {:error, atom()}
-  def pickup(state, [block]) do
+  def pickup(state, [block]) when is_binary(block) do
     # Check preconditions
     current_pos = AriaHybridPlanner.get_fact(state, "pos", block)
     is_clear = AriaHybridPlanner.get_fact(state, "clear", block)
@@ -68,6 +68,9 @@ defmodule AriaBlocksWorld.Domain do
     end
   end
 
+  def pickup(_state, [nil]), do: raise ArgumentError, "block name cannot be nil"
+  def pickup(_state, [block]) when not is_binary(block), do: raise ArgumentError, "block name must be a string"
+
   @doc """
   Remove block1 from on top of block2.
 
@@ -85,7 +88,7 @@ defmodule AriaBlocksWorld.Domain do
   """
   @action true
   @spec unstack(AriaHybridPlanner.State.t(), [block()]) :: {:ok, AriaHybridPlanner.State.t()} | {:error, atom()}
-  def unstack(state, [block1, block2]) do
+  def unstack(state, [block1, block2]) when is_binary(block1) and is_binary(block2) do
     # Check preconditions
     current_pos = AriaHybridPlanner.get_fact(state, "pos", block1)
     is_clear = AriaHybridPlanner.get_fact(state, "clear", block1)
@@ -107,6 +110,10 @@ defmodule AriaBlocksWorld.Domain do
         {:ok, new_state}
     end
   end
+
+  def unstack(_state, [_block1, nil]), do: raise ArgumentError, "block name cannot be nil"
+  def unstack(_state, [nil, _block2]), do: raise ArgumentError, "block name cannot be nil"
+  def unstack(_state, [block1, block2]) when not is_binary(block1) or not is_binary(block2), do: raise ArgumentError, "block names must be strings"
 
   @doc """
   Put down the held block on the table.
@@ -180,7 +187,7 @@ defmodule AriaBlocksWorld.Domain do
   """
   @action true
   @spec take(AriaHybridPlanner.State.t(), [block()]) :: {:ok, AriaHybridPlanner.State.t()} | {:error, atom()}
-  def take(state, [block]) do
+  def take(state, [block]) when is_binary(block) do
     current_pos = AriaHybridPlanner.get_fact(state, "pos", block)
 
     case current_pos do
@@ -189,6 +196,9 @@ defmodule AriaBlocksWorld.Domain do
       _ -> {:error, :invalid_position}
     end
   end
+
+  def take(_state, [nil]), do: raise ArgumentError, "block name cannot be nil"
+  def take(_state, [block]) when not is_binary(block), do: raise ArgumentError, "block name must be a string"
 
   # Task methods for complex workflows following R25W1398085
 

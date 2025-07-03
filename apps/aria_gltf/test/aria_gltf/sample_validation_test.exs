@@ -93,7 +93,7 @@ defmodule AriaGltf.SampleValidationTest do
         {:error, reason} ->
           # If SimpleMorph.gltf is not available, the test should not fail
           # This allows the test suite to pass even if the file wasn't downloaded
-          IO.puts("SimpleMorph.gltf not available: #{inspect(reason)}")
+          Logger.debug("SimpleMorph.gltf not available: #{inspect(reason)}")
           assert true
       end
     end

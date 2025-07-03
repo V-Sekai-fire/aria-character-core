@@ -14,21 +14,21 @@ defmodule AriaEngine.Membrane.Format.TestModule do
 end
 """
 
-IO.puts("=== Original content ===")
-IO.puts(test_content)
+Logger.debug("=== Original content ===")
+Logger.debug(test_content)
 
 case MembraneNamespaceCleanup.transform_file_content(test_content, "test.ex") do
   {:ok, transformed} ->
-    IO.puts("\n=== Transformed content ===")
-    IO.puts(transformed)
+    Logger.debug("\n=== Transformed content ===")
+    Logger.debug(transformed)
 
-    IO.puts("\n=== Comparison ===")
+    Logger.debug("\n=== Comparison ===")
     if test_content == transformed do
-      IO.puts("❌ NO CHANGES MADE")
+      Logger.debug("❌ NO CHANGES MADE")
     else
-      IO.puts("✅ TRANSFORMATION APPLIED")
+      Logger.debug("✅ TRANSFORMATION APPLIED")
     end
 
   {:error, reason} ->
-    IO.puts("❌ Error: #{reason}")
+    Logger.debug("❌ Error: #{reason}")
 end

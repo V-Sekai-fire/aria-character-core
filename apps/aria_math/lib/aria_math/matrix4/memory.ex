@@ -294,7 +294,7 @@ defmodule AriaMath.Matrix4.Memory do
         AriaMath.Matrix4.Batch.multiply_batch(large_a, large_b)
       end)
 
-      IO.puts("Memory used: \#{memory_stats.memory_used} bytes")
+      Logger.debug("Memory used: \#{memory_stats.memory_used} bytes")
   """
   @spec with_memory_monitoring(function()) :: {any(), map()}
   def with_memory_monitoring(operation_fn) when is_function(operation_fn, 0) do
@@ -307,7 +307,7 @@ defmodule AriaMath.Matrix4.Memory do
   ## Examples
 
       batch_size = AriaMath.Matrix4.Memory.optimal_batch_size({10000, 4, 4})
-      IO.puts("Process \#{batch_size} matrices at a time for optimal memory usage")
+      Logger.debug("Process \#{batch_size} matrices at a time for optimal memory usage")
   """
   @spec optimal_batch_size(tuple()) :: integer()
   def optimal_batch_size(tensor_shape) do

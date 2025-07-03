@@ -64,7 +64,7 @@ defmodule AriaMath.Memory do
   ## Examples
 
       memory_info = AriaMath.Memory.get_memory_info()
-      IO.puts("Available memory: \#{memory_info.available_memory} bytes")
+      Logger.debug("Available memory: \#{memory_info.available_memory} bytes")
   """
   @spec get_memory_info() :: memory_info()
   def get_memory_info do
@@ -234,7 +234,7 @@ defmodule AriaMath.Memory do
   ## Examples
 
       memory_bytes = AriaMath.Memory.estimate_memory_usage(:coordinate_transform, {10000, 100, 3})
-      IO.puts("Estimated memory: \#{memory_bytes / 1024 / 1024} MB")
+      Logger.debug("Estimated memory: \#{memory_bytes / 1024 / 1024} MB")
   """
   @spec estimate_memory_usage(operation_type(), tensor_shape()) :: integer()
   def estimate_memory_usage(operation_type, tensor_shape) do
@@ -274,7 +274,7 @@ defmodule AriaMath.Memory do
         AriaMath.Matrix4.Tensor.multiply_batch(matrices_a, matrices_b)
       end)
 
-      IO.puts("Peak memory usage: \#{memory_stats.peak_usage} bytes")
+      Logger.debug("Peak memory usage: \#{memory_stats.peak_usage} bytes")
   """
   @spec monitor_memory(function()) :: {any(), map()}
   def monitor_memory(operation_fn) when is_function(operation_fn, 0) do
