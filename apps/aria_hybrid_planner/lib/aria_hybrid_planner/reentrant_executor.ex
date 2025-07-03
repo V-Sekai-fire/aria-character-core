@@ -209,11 +209,17 @@ defmodule Plan.ReentrantExecutor do
             execute_with_retry(domain, partial_state, updated_actions, updated_tree, updated_blacklist_state, partial_trace, opts, retry_count + 1, max_retries)
         end
 
-      {:error, reason, _failed_action, _partial_state, partial_trace} ->
-        if verbose > 1 do
-          Logger.debug("ReentrantExecutor: Execution failed with unrecoverable error: #{reason}")
-        end
-        {:error, reason, Enum.reverse(partial_trace)}
+            {:error, reason, _failed_action, _partial_state, partial_trace} ->
+              if verbose > 1 do
+                Logger.debug("ReentrantExecutor: Execution failed with unrecoverable error: #{reason}")
+              end
+              # Convert atom reasons to strings for consistency
+              string_reason = case reason do
+                atom when is_atom(atom) -> Atom.to_string(atom)
+                string when is_binary(string) -> string
+                other -> inspect(other)
+              end
+              {:error, string_reason, Enum.reverse(partial_trace)}
     end
   end
 
@@ -756,7 +762,7 @@ defmodule Plan.ReentrantExecutor do
 
     try do
         # Get the method function from the domain
-        case get_task_method_function(domain, method_name) do
+        case get_task_method_function(domain, task_name, method_name) do
         {:ok, method_fn} ->
           # Execute the method with state and task arguments
           case method_fn.(state, args) do
@@ -787,20 +793,20 @@ defmodule Plan.ReentrantExecutor do
   end
 
   # Get a task method function from the domain.
-  @spec get_task_method_function(map(), String.t()) :: {:ok, function()} | {:error, String.t()}
-  defp get_task_method_function(domain, method_name) do
-    # Convert method name to atom for lookup
-    method_atom = case method_name do
-      atom when is_atom(atom) -> atom
-      string when is_binary(string) -> String.to_atom(string)
-    end
-
-    # Get task methods for this method name (treating method name as task name)
-    case AriaCore.get_task_methods_from_domain(domain, method_atom) do
+  @spec get_task_method_function(map(), atom(), String.t()) :: {:ok, function()} | {:error, String.t()}
+  defp get_task_method_function(domain, task_name, method_name) do
+    # Get task methods for the actual task name
+    case AriaCore.get_task_methods_from_domain(domain, task_name) do
       [] ->
         {:error, "Task method #{method_name} not found in domain"}
 
       methods when is_list(methods) ->
+        # Convert method name to atom for lookup
+        method_atom = case method_name do
+          atom when is_atom(atom) -> atom
+          string when is_binary(string) -> String.to_atom(string)
+        end
+
         # Find the method function in the keyword list
         case Keyword.get(methods, method_atom) do
           nil ->

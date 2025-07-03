@@ -45,7 +45,7 @@ defmodule Plan.NodeExpansion do
           expanded: false,
           method_tried: nil,
           blacklisted_methods: [],
-          is_primitive: Plan.Utils.is_primitive_task?(todo),
+          is_primitive: false,
           is_durative: false
         }
 
@@ -54,7 +54,7 @@ defmodule Plan.NodeExpansion do
       end)
 
     child_ids = Enum.reverse(child_ids)
-    updated_root = %{solution_tree.nodes[root_id] | children_ids: child_ids, expanded: true}
+    updated_root = %{solution_tree.nodes[root_id] | children_ids: child_ids, expanded: true, method_tried: :root_expansion}
     final_tree = put_in(new_tree.nodes[root_id], updated_root)
     {:ok, final_tree}
   end
@@ -84,7 +84,6 @@ defmodule Plan.NodeExpansion do
       {new_tree, child_ids} =
         Enum.reduce(unsatisfied, {solution_tree, []}, fn goal, {tree, ids} ->
           child_id = Plan.Utils.generate_node_id()
-          is_primitive = Plan.Utils.is_primitive_task?(goal)
 
           child_node = %{
             id: child_id,
@@ -93,10 +92,10 @@ defmodule Plan.NodeExpansion do
             children_ids: [],
             state: node.state,
             visited: false,
-            expanded: is_primitive,
+            expanded: false,
             method_tried: nil,
             blacklisted_methods: [],
-            is_primitive: is_primitive,
+            is_primitive: false,
             is_durative: false
           }
 
@@ -105,7 +104,7 @@ defmodule Plan.NodeExpansion do
         end)
 
       child_ids = Enum.reverse(child_ids)
-      updated_node = %{node | children_ids: child_ids, expanded: true}
+      updated_node = %{node | children_ids: child_ids, expanded: true, method_tried: :multigoal_expansion}
       final_tree = put_in(new_tree.nodes[node_id], updated_node)
       {:ok, final_tree}
     end

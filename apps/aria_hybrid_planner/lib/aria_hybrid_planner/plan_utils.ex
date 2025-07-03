@@ -113,33 +113,6 @@ defmodule Plan.Utils do
     }
   end
 
-  @doc """
-  Check if a task is primitive (represents a direct action).
-  """
-  @spec is_primitive_task?(Core.todo_item()) :: boolean()
-  def is_primitive_task?({task_name, _args}) when is_binary(task_name) do
-    # For now, assume all string tasks need to be checked against domain
-    false
-  end
-
-  def is_primitive_task?({action_name, _args}) when is_atom(action_name) do
-    # Atom tasks are typically primitive actions
-    true
-  end
-
-  def is_primitive_task?({_predicate, _subject, _value}) do
-    # Goals are not primitive
-    false
-  end
-
-  def is_primitive_task?(%AriaEngineCore.Multigoal{}) do
-    # Multigoals are not primitive
-    false
-  end
-
-  def is_primitive_task?(_) do
-    false
-  end
 
   @doc """
   Validate a plan by executing it step by step.

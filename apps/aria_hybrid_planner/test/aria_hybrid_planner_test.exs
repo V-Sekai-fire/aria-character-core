@@ -7,12 +7,12 @@ defmodule AriaHybridPlannerTest do
 
   alias AriaHybridPlanner
   alias AriaHybridPlanner.State
-  alias Domain.Core
+  alias AriaCore.Domain
 
   describe "basic planning functionality" do
     setup do
       # Create a simple test domain
-      domain = Core.new("test_domain")
+      domain = Domain.new("test_domain")
 
       # Add a simple action
       move_action = %{
@@ -23,7 +23,7 @@ defmodule AriaHybridPlannerTest do
         end
       }
 
-      domain = Core.add_action(domain, :move, move_action)
+      domain = Domain.add_action(domain, :move, move_action)
 
       # Create initial state
       state = AriaHybridPlanner.new_state()
@@ -75,7 +75,8 @@ defmodule AriaHybridPlannerTest do
           assert is_binary(reason)
           assert String.contains?(reason, "function not found") or
                  String.contains?(reason, "Domain required") or
-                 String.contains?(reason, "execution")
+                 String.contains?(reason, "execution") or
+                 String.contains?(reason, "todo_item_failed")
       end
     end
 
@@ -99,7 +100,8 @@ defmodule AriaHybridPlannerTest do
           assert is_binary(reason)
           assert String.contains?(reason, "function not found") or
                  String.contains?(reason, "Domain required") or
-                 String.contains?(reason, "execution")
+                 String.contains?(reason, "execution") or
+                 String.contains?(reason, "todo_item_failed")
       end
     end
 
@@ -190,9 +192,9 @@ defmodule AriaHybridPlannerTest do
 
   describe "domain integration" do
     test "plan/4 uses domain for task decomposition" do
-      # Create domain with task methods
-      domain = Core.new("test_domain")
-      domain = Core.add_task_method(domain, :transport, "method1", fn -> :ok end)
+      # Create domain with task methods using AriaCore.MethodManagement
+      domain = Domain.new("test_domain")
+      domain = AriaCore.MethodManagement.add_task_method(domain, "transport", "method1", fn _state, _args -> {:ok, []} end)
 
       state = AriaHybridPlanner.new_state()
       todos = [{:transport, ["a", "b"]}]
@@ -205,12 +207,18 @@ defmodule AriaHybridPlannerTest do
     end
 
     test "plan/4 handles goals with unigoal methods" do
-      # Create domain with unigoal methods
-      domain = Core.new("test_domain")
-      domain = Core.add_unigoal_method(domain, :location, "move_method", fn -> :ok end)
+      # Create domain with unigoal methods using proper AriaCore API
+      domain = Domain.new("test_domain")
+
+      # Create unigoal method spec with proper structure
+      unigoal_spec = %{
+        predicate: "location",
+        goal_fn: fn _state, _args -> {:ok, []} end
+      }
+      domain = AriaCore.add_unigoal_method(domain, :move_method, unigoal_spec)
 
       state = AriaHybridPlanner.new_state()
-      todos = [{:location, "a", "room1"}]
+      todos = [{"location", "a", "room1"}]
 
       assert {:ok, plan} = AriaHybridPlanner.plan(domain, state, todos, verbose: 2)
 

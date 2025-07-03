@@ -159,8 +159,8 @@ defmodule AriaHybridPlanner do
         end
         Plan.NodeExpansion.expand_multigoal_node(domain, state, solution_tree, node_id, multigoal, verbose)
 
-      # Handle regular tasks
-      {task_name, _args} when is_binary(task_name) ->
+      # Handle regular tasks (both string and atom task names)
+      {task_name, _args} when is_binary(task_name) or is_atom(task_name) ->
         if verbose > 2 do
           Logger.debug("HTN Planning: Expanding task node #{node_id}: #{task_name}")
         end
@@ -189,12 +189,16 @@ defmodule AriaHybridPlanner do
   end
 
   # Expand a task node using domain methods
-  defp expand_task_node(domain, solution_tree, node_id, node, _state, opts) do
-    {task_name, _args} = node.task
+  defp expand_task_node(domain, solution_tree, node_id, node, state, opts) do
+    {task_name, args} = node.task
     verbose = Keyword.get(opts, :verbose, 0)
 
-    # Convert string task name to atom for domain lookup
-    task_atom = if is_binary(task_name), do: String.to_atom(task_name), else: task_name
+    # Convert task name to atom for domain lookup
+    task_atom = case task_name do
+      atom when is_atom(atom) -> atom
+      string when is_binary(string) -> String.to_atom(string)
+      other -> other
+    end
 
     # Check if domain has methods for this task
     case AriaCore.get_task_methods_from_domain(domain, task_atom) do
@@ -208,9 +212,41 @@ defmodule AriaHybridPlanner do
         if verbose > 2 do
           Logger.debug("HTN Planning: Found #{length(methods)} methods for task #{task_name}")
         end
-        # For now, mark as primitive since we don't have method execution logic
-        # In a full implementation, this would try each method
-        Plan.NodeExpansion.mark_as_primitive(solution_tree, node_id)
+
+        # Get the first available method from the list
+        case methods do
+          [] ->
+            if verbose > 2 do
+              Logger.debug("HTN Planning: No methods available for task #{task_name}")
+            end
+            :failure
+
+          [{method_name, _method_spec} | _] ->
+            case execute_task_method_for_planning(domain, state, task_atom, args, method_name, opts) do
+              {:ok, []} ->
+                # Method returned empty list - task already completed
+                if verbose > 2 do
+                  Logger.debug("HTN Planning: Task method #{method_name} returned empty list - task completed")
+                end
+                Plan.NodeExpansion.mark_as_primitive(solution_tree, node_id)
+
+              {:ok, subtasks} ->
+                # Method returned subtasks - create child nodes
+                if verbose > 2 do
+                  Logger.debug("HTN Planning: Task method #{method_name} returned #{length(subtasks)} subtasks")
+                end
+                case create_child_nodes_for_planning(solution_tree, node_id, subtasks, method_name, opts) do
+                  {:ok, updated_tree} -> {:ok, updated_tree}
+                  {:error, reason} -> {:error, "Failed to create child nodes: #{reason}"}
+                end
+
+              {:error, reason} ->
+                if verbose > 2 do
+                  Logger.debug("HTN Planning: Task method #{method_name} failed: #{reason}")
+                end
+                :failure
+            end
+        end
     end
   end
 
@@ -386,6 +422,77 @@ defmodule AriaHybridPlanner do
   defdelegate get_subjects_with_fact(state, predicate, value), to: AriaHybridPlanner.State
 
 
+  # Execute a task method during planning to get subtasks.
+  defp execute_task_method_for_planning(domain, state, task_name, args, method_name, opts) do
+    verbose = Keyword.get(opts, :verbose, 0)
+
+    if verbose > 2 do
+      Logger.debug("HTN Planning: Executing task method #{method_name} for #{task_name}(#{inspect(args)})")
+    end
+
+    try do
+      # Get task methods for the task name using the unified helper
+      case get_task_methods_from_domain(domain, task_name) do
+        [] ->
+          {:error, "No task methods found for task #{task_name}"}
+
+        methods when is_list(methods) ->
+          # Find the method function in the list of tuples
+          case find_method_function(methods, method_name) do
+            nil ->
+              if verbose > 2 do
+                Logger.debug("HTN Planning: No method function found for #{method_name}, marking as primitive")
+              end
+              {:ok, []}
+
+            method_fn when is_function(method_fn, 2) ->
+              execute_task_method_function(method_fn, state, args, method_name, verbose)
+
+            _other ->
+              {:error, "Invalid method function for #{method_name}"}
+          end
+
+        _other ->
+          {:error, "Invalid task methods structure for task #{task_name}"}
+      end
+    rescue
+      e ->
+        error_msg = "Method execution failed: #{Exception.message(e)}"
+        if verbose > 1 do
+          Logger.debug("HTN Planning: #{error_msg}")
+        end
+        {:error, error_msg}
+    end
+  end
+
+  defp execute_task_method_function(method_fn, state, args, method_name, verbose) do
+    case method_fn.(state, args) do
+      {:ok, subtasks} when is_list(subtasks) ->
+        if verbose > 2 do
+          Logger.debug("HTN Planning: Method #{method_name} returned #{length(subtasks)} subtasks")
+        end
+        {:ok, subtasks}
+
+      subtasks when is_list(subtasks) ->
+        if verbose > 2 do
+          Logger.debug("HTN Planning: Method #{method_name} returned #{length(subtasks)} subtasks")
+        end
+        {:ok, subtasks}
+
+      {:error, reason} ->
+        if verbose > 2 do
+          Logger.debug("HTN Planning: Method #{method_name} failed: #{reason}")
+        end
+        {:error, reason}
+
+      other_result ->
+        if verbose > 2 do
+          Logger.debug("HTN Planning: Method #{method_name} returned non-list result: #{inspect(other_result)}")
+        end
+        {:error, "Method returned non-list result: #{inspect(other_result)}"}
+    end
+  end
+
   # Helper functions for planning-time method execution
 
   # Execute a unigoal method during planning to get subtasks.
@@ -537,6 +644,37 @@ defmodule AriaHybridPlanner do
           Logger.debug("HTN Planning: #{error_msg}")
         end
         {:error, error_msg}
+    end
+  end
+
+  # Helper functions for domain compatibility
+
+  # Unified helper to get task methods from domain
+  defp get_task_methods_from_domain(domain, task_name) do
+    # Use AriaCore.MethodManagement directly
+    AriaCore.MethodManagement.get_task_methods(domain, task_name)
+  end
+
+  # Find method function in a list of method tuples
+  defp find_method_function(methods, method_name) do
+    # Convert method_name to string for comparison
+    method_name_str = case method_name do
+      atom when is_atom(atom) -> Atom.to_string(atom)
+      string when is_binary(string) -> string
+      other -> to_string(other)
+    end
+
+    # Find the method in the list of {name, function} tuples
+    case Enum.find(methods, fn {name, _fn} ->
+      name_str = case name do
+        atom when is_atom(atom) -> Atom.to_string(atom)
+        string when is_binary(string) -> string
+        other -> to_string(other)
+      end
+      name_str == method_name_str
+    end) do
+      {_name, method_fn} -> method_fn
+      nil -> nil
     end
   end
 

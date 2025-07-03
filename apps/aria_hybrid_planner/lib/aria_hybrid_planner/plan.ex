@@ -317,32 +317,6 @@ defmodule AriaEngineCore.Plan do
     end
   end
 
-  @doc """
-  Checks if a todo item represents a primitive task.
-
-  Primitive tasks are actions that can be executed directly without
-  further decomposition.
-
-  ## Parameters
-
-  - `todo_item` - The todo item to check
-
-  ## Returns
-
-  `true` if the item is primitive, `false` otherwise.
-  """
-  @spec is_primitive_task?(todo_item()) :: boolean()
-  def is_primitive_task?({name, _args}) when is_atom(name) do
-    true
-  end
-
-  def is_primitive_task?({name, _args}) when is_binary(name) do
-    false
-  end
-
-  def is_primitive_task?(_) do
-    false
-  end
 
   @doc """
   Extracts goals from a solution tree.
