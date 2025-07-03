@@ -446,41 +446,60 @@ defmodule AriaBlocksWorld.Domain do
     # Register all attribute-defined actions and methods
     domain = AriaCore.register_attribute_specs(domain, __MODULE__)
 
-    # Add multigoal method for splitting multigoals (GTpyhop pattern)
-    domain = AriaCore.add_multigoal_method_to_domain(domain, "split_multigoal", &split_multigoal/2)
+    # Add intelligent multigoal method implementing IPyHOP algorithm
+    domain = AriaCore.add_multigoal_method_to_domain(domain, "intelligent_multigoal", &intelligent_multigoal/2)
 
     domain
   end
 
   @doc """
-  Split a multigoal into individual unigoals following GTpyhop pattern.
+  Intelligent multigoal method implementing IPyHOP's block-stacking algorithm.
 
-  This multigoal method implements the classic GTpyhop m_split_multigoal approach:
-  1. Check which goals in the multigoal are not yet satisfied
-  2. Return individual unigoals for unsatisfied goals in original order
-  3. Add a verification goal to ensure all goals are achieved
+  This method analyzes block dependencies and returns goals in optimal order:
+  1. Blocks that can move to final position immediately
+  2. Blocks that need to move out of the way to table
+  3. Blocks that are waiting for dependencies
 
-  The HTN planner will discover the optimal goal ordering through its natural
-  backtracking mechanism, so no domain-specific sorting is needed.
+  Based on IPyHOP's mgm_move_blocks algorithm with status analysis.
   """
-  @spec split_multigoal(AriaState.t(), AriaEngineCore.Multigoal.t()) ::
+  @multigoal_method true
+  @spec intelligent_multigoal(AriaState.t(), AriaEngineCore.Multigoal.t()) ::
     {:ok, [AriaHybridPlanner.todo_item()]} | {:error, atom()}
-  def split_multigoal(state, multigoal) do
+  def intelligent_multigoal(state, multigoal) do
     # Check if multigoal is already satisfied
     if AriaEngineCore.Multigoal.satisfied?(multigoal, state) do
       {:ok, []}  # All goals already achieved
     else
-      # Get unsatisfied goals in original order - let planner discover optimal sequence
-      unsatisfied = AriaEngineCore.Multigoal.unsatisfied_goals(multigoal, state)
+      # Convert multigoal to goal map for analysis
+      goal_map = multigoal_to_goal_map(multigoal)
 
-      # Add a verification goal that checks all goals are satisfied
-      # This prevents infinite loops while ensuring verification
-      verification_goal = {"multigoal_verified", inspect(multigoal.goals), true}
+      # Get all blocks in the domain
+      all_blocks = get_all_blocks(state)
 
-      # Return individual goals + verification goal in original order
-      todo_list = unsatisfied ++ [verification_goal]
+      # Find blocks that can be moved optimally using IPyHOP algorithm
+      case find_optimal_move(state, goal_map, all_blocks) do
+        {:move_to_block, block, destination} ->
+          # Block can move to final position - prioritize this
+          goal = {"pos", block, destination}
+          recursive_multigoal = AriaEngineCore.Multigoal.remove_goal(multigoal, "pos", block, destination)
+          {:ok, [goal, recursive_multigoal]}
 
-      {:ok, todo_list}
+        {:move_to_table, block} ->
+          # Block needs to move out of the way - do this first
+          goal = {"pos", block, "table"}
+          {:ok, [goal, multigoal]}
+
+        {:waiting, block} ->
+          # Block is waiting - move to table to unblock others
+          goal = {"pos", block, "table"}
+          {:ok, [goal, multigoal]}
+
+        :no_moves_needed ->
+          # All remaining goals can be achieved directly
+          unsatisfied = AriaEngineCore.Multigoal.unsatisfied_goals(multigoal, state)
+          verification_goal = {"multigoal_verified", inspect(multigoal.goals), true}
+          {:ok, unsatisfied ++ [verification_goal]}
+      end
     end
   end
 
@@ -519,5 +538,84 @@ defmodule AriaBlocksWorld.Domain do
 
     # Combine and return all blocks
     (clear_true ++ clear_false) |> Enum.uniq()
+  end
+
+  # IPyHOP algorithm implementation
+
+  defp multigoal_to_goal_map(multigoal) do
+    # Convert multigoal to a map for easier lookup
+    # Only handle "pos" goals for now
+    multigoal.goals
+    |> Enum.filter(fn {predicate, _subject, _value} -> predicate == "pos" end)
+    |> Enum.into(%{}, fn {"pos", block, destination} -> {block, destination} end)
+  end
+
+  defp find_optimal_move(state, goal_map, all_blocks) do
+    # IPyHOP algorithm: find blocks that can be moved optimally
+
+    # First pass: look for blocks that can move to final position
+    case find_block_with_status(state, goal_map, all_blocks, :move_to_block) do
+      {block, destination} -> {:move_to_block, block, destination}
+      nil ->
+        # Second pass: look for blocks that need to move out of the way
+        case find_block_with_status(state, goal_map, all_blocks, :move_to_table) do
+          {block, _} -> {:move_to_table, block}
+          nil ->
+            # Third pass: look for waiting blocks
+            case find_block_with_status(state, goal_map, all_blocks, :waiting) do
+              {block, _} -> {:waiting, block}
+              nil -> :no_moves_needed
+            end
+        end
+    end
+  end
+
+  defp find_block_with_status(state, goal_map, all_blocks, target_status) do
+    Enum.find_value(all_blocks, fn block ->
+      case block_status(state, goal_map, block) do
+        ^target_status -> {block, Map.get(goal_map, block)}
+        _ -> nil
+      end
+    end)
+  end
+
+  defp block_status(state, goal_map, block) do
+    # IPyHOP status function implementation
+    cond do
+      is_done?(state, goal_map, block) ->
+        :done
+
+      not AriaState.get_fact(state, "clear", block) ->
+        :inaccessible
+
+      not Map.has_key?(goal_map, block) or Map.get(goal_map, block) == "table" ->
+        :move_to_table
+
+      true ->
+        destination = Map.get(goal_map, block)
+        if is_done?(state, goal_map, destination) and AriaState.get_fact(state, "clear", destination) do
+          :move_to_block
+        else
+          :waiting
+        end
+    end
+  end
+
+  defp is_done?(state, goal_map, block) do
+    # IPyHOP is_done function: check if block is in correct position recursively
+    cond do
+      block == "table" ->
+        true
+
+      Map.has_key?(goal_map, block) and Map.get(goal_map, block) != AriaState.get_fact(state, "pos", block) ->
+        false
+
+      AriaState.get_fact(state, "pos", block) == "table" ->
+        true
+
+      true ->
+        current_pos = AriaState.get_fact(state, "pos", block)
+        is_done?(state, goal_map, current_pos)
+    end
   end
 end
