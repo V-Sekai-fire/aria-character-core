@@ -47,7 +47,7 @@ defmodule AriaBlocksWorld.State do
         holding: %{"hand" => false}
       })
   """
-  @spec create(map()) :: AriaState.t()
+  @spec create(map()) :: AriaHybridPlanner.State.t()
   def create(data) do
     state = AriaHybridPlanner.new_state()
 
@@ -78,7 +78,7 @@ defmodule AriaBlocksWorld.State do
 
   ## Returns
 
-  - Multigoal structure for planning
+  - AriaEngineCore.Multigoal.t() - Proper multigoal structure for planning
 
   ## Example
 
@@ -86,11 +86,42 @@ defmodule AriaBlocksWorld.State do
         pos: %{"a" => "b", "b" => "table"}
       })
   """
-  @spec create_multigoal(map()) :: term()
+  @spec create_multigoal(map()) :: AriaEngineCore.Multigoal.t()
   def create_multigoal(goal_data) do
-    # For now, return the goal data as-is
-    # This will be refined when we implement the planning methods
-    {:multigoal, goal_data}
+    # Convert blocks world goal format to predicate-subject-value triples
+    goals = []
+
+    # Convert position goals
+    goals = if Map.has_key?(goal_data, :pos) do
+      pos_goals = Enum.map(goal_data.pos, fn {block, position} ->
+        {"pos", block, position}
+      end)
+      goals ++ pos_goals
+    else
+      goals
+    end
+
+    # Convert clear goals
+    goals = if Map.has_key?(goal_data, :clear) do
+      clear_goals = Enum.map(goal_data.clear, fn {block, is_clear} ->
+        {"clear", block, is_clear}
+      end)
+      goals ++ clear_goals
+    else
+      goals
+    end
+
+    # Convert holding goals
+    goals = if Map.has_key?(goal_data, :holding) do
+      holding_goals = Enum.map(goal_data.holding, fn {entity, held_item} ->
+        {"holding", entity, held_item}
+      end)
+      goals ++ holding_goals
+    else
+      goals
+    end
+
+    AriaEngineCore.Multigoal.new(goals)
   end
 
   @doc """

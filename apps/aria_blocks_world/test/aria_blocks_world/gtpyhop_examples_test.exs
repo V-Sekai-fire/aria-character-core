@@ -140,8 +140,10 @@ defmodule AriaBlocksWorld.GtpyhopExamplesTest do
       # Test planning without execution
       assert {:ok, solution_tree} = AriaBlocksWorld.plan_problem(state1, [goal])
       assert is_map(solution_tree)
-      assert Map.has_key?(solution_tree, :root_id)
-      assert Map.has_key?(solution_tree, :nodes)
+      # The solution_tree is nested under :solution_tree key
+      assert Map.has_key?(solution_tree, :solution_tree)
+      assert Map.has_key?(solution_tree.solution_tree, :root_id)
+      assert Map.has_key?(solution_tree.solution_tree, :nodes)
     end
   end
 
@@ -186,8 +188,8 @@ defmodule AriaBlocksWorld.GtpyhopExamplesTest do
         pos: %{"a" => "b", "b" => "table"}
       })
 
-      assert {:multigoal, goal_data} = goal
-      assert goal_data.pos == %{"a" => "b", "b" => "table"}
+      assert %AriaEngineCore.Multigoal{} = goal
+      assert goal.goals == [{"pos", "a", "b"}, {"pos", "b", "table"}]
     end
   end
 end

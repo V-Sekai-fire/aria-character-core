@@ -15,11 +15,13 @@ defmodule AriaBlocksWorld.Domain do
   Artificial Intelligence 56(2-3):223–254, 1992.
   """
 
+  use AriaCore.ActionAttributes
+
   @type block :: String.t()
 
   # Entity setup action
   @action true
-  @spec setup_blocks_scenario(AriaState.t(), []) :: {:ok, AriaState.t()} | {:error, atom()}
+  @spec setup_blocks_scenario(AriaHybridPlanner.State.t(), []) :: {:ok, AriaHybridPlanner.State.t()} | {:error, atom()}
   def setup_blocks_scenario(state, []) do
     state = state
     |> register_entity(["hand", "agent", [:manipulation]])
@@ -44,7 +46,7 @@ defmodule AriaBlocksWorld.Domain do
   - Hand holds the block
   """
   @action true
-  @spec pickup(AriaState.t(), [block()]) :: {:ok, AriaState.t()} | {:error, atom()}
+  @spec pickup(AriaHybridPlanner.State.t(), [block()]) :: {:ok, AriaHybridPlanner.State.t()} | {:error, atom()}
   def pickup(state, [block]) do
     # Check preconditions
     current_pos = AriaHybridPlanner.get_fact(state, "pos", block)
@@ -82,7 +84,7 @@ defmodule AriaBlocksWorld.Domain do
   - Block2 becomes clear
   """
   @action true
-  @spec unstack(AriaState.t(), [block()]) :: {:ok, AriaState.t()} | {:error, atom()}
+  @spec unstack(AriaHybridPlanner.State.t(), [block()]) :: {:ok, AriaHybridPlanner.State.t()} | {:error, atom()}
   def unstack(state, [block1, block2]) do
     # Check preconditions
     current_pos = AriaHybridPlanner.get_fact(state, "pos", block1)
@@ -118,7 +120,7 @@ defmodule AriaBlocksWorld.Domain do
   - Hand becomes empty
   """
   @action true
-  @spec putdown(AriaState.t(), [block()]) :: {:ok, AriaState.t()} | {:error, atom()}
+  @spec putdown(AriaHybridPlanner.State.t(), [block()]) :: {:ok, AriaHybridPlanner.State.t()} | {:error, atom()}
   def putdown(state, [block]) do
     # Check preconditions
     hand_holding = AriaHybridPlanner.get_fact(state, "holding", "hand")
@@ -150,7 +152,7 @@ defmodule AriaBlocksWorld.Domain do
   - Block2 becomes not clear
   """
   @action true
-  @spec stack(AriaState.t(), [block()]) :: {:ok, AriaState.t()} | {:error, atom()}
+  @spec stack(AriaHybridPlanner.State.t(), [block()]) :: {:ok, AriaHybridPlanner.State.t()} | {:error, atom()}
   def stack(state, [block1, block2]) do
     # Check preconditions
     hand_holding = AriaHybridPlanner.get_fact(state, "holding", "hand")
@@ -177,7 +179,7 @@ defmodule AriaBlocksWorld.Domain do
   This is an alias for the appropriate pickup/unstack action based on the block's current position.
   """
   @action true
-  @spec take(AriaState.t(), [block()]) :: {:ok, AriaState.t()} | {:error, atom()}
+  @spec take(AriaHybridPlanner.State.t(), [block()]) :: {:ok, AriaHybridPlanner.State.t()} | {:error, atom()}
   def take(state, [block]) do
     current_pos = AriaHybridPlanner.get_fact(state, "pos", block)
 
@@ -197,7 +199,7 @@ defmodule AriaBlocksWorld.Domain do
   sequence of pickup/unstack and putdown/stack actions.
   """
   @task_method true
-  @spec move_block(AriaState.t(), [any()]) :: {:ok, [AriaHybridPlanner.todo_item()]} | {:error, atom()}
+  @spec move_block(AriaHybridPlanner.State.t(), [any()]) :: {:ok, [AriaHybridPlanner.todo_item()]} | {:error, atom()}
   def move_block(state, [block, destination]) do
     current_pos = AriaHybridPlanner.get_fact(state, "pos", block)
 
@@ -217,6 +219,22 @@ defmodule AriaBlocksWorld.Domain do
     {:ok, [pickup_action, putdown_action]}
   end
 
+  @doc """
+  Validate preconditions for moving a block to a destination.
+
+  This task method decomposes validation into separate goal checks for the planner to orchestrate.
+  """
+  @task_method true
+  @spec validate_move_preconditions(AriaHybridPlanner.State.t(), [block() | String.t()]) :: {:ok, [AriaHybridPlanner.todo_item()]} | {:error, atom()}
+  def validate_move_preconditions(_state, [block, destination]) do
+    # Decompose validation into separate goal checks for planner to orchestrate
+    {:ok, [
+      {"accessible", block, true},
+      {"destination_available", destination, true},
+      {"no_cyclic_dependency", {block, destination}, true}
+    ]}
+  end
+
   # Unigoal methods for position goals following R25W1398085
 
   @doc """
@@ -225,7 +243,7 @@ defmodule AriaBlocksWorld.Domain do
   This unigoal method handles goals of the form {"pos", block, destination}.
   """
   @unigoal_method predicate: "pos"
-  @spec achieve_position(AriaState.t(), {block(), String.t()}) :: {:ok, [AriaHybridPlanner.todo_item()]} | {:error, atom()}
+  @spec achieve_position(AriaHybridPlanner.State.t(), {block(), String.t()}) :: {:ok, [AriaHybridPlanner.todo_item()]} | {:error, atom()}
   def achieve_position(state, {block, destination}) do
     current_pos = AriaHybridPlanner.get_fact(state, "pos", block)
 
@@ -246,7 +264,7 @@ defmodule AriaBlocksWorld.Domain do
   This unigoal method handles goals of the form {"clear", block, true}.
   """
   @unigoal_method predicate: "clear"
-  @spec achieve_clear(AriaState.t(), {block(), boolean()}) :: {:ok, [AriaHybridPlanner.todo_item()]} | {:error, atom()}
+  @spec achieve_clear(AriaHybridPlanner.State.t(), {block(), boolean()}) :: {:ok, [AriaHybridPlanner.todo_item()]} | {:error, atom()}
   def achieve_clear(state, {block, true}) do
     current_clear = AriaHybridPlanner.get_fact(state, "clear", block)
 
@@ -276,31 +294,13 @@ defmodule AriaBlocksWorld.Domain do
     {:ok, []}
   end
 
-  # Precondition validation methods as unigoal methods
-
-  @doc """
-  Validate preconditions for moving a block to a destination.
-
-  This task method decomposes validation into separate goal checks for the planner to orchestrate.
-  """
-  @task_method true
-  @spec validate_move_preconditions(AriaState.t(), [block() | String.t()]) :: {:ok, [AriaHybridPlanner.todo_item()]} | {:error, atom()}
-  def validate_move_preconditions(_state, [block, destination]) do
-    # Decompose validation into separate goal checks for planner to orchestrate
-    {:ok, [
-      {"accessible", block, true},
-      {"destination_available", destination, true},
-      {"no_cyclic_dependency", {block, destination}, true}
-    ]}
-  end
-
   @doc """
   Check if a block is accessible (clear or can be made clear).
 
   This unigoal method handles goals of the form {"accessible", block, true}.
   """
   @unigoal_method predicate: "accessible"
-  @spec check_block_accessible(AriaState.t(), {block(), boolean()}) :: {:ok, [AriaHybridPlanner.todo_item()]} | {:error, atom()}
+  @spec check_block_accessible(AriaHybridPlanner.State.t(), {block(), boolean()}) :: {:ok, [AriaHybridPlanner.todo_item()]} | {:error, atom()}
   def check_block_accessible(state, {block, true}) do
     current_pos = AriaHybridPlanner.get_fact(state, "pos", block)
 
@@ -337,7 +337,7 @@ defmodule AriaBlocksWorld.Domain do
   This unigoal method handles goals of the form {"destination_available", destination, true}.
   """
   @unigoal_method predicate: "destination_available"
-  @spec check_destination_available(AriaState.t(), {String.t(), boolean()}) :: {:ok, [AriaHybridPlanner.todo_item()]} | {:error, atom()}
+  @spec check_destination_available(AriaHybridPlanner.State.t(), {String.t(), boolean()}) :: {:ok, [AriaHybridPlanner.todo_item()]} | {:error, atom()}
   def check_destination_available(_state, {"table", true}) do
     {:ok, []}  # Table is always available
   end
@@ -355,7 +355,7 @@ defmodule AriaBlocksWorld.Domain do
   This unigoal method handles goals of the form {"no_cyclic_dependency", {block, destination}, true}.
   """
   @unigoal_method predicate: "no_cyclic_dependency"
-  @spec check_no_cyclic_dependency(AriaState.t(), {{block(), String.t()}, boolean()}) :: {:ok, [AriaHybridPlanner.todo_item()]} | {:error, atom()}
+  @spec check_no_cyclic_dependency(AriaHybridPlanner.State.t(), {{block(), String.t()}, boolean()}) :: {:ok, [AriaHybridPlanner.todo_item()]} | {:error, atom()}
   def check_no_cyclic_dependency(state, {{block, destination}, true}) when is_binary(destination) do
     # Check if destination is currently on top of block (direct cycle)
     dest_pos = AriaHybridPlanner.get_fact(state, "pos", destination)
@@ -373,38 +373,18 @@ defmodule AriaBlocksWorld.Domain do
   # Domain creation and helper functions
 
   @doc """
-  Create the blocks world domain.
+  Create the blocks world domain using attribute-based registration.
   """
-  @spec create() :: Domain.Core.t()
-  def create(_opts \\ %{}) do
-    domain = Domain.Core.new("blocks_world")
+  @spec create() :: AriaCore.Domain.t()
+  def create() do
+    # Create a proper AriaCore.Domain struct
+    domain = AriaCore.new_domain(:blocks_world)
 
-    # Add actions to domain
-    domain
-    |> Domain.Core.add_action(:pickup, %{
-      effects: fn state, [block] -> pickup(state, [block]) end
-    })
-    |> Domain.Core.add_action(:unstack, %{
-      effects: fn state, [block1, block2] -> unstack(state, [block1, block2]) end
-    })
-    |> Domain.Core.add_action(:putdown, %{
-      effects: fn state, [block] -> putdown(state, [block]) end
-    })
-    |> Domain.Core.add_action(:stack, %{
-      effects: fn state, [block1, block2] -> stack(state, [block1, block2]) end
-    })
-    |> Domain.Core.add_action(:take, %{
-      effects: fn state, [block] -> take(state, [block]) end
-    })
-    # Add task methods
-    |> Domain.Core.add_task_method("move_block", "move_block_method", &move_block/2)
-    |> Domain.Core.add_task_method("validate_move_preconditions", "validate_move_method", &validate_move_preconditions/2)
-    # Add unigoal methods
-    |> Domain.Core.add_unigoal_method("pos", "achieve_position_method", &achieve_position/2)
-    |> Domain.Core.add_unigoal_method("clear", "achieve_clear_method", &achieve_clear/2)
-    |> Domain.Core.add_unigoal_method("accessible", "check_accessible_method", &check_block_accessible/2)
-    |> Domain.Core.add_unigoal_method("destination_available", "check_destination_method", &check_destination_available/2)
-    |> Domain.Core.add_unigoal_method("no_cyclic_dependency", "check_cycles_method", &check_no_cyclic_dependency/2)
+    # Register all attribute-defined actions and methods
+    domain = AriaCore.register_attribute_specs(domain, __MODULE__)
+
+    # Add multigoal method for splitting multigoals (GTpyhop pattern)
+    AriaCore.add_multigoal_method_to_domain(domain, "split_multigoal", &split_multigoal/2)
   end
 
   @doc """
@@ -422,6 +402,38 @@ defmodule AriaBlocksWorld.Domain do
       entities: ["hand", "table"],
       capabilities: [:manipulation, :support]
     }
+  end
+
+  @doc """
+  Split a multigoal into individual unigoals following GTpyhop pattern.
+
+  This multigoal method implements the classic GTpyhop m_split_multigoal approach:
+  1. Check which goals in the multigoal are not yet satisfied
+  2. Return individual unigoals for unsatisfied goals
+  3. Add the original multigoal back for re-verification
+
+  This ensures all goals are achieved and simultaneously true.
+  """
+  @spec split_multigoal(AriaHybridPlanner.State.t(), AriaEngineCore.Multigoal.t()) ::
+    {:ok, [AriaHybridPlanner.todo_item()]} | {:error, atom()}
+  def split_multigoal(state, multigoal) do
+    # Check if multigoal is already satisfied
+    if AriaEngineCore.Multigoal.satisfied?(multigoal, state) do
+      {:ok, []}  # All goals already achieved
+    else
+      # Get unsatisfied goals
+      unsatisfied = AriaEngineCore.Multigoal.unsatisfied_goals(multigoal, state)
+
+      # Convert unsatisfied goals to individual unigoals
+      unigoals = Enum.map(unsatisfied, fn {subject, predicate, value} ->
+        {predicate, subject, value}
+      end)
+
+      # GTpyhop pattern: return individual goals + original multigoal for re-verification
+      todo_list = unigoals ++ [multigoal]
+
+      {:ok, todo_list}
+    end
   end
 
   # Private helper functions

@@ -93,16 +93,16 @@ defmodule AriaBlocksWorld do
 
   ## Returns
 
-  - `AriaHybridPlanner.Multigoal.t()` - Goal specification
+  - `AriaEngineCore.Multigoal.t()` - Goal specification
 
   ## Examples
 
       iex> goal = AriaBlocksWorld.create_multigoal(%{
       ...>   pos: %{"a" => "b", "b" => "table"}
       ...> })
-      iex> {:multigoal, goal_data} = goal
-      iex> goal_data.pos
-      %{"a" => "b", "b" => "table"}
+      iex> %AriaEngineCore.Multigoal{} = goal
+      iex> goal.goals
+      [{"pos", "a", "b"}, {"pos", "b", "table"}]
   """
   @spec create_multigoal(map()) :: term()
   def create_multigoal(goal_data) do

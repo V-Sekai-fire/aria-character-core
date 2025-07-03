@@ -12,7 +12,7 @@ defmodule AriaBlocksWorld.DomainTest do
     test "creates domain successfully" do
       domain = Domain.create()
       assert is_struct(domain)
-      assert domain.name == "blocks_world"
+      assert domain.name == :blocks_world
     end
 
     test "provides domain info" do
