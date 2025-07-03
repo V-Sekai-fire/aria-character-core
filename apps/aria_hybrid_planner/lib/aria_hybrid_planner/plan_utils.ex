@@ -113,30 +113,6 @@ defmodule Plan.Utils do
     }
   end
 
-
-  @doc """
-  Validate a plan by executing it step by step.
-  """
-  @spec validate_plan(term(), State.t(), [plan_step()]) ::
-    {:ok, State.t()} | {:error, String.t()}
-  def validate_plan(domain, initial_state, plan_steps) do
-    try do
-      final_state = Enum.reduce_while(plan_steps, initial_state, fn {action, args}, current_state ->
-        case AriaCore.execute_action(domain, current_state, action, args) do
-          {:ok, new_state} -> {:cont, new_state}
-          {:error, reason} -> {:halt, {:error, reason}}
-        end
-      end)
-
-      case final_state do
-        {:error, reason} -> {:error, reason}
-        state -> {:ok, state}
-      end
-    rescue
-      e -> {:error, "Plan validation error: #{Exception.message(e)}"}
-    end
-  end
-
   @doc """
   Update cached states in a solution tree after state changes.
   """

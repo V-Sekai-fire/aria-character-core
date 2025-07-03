@@ -100,13 +100,6 @@ defmodule AriaBlocksWorld.MethodExecutionTest do
 
       assert goals == expected_goals
     end
-
-    test "validate_move always succeeds for now", %{state: state} do
-      # Current implementation always returns empty (no validation)
-      assert {:ok, []} = Domain.validate_move(state, ["c", "table"])
-      assert {:ok, []} = Domain.validate_move(state, ["d", "a"])
-      assert {:ok, []} = Domain.validate_move(state, ["nonexistent", "nowhere"])
-    end
   end
 
   describe "unigoal method execution scenarios" do
@@ -138,19 +131,16 @@ defmodule AriaBlocksWorld.MethodExecutionTest do
       # Test goals that require action
       assert {:ok, actions} = Domain.achieve_position(state, {"c", "table"})
       assert actions == [
-        {:validate_move, ["c", "table"]},
         {:move_block, ["c", "table"]}
       ]
 
       assert {:ok, actions} = Domain.achieve_position(state, {"b", "d"})
       assert actions == [
-        {:validate_move, ["b", "d"]},
         {:move_block, ["b", "d"]}
       ]
 
       assert {:ok, actions} = Domain.achieve_position(state, {"a", "d"})
       assert actions == [
-        {:validate_move, ["a", "d"]},
         {:move_block, ["a", "d"]}
       ]
     end
@@ -165,14 +155,12 @@ defmodule AriaBlocksWorld.MethodExecutionTest do
       # Test clearing block b (c is on top)
       assert {:ok, actions} = Domain.achieve_clear(state, {"b", true})
       assert actions == [
-        {:validate_move, ["c", "table"]},
         {:move_block, ["c", "table"]}
       ]
 
       # Test clearing block a (b is on top, but b has c on top)
       assert {:ok, actions} = Domain.achieve_clear(state, {"a", true})
       assert actions == [
-        {:validate_move, ["b", "table"]},
         {:move_block, ["b", "table"]}
       ]
     end
@@ -279,7 +267,6 @@ defmodule AriaBlocksWorld.MethodExecutionTest do
 
       # Should decompose to validation + movement
       assert actions == [
-        {:validate_move, ["b", "table"]},
         {:move_block, ["b", "table"]}
       ]
 
@@ -294,7 +281,6 @@ defmodule AriaBlocksWorld.MethodExecutionTest do
 
       # Should decompose to validation + movement of blocking block
       assert actions == [
-        {:validate_move, ["b", "table"]},
         {:move_block, ["b", "table"]}
       ]
     end
@@ -305,7 +291,6 @@ defmodule AriaBlocksWorld.MethodExecutionTest do
       # First, achieve_clear for a
       assert {:ok, clear_actions} = Domain.achieve_clear(state, {"a", true})
       assert clear_actions == [
-        {:validate_move, ["b", "table"]},
         {:move_block, ["b", "table"]}
       ]
 
@@ -319,7 +304,6 @@ defmodule AriaBlocksWorld.MethodExecutionTest do
       # Move a to a different destination (block d) to test the full decomposition
       assert {:ok, move_actions} = Domain.achieve_position(state_after_clear, {"a", "d"})
       assert move_actions == [
-        {:validate_move, ["a", "d"]},
         {:move_block, ["a", "d"]}
       ]
 

@@ -224,33 +224,6 @@ defmodule AriaEngineCore.Plan do
   end
 
   @doc """
-  Validates a plan by executing it step by step.
-
-  This function can validate either a list of plan steps or a solution tree.
-  For solution trees, it first extracts the primitive actions.
-
-  ## Parameters
-
-  - `domain` - The domain containing action definitions
-  - `initial_state` - The initial state to start validation from
-  - `plan_or_tree` - Either a list of plan steps or a solution tree
-
-  ## Returns
-
-  `{:ok, final_state}` if validation succeeds, `{:error, reason}` otherwise.
-  """
-  @spec validate_plan(map(), State.t(), [plan_step()] | solution_tree()) ::
-          {:ok, State.t()} | {:error, String.t()}
-  def validate_plan(
-        domain,
-        initial_state,
-        %{root_id: _} = solution_tree
-      ) when is_map(domain) do
-    actions = get_primitive_actions_dfs(solution_tree)
-    validate_plan(domain, initial_state, actions)
-  end
-
-  @doc """
   Estimates the cost of a plan (simple step count for now).
 
   ## Parameters

@@ -31,10 +31,6 @@ defmodule AriaBlocksWorld.DomainRegistrationDebugTest do
       # Test specific method lookups that are failing
       Logger.debug("\n=== TESTING METHOD LOOKUPS ===")
 
-      # Test validate_move lookup
-      validate_move_methods = AriaCore.get_task_methods_from_domain(domain, :validate_move)
-      Logger.debug("validate_move methods found: #{inspect(validate_move_methods)}")
-
       # Test move_block lookup
       move_block_methods = AriaCore.get_task_methods_from_domain(domain, :move_block)
       Logger.debug("move_block methods found: #{inspect(move_block_methods)}")
@@ -47,7 +43,6 @@ defmodule AriaBlocksWorld.DomainRegistrationDebugTest do
 
       # Verify the methods we expect are registered
       assert Map.has_key?(domain.task_methods, :move_block), "move_block should be registered"
-      assert Map.has_key?(domain.task_methods, :validate_move), "validate_move should be registered"
     end
 
     test "test AriaCore method lookup functions" do
@@ -60,8 +55,6 @@ defmodule AriaBlocksWorld.DomainRegistrationDebugTest do
 
       # Test various task name formats
       test_cases = [
-        :validate_move,
-        "validate_move",
         :move_block,
         "move_block",
         :take_method,

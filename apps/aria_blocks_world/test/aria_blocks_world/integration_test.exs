@@ -225,14 +225,12 @@ defmodule AriaBlocksWorld.IntegrationTest do
       # Test achieve_position method
       assert {:ok, actions} = Domain.achieve_position(state, {"b", "c"})
       assert actions == [
-        {:validate_move, ["b", "c"]},
         {:move_block, ["b", "c"]}
       ]
 
       # Test achieve_clear method
       assert {:ok, clear_actions} = Domain.achieve_clear(state, {"a", true})
       assert clear_actions == [
-        {:validate_move, ["b", "table"]},
         {:move_block, ["b", "table"]}
       ]
     end

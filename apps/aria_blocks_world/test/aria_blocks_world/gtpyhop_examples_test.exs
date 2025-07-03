@@ -139,10 +139,8 @@ defmodule AriaBlocksWorld.GtpyhopExamplesTest do
       })
 
       Logger.debug("Goals: #{inspect(sussman_goal.goals)}")
-      Logger.debug("Expected GTpyhop plan: [('unstack', 'c', 'a'), ('putdown', 'c'), ('pickup', 'b'), ('stack', 'b', 'c'), ('pickup', 'a'), ('stack', 'a', 'b')]")
+      Logger.debug("Expected GTpyhop plan: [{:unstack, ['c', 'a']}, {:putdown, ['c']}, {:pickup, ['b']), (:stack, ['b', 'c']}, {:pickup, ['a']}, {:stack, ['a', 'b']}]")
 
-      # Expected plan from GTpyhop:
-      # [{:unstack, ['c', 'a']}, {:putdown, ['c']}, {:pickup, ['b']), (:stack, ['b', 'c']}, {:pickup, ['a']}, {:stack, ['a', 'b']}]
       result = AriaBlocksWorld.solve_problem(sussman_initial, [sussman_goal])
       Logger.debug("Planning result: #{inspect(elem(result, 0))}")
 

@@ -115,29 +115,48 @@ defmodule AriaHybridPlanner do
         # All nodes are expanded or primitive
         {:ok, solution_tree}
       else
-        # Expand the first unexpanded node
-        [node_id | _] = unexpanded_nodes
-        node = solution_tree.nodes[node_id]
-
-        case expand_node_by_type(domain, solution_tree, node_id, node, state, opts) do
+        # Expand all unexpanded nodes in this iteration
+        case expand_all_nodes(domain, solution_tree, unexpanded_nodes, state, opts) do
           {:ok, updated_tree} ->
-            # Continue planning recursively
+            # Continue planning recursively with updated tree
             plan_recursive(domain, updated_tree, state, opts, depth + 1, max_depth)
 
           {:error, reason} ->
             {:error, reason}
-
-          :failure ->
-            # Mark node as primitive if no methods available
-            case Plan.NodeExpansion.mark_as_primitive(solution_tree, node_id) do
-              {:ok, updated_tree} ->
-                plan_recursive(domain, updated_tree, state, opts, depth + 1, max_depth)
-              {:error, reason} ->
-                {:error, reason}
-            end
         end
       end
     end
+  end
+
+  # Expand all unexpanded nodes in a single iteration
+  defp expand_all_nodes(domain, solution_tree, unexpanded_nodes, state, opts) do
+    verbose = Keyword.get(opts, :verbose, 0)
+
+    if verbose > 2 do
+      Logger.debug("HTN Planning: Expanding #{length(unexpanded_nodes)} nodes in this iteration")
+    end
+
+    # Expand each node and accumulate the results
+    Enum.reduce_while(unexpanded_nodes, {:ok, solution_tree}, fn node_id, {:ok, current_tree} ->
+      node = current_tree.nodes[node_id]
+
+      case expand_node_by_type(domain, current_tree, node_id, node, state, opts) do
+        {:ok, updated_tree} ->
+          {:cont, {:ok, updated_tree}}
+
+        {:error, reason} ->
+          {:halt, {:error, reason}}
+
+        :failure ->
+          # Mark node as primitive if no methods available
+          case Plan.NodeExpansion.mark_as_primitive(current_tree, node_id) do
+            {:ok, updated_tree} ->
+              {:cont, {:ok, updated_tree}}
+            {:error, reason} ->
+              {:halt, {:error, reason}}
+          end
+      end
+    end)
   end
 
   # Find nodes that need expansion (not primitive and not expanded)

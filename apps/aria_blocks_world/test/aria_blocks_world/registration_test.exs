@@ -143,12 +143,6 @@ defmodule AriaBlocksWorld.RegistrationTest do
       assert {:ok, actions} = Domain.move_block(state, ["c", "b"])
       assert actions == [{:unstack, ["c", "a"]}, {:stack, ["c", "b"]}]
     end
-
-    test "validate_move task method", %{state: state} do
-      # For now, validate_move always succeeds (returns empty action list)
-      assert {:ok, []} = Domain.validate_move(state, ["c", "table"])
-      assert {:ok, []} = Domain.validate_move(state, ["b", "a"])
-    end
   end
 
   describe "unigoal method registration" do
@@ -170,7 +164,6 @@ defmodule AriaBlocksWorld.RegistrationTest do
       # Test when goal requires action
       assert {:ok, actions} = Domain.achieve_position(state, {"b", "table"})
       assert actions == [
-        {:validate_move, ["b", "table"]},
         {:move_block, ["b", "table"]}
       ]
     end
@@ -182,7 +175,6 @@ defmodule AriaBlocksWorld.RegistrationTest do
       # Test when block needs to be cleared
       assert {:ok, actions} = Domain.achieve_clear(state, {"a", true})
       assert actions == [
-        {:validate_move, ["b", "table"]},
         {:move_block, ["b", "table"]}
       ]
 

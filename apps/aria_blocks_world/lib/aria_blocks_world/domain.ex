@@ -235,22 +235,6 @@ defmodule AriaBlocksWorld.Domain do
     ]}
   end
 
-  @doc """
-  Validate move preconditions for a block to a destination.
-
-  This task method checks if a move is valid and safe to execute.
-  """
-  @task_method true
-  @spec validate_move(AriaHybridPlanner.State.t(), [block() | String.t()]) :: {:ok, [AriaHybridPlanner.todo_item()]} | {:error, atom()}
-  def validate_move(_state, [_block, _destination]) do
-    # For now, assume all moves are valid
-    # In a more sophisticated implementation, this would check:
-    # - Block is accessible (clear)
-    # - Destination is available
-    # - No cyclic dependencies
-    {:ok, []}
-  end
-
   # Task methods following GTPyhop blocks_gtn pattern
 
   @doc """
@@ -302,7 +286,7 @@ defmodule AriaBlocksWorld.Domain do
   Achieve a position goal for a block.
 
   This unigoal method handles goals of the form {"pos", block, destination}.
-  It decomposes the goal into validation and movement task methods.
+  It decomposes the goal into prerequisite clearing and movement task methods.
   """
   @unigoal_method predicate: "pos"
   @spec achieve_position(AriaHybridPlanner.State.t(), {String.t(), String.t()}) :: {:ok, [AriaHybridPlanner.todo_item()]} | {:error, atom()}
@@ -313,12 +297,36 @@ defmodule AriaBlocksWorld.Domain do
     if current_pos == destination do
       {:ok, []}
     else
-      # Need to move block to destination
-      # Use task methods for validation and movement
-      {:ok, [
-        {:validate_move, [block, destination]},
+      is_clear = AriaHybridPlanner.get_fact(state, "clear", block)
+      destination_clear = case destination do
+        "table" -> true  # Table is always available
+        dest_block -> AriaHybridPlanner.get_fact(state, "clear", dest_block)
+      end
+
+      # Build prerequisite goals and movement tasks
+      tasks = []
+
+      # First, ensure the block is clear (accessible)
+      tasks = if is_clear != true do
+        [{"clear", block, true} | tasks]
+      else
+        tasks
+      end
+
+      # Second, ensure destination is clear (if it's a block)
+      tasks = if destination != "table" and destination_clear != true do
+        [{"clear", destination, true} | tasks]
+      else
+        tasks
+      end
+
+      # Finally, add the movement tasks
+      movement_tasks = [
         {:move_block, [block, destination]}
-      ]}
+      ]
+
+      # Return prerequisites first, then movement
+      {:ok, Enum.reverse(tasks) ++ movement_tasks}
     end
   end
 
@@ -343,7 +351,6 @@ defmodule AriaBlocksWorld.Domain do
       if blocking_block do
         # Move the blocking block to the table using task methods
         {:ok, [
-          {:validate_move, [blocking_block, "table"]},
           {:move_block, [blocking_block, "table"]}
         ]}
       else

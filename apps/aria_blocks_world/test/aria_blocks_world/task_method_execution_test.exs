@@ -12,7 +12,7 @@ defmodule AriaBlocksWorld.TaskMethodExecutionTest do
   alias AriaBlocksWorld.Domain
   alias AriaHybridPlanner
 
-  test "debug task method execution - validate_move and move_block" do
+  test "debug task method execution - move_block" do
     # Create test state
     state = AriaHybridPlanner.new_state()
     |> AriaHybridPlanner.set_fact("pos", "b", "d")
@@ -21,28 +21,18 @@ defmodule AriaBlocksWorld.TaskMethodExecutionTest do
     |> AriaHybridPlanner.set_fact("clear", "c", true)
     |> AriaHybridPlanner.set_fact("holding", "hand", false)
 
-    # Test validate_move task method directly
-    Logger.debug("Testing validate_move task method...")
-    validate_result = Domain.validate_move(state, ["b", "c"])
-    Logger.debug("validate_move result: #{inspect(validate_result)}")
-
     # Test move_block task method directly
     Logger.debug("Testing move_block task method...")
     move_result = Domain.move_block(state, ["b", "c"])
     Logger.debug("move_block result: #{inspect(move_result)}")
 
     # Both should return {:ok, [list_of_actions]}
-    assert {:ok, validate_actions} = validate_result
     assert {:ok, move_actions} = move_result
 
-    Logger.debug("validate_move returns: #{inspect(validate_actions)}")
     Logger.debug("move_block returns: #{inspect(move_actions)}")
 
     # move_block should return primitive actions
     assert move_actions == [{:unstack, ["b", "d"]}, {:stack, ["b", "c"]}]
-
-    # validate_move should return empty list (no validation needed for this simple case)
-    assert validate_actions == []
   end
 
   test "debug primitive action execution" do
@@ -84,7 +74,6 @@ defmodule AriaBlocksWorld.TaskMethodExecutionTest do
     # instead of trying to execute them as primitive actions
 
     Logger.debug("Task methods should be decomposed, not executed as primitives")
-    Logger.debug("validate_move should decompose to: #{inspect(Domain.validate_move(state, ["b", "c"]))}")
     Logger.debug("move_block should decompose to: #{inspect(Domain.move_block(state, ["b", "c"]))}")
 
     # The problem is in the execution engine - it's not recognizing that these are task methods
