@@ -86,28 +86,53 @@ defmodule AriaSimpleTravelTest do
       {:ok, domain: domain, state: state}
     end
 
-    test "walk changes person location", %{state: state} do
-      {:ok, new_state} = Domain.walk(state, ["alice", "home_a", "park"])
+    test "walk_step changes person location", %{state: state} do
+      {:ok, new_state} = Domain.walk_step(state, ["alice", "home_a", "park"])
 
       assert AriaState.get_fact(new_state, "location", "alice") == "park"
+    end
+
+    test "walk_step fails when from equals to", %{state: state} do
+      assert {:error, :same_location} = Domain.walk_step(state, ["alice", "home_a", "home_a"])
+    end
+
+    test "walk returns decomposed walk_step actions", %{state: state} do
+      {:ok, actions} = Domain.walk(state, ["alice", "home_a", "park"])
+
+      # Distance from home_a to park is 8, so should get 8 walk_step actions
+      assert length(actions) == 8
+      assert Enum.all?(actions, fn action -> match?({:walk_step, ["alice", "home_a", "park"]}, action) end)
     end
 
     test "walk fails when from equals to", %{state: state} do
       assert {:error, :same_location} = Domain.walk(state, ["alice", "home_a", "home_a"])
     end
 
-    test "ride_taxi moves taxi and charges fare", %{state: state} do
+    test "ride_step moves taxi and charges fare", %{state: state} do
       # Set up: Alice is in taxi at home_a
       state = state
       |> AriaState.set_fact("location", "taxi1", "home_a")
       |> AriaState.set_fact("location", "alice", "taxi1")
 
-      {:ok, new_state} = Domain.ride_taxi(state, ["alice", "park"])
+      {:ok, new_state} = Domain.ride_step(state, ["alice", "park"])
 
       # Taxi should be at park
       assert AriaState.get_fact(new_state, "location", "taxi1") == "park"
       # Alice should owe fare (1.5 + 0.5 * 8 = 5.5)
       assert AriaState.get_fact(new_state, "owe", "alice") == 5.5
+    end
+
+    test "ride_taxi returns decomposed ride_step actions", %{state: state} do
+      # Set up: Alice is in taxi at home_a
+      state = state
+      |> AriaState.set_fact("location", "taxi1", "home_a")
+      |> AriaState.set_fact("location", "alice", "taxi1")
+
+      {:ok, actions} = Domain.ride_taxi(state, ["alice", "park"])
+
+      # Distance from home_a to park is 8, so should get 8 ride_step actions
+      assert length(actions) == 8
+      assert Enum.all?(actions, fn action -> match?({:ride_step, ["alice", "park"]}, action) end)
     end
 
     test "ride_taxi fails when person not in taxi", %{state: state} do
@@ -126,16 +151,22 @@ defmodule AriaSimpleTravelTest do
       # Bob at home_b, park is 2 units away (walkable)
       {:ok, todos} = Domain.travel(state, ["bob", "park"])
 
-      assert todos == [{:walk, ["bob", "home_b", "park"]}]
+      # Should get 2 walk_step actions for distance=2
+      expected = [
+        {:walk_step, ["bob", "home_b", "park"]},
+        {:walk_step, ["bob", "home_b", "park"]}
+      ]
+      assert todos == expected
     end
 
     test "travel chooses taxi for long distances", %{state: state} do
       # Alice at home_a, park is 8 units away (requires taxi)
       {:ok, todos} = Domain.travel(state, ["alice", "park"])
 
+      # Should get call_taxi, 8 ride_step actions, and pay_driver
       expected = [
-        {:call_taxi, ["alice", "taxi1"]},
-        {:ride_taxi, ["alice", "park"]},
+        {:call_taxi, ["alice", "taxi1"]}
+      ] ++ List.duplicate({:ride_step, ["alice", "park"]}, 8) ++ [
         {:pay_driver, ["alice", "park"]}
       ]
       assert todos == expected
@@ -179,19 +210,19 @@ defmodule AriaSimpleTravelTest do
     test "plans simple walking scenario", %{domain: domain, state: state} do
       goals = [{"location", "bob", "park"}]
 
-      {:ok, _solution_tree} = AriaSimpleTravel.plan(domain, state, goals)
+      {:ok, _solution_tree} = AriaHybridPlanner.plan(domain, state, goals)
     end
 
     test "plans taxi scenario", %{domain: domain, state: state} do
       goals = [{"location", "alice", "park"}]
 
-      {:ok, _solution_tree} = AriaSimpleTravel.plan(domain, state, goals)
+      {:ok, _solution_tree} = AriaHybridPlanner.plan(domain, state, goals)
     end
 
     test "executes plan with run_lazy", %{domain: domain, state: state} do
       goals = [{"location", "bob", "park"}]
 
-      {:ok, {_solution_tree, final_state}} = AriaSimpleTravel.run_lazy(domain, state, goals)
+      {:ok, {_solution_tree, final_state}} = AriaHybridPlanner.run_lazy(domain, state, goals)
 
       # Bob should be at park
       assert AriaState.get_fact(final_state, "location", "bob") == "park"
@@ -199,9 +230,12 @@ defmodule AriaSimpleTravelTest do
 
     test "executes pre-made solution tree", %{domain: domain, state: state} do
       goals = [{"location", "bob", "park"}]
-      {:ok, solution_tree} = AriaSimpleTravel.plan(domain, state, goals)
+      {:ok, plan_result} = AriaHybridPlanner.plan(domain, state, goals)
 
-      {:ok, {final_state, _}} = AriaSimpleTravel.run_lazy_tree(domain, state, solution_tree)
+      # Extract the solution tree from the plan result
+      solution_tree = plan_result.solution_tree
+
+      {:ok, {_, final_state}} = AriaHybridPlanner.run_lazy_tree(domain, state, solution_tree)
 
       # Bob should be at park
       assert AriaState.get_fact(final_state, "location", "bob") == "park"
@@ -234,7 +268,7 @@ defmodule AriaSimpleTravelTest do
     end
 
     test "runs bob_short_walk example" do
-      {:ok, {final_state, solution_tree, scenario}} = AriaSimpleTravel.run_example(:bob_short_walk)
+      {:ok, {final_state, _plan, scenario}} = AriaSimpleTravel.run_example(:bob_short_walk)
       # Bob should be at park
       assert AriaState.get_fact(final_state, "location", "bob") == "park"
       # Bob should still have same cash (walking is free)
@@ -252,21 +286,6 @@ defmodule AriaSimpleTravelTest do
 
     test "fails for unknown scenario" do
       assert {:error, :unknown_scenario} = AriaSimpleTravel.run_example(:nonexistent)
-    end
-  end
-
-  describe "specification compliance" do
-    test "main module has required API" do
-      # Check that main module exports required API functions
-      assert function_exported?(AriaSimpleTravel, :create_domain, 0)
-      assert function_exported?(AriaSimpleTravel, :create_domain, 1)
-      assert function_exported?(AriaSimpleTravel, :setup_scenario, 0)
-      assert function_exported?(AriaSimpleTravel, :plan, 3)
-      assert function_exported?(AriaSimpleTravel, :run_lazy, 3)
-      assert function_exported?(AriaSimpleTravel, :run_lazy_tree, 3)
-      assert function_exported?(AriaSimpleTravel, :get_example_scenarios, 0)
-      assert function_exported?(AriaSimpleTravel, :run_example, 1)
-      assert function_exported?(AriaSimpleTravel, :validate_specification_compliance, 0)
     end
   end
 
@@ -289,7 +308,7 @@ defmodule AriaSimpleTravelTest do
       |> AriaState.set_fact("location", "taxi1", "home_a")
       |> AriaState.set_fact("location", "alice", "taxi1")
 
-      {:ok, new_state} = Domain.ride_taxi(state, ["alice", "park"])
+      {:ok, new_state} = Domain.ride_step(state, ["alice", "park"])
 
       # Fare should be 1.5 + 0.5 * 8 = 5.5
       assert AriaState.get_fact(new_state, "owe", "alice") == 5.5

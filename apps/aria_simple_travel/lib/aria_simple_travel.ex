@@ -26,7 +26,7 @@ defmodule AriaSimpleTravel do
       {:ok, solution_tree} = AriaSimpleTravel.plan(domain, state, goals)
 
       # Execute the plan
-      {:ok, {final_state, _}} = AriaSimpleTravel.run_lazy(domain, state, goals)
+      {:ok, {final_state, _}} = AriaHybridPlanner.run_lazy(domain, state, goals)
 
   ## Temporal Patterns Demonstrated
 
@@ -56,7 +56,7 @@ defmodule AriaSimpleTravel do
   """
   @spec create_domain(map()) :: AriaEngine.Domain.t()
   def create_domain(opts \\ %{}) do
-    Domain.create_domain(opts)
+    AriaSimpleTravel.Domain.create_domain(opts)
   end
 
   @doc """
@@ -74,96 +74,6 @@ defmodule AriaSimpleTravel do
   def setup_scenario do
     state = AriaState.new()
     Domain.setup_scenario(state, [])
-  end
-
-  @doc """
-  Plan a sequence of actions to achieve the given goals.
-
-  Uses AriaEngineCore.plan/3 to generate a solution tree with temporal constraints
-  and resource allocation.
-
-  ## Parameters
-
-  - `domain` - AriaEngine domain created with create_domain/1
-  - `state` - Initial state from setup_scenario/0
-  - `goals` - List of goals in format {"predicate", subject, value}
-
-  ## Returns
-
-  - `{:ok, AriaEngineCore.Plan.solution_tree()}` - Complete planning solution
-  - `{:error, atom()}` - Planning failed
-
-  ## Example
-
-      domain = AriaSimpleTravel.create_domain()
-      {:ok, state} = AriaSimpleTravel.setup_scenario()
-      goals = [{"location", "alice", "park"}]
-      {:ok, solution_tree} = AriaSimpleTravel.plan(domain, state, goals)
-  """
-  @spec plan(AriaEngine.Domain.t(), AriaState.t(), [AriaEngine.goal()]) ::
-    {:ok, AriaEngineCore.Plan.solution_tree()} | {:error, atom()}
-  def plan(domain, state, goals) do
-    AriaHybridPlanner.plan(domain, state, goals)
-  end
-
-  @doc """
-  Plan and execute actions to achieve the given goals.
-
-  Combines planning and execution in one step using AriaEngineCore.run_lazy/3.
-  Returns both the final state and the solution tree.
-
-  ## Parameters
-
-  - `domain` - AriaEngine domain created with create_domain/1
-  - `state` - Initial state from setup_scenario/0
-  - `goals` - List of goals in format {"predicate", subject, value}
-
-  ## Returns
-
-  - `{:ok, {AriaState.t(), AriaEngineCore.Plan.solution_tree()}}` - Final state and plan
-  - `{:error, atom()}` - Planning or execution failed
-
-  ## Example
-
-      domain = AriaSimpleTravel.create_domain()
-      {:ok, state} = AriaSimpleTravel.setup_scenario()
-      goals = [{"location", "alice", "park"}]
-      {:ok, {final_state, solution_tree}} = AriaSimpleTravel.run_lazy(domain, state, goals)
-  """
-  @spec run_lazy(AriaEngine.Domain.t(), AriaState.t(), [AriaEngine.goal()]) ::
-    {:ok, {AriaState.t(), AriaEngineCore.Plan.solution_tree()}} | {:error, atom()}
-  def run_lazy(domain, state, goals) do
-    AriaHybridPlanner.run_lazy(domain, state, goals)
-  end
-
-  @doc """
-  Execute a pre-made solution tree.
-
-  Takes a solution tree from plan/3 and executes it, returning the final state.
-
-  ## Parameters
-
-  - `domain` - AriaEngine domain created with create_domain/1
-  - `state` - Initial state from setup_scenario/0
-  - `solution_tree` - Solution tree from plan/3
-
-  ## Returns
-
-  - `{:ok, {AriaState.t(), AriaEngineCore.Plan.solution_tree()}}` - Final state and updated tree
-  - `{:error, atom()}` - Execution failed
-
-  ## Example
-
-      domain = AriaSimpleTravel.create_domain()
-      {:ok, state} = AriaSimpleTravel.setup_scenario()
-      goals = [{"location", "alice", "park"}]
-      {:ok, solution_tree} = AriaSimpleTravel.plan(domain, state, goals)
-      {:ok, {final_state, _}} = AriaSimpleTravel.run_lazy_tree(domain, state, solution_tree)
-  """
-  @spec run_lazy_tree(AriaEngine.Domain.t(), AriaState.t(), AriaEngineCore.Plan.solution_tree()) ::
-    {:ok, {AriaState.t(), AriaEngineCore.Plan.solution_tree()}} | {:error, atom()}
-  def run_lazy_tree(domain, state, solution_tree) do
-    AriaHybridPlanner.run_lazy_tree(domain, state, solution_tree)
   end
 
   @doc """
@@ -236,8 +146,8 @@ defmodule AriaSimpleTravel do
 
         case setup_scenario() do
           {:ok, state} ->
-            case run_lazy(domain, state, scenario.goals) do
-              {:ok, {final_state, solution_tree}} ->
+            case AriaHybridPlanner.run_lazy(domain, state, scenario.goals) do
+              {:ok, {solution_tree, final_state}} ->
                 {:ok, {final_state, solution_tree, scenario}}
 
               {:error, reason} ->

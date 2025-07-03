@@ -8,11 +8,11 @@ defmodule AriaHybridPlanner do
   ## Usage
 
       # Plan and execute in one step (recommended)
-      {:ok, {final_state, solution_tree}} = AriaHybridPlanner.run_lazy(domain, state, todos)
+      {:ok, {solution_tree, final_state}} = AriaHybridPlanner.run_lazy(domain, state, todos)
 
       # Plan first, then execute separately
       {:ok, plan} = AriaHybridPlanner.plan(domain, state, todos, opts)
-      {:ok, {final_state, updated_tree}} = AriaHybridPlanner.run_lazy_tree(domain, state, plan.solution_tree)
+      {:ok, {updated_tree, final_state}} = AriaHybridPlanner.run_lazy_tree(domain, state, plan.solution_tree)
 
       # Advanced planning with options
       {:ok, plan} = AriaHybridPlanner.plan(domain, state, todos, verbose: 2, max_depth: 15)
@@ -39,7 +39,7 @@ defmodule AriaHybridPlanner do
   @type todo_item :: AriaEngineCore.Plan.todo_item()
   @type solution_tree :: AriaEngineCore.Plan.solution_tree()
   @type plan_result :: {:ok, map()} | {:error, String.t()}
-  @type execution_result :: {:ok, {state(), solution_tree()}} | {:error, String.t()}
+  @type execution_result :: {:ok, {solution_tree(), state()}} | {:error, String.t()}
   @type lazy_execution_result :: {:ok, state()} | {:error, String.t()}
 
   # Delegate to internal modules
@@ -59,7 +59,7 @@ defmodule AriaHybridPlanner do
           execution_opts = Keyword.put(opts, :domain, domain)
           case Plan.ReentrantExecutor.execute_plan_lazy(solution_tree, initial_state, execution_opts) do
             {:ok, final_state} ->
-              {:ok, {final_state, solution_tree}}
+              {:ok, {solution_tree, final_state}}
             {:error, reason} ->
               {:error, reason}
           end
@@ -72,13 +72,12 @@ defmodule AriaHybridPlanner do
     end
   end
 
-  @spec run_lazy_tree(domain(), state(), solution_tree(), keyword()) :: lazy_execution_result()
+  @spec run_lazy_tree(domain(), state(), solution_tree(), keyword()) :: execution_result()
   def run_lazy_tree(domain, initial_state, solution_tree, opts \\ []) do
-    # Execute the provided solution tree directly
     execution_opts = Keyword.put(opts, :domain, domain)
     case Plan.ReentrantExecutor.execute_plan_lazy(solution_tree, initial_state, execution_opts) do
       {:ok, final_state} ->
-        {:ok, final_state}
+        {:ok, {solution_tree, final_state}}
       {:error, reason} ->
         {:error, reason}
     end

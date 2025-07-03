@@ -66,6 +66,46 @@ defmodule AriaSimpleTravel.Domain do
   # ============================================================================
 
   @doc """
+  Walk one step (10 minutes of walking).
+
+  This is an atomic action that represents a single unit of walking movement.
+  Task methods will decompose longer walks into multiple walk_step actions.
+  """
+  @spec walk_step(AriaState.t(), list()) :: {:ok, AriaState.t()} | {:error, atom()}
+  @action duration: "PT10M",
+          requires_entities: [
+            %{type: "person", capabilities: [:walking]}
+          ]
+  def walk_step(state, [person, from, to]) do
+    if from != to do
+      state
+      |> AriaState.set_fact("location", person, to)
+      |> then(&{:ok, &1})
+    else
+      {:error, :same_location}
+    end
+  end
+
+  @doc """
+  Walk from one location to another.
+
+  This is a composite action that gets decomposed into multiple walk_step actions based on distance.
+  """
+  @spec walk(AriaState.t(), list()) :: {:ok, [AriaHybridPlanner.todo_item()]} | {:error, atom()}
+  @task_method true
+  def walk(state, [person, from, to]) do
+    if from != to do
+      distance = get_distance(state, from, to)
+      walk_steps = for _step <- 1..distance do
+        {:walk_step, [person, from, to]}
+      end
+      {:ok, walk_steps}
+    else
+      {:error, :same_location}
+    end
+  end
+
+  @doc """
   Call a taxi to the person's current location.
 
   This is an instant action that immediately brings a taxi to the caller's location
@@ -117,39 +157,18 @@ defmodule AriaSimpleTravel.Domain do
   # ============================================================================
 
   @doc """
-  Walk from one location to another.
+  Ride taxi one step (5 minutes of taxi travel).
 
-  Duration is calculated based on distance: 10 minutes per distance unit.
-  This represents the time it takes to walk between locations.
+  This is an atomic action that represents a single unit of taxi movement.
+  Task methods will decompose longer rides into multiple ride_step actions.
   """
-  @action duration_calc: &__MODULE__.calculate_walk_duration/2,
-          requires_entities: [
-            %{type: "person", capabilities: [:walking]}
-          ]
-  @spec walk(AriaState.t(), list()) :: {:ok, AriaState.t()} | {:error, atom()}
-  def walk(state, [person, from, to]) do
-    if from != to do
-      state
-      |> AriaState.set_fact("location", person, to)
-      |> then(&{:ok, &1})
-    else
-      {:error, :same_location}
-    end
-  end
-
-  @doc """
-  Ride taxi to destination.
-
-  Duration is calculated based on distance: 5 minutes per distance unit.
-  Taxis are faster than walking but cost money.
-  """
-  @action duration_calc: &__MODULE__.calculate_taxi_duration/2,
+  @spec ride_step(AriaState.t(), list()) :: {:ok, AriaState.t()} | {:error, atom()}
+  @action duration: "PT5M",
           requires_entities: [
             %{type: "person", capabilities: [:taxi_riding]},
             %{type: "taxi", capabilities: [:transportation]}
           ]
-  @spec ride_taxi(AriaState.t(), list()) :: {:ok, AriaState.t()} | {:error, atom()}
-  def ride_taxi(state, [person, destination]) do
+  def ride_step(state, [person, destination]) do
     # Person should be in a taxi
     current_location = AriaState.get_fact(state, "location", person)
 
@@ -163,6 +182,32 @@ defmodule AriaSimpleTravel.Domain do
       |> AriaState.set_fact("location", taxi, destination)
       |> AriaState.set_fact("owe", person, fare)
       |> then(&{:ok, &1})
+    else
+      {:error, :not_in_taxi}
+    end
+  end
+
+  @doc """
+  Ride taxi to destination.
+
+  This is a composite action that gets decomposed by the travel task method
+  into multiple ride_step actions based on distance.
+  """
+  @task_method true
+  @spec ride_taxi(AriaState.t(), list()) :: {:ok, [AriaHybridPlanner.todo_item()]} | {:error, atom()}
+  def ride_taxi(state, [person, destination]) do
+    # Person should be in a taxi
+    current_location = AriaState.get_fact(state, "location", person)
+
+    if is_taxi?(state, current_location) do
+      taxi_location = AriaState.get_fact(state, "location", current_location)
+      distance = get_distance(state, taxi_location, destination)
+
+      ride_steps = for _step <- 1..distance do
+        {:ride_step, [person, destination]}
+      end
+
+      {:ok, ride_steps}
     else
       {:error, :not_in_taxi}
     end
@@ -189,15 +234,28 @@ defmodule AriaSimpleTravel.Domain do
 
       can_walk?(state, current_location, destination) ->
         # Walk if distance is reasonable (≤ 2 units)
-        {:ok, [{:walk, [person, current_location, destination]}]}
+        # Decompose into multiple walk_step actions based on distance
+        distance = get_distance(state, current_location, destination)
+        walk_steps = for _step <- 1..distance do
+          {:walk_step, [person, current_location, destination]}
+        end
+        {:ok, walk_steps}
 
       can_afford_taxi?(state, person, current_location, destination) ->
         # Take taxi if affordable
-        {:ok, [
-          {:call_taxi, [person, "taxi1"]},
-          {:ride_taxi, [person, destination]},
+        # Decompose into call, multiple ride steps, and payment
+        distance = get_distance(state, current_location, destination)
+        ride_steps = for _step <- 1..distance do
+          {:ride_step, [person, destination]}
+        end
+
+        taxi_actions = [
+          {:call_taxi, [person, "taxi1"]}
+        ] ++ ride_steps ++ [
           {:pay_driver, [person, destination]}
-        ]}
+        ]
+
+        {:ok, taxi_actions}
 
       true ->
         {:error, :no_viable_transportation}
@@ -226,13 +284,14 @@ defmodule AriaSimpleTravel.Domain do
   """
   @spec create_domain(map()) :: AriaCore.Domain.t()
   def create_domain(_opts \\ %{}) do
+    require Logger
     # Create a proper AriaCore.Domain struct
     domain = AriaCore.new_domain(:simple_travel)
 
-    # Register all attribute-defined actions and methods
-    domain = AriaCore.register_attribute_specs(domain, __MODULE__)
+    Logger.debug("Domain before attribute registration: actions = #{inspect(Map.keys(domain.actions))}")
 
-    domain
+    # Register all attribute-defined actions and methods
+    AriaCore.register_attribute_specs(domain, __MODULE__)
   end
 
   # ============================================================================
@@ -293,17 +352,6 @@ defmodule AriaSimpleTravel.Domain do
     |> AriaState.set_fact("status", entity_id, "available")
   end
 
-  def calculate_walk_duration(state, [_person, from, to]) do
-    # 10 minutes per distance unit for walking
-    distance = get_distance(state, from, to)
-    "PT#{distance * 10}M"
-  end
-
-  def calculate_taxi_duration(_state, [_person, _destination]) do
-    # 5 minutes per distance unit for taxi
-    # This would be calculated dynamically in a real implementation
-    "PT#{5}M"   # Default for now, should use actual distance
-  end
 
   defp get_distance(state, loc1, loc2) do
     AriaState.get_fact(state, "distance", {loc1, loc2}) ||

@@ -273,7 +273,10 @@ defmodule Plan.ReentrantExecutor do
     cond do
       # Check if domain is an AriaCore.Domain struct with actions
       is_map(domain) and Map.has_key?(domain, :actions) ->
-        case Map.get(domain.actions, action_atom) do
+        # Try both string and atom keys for action lookup
+        action_def = Map.get(domain.actions, action_atom) || Map.get(domain.actions, Atom.to_string(action_atom))
+
+        case action_def do
           nil ->
             {:error, "Todo item action not found in domain: #{action_name}"}
           action_def when is_map(action_def) ->
