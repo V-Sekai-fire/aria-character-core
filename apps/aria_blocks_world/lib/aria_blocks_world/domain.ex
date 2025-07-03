@@ -425,9 +425,8 @@ defmodule AriaBlocksWorld.Domain do
       unsatisfied = AriaEngineCore.Multigoal.unsatisfied_goals(multigoal, state)
 
       # Convert unsatisfied goals to individual unigoals
-      unigoals = Enum.map(unsatisfied, fn {subject, predicate, value} ->
-        {predicate, subject, value}
-      end)
+      # unsatisfied_goals already returns {predicate, subject, value} format
+      unigoals = unsatisfied
 
       # GTpyhop pattern: return individual goals + original multigoal for re-verification
       todo_list = unigoals ++ [multigoal]
