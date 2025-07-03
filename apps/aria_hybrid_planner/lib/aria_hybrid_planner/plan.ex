@@ -210,7 +210,14 @@ defmodule AriaEngineCore.Plan do
       node ->
         if node.is_primitive and node.expanded do
           case node.task do
-            {action_name, args} -> [{action_name, args}]
+            {action_name, args} ->
+              # Convert action name to atom for test compatibility
+              action_name_atom = case action_name do
+                atom when is_atom(atom) -> atom
+                string when is_binary(string) -> String.to_atom(string)
+                _ -> String.to_atom(to_string(action_name))
+              end
+              [{action_name_atom, args}]
             _ -> []
           end
         else
