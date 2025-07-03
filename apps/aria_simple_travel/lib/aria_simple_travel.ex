@@ -42,6 +42,7 @@ defmodule AriaSimpleTravel do
 
   alias AriaSimpleTravel.Domain
   alias AriaEngineCore
+  require Logger
 
   @doc """
   Create the Simple Travel domain with AriaEngine integration.
@@ -146,6 +147,7 @@ defmodule AriaSimpleTravel do
 
         case setup_scenario() do
           {:ok, state} ->
+            Logger.debug("Running scenario goals: #{inspect(scenario.goals)}")
             case AriaHybridPlanner.run_lazy(domain, state, scenario.goals) do
               {:ok, {solution_tree, final_state}} ->
                 {:ok, {final_state, solution_tree, scenario}}

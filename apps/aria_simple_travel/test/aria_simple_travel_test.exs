@@ -4,6 +4,7 @@
 defmodule AriaSimpleTravelTest do
   use ExUnit.Case, async: true
   doctest AriaSimpleTravel
+  require Logger
 
   alias AriaSimpleTravel
   alias AriaSimpleTravel.Domain
@@ -257,7 +258,7 @@ defmodule AriaSimpleTravelTest do
     end
 
     test "runs alice_to_park example" do
-      {:ok, {final_state, _solution_tree, scenario}} = AriaSimpleTravel.run_example(:alice_to_park)
+      {:ok, {final_state, solution_tree, scenario}} = AriaSimpleTravel.run_example(:alice_to_park)
       # Alice should be at park
       assert AriaState.get_fact(final_state, "location", "alice") == "park"
       # Alice should have less cash (paid taxi fare)
@@ -265,6 +266,7 @@ defmodule AriaSimpleTravelTest do
       # Alice should owe nothing
       assert AriaState.get_fact(final_state, "owe", "alice") == 0
       assert scenario.description =~ "Alice travels from home_a to park"
+      Logger.debug("Solution tree: #{inspect(AriaEngineCore.Plan.get_primitive_actions_dfs(solution_tree))}")
     end
 
     test "runs bob_short_walk example" do
