@@ -397,11 +397,6 @@ defmodule AriaBlocksWorld.Domain do
     end
   end
 
-  @doc """
-  Achieve a clear goal for a block with value false.
-
-  This handles the case where we want to make a block not clear (i.e., put something on it).
-  """
   @unigoal_method predicate: "clear"
   @spec achieve_clear(AriaState.t(), {String.t(), boolean()}) :: {:ok, [AriaHybridPlanner.todo_item()]} | {:error, atom()}
   def achieve_clear(state, {block, false}) do
@@ -425,7 +420,7 @@ defmodule AriaBlocksWorld.Domain do
   """
   @unigoal_method predicate: "multigoal_verified"
   @spec verify_multigoal(AriaState.t(), {String.t(), boolean()}) :: {:ok, [AriaHybridPlanner.todo_item()]} | {:error, atom()}
-  def verify_multigoal(state, {goals_string, true}) do
+  def verify_multigoal(_state, {_goals_string, true}) do
     # Parse the goals string back to the original goals list
     try do
       # The goals_string is the inspect output of the goals list
@@ -478,22 +473,41 @@ defmodule AriaBlocksWorld.Domain do
       # Get unsatisfied goals in original order
       unsatisfied = AriaEngineCore.Multigoal.unsatisfied_goals(multigoal, state)
 
-      # For blocks world, reverse the goal order to achieve dependencies first
-      # This ensures bottom-up construction: table goals first, then stacking goals
-      reversed_unsatisfied = Enum.reverse(unsatisfied)
+      # Sort goals by dependency order for optimal planning
+      # Bottom-up construction: table goals first, then stacking goals
+      sorted_unsatisfied = sort_goals_by_dependencies(unsatisfied)
 
       # Add a verification goal that checks all goals are satisfied
       # This prevents infinite loops while ensuring verification
       verification_goal = {"multigoal_verified", inspect(multigoal.goals), true}
 
       # Return individual goals + verification goal in dependency order
-      todo_list = reversed_unsatisfied ++ [verification_goal]
+      todo_list = sorted_unsatisfied ++ [verification_goal]
 
       {:ok, todo_list}
     end
   end
 
   # Private helper functions
+
+  defp sort_goals_by_dependencies(goals) do
+    # Sort goals by dependency order for optimal planning
+    # Bottom-up construction: table goals first, then stacking goals
+    Enum.sort(goals, fn goal1, goal2 ->
+      case {goal1, goal2} do
+        # Position goals: table positions come first
+        {{"pos", _block1, "table"}, {"pos", _block2, dest2}} when dest2 != "table" -> true
+        {{"pos", _block1, dest1}, {"pos", _block2, "table"}} when dest1 != "table" -> false
+
+        # Clear goals come before position goals
+        {{"clear", _block, _value}, {"pos", _block2, _dest}} -> true
+        {{"pos", _block, _dest}, {"clear", _block2, _value}} -> false
+
+        # Default: maintain original order
+        _ -> true
+      end
+    end)
+  end
 
   defp register_entity(state, [entity_id, type, capabilities]) do
     state

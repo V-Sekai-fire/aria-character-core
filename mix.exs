@@ -146,7 +146,8 @@ defmodule AriaCharacterCore.MixProject do
       {:aria_gltf, path: "apps/aria_gltf"},
       {:aria_qcp, path: "apps/aria_qcp"},
       {:ast_migrate, path: "apps/ast_migrate"},
-      {:aria_serial, path: "apps/aria_serial"}
+      {:aria_serial, path: "apps/aria_serial"},
+      {:aria_simple_travel, path: "apps/aria_simple_travel"}
     ]
   end
 
