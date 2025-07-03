@@ -81,7 +81,7 @@ defmodule AriaBlocksWorld.GtpyhopExamplesTest do
       Logger.debug("Goals: #{inspect(goal1a.goals)}")
       domain = AriaBlocksWorld.Domain.create()
       {:ok, result} = AriaHybridPlanner.plan(domain, state1, [goal1a], verbose: 3)
-      assert [{"unstack", ["a", "b"]}, {"putdown", ["a"]}, {"pickup", ["b"]}, {"stack", ["b", "a"]}, {"pickup", ["c"]}, {"stack", ["c", "b"]}] = AriaEngineCore.Plan.get_primitive_actions_dfs(result.solution_tree)
+      assert [{:unstack, ["a", "b"]}, {:putdown, ["a"]}, {:pickup, ["b"]}, {:stack, ["b", "a"]}, {:pickup, ["c"]}, {:stack, ["c", "b"]}] = AriaEngineCore.Plan.get_primitive_actions_dfs(result.solution_tree)
     end
 
     test "Sussman anomaly" do
@@ -139,7 +139,7 @@ defmodule AriaBlocksWorld.GtpyhopExamplesTest do
       # Expected plan from GTpyhop:
       #
       {:ok, result} = AriaHybridPlanner.plan(domain, state2, [goal2])
-      assert [{"unstack", ["a", "c"]}, {"putdown", ["a"]}, {"unstack", ["b", "d"]}, {"stack", ["b", "c"]}, {"pickup", ["a"]}, {"stack", ["a", "d"]}] = AriaEngineCore.Plan.get_primitive_actions_dfs(result.solution_tree)
+      assert [{:unstack, ["a", "c"]}, {:putdown, ["a"]}, {:unstack, ["b", "d"]}, {:stack, ["b", "c"]}, {:pickup, ["a"]}, {:stack, ["a", "d"]}] = AriaEngineCore.Plan.get_primitive_actions_dfs(result.solution_tree)
     end
 
     test "planning only (no execution)" do

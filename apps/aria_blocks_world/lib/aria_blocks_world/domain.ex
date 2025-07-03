@@ -69,8 +69,7 @@ defmodule AriaBlocksWorld.Domain do
   Remove block1 from on top of block2.
 
   Preconditions:
-  - Block1 must be on block2
-  - Block2 must not be the table
+  - Block1 must be on block2 (including table)
   - Block1 must be clear
   - Hand must be empty
 
@@ -78,7 +77,7 @@ defmodule AriaBlocksWorld.Domain do
   - Block1 position becomes 'hand'
   - Block1 becomes not clear
   - Hand holds block1
-  - Block2 becomes clear
+  - Block2 becomes clear (if block2 is not table)
   """
   @action true
   @spec unstack(AriaState.t(), [block()]) :: {:ok, AriaState.t()} | {:error, atom()}
@@ -90,7 +89,6 @@ defmodule AriaBlocksWorld.Domain do
 
     cond do
       current_pos != block2 -> {:error, :not_on_target_block}
-      block2 == "table" -> {:error, :cannot_unstack_from_table}
       is_clear != true -> {:error, :block_not_clear}
       hand_holding != false -> {:error, :hand_not_empty}
       true ->
@@ -99,7 +97,13 @@ defmodule AriaBlocksWorld.Domain do
         |> AriaState.set_fact("pos", block1, "hand")
         |> AriaState.set_fact("clear", block1, false)
         |> AriaState.set_fact("holding", "hand", block1)
-        |> AriaState.set_fact("clear", block2, true)
+
+        # Only set block2 clear if it's not the table
+        new_state = if block2 != "table" do
+          AriaState.set_fact(new_state, "clear", block2, true)
+        else
+          new_state
+        end
 
         {:ok, new_state}
     end
@@ -458,9 +462,10 @@ defmodule AriaBlocksWorld.Domain do
 
   This multigoal method implements the classic GTpyhop m_split_multigoal approach:
   1. Check which goals in the multigoal are not yet satisfied
-  2. Return individual unigoals for unsatisfied goals in original order
+  2. Return individual unigoals for unsatisfied goals in dependency order
   3. Add a verification goal to ensure all goals are achieved
 
+  For blocks world, goals must be achieved in dependency order (bottom-up).
   This ensures all goals are achieved and simultaneously true.
   """
   @spec split_multigoal(AriaState.t(), AriaEngineCore.Multigoal.t()) ::
@@ -473,12 +478,16 @@ defmodule AriaBlocksWorld.Domain do
       # Get unsatisfied goals in original order
       unsatisfied = AriaEngineCore.Multigoal.unsatisfied_goals(multigoal, state)
 
+      # For blocks world, reverse the goal order to achieve dependencies first
+      # This ensures bottom-up construction: table goals first, then stacking goals
+      reversed_unsatisfied = Enum.reverse(unsatisfied)
+
       # Add a verification goal that checks all goals are satisfied
       # This prevents infinite loops while ensuring verification
       verification_goal = {"multigoal_verified", inspect(multigoal.goals), true}
 
-      # Return individual goals + verification goal in original order
-      todo_list = unsatisfied ++ [verification_goal]
+      # Return individual goals + verification goal in dependency order
+      todo_list = reversed_unsatisfied ++ [verification_goal]
 
       {:ok, todo_list}
     end

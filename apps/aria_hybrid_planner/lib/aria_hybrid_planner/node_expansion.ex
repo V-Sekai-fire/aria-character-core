@@ -68,8 +68,10 @@ defmodule Plan.NodeExpansion do
         ) :: {:ok, solution_tree()} | {:error, String.t()} | :failure
   def expand_multigoal_node(domain, state, solution_tree, node_id, multigoal) do
     node = solution_tree.nodes[node_id]
+    # Use the node's current state instead of the global state
+    current_state = node.state || state
 
-    if AriaEngineCore.Multigoal.satisfied?(multigoal, state) do
+    if AriaEngineCore.Multigoal.satisfied?(multigoal, current_state) do
       updated_node = %{node | expanded: true, is_primitive: true}
       final_tree = put_in(solution_tree.nodes[node_id], updated_node)
       {:ok, final_tree}
@@ -77,7 +79,7 @@ defmodule Plan.NodeExpansion do
       # Try to use domain's multigoal methods first
       multigoal_methods = AriaCore.get_multigoal_methods_from_domain(domain)
 
-      case try_multigoal_methods(multigoal_methods, state, multigoal) do
+      case try_multigoal_methods(multigoal_methods, current_state, multigoal) do
         {:ok, []} ->
           # Method returned empty list - multigoal already completed
           Logger.debug("Multigoal method returned empty list, marking as completed")
@@ -104,10 +106,10 @@ defmodule Plan.NodeExpansion do
               }
 
               new_tree = put_in(tree.nodes[child_id], child_node)
-              {new_tree, [child_id | ids]}
+              {new_tree, ids ++ [child_id]}  # Append to maintain order
             end)
 
-          child_ids = Enum.reverse(child_ids)
+          # Multigoal methods return goals in correct dependency order
           updated_node = %{node | children_ids: child_ids, expanded: true, method_tried: :multigoal_method}
           final_tree = put_in(new_tree.nodes[node_id], updated_node)
           {:ok, final_tree}

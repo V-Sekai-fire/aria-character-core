@@ -12,6 +12,7 @@ defmodule AriaHybridPlanner.Planner do
 
   @doc """
   Plan using breadth-first HTN decomposition with node-by-node expansion.
+  Uses IPyHOP-style state management with actual action execution during planning.
   """
   @spec plan(term(), term(), [term()], keyword()) :: {:ok, map()} | {:error, String.t()}
   def plan(domain, initial_state, todos, opts \\ []) do
@@ -29,13 +30,16 @@ defmodule AriaHybridPlanner.Planner do
       # Expand the root node with todos
       {:ok, expanded_tree} = Plan.NodeExpansion.expand_root_node(solution_tree, solution_tree.root_id, todos, initial_state)
 
+      # Initialize global planning state (IPyHOP-style)
+      planning_state = initial_state
+
       # Perform HTN planning by expanding nodes one at a time (breadth-first)
       if verbose > 1 do
         Logger.debug("HTN Planning: Starting BFS planning with expanded tree")
         Logger.debug("HTN Planning: Initial tree has #{map_size(expanded_tree.nodes)} nodes")
       end
 
-      case plan_recursive_bfs(domain, expanded_tree, initial_state, opts, 0, max_depth) do
+      case plan_recursive_bfs(domain, expanded_tree, planning_state, opts, 0, max_depth) do
         {:ok, final_tree} ->
           if verbose > 1 do
             Logger.debug("HTN Planning: BFS planning completed successfully")
@@ -78,8 +82,8 @@ defmodule AriaHybridPlanner.Planner do
     end
   end
 
-  # Breadth-first HTN planning implementation (natural order, no sorting)
-  defp plan_recursive_bfs(domain, solution_tree, state, opts, depth, max_depth) do
+  # Breadth-first HTN planning implementation with IPyHOP-style state management
+  defp plan_recursive_bfs(domain, solution_tree, planning_state, opts, depth, max_depth) do
     verbose = Keyword.get(opts, :verbose, 0)
 
     if depth >= max_depth do
@@ -101,9 +105,9 @@ defmodule AriaHybridPlanner.Planner do
             Logger.debug("HTN Planning: Expanding node #{node_id} (iteration depth #{depth})")
           end
 
-          case expand_single_node(domain, solution_tree, node_id, state, opts) do
-            {:ok, updated_tree} ->
-              plan_recursive_bfs(domain, updated_tree, state, opts, depth + 1, max_depth)
+          case expand_single_node(domain, solution_tree, node_id, planning_state, opts) do
+            {:ok, updated_tree, updated_state} ->
+              plan_recursive_bfs(domain, updated_tree, updated_state, opts, depth + 1, max_depth)
             {:error, reason} ->
               {:error, reason}
           end
@@ -122,35 +126,41 @@ defmodule AriaHybridPlanner.Planner do
     end)
   end
 
-  # Expand a single node based on its type
-  defp expand_single_node(domain, solution_tree, node_id, state, opts) do
+  # Expand a single node based on its type (IPyHOP-style)
+  defp expand_single_node(domain, solution_tree, node_id, planning_state, opts) do
     node = solution_tree.nodes[node_id]
-    expand_node_by_type(domain, solution_tree, node_id, node, state, opts)
+    expand_node_by_type(domain, solution_tree, node_id, node, planning_state, opts)
   end
 
-  # Expand a node based on its task type
-  defp expand_node_by_type(domain, solution_tree, node_id, node, state, opts) do
+  # Expand a node based on its task type (IPyHOP-style)
+  defp expand_node_by_type(domain, solution_tree, node_id, node, planning_state, opts) do
     case node.task do
       # Multigoal expansion
       %AriaEngineCore.Multigoal{} = multigoal ->
-        Plan.NodeExpansion.expand_multigoal_node(domain, state, solution_tree, node_id, multigoal)
+        case Plan.NodeExpansion.expand_multigoal_node(domain, planning_state, solution_tree, node_id, multigoal) do
+          {:ok, updated_tree} -> {:ok, updated_tree, planning_state}
+          error -> error
+        end
 
       # Goal expansion (predicate, subject, value)
       {predicate, subject, value} when is_binary(predicate) ->
-        expand_goal_node(domain, solution_tree, node_id, predicate, subject, value, state, opts)
+        expand_goal_node(domain, solution_tree, node_id, predicate, subject, value, planning_state, opts)
 
       # Task expansion (task_name, args) - handle both atoms and strings
       {task_name, args} when is_binary(task_name) or is_atom(task_name) ->
-        expand_task_node(domain, solution_tree, node_id, to_string(task_name), args, state, opts)
+        expand_task_node(domain, solution_tree, node_id, to_string(task_name), args, planning_state, opts)
 
       # Unknown task type - mark as primitive
       _ ->
-        Plan.NodeExpansion.mark_as_primitive(solution_tree, node_id)
+        case Plan.NodeExpansion.mark_as_primitive(solution_tree, node_id) do
+          {:ok, updated_tree} -> {:ok, updated_tree, planning_state}
+          error -> error
+        end
     end
   end
 
-  # Expand a goal node using unigoal methods
-  defp expand_goal_node(domain, solution_tree, node_id, predicate, subject, value, state, opts) do
+  # Expand a goal node using unigoal methods (IPyHOP-style)
+  defp expand_goal_node(domain, solution_tree, node_id, predicate, subject, value, planning_state, opts) do
     verbose = Keyword.get(opts, :verbose, 0)
     node = solution_tree.nodes[node_id]
 
@@ -159,11 +169,14 @@ defmodule AriaHybridPlanner.Planner do
     end
 
     # Check if goal is already satisfied
-    if goal_satisfied?(state, predicate, subject, value) do
+    if goal_satisfied?(planning_state, predicate, subject, value) do
       if verbose > 2 do
         Logger.debug("HTN Planning: Goal #{predicate}(#{subject}, #{value}) already satisfied")
       end
-      Plan.NodeExpansion.mark_as_completed(solution_tree, node_id)
+      case Plan.NodeExpansion.mark_as_completed(solution_tree, node_id) do
+        {:ok, updated_tree} -> {:ok, updated_tree, planning_state}
+        error -> error
+      end
     else
       # Debug: Check what unigoal methods are available
       if verbose > 1 do
@@ -175,58 +188,73 @@ defmodule AriaHybridPlanner.Planner do
       end
 
       # Try to expand using unigoal methods
-      case try_unigoal_methods(domain, state, predicate, subject, value, node.blacklisted_methods, opts) do
+      case try_unigoal_methods(domain, planning_state, predicate, subject, value, node.blacklisted_methods, opts) do
         {:ok, []} ->
           # Method returned empty list - goal completed
           if verbose > 1 do
             Logger.debug("HTN Planning: Unigoal method returned empty list - goal completed")
           end
-          Plan.NodeExpansion.mark_as_completed(solution_tree, node_id)
+          case Plan.NodeExpansion.mark_as_completed(solution_tree, node_id) do
+            {:ok, updated_tree} -> {:ok, updated_tree, planning_state}
+            error -> error
+          end
 
         {:ok, subtasks} ->
           # Create child nodes for subtasks
           if verbose > 1 do
             Logger.debug("HTN Planning: Unigoal method returned #{length(subtasks)} subtasks: #{inspect(subtasks)}")
           end
-          create_child_nodes(solution_tree, node_id, subtasks, "unigoal_method")
+          case create_child_nodes(solution_tree, node_id, subtasks, "unigoal_method", planning_state) do
+            {:ok, updated_tree} -> {:ok, updated_tree, planning_state}
+            error -> error
+          end
 
         {:error, reason} ->
           # No methods available - mark as primitive
           if verbose > 1 do
             Logger.debug("HTN Planning: No unigoal methods found for #{predicate}: #{inspect(reason)} - marking as primitive")
           end
-          Plan.NodeExpansion.mark_as_primitive(solution_tree, node_id)
+          case Plan.NodeExpansion.mark_as_primitive(solution_tree, node_id) do
+            {:ok, updated_tree} -> {:ok, updated_tree, planning_state}
+            error -> error
+          end
       end
     end
   end
 
-  # Expand a task node using task methods
-  defp expand_task_node(domain, solution_tree, node_id, task_name, args, state, opts) do
+  # Expand a task node using task methods (IPyHOP-style)
+  defp expand_task_node(domain, solution_tree, node_id, task_name, args, planning_state, opts) do
     verbose = Keyword.get(opts, :verbose, 0)
     node = solution_tree.nodes[node_id]
 
     # Try to expand using task methods
-    case try_task_methods(domain, state, task_name, args, node.blacklisted_methods, opts) do
+    case try_task_methods(domain, planning_state, task_name, args, node.blacklisted_methods, opts) do
       {:ok, []} ->
         # Method returned empty list - task completed
         if verbose > 2 do
           Logger.debug("HTN Planning: Task #{task_name} completed (empty method result)")
         end
-        Plan.NodeExpansion.mark_as_completed(solution_tree, node_id)
+        case Plan.NodeExpansion.mark_as_completed(solution_tree, node_id) do
+          {:ok, updated_tree} -> {:ok, updated_tree, planning_state}
+          error -> error
+        end
 
       {:ok, subtasks} ->
         # Create child nodes for subtasks
         if verbose > 2 do
           Logger.debug("HTN Planning: Task #{task_name} expanded to #{length(subtasks)} subtasks")
         end
-        create_child_nodes(solution_tree, node_id, subtasks, "task_method")
+        case create_child_nodes(solution_tree, node_id, subtasks, "task_method", planning_state) do
+          {:ok, updated_tree} -> {:ok, updated_tree, planning_state}
+          error -> error
+        end
 
       {:error, _reason} ->
-        # No methods available - validate as primitive action
+        # No methods available - validate as primitive action (IPyHOP-style execution)
         if verbose > 2 do
-          Logger.debug("HTN Planning: No methods for task #{task_name}, validating as primitive action")
+          Logger.debug("HTN Planning: No methods for task #{task_name}, executing as primitive action")
         end
-        validate_primitive_action(domain, solution_tree, node_id, task_name, args, state, opts)
+        execute_primitive_action(domain, solution_tree, node_id, task_name, args, planning_state, opts)
     end
   end
 
@@ -319,21 +347,22 @@ defmodule AriaHybridPlanner.Planner do
     end
   end
 
-  # Create child nodes from subtasks
-  defp create_child_nodes(solution_tree, parent_node_id, subtasks, method_name) do
+  # Create child nodes from subtasks (IPyHOP-style - no state progression)
+  defp create_child_nodes(solution_tree, parent_node_id, subtasks, method_name, planning_state) do
     parent_node = solution_tree.nodes[parent_node_id]
 
-    # Generate child nodes
+    # Generate child nodes without state progression (IPyHOP approach)
     {child_nodes, child_ids} = subtasks
     |> Enum.with_index()
-    |> Enum.map(fn {subtask, index} ->
+    |> Enum.reduce({[], []}, fn {subtask, index}, {nodes_acc, ids_acc} ->
       child_id = "#{parent_node_id}_#{method_name}_#{index}"
+
       child_node = %{
         id: child_id,
         task: subtask,
         parent_id: parent_node_id,
         children_ids: [],
-        state: parent_node.state,
+        state: planning_state,  # All children start with current planning state
         visited: false,
         expanded: false,
         method_tried: nil,
@@ -341,9 +370,13 @@ defmodule AriaHybridPlanner.Planner do
         is_primitive: false,
         is_durative: false
       }
-      {{child_id, child_node}, child_id}
+
+      {[{child_id, child_node} | nodes_acc], [child_id | ids_acc]}
     end)
-    |> Enum.unzip()
+
+    # Reverse to maintain correct order
+    child_nodes = Enum.reverse(child_nodes)
+    child_ids = Enum.reverse(child_ids)
 
     # Update parent node
     updated_parent = %{parent_node |
@@ -361,12 +394,11 @@ defmodule AriaHybridPlanner.Planner do
     {:ok, updated_tree}
   end
 
-  # Validate a primitive action by checking if it exists in the domain
-  defp validate_primitive_action(domain, solution_tree, node_id, task_name, _args, _state, opts) do
+  # Execute a primitive action during planning (IPyHOP-style)
+  defp execute_primitive_action(domain, solution_tree, node_id, task_name, args, planning_state, opts) do
     verbose = Keyword.get(opts, :verbose, 0)
 
-    # Check if the action exists in the domain (don't execute it during planning)
-    # Actions are stored as strings in the domain
+    # Get the action function from the domain
     case AriaCore.get_action_from_domain(domain, task_name) do
       nil ->
         # Action doesn't exist in domain
@@ -376,11 +408,55 @@ defmodule AriaHybridPlanner.Planner do
         {:error, "Action #{task_name} not found in domain"}
 
       action_fn when is_function(action_fn) ->
-        # Action exists - mark as primitive (execution will happen later)
+        # Execute the action during planning (IPyHOP approach)
         if verbose > 2 do
-          Logger.debug("HTN Planning: Primitive action #{task_name} validated successfully")
+          Logger.debug("HTN Planning: Executing primitive action #{task_name} with args #{inspect(args)}")
         end
-        Plan.NodeExpansion.mark_as_primitive(solution_tree, node_id)
+
+        try do
+          # Execute the action and get the new state
+          case action_fn.(planning_state, args) do
+            {:ok, new_state} ->
+              # Action succeeded - mark as primitive and return updated state
+              if verbose > 2 do
+                Logger.debug("HTN Planning: Action #{task_name} succeeded")
+              end
+              case Plan.NodeExpansion.mark_as_primitive(solution_tree, node_id) do
+                {:ok, updated_tree} -> {:ok, updated_tree, new_state}
+                error -> error
+              end
+
+            {:error, reason} ->
+              # Action failed
+              if verbose > 1 do
+                Logger.debug("HTN Planning: Action #{task_name} failed: #{inspect(reason)}")
+              end
+              {:error, "Action #{task_name} failed: #{inspect(reason)}"}
+
+            new_state when is_map(new_state) ->
+              # Action returned new state directly
+              if verbose > 2 do
+                Logger.debug("HTN Planning: Action #{task_name} succeeded (direct state return)")
+              end
+              case Plan.NodeExpansion.mark_as_primitive(solution_tree, node_id) do
+                {:ok, updated_tree} -> {:ok, updated_tree, new_state}
+                error -> error
+              end
+
+            _ ->
+              # Unexpected return format
+              if verbose > 1 do
+                Logger.debug("HTN Planning: Action #{task_name} returned unexpected format")
+              end
+              {:error, "Action #{task_name} returned unexpected format"}
+          end
+        rescue
+          e ->
+            if verbose > 1 do
+              Logger.debug("HTN Planning: Action #{task_name} raised exception: #{inspect(e)}")
+            end
+            {:error, "Action #{task_name} raised exception: #{inspect(e)}"}
+        end
 
       _ ->
         # Unexpected action format
