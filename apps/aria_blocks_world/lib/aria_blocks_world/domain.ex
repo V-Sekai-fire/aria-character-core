@@ -457,11 +457,11 @@ defmodule AriaBlocksWorld.Domain do
 
   This multigoal method implements the classic GTpyhop m_split_multigoal approach:
   1. Check which goals in the multigoal are not yet satisfied
-  2. Return individual unigoals for unsatisfied goals in dependency order
+  2. Return individual unigoals for unsatisfied goals in original order
   3. Add a verification goal to ensure all goals are achieved
 
-  For blocks world, goals must be achieved in dependency order (bottom-up).
-  This ensures all goals are achieved and simultaneously true.
+  The HTN planner will discover the optimal goal ordering through its natural
+  backtracking mechanism, so no domain-specific sorting is needed.
   """
   @spec split_multigoal(AriaState.t(), AriaEngineCore.Multigoal.t()) ::
     {:ok, [AriaHybridPlanner.todo_item()]} | {:error, atom()}
@@ -470,68 +470,21 @@ defmodule AriaBlocksWorld.Domain do
     if AriaEngineCore.Multigoal.satisfied?(multigoal, state) do
       {:ok, []}  # All goals already achieved
     else
-      # Get unsatisfied goals in original order
+      # Get unsatisfied goals in original order - let planner discover optimal sequence
       unsatisfied = AriaEngineCore.Multigoal.unsatisfied_goals(multigoal, state)
-
-      # Sort goals by dependency order for optimal planning
-      # Bottom-up construction: table goals first, then stacking goals
-      sorted_unsatisfied = sort_goals_by_dependencies(unsatisfied)
 
       # Add a verification goal that checks all goals are satisfied
       # This prevents infinite loops while ensuring verification
       verification_goal = {"multigoal_verified", inspect(multigoal.goals), true}
 
-      # Return individual goals + verification goal in dependency order
-      todo_list = sorted_unsatisfied ++ [verification_goal]
+      # Return individual goals + verification goal in original order
+      todo_list = unsatisfied ++ [verification_goal]
 
       {:ok, todo_list}
     end
   end
 
   # Private helper functions
-
-  defp sort_goals_by_dependencies(goals) do
-    # Sort goals by dependency order for optimal planning
-    # Bottom-up construction: dependencies must be satisfied first
-
-    # Separate position goals from other goals
-    {pos_goals, other_goals} = Enum.split_with(goals, fn
-      {"pos", _block, _dest} -> true
-      _ -> false
-    end)
-
-    # Sort position goals by dependency depth
-    sorted_pos_goals = Enum.sort(pos_goals, fn goal1, goal2 ->
-      dependency_depth(goal1, pos_goals) <= dependency_depth(goal2, pos_goals)
-    end)
-
-    # Sort other goals (clear goals come before position goals)
-    sorted_other_goals = Enum.sort(other_goals, fn goal1, goal2 ->
-      case {goal1, goal2} do
-        {{"clear", _block, _value}, _} -> true
-        {_, {"clear", _block, _value}} -> false
-        _ -> true
-      end
-    end)
-
-    # Return other goals first, then position goals in dependency order
-    sorted_other_goals ++ sorted_pos_goals
-  end
-
-  # Calculate dependency depth for a position goal
-  # Goals with lower depth (fewer dependencies) should come first
-  defp dependency_depth({"pos", _block, dest}, all_pos_goals) do
-    case dest do
-      "table" -> 0  # Table goals have no dependencies
-      target_block ->
-        # Find if target_block has its own position goal
-        target_goal = Enum.find(all_pos_goals, fn {"pos", b, _d} -> b == target_block end)
-        case target_goal do
-          nil -> 1  # Target block has no goal, so depth is 1
-          target_goal -> 1 + dependency_depth(target_goal, all_pos_goals)
-        end
-    end
-  end
 
   defp register_entity(state, [entity_id, type, capabilities]) do
     state
