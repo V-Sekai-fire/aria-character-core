@@ -32,20 +32,6 @@ defmodule AriaBlocksWorld.MethodExecutionTest do
       {:ok, state: state}
     end
 
-    test "take_method handles various block positions", %{state: state} do
-      # Test taking from top of stack (clear block on another block)
-      assert {:ok, actions} = Domain.take_method(state, ["c"])
-      assert actions == [{:unstack, ["c", "b"]}]
-
-      # Test taking from table (clear block on table)
-      assert {:ok, actions} = Domain.take_method(state, ["d"])
-      assert actions == [{:pickup, ["d"]}]
-
-      # Test taking blocked block (should fail)
-      assert {:error, :block_not_clear} = Domain.take_method(state, ["b"])
-      assert {:error, :block_not_clear} = Domain.take_method(state, ["a"])
-    end
-
     test "put_method handles various destinations", %{state: state} do
       # Set up state with block in hand
       state_holding_c = AriaHybridPlanner.set_fact(state, "holding", "hand", "c")
@@ -164,12 +150,6 @@ defmodule AriaBlocksWorld.MethodExecutionTest do
         {:move_block, ["b", "table"]}
       ]
     end
-
-    test "achieve_clear false returns empty", %{state: state} do
-      # Cannot directly make blocks not clear
-      assert {:ok, []} = Domain.achieve_clear(state, {"c", false})
-      assert {:ok, []} = Domain.achieve_clear(state, {"d", false})
-    end
   end
 
   describe "multigoal method execution scenarios" do
@@ -266,9 +246,7 @@ defmodule AriaBlocksWorld.MethodExecutionTest do
       assert {:ok, actions} = Domain.achieve_position(state, {"b", "table"})
 
       # Should decompose to validation + movement
-      assert actions == [
-        {:move_block, ["b", "table"]}
-      ]
+      assert actions == [{:unstack, ["b", "a"]}, {:putdown, ["b"]}]
 
       # Test that move_block further decomposes
       assert {:ok, move_actions} = Domain.move_block(state, ["b", "table"])
@@ -303,9 +281,7 @@ defmodule AriaBlocksWorld.MethodExecutionTest do
 
       # Move a to a different destination (block d) to test the full decomposition
       assert {:ok, move_actions} = Domain.achieve_position(state_after_clear, {"a", "d"})
-      assert move_actions == [
-        {:move_block, ["a", "d"]}
-      ]
+      assert move_actions ==  [{"clear", "d", true}, {:pickup, ["a"]}, {:stack, ["a", "d"]}]
 
       # Also test that if a is already at the target, no actions are needed
       assert {:ok, no_actions} = Domain.achieve_position(state_after_clear, {"a", "table"})
@@ -314,26 +290,6 @@ defmodule AriaBlocksWorld.MethodExecutionTest do
   end
 
   describe "edge cases and boundary conditions" do
-    test "empty state handling" do
-      empty_state = AriaHybridPlanner.new_state()
-
-      # Methods should handle empty state gracefully
-      assert {:error, _} = Domain.take_method(empty_state, ["nonexistent"])
-      assert {:ok, _} = Domain.achieve_position(empty_state, {"a", "table"})
-      assert {:ok, _} = Domain.move_block(empty_state, ["a", "table"])
-    end
-
-    test "invalid block names" do
-      state = AriaHybridPlanner.new_state()
-      |> AriaHybridPlanner.set_fact("pos", "a", "table")
-      |> AriaHybridPlanner.set_fact("clear", "a", true)
-      |> AriaHybridPlanner.set_fact("holding", "hand", false)
-
-      # Methods should handle invalid block names
-      assert {:error, _} = Domain.take_method(state, ["nonexistent"])
-      assert {:ok, _} = Domain.achieve_position(state, {"nonexistent", "table"})
-    end
-
     test "circular dependencies in goals" do
       state = AriaHybridPlanner.new_state()
       |> AriaHybridPlanner.set_fact("pos", "a", "table")

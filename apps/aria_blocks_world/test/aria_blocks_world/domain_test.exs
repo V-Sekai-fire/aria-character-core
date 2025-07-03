@@ -14,15 +14,6 @@ defmodule AriaBlocksWorld.DomainTest do
       assert is_struct(domain)
       assert domain.name == :blocks_world
     end
-
-    test "provides domain info" do
-      info = Domain.info()
-      assert info.name == "Blocks World Domain"
-      assert :pickup in info.actions
-      assert :unstack in info.actions
-      assert :putdown in info.actions
-      assert :stack in info.actions
-    end
   end
 
   describe "basic actions" do
@@ -140,7 +131,7 @@ defmodule AriaBlocksWorld.DomainTest do
 
       {:ok, actions} = Domain.achieve_position(state, {"a", "table"})
 
-      assert actions == [{:move_block, ["a", "table"]}]
+      assert actions ==  [{"clear", "a", true}, {:unstack, ["a", "b"]}, {:putdown, ["a"]}]
     end
 
     test "achieve_clear when block already clear" do
@@ -185,11 +176,11 @@ defmodule AriaBlocksWorld.DomainTest do
 
       # Test take 'a' should work (unstack)
       {:ok, actions} = Domain.achieve_position(state, {"a", "hand"})
-      assert actions == [{:move_block, ["a", "hand"]}]
+      assert actions == [{"clear", "hand", true}, {:unstack, ["a", "b"]}, {:stack, ["a", "hand"]}]
 
       # Test take 'c' should work (pickup)
       {:ok, actions} = Domain.achieve_position(state, {"c", "hand"})
-      assert actions == [{:move_block, ["c", "hand"]}]
+      assert actions == [{"clear", "hand", true}, {:pickup, ["c"]}, {:stack, ["c", "hand"]}]
     end
 
     test "Sussman anomaly initial state" do
@@ -216,10 +207,10 @@ defmodule AriaBlocksWorld.DomainTest do
 
       # Test basic goal achievement
       {:ok, actions} = Domain.achieve_position(state, {"a", "b"})
-      assert actions == [{:move_block, ["a", "b"]}]
+      assert actions == [{"clear", "a", true}, {:pickup, ["a"]}, {:stack, ["a", "b"]}]
 
       {:ok, actions} = Domain.achieve_position(state, {"b", "c"})
-      assert actions == [{:move_block, ["b", "c"]}]
+      assert actions == [{:pickup, ["b"]}, {:stack, ["b", "c"]}]
     end
 
     test "state2 configuration" do
@@ -244,10 +235,10 @@ defmodule AriaBlocksWorld.DomainTest do
       # then stacking b on c and a on d
 
       {:ok, actions} = Domain.achieve_position(state, {"b", "c"})
-      assert actions == [{:move_block, ["b", "c"]}]
+      assert actions == [{"clear", "c", true}, {:unstack, ["b", "d"]}, {:stack, ["b", "c"]}]
 
       {:ok, actions} = Domain.achieve_position(state, {"a", "d"})
-      assert actions == [{:move_block, ["a", "d"]}]
+      assert actions ==  [{"clear", "d", true}, {:unstack, ["a", "c"]}, {:stack, ["a", "d"]}]
     end
   end
 

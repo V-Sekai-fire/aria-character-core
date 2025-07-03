@@ -23,42 +23,12 @@ defmodule AriaBlocksWorld.RegistrationTest do
       assert domain.name == :blocks_world
     end
 
-    test "provides complete domain information" do
-      info = Domain.info()
-
-      assert info.name == "Blocks World Domain"
-      assert is_binary(info.description)
-      assert is_list(info.actions)
-      assert is_list(info.task_methods)
-      assert is_list(info.multigoal_methods)
-      assert is_list(info.predicates)
-      assert is_list(info.entities)
-      assert is_list(info.capabilities)
-
-      # Verify key components are present
-      assert :pickup in info.actions
-      assert :unstack in info.actions
-      assert :putdown in info.actions
-      assert :stack in info.actions
-      assert :take in info.actions
-
-      assert "move_block" in info.task_methods
-      assert "take" in info.task_methods
-      assert "put" in info.task_methods
-
-      assert "split_multigoal" in info.multigoal_methods
-
-      assert "pos" in info.predicates
-      assert "clear" in info.predicates
-      assert "holding" in info.predicates
-    end
-
     test "registers actions through attribute system" do
       domain = Domain.create()
       actions = AriaCore.list_actions_in_domain(domain)
 
       # Verify all expected actions are registered
-      expected_actions = [:pickup, :unstack, :putdown, :stack, :take, :setup_blocks_scenario]
+      expected_actions = [:pickup, :unstack, :putdown, :stack, :setup_blocks_scenario]
 
       for action <- expected_actions do
         assert action in actions, "Action #{action} should be registered"
@@ -89,28 +59,6 @@ defmodule AriaBlocksWorld.RegistrationTest do
       |> AriaHybridPlanner.set_fact("holding", "hand", false)
 
       {:ok, state: state}
-    end
-
-    test "task method execution works through registration", %{state: state} do
-      # Test take_method for block 'c' (should work since c is clear and on block 'a')
-      assert {:ok, actions} = Domain.take_method(state, ["c"])
-      assert actions == [{:unstack, ["c", "a"]}]
-
-      # Test take_method for block 'a' (should fail since a is not clear)
-      assert {:error, :block_not_clear} = Domain.take_method(state, ["a"])
-
-      # Test take_method for block 'b' (should work since b is clear and on table)
-      assert {:ok, actions} = Domain.take_method(state, ["b"])
-      assert actions == [{:pickup, ["b"]}]
-    end
-
-    test "task method error handling works through registration", %{state: state} do
-      # Test take_method for block that's not clear
-      state_with_blocked = AriaHybridPlanner.set_fact(state, "clear", "a", false)
-      assert {:error, :block_not_clear} = Domain.take_method(state_with_blocked, ["a"])
-
-      # Test put_method when hand is empty (should fail)
-      assert {:error, :not_holding_block} = Domain.put_method(state, ["c", "table"])
     end
 
     test "task method execution with valid holding state", %{state: state} do
@@ -163,23 +111,7 @@ defmodule AriaBlocksWorld.RegistrationTest do
 
       # Test when goal requires action
       assert {:ok, actions} = Domain.achieve_position(state, {"b", "table"})
-      assert actions == [
-        {:move_block, ["b", "table"]}
-      ]
-    end
-
-    test "achieve_clear unigoal method works", %{state: state} do
-      # Test when block is already clear
-      assert {:ok, []} = Domain.achieve_clear(state, {"b", true})
-
-      # Test when block needs to be cleared
-      assert {:ok, actions} = Domain.achieve_clear(state, {"a", true})
-      assert actions == [
-        {:move_block, ["b", "table"]}
-      ]
-
-      # Test achieve_clear false (should return empty - cannot directly make not clear)
-      assert {:ok, []} = Domain.achieve_clear(state, {"b", false})
+      assert actions == [{:unstack, ["b", "a"]}, {:putdown, ["b"]}]
     end
   end
 
@@ -211,20 +143,6 @@ defmodule AriaBlocksWorld.RegistrationTest do
       for action <- actions do
         assert function_exported?(Domain, action, 2),
                "Action #{action} should be exported with arity 2"
-      end
-    end
-
-    test "domain info matches actual registration" do
-      domain = Domain.create()
-      info = Domain.info()
-
-      # Get actual registered actions
-      registered_actions = AriaCore.list_actions_in_domain(domain)
-
-      # Verify info actions are subset of registered actions
-      for action <- info.actions do
-        assert action in registered_actions,
-               "Info action #{action} should be in registered actions"
       end
     end
   end

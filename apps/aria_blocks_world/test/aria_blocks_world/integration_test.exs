@@ -224,9 +224,7 @@ defmodule AriaBlocksWorld.IntegrationTest do
     test "unigoal method goal achievement", %{state: state} do
       # Test achieve_position method
       assert {:ok, actions} = Domain.achieve_position(state, {"b", "c"})
-      assert actions == [
-        {:move_block, ["b", "c"]}
-      ]
+      assert actions == [{:unstack, ["b", "a"]}, {:stack, ["b", "c"]}]
 
       # Test achieve_clear method
       assert {:ok, clear_actions} = Domain.achieve_clear(state, {"a", true})

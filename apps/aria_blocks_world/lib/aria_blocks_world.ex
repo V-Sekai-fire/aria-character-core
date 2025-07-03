@@ -133,7 +133,7 @@ defmodule AriaBlocksWorld do
       {:ok, result} ->
         todo_list = Plan.Utils.get_primitive_actions_dfs(result.solution_tree)
         Logger.debug("Todo List: #{inspect(todo_list)}")
-        {:ok, todo_list}
+        {:ok, {result.solution_tree, todo_list}}
       {:error, reason} ->
         {:error, reason}
     end
