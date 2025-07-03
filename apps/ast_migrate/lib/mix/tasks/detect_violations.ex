@@ -7,6 +7,7 @@ defmodule Mix.Tasks.DetectViolations do
   """
 
   use Mix.Task
+  require Logger
 
   @impl Mix.Task
   def run(args) do

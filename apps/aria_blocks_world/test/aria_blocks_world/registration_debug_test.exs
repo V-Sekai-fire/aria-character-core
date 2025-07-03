@@ -21,8 +21,8 @@ defmodule AriaBlocksWorld.RegistrationDebugTest do
     Logger.debug("Domain unigoal methods: #{inspect(domain.unigoal_methods)}")
 
     # Check if our specific methods are registered
-    validate_move_registered = Map.has_key?(domain.task_methods, "validate_move")
-    move_block_registered = Map.has_key?(domain.task_methods, "move_block")
+    validate_move_registered = Map.has_key?(domain.task_methods, :validate_move)
+    move_block_registered = Map.has_key?(domain.task_methods, :move_block)
 
     Logger.debug("validate_move registered: #{validate_move_registered}")
     Logger.debug("move_block registered: #{move_block_registered}")

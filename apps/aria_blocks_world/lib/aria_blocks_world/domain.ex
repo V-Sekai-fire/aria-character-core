@@ -68,9 +68,6 @@ defmodule AriaBlocksWorld.Domain do
     end
   end
 
-  def pickup(_state, [nil]), do: raise ArgumentError, "block name cannot be nil"
-  def pickup(_state, [block]) when not is_binary(block), do: raise ArgumentError, "block name must be a string"
-
   @doc """
   Remove block1 from on top of block2.
 
@@ -110,10 +107,6 @@ defmodule AriaBlocksWorld.Domain do
         {:ok, new_state}
     end
   end
-
-  def unstack(_state, [_block1, nil]), do: raise ArgumentError, "block name cannot be nil"
-  def unstack(_state, [nil, _block2]), do: raise ArgumentError, "block name cannot be nil"
-  def unstack(_state, [block1, block2]) when not is_binary(block1) or not is_binary(block2), do: raise ArgumentError, "block names must be strings"
 
   @doc """
   Put down the held block on the table.
@@ -196,9 +189,6 @@ defmodule AriaBlocksWorld.Domain do
       _ -> {:error, :invalid_position}
     end
   end
-
-  def take(_state, [nil]), do: raise ArgumentError, "block name cannot be nil"
-  def take(_state, [block]) when not is_binary(block), do: raise ArgumentError, "block name must be a string"
 
   # Task methods for complex workflows following R25W1398085
 
