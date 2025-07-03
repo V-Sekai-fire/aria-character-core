@@ -79,6 +79,13 @@ defmodule Plan.NodeExpansion do
       multigoal_methods = AriaCore.get_multigoal_methods_from_domain(domain)
 
       case try_multigoal_methods(multigoal_methods, state, multigoal, verbose) do
+        {:ok, []} ->
+          # Method returned empty list - multigoal already completed
+          if verbose > 2 do
+            Logger.debug("Multigoal method returned empty list, marking as completed")
+          end
+          mark_as_completed(solution_tree, node_id)
+
         {:ok, todo_list} ->
           # Create child nodes for the todo list returned by the multigoal method
           {new_tree, child_ids} =
@@ -154,6 +161,12 @@ defmodule Plan.NodeExpansion do
   defp try_multigoal_methods([{_method_name, method_fn} | rest], state, multigoal, verbose) do
     try do
       case method_fn.(state, multigoal) do
+        {:ok, []} ->
+          # Method returned empty list - multigoal already satisfied
+          if verbose > 2 do
+            Logger.debug("Multigoal method succeeded, returned empty list - multigoal completed")
+          end
+          {:ok, []}
         {:ok, todo_list} when is_list(todo_list) ->
           if verbose > 2 do
             Logger.debug("Multigoal method succeeded, returned #{length(todo_list)} todo items")
@@ -189,6 +202,21 @@ defmodule Plan.NodeExpansion do
       node ->
         is_durative = Keyword.get(opts, :is_durative, false)
         updated_node = %{node | is_primitive: true, expanded: true, is_durative: is_durative}
+        final_tree = put_in(solution_tree.nodes[node_id], updated_node)
+        {:ok, final_tree}
+    end
+  end
+
+  @spec mark_as_completed(solution_tree(), node_id(), keyword()) ::
+          {:ok, solution_tree()} | {:error, String.t()}
+  def mark_as_completed(solution_tree, node_id, opts \\ []) do
+    case solution_tree.nodes[node_id] do
+      nil ->
+        {:error, "Node not found: #{node_id}"}
+
+      node ->
+        is_durative = Keyword.get(opts, :is_durative, false)
+        updated_node = %{node | is_primitive: false, expanded: true, is_durative: is_durative}
         final_tree = put_in(solution_tree.nodes[node_id], updated_node)
         {:ok, final_tree}
     end

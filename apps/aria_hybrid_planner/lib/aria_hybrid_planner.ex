@@ -228,7 +228,7 @@ defmodule AriaHybridPlanner do
                 if verbose > 2 do
                   Logger.debug("HTN Planning: Task method #{method_name} returned empty list - task completed")
                 end
-                Plan.NodeExpansion.mark_as_primitive(solution_tree, node_id)
+                Plan.NodeExpansion.mark_as_completed(solution_tree, node_id)
 
               {:ok, subtasks} ->
                 # Method returned subtasks - create child nodes
@@ -292,8 +292,8 @@ defmodule AriaHybridPlanner do
               case execute_unigoal_method_for_planning(domain, state, predicate_atom, {subject, value}, method_name, opts) do
                 {:ok, []} ->
                   # Method returned empty list - goal already satisfied
-                  Logger.debug("HTN Goal Expansion: Unigoal method #{method_name} returned empty list, marking as primitive")
-                  Plan.NodeExpansion.mark_as_primitive(solution_tree, node_id)
+                  Logger.debug("HTN Goal Expansion: Unigoal method #{method_name} returned empty list, marking as completed")
+                  Plan.NodeExpansion.mark_as_completed(solution_tree, node_id)
 
                 {:ok, subtasks} ->
                   # Method returned subtasks - create child nodes
