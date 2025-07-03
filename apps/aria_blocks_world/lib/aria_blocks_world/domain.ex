@@ -492,21 +492,45 @@ defmodule AriaBlocksWorld.Domain do
 
   defp sort_goals_by_dependencies(goals) do
     # Sort goals by dependency order for optimal planning
-    # Bottom-up construction: table goals first, then stacking goals
-    Enum.sort(goals, fn goal1, goal2 ->
+    # Bottom-up construction: dependencies must be satisfied first
+
+    # Separate position goals from other goals
+    {pos_goals, other_goals} = Enum.split_with(goals, fn
+      {"pos", _block, _dest} -> true
+      _ -> false
+    end)
+
+    # Sort position goals by dependency depth
+    sorted_pos_goals = Enum.sort(pos_goals, fn goal1, goal2 ->
+      dependency_depth(goal1, pos_goals) <= dependency_depth(goal2, pos_goals)
+    end)
+
+    # Sort other goals (clear goals come before position goals)
+    sorted_other_goals = Enum.sort(other_goals, fn goal1, goal2 ->
       case {goal1, goal2} do
-        # Position goals: table positions come first
-        {{"pos", _block1, "table"}, {"pos", _block2, dest2}} when dest2 != "table" -> true
-        {{"pos", _block1, dest1}, {"pos", _block2, "table"}} when dest1 != "table" -> false
-
-        # Clear goals come before position goals
-        {{"clear", _block, _value}, {"pos", _block2, _dest}} -> true
-        {{"pos", _block, _dest}, {"clear", _block2, _value}} -> false
-
-        # Default: maintain original order
+        {{"clear", _block, _value}, _} -> true
+        {_, {"clear", _block, _value}} -> false
         _ -> true
       end
     end)
+
+    # Return other goals first, then position goals in dependency order
+    sorted_other_goals ++ sorted_pos_goals
+  end
+
+  # Calculate dependency depth for a position goal
+  # Goals with lower depth (fewer dependencies) should come first
+  defp dependency_depth({"pos", _block, dest}, all_pos_goals) do
+    case dest do
+      "table" -> 0  # Table goals have no dependencies
+      target_block ->
+        # Find if target_block has its own position goal
+        target_goal = Enum.find(all_pos_goals, fn {"pos", b, _d} -> b == target_block end)
+        case target_goal do
+          nil -> 1  # Target block has no goal, so depth is 1
+          target_goal -> 1 + dependency_depth(target_goal, all_pos_goals)
+        end
+    end
   end
 
   defp register_entity(state, [entity_id, type, capabilities]) do
