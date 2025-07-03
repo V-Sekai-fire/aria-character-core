@@ -45,29 +45,21 @@ defmodule AriaBlocksWorld.Domain do
   - Block becomes not clear
   - Hand holds the block
   """
-  @task_method true
-  @spec pickup(AriaHybridPlanner.State.t(), [block()]) :: {:ok, [AriaHybridPlanner.todo_item()]} | {:error, atom()}
+  @action true
+  @spec setup_blocks_scenario(AriaHybridPlanner.State.t(), []) :: {:ok, AriaHybridPlanner.State.t()} | {:error, atom()}
   def pickup(state, [block]) do
     is_clear = AriaHybridPlanner.get_fact(state, "clear", block)
-    if is_clear == nil do
-      {:error, :block_not_found}
-    else
-      current_pos = AriaHybridPlanner.get_fact(state, "pos", block)
-      hand_holding = AriaHybridPlanner.get_fact(state, "holding", "hand")
-      cond do
-          current_pos != "table" -> {:error, :not_on_table}
-          is_clear != true -> {:error, :block_not_clear}
-          hand_holding != false -> {:error, :hand_not_empty}
-          true ->
-            goal = %AriaEngineCore.Multigoal{
-              goals: [
-                {"pos", block, "hand"},
-                {"clear", block, false},
-                {"holding", "hand", block}
-              ]
-            }
-            {:ok, [goal]}
-        end
+    current_pos = AriaHybridPlanner.get_fact(state, "pos", block)
+    hand_holding = AriaHybridPlanner.get_fact(state, "holding", "hand")
+    cond do
+        current_pos != "table" -> {:error, :not_on_table}
+        is_clear != true -> {:error, :block_not_clear}
+        hand_holding != false -> {:error, :hand_not_empty}
+        true ->
+          new_state = AriaHybridPlanner.set_fact(state, "pos", block, "hand")
+          |> AriaHybridPlanner.set_fact("clear", block, false)
+          |> AriaHybridPlanner.set_fact("holding", "hand", block)
+          {:ok, new_state}
     end
   end
 
@@ -269,7 +261,7 @@ defmodule AriaBlocksWorld.Domain do
   Achieve a position goal for a block.
 
   This unigoal method handles goals of the form {"pos", block, destination}.
-  It decomposes the goal into prerequisite clearing and movement task methods.
+  It decomposes the goal into prerequisite clearing and primitive movement actions.
   """
   @unigoal_method predicate: "pos"
   @spec achieve_position(AriaHybridPlanner.State.t(), {String.t(), String.t()}) :: {:ok, [AriaHybridPlanner.todo_item()]} | {:error, atom()}
@@ -286,7 +278,7 @@ defmodule AriaBlocksWorld.Domain do
         dest_block -> AriaHybridPlanner.get_fact(state, "clear", dest_block)
       end
 
-      # Build prerequisite goals and movement tasks
+      # Build prerequisite goals and primitive movement actions
       tasks = []
 
       # First, ensure the block is clear (accessible)
@@ -303,10 +295,21 @@ defmodule AriaBlocksWorld.Domain do
         tasks
       end
 
-      # Finally, add the movement tasks
-      movement_tasks = [
-        {:move_block, [block, destination]}
-      ]
+      # Finally, add the primitive movement actions
+      # Determine pickup/unstack action based on current position
+      pickup_action = case current_pos do
+        "table" -> {:pickup, [block]}
+        other_block when is_binary(other_block) -> {:unstack, [block, other_block]}
+        _ -> {:pickup, [block]}  # Default fallback
+      end
+
+      # Determine putdown/stack action based on destination
+      putdown_action = case destination do
+        "table" -> {:putdown, [block]}
+        target_block -> {:stack, [block, target_block]}
+      end
+
+      movement_tasks = [pickup_action, putdown_action]
 
       # Return prerequisites first, then movement
       {:ok, Enum.reverse(tasks) ++ movement_tasks}
