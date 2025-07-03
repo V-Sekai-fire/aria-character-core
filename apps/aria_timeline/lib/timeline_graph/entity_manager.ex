@@ -6,7 +6,6 @@ defmodule TimelineGraph.EntityManager do
   alias AriaTimeline.TimelineCore, as: Timeline
   alias Timeline.AgentEntity
   alias Timeline.Interval
-  alias Timeline.State
   @type entity_id :: String.t()
   @type lod_level :: :very_low | :low | :medium | :high | :ultra_high
   @type entity_timeline :: %{
@@ -36,7 +35,7 @@ defmodule TimelineGraph.EntityManager do
 
     updated_state =
       Enum.reduce(properties, timeline_graph.state, fn {predicate, value}, state ->
-        State.set_fact(state, entity_id, predicate, value)
+        AriaState.set_fact(state, entity_id, predicate, value)
       end)
 
     updated_timeline_graph = %{
@@ -115,7 +114,7 @@ defmodule TimelineGraph.EntityManager do
   @doc "Gets entity properties using entity-first StateV2 API.\n"
   @spec get_entity_properties(map(), entity_id()) :: %{String.t() => any()}
   def get_entity_properties(timeline_graph, entity_id) do
-    State.get_properties(timeline_graph.state, entity_id)
+    AriaState.get_subject_properties(timeline_graph.state, entity_id)
   end
 
   @doc "Sets an entity property and triggers timeline growth if appropriate.\n"
@@ -127,7 +126,7 @@ defmodule TimelineGraph.EntityManager do
         {:error, :entity_not_found}
 
       entity_timeline ->
-        updated_state = State.set_fact(timeline_graph.state, entity_id, predicate, value)
+        updated_state = AriaState.set_fact(timeline_graph.state, entity_id, predicate, value)
 
         updated_timeline =
           grow_timeline_for_property_change(

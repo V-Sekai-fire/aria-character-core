@@ -11,7 +11,7 @@ defmodule AriaQcp.QCP do
   """
 
   alias AriaMath.{Vector3, Quaternion}
-  alias AriaQcp.QCP.{Validation, State, SinglePoint, MultiPoint, Utils}
+  alias AriaQcp.QCP.{Validation, SinglePoint, MultiPoint, Utils}
 
   @default_precision 1.0e-6
 
@@ -130,8 +130,8 @@ defmodule AriaQcp.QCP do
   def weighted_superpose(moved, target, weights \\ [], translate \\ true, precision \\ @default_precision) do
     # Input validation
     with :ok <- Validation.validate_inputs(moved, target, weights),
-         {:ok, qcp_state} <- State.initialize_qcp_state(moved, target, weights, translate, precision),
-         {:ok, qcp_state_with_inner_product} <- State.calculate_inner_product(qcp_state),
+         {:ok, qcp_state} <- AriaQcp.QCP.State.initialize_qcp_state(moved, target, weights, translate, precision),
+         {:ok, qcp_state_with_inner_product} <- AriaQcp.QCP.State.calculate_inner_product(qcp_state),
          {:ok, rotation} <- calculate_rotation(qcp_state_with_inner_product),
          {:ok, translation} <- Utils.calculate_translation(qcp_state_with_inner_product, rotation) do
       {:ok, {rotation, translation}}

@@ -27,10 +27,8 @@ defmodule AriaEngineCore.Plan do
       actions = AriaEngineCore.Plan.get_primitive_actions_dfs(tree)
   """
 
-  alias AriaEngineCore.State
-
   @type task :: {String.t(), list()}
-  @type goal :: {String.t(), String.t(), State.fact_value()}
+  @type goal :: {String.t(), String.t(), AriaState.fact_value()}
   @type todo_item :: task() | goal() | AriaEngineCore.Multigoal.t()
   @type plan_step :: {atom(), list()}
   @type node_id :: String.t()
@@ -40,7 +38,7 @@ defmodule AriaEngineCore.Plan do
           task: todo_item(),
           parent_id: node_id() | nil,
           children_ids: [node_id()],
-          state: State.t() | nil,
+          state: AriaAriaState.t() | nil,
           visited: boolean(),
           expanded: boolean(),
           method_tried: String.t() | nil,
@@ -57,7 +55,7 @@ defmodule AriaEngineCore.Plan do
         }
 
   @doc """
-  Creates an initial solution tree for the given todo items and initial state.
+  Creates an initial solution tree for the given todo items and initial AriaState.
 
   ## Parameters
 
@@ -71,10 +69,10 @@ defmodule AriaEngineCore.Plan do
   ## Example
 
       todos = [{:cook_meal, ["pasta"]}, {"location", "chef", "kitchen"}]
-      state = AriaEngineCore.State.new()
+      state = AriaEngineCore.AriaState.new()
       tree = AriaEngineCore.Plan.create_initial_solution_tree(todos, state)
   """
-  @spec create_initial_solution_tree([todo_item()], State.t()) :: solution_tree()
+  @spec create_initial_solution_tree([todo_item()], AriaAriaState.t()) :: solution_tree()
   def create_initial_solution_tree(todos, initial_state) do
     root_id = generate_node_id()
 
@@ -135,7 +133,7 @@ defmodule AriaEngineCore.Plan do
   end
 
   @doc """
-  Updates all cached states in the solution tree with a new state.
+  Updates all cached states in the solution tree with a new AriaState.
 
   ## Parameters
 
@@ -146,7 +144,7 @@ defmodule AriaEngineCore.Plan do
 
   Updated solution tree with new cached states.
   """
-  @spec update_cached_states(solution_tree(), State.t()) :: solution_tree()
+  @spec update_cached_states(solution_tree(), AriaAriaState.t()) :: solution_tree()
   def update_cached_states(solution_tree, new_state) do
     updated_nodes =
       Map.new(solution_tree.nodes, fn {id, node} -> {id, %{node | state: new_state}} end)
@@ -324,7 +322,7 @@ defmodule AriaEngineCore.Plan do
 
   A solution tree containing the actions as primitive nodes.
   """
-  @spec create_solution_tree_from_actions([plan_step()], [todo_item()], State.t()) :: solution_tree()
+  @spec create_solution_tree_from_actions([plan_step()], [todo_item()], AriaAriaState.t()) :: solution_tree()
   def create_solution_tree_from_actions(actions, goals, state) do
     root_id = generate_node_id()
 

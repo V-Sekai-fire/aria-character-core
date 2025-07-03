@@ -52,7 +52,7 @@ defmodule Plan.ReentrantExecutor do
 
         domain when is_map(domain) ->
           # Extract primitive actions from solution tree
-          primitive_actions = extract_primitive_actions(solution_tree)
+          primitive_actions = AriaEngineCore.Plan.get_primitive_actions_dfs(solution_tree)
 
           if verbose > 1 do
             Logger.debug("IPyHOP execution: Executing #{length(primitive_actions)} primitive actions")
@@ -129,23 +129,13 @@ defmodule Plan.ReentrantExecutor do
     blacklist_state = get_or_create_blacklist_state(solution_tree, opts)
 
     # Extract primitive actions from solution tree
-    primitive_actions = extract_primitive_actions(solution_tree)
+    primitive_actions = AriaEngineCore.Plan.get_primitive_actions_dfs(solution_tree)
 
     # Initialize execution trace with initial state
     initial_trace = [{nil, initial_state}]
 
     # Execute with retry capability
     execute_with_retry(domain, initial_state, primitive_actions, solution_tree, blacklist_state, initial_trace, opts, 0, max_retries)
-  end
-
-  @doc """
-  Extract primitive actions from a solution tree for execution.
-
-  Uses existing utility function to maintain compatibility.
-  """
-  @spec extract_primitive_actions(solution_tree()) :: [plan_step()]
-  def extract_primitive_actions(solution_tree) do
-    Utils.get_primitive_actions_dfs(solution_tree)
   end
 
   # Private implementation functions
@@ -180,7 +170,7 @@ defmodule Plan.ReentrantExecutor do
             case replan_from_node(domain, updated_tree, parent_node_id, partial_state, opts) do
               {:ok, replanned_tree} ->
                 # Extract new primitive actions from replanned tree
-                updated_actions = extract_primitive_actions(replanned_tree)
+                updated_actions = AriaEngineCore.Plan.get_primitive_actions_dfs(replanned_tree)
 
                 if verbose > 1 do
                   Logger.debug("ReentrantExecutor: Re-planned with #{length(updated_actions)} actions")
@@ -204,7 +194,7 @@ defmodule Plan.ReentrantExecutor do
             # Fallback to action-level blacklisting for primitive actions
             updated_blacklist_state = Blacklisting.blacklist_command(blacklist_state, failed_action)
             updated_tree = Map.put(solution_tree, :blacklisted_commands, updated_blacklist_state.blacklisted_commands)
-            updated_actions = extract_primitive_actions(updated_tree)
+            updated_actions = AriaEngineCore.Plan.get_primitive_actions_dfs(updated_tree)
 
             execute_with_retry(domain, partial_state, updated_actions, updated_tree, updated_blacklist_state, partial_trace, opts, retry_count + 1, max_retries)
         end

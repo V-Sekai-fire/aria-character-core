@@ -27,6 +27,7 @@ defmodule AriaTimeline.MixProject do
 
   defp deps do
     [
+      {:aria_state, path: "../aria_state"},
       {:jason, "~> 1.4"},
       {:libgraph, "~> 0.16"},
       {:ex_doc, "~> 0.31", only: :dev, runtime: false},

@@ -23,7 +23,7 @@ defmodule TimelineGraph do
         }
   @type t :: %__MODULE__{
           entities: %{entity_id() => entity_timeline()},
-          state: State.t(),
+          state: AriaAriaState.t(),
           bridge_strength: %{{entity_id(), entity_id()} => float()},
           lod_promotion_queue: [entity_id()],
           growth_triggers: %{entity_id() => [atom()]}
@@ -37,7 +37,7 @@ defmodule TimelineGraph do
   @doc "Creates a new TimelineGraph with empty entity and timeline registry.\n"
   @spec new() :: t()
   def new do
-    %__MODULE__{state: State.new()}
+    %__MODULE__{state: AriaState.new()}
   end
 
   @doc "Creates a new entity with automatic timeline attachment.\n\nDelegates to `TimelineGraph.EntityManager.create_entity/5`.\n"

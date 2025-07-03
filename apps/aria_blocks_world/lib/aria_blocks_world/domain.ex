@@ -21,7 +21,7 @@ defmodule AriaBlocksWorld.Domain do
 
   # Entity setup action
   @action true
-  @spec setup_blocks_scenario(AriaHybridPlanner.State.t(), []) :: {:ok, AriaHybridPlanner.State.t()} | {:error, atom()}
+  @spec setup_blocks_scenario(AriaState.t(), []) :: {:ok, AriaState.t()} | {:error, atom()}
   def setup_blocks_scenario(state, []) do
     state = state
     |> register_entity(["hand", "agent", [:manipulation]])
@@ -46,7 +46,7 @@ defmodule AriaBlocksWorld.Domain do
   - Hand holds the block
   """
   @action true
-  @spec pickup(AriaState.State.t(), []) :: {:ok, AriaHybridPlanner.State.t()} | {:error, atom()}
+  @spec pickup(AriaState.t(), []) :: {:ok, AriaState.t()} | {:error, atom()}
   def pickup(state, [block]) do
     is_clear = AriaState.get_fact(state, "clear", block)
     hand_holding = AriaState.get_fact(state, "holding", "hand")
@@ -79,7 +79,7 @@ defmodule AriaBlocksWorld.Domain do
   - Block2 becomes clear
   """
   @action true
-  @spec unstack(AriaState.State.t(), [block()]) :: {:ok, AriaHybridPlanner.State.t()} | {:error, atom()}
+  @spec unstack(AriaState.t(), [block()]) :: {:ok, AriaState.t()} | {:error, atom()}
   def unstack(state, [block1, block2]) do
     # Check preconditions
     current_pos = AriaState.get_fact(state, "pos", block1)
@@ -115,7 +115,7 @@ defmodule AriaBlocksWorld.Domain do
   - Hand becomes empty
   """
   @action true
-  @spec putdown(AriaState.State.t(), [block()]) :: {:ok, AriaHybridPlanner.State.t()} | {:error, atom()}
+  @spec putdown(AriaState.t(), [block()]) :: {:ok, AriaState.t()} | {:error, atom()}
   def putdown(state, [block]) do
     # Check preconditions
     hand_holding = AriaState.get_fact(state, "holding", "hand")
@@ -147,7 +147,7 @@ defmodule AriaBlocksWorld.Domain do
   - Block2 becomes not clear
   """
   @action true
-  @spec stack(AriaState.State.t(), [block()]) :: {:ok, AriaHybridPlanner.State.t()} | {:error, atom()}
+  @spec stack(AriaState.t(), [block()]) :: {:ok, AriaState.t()} | {:error, atom()}
   def stack(state, [block1, block2]) do
     # Check preconditions
     hand_holding = AriaState.get_fact(state, "holding", "hand")
@@ -175,7 +175,7 @@ defmodule AriaBlocksWorld.Domain do
   and returns the corresponding subtask.
   """
   @task_method true
-  @spec take(AriaState.State.t(), [block()]) :: {:ok, [AriaHybridPlanner.todo_item()]} | {:error, atom()}
+  @spec take(AriaState.t(), [block()]) :: {:ok, [AriaHybridPlanner.todo_item()]} | {:error, atom()}
   def take(state, [block]) do
     current_pos = AriaState.get_fact(state, "pos", block)
 
@@ -195,7 +195,7 @@ defmodule AriaBlocksWorld.Domain do
   sequence of pickup/unstack and putdown/stack actions.
   """
   @task_method true
-  @spec move_block(AriaState.State.t(), [any()]) :: {:ok, [AriaHybridPlanner.todo_item()]} | {:error, atom()}
+  @spec move_block(AriaState.t(), [any()]) :: {:ok, [AriaHybridPlanner.todo_item()]} | {:error, atom()}
   def move_block(state, [block, destination]) do
     current_pos = AriaState.get_fact(state, "pos", block)
 
@@ -221,7 +221,7 @@ defmodule AriaBlocksWorld.Domain do
   This task method decomposes validation into separate goal checks for the planner to orchestrate.
   """
   @task_method true
-  @spec validate_move_preconditions(AriaState.State.t(), [block() | String.t()]) :: {:ok, [AriaHybridPlanner.todo_item()]} | {:error, atom()}
+  @spec validate_move_preconditions(AriaState.t(), [block() | String.t()]) :: {:ok, [AriaHybridPlanner.todo_item()]} | {:error, atom()}
   def validate_move_preconditions(_state, [block, destination]) do
     # Decompose validation into separate goal checks for planner to orchestrate
     {:ok, [
@@ -240,7 +240,7 @@ defmodule AriaBlocksWorld.Domain do
   Following GTPyhop m_put pattern: if holding block, generate appropriate primitive action.
   """
   @task_method true
-  @spec put_method(AriaState.State.t(), [block() | String.t()]) :: {:ok, [AriaHybridPlanner.todo_item()]} | {:error, atom()}
+  @spec put_method(AriaState.t(), [block() | String.t()]) :: {:ok, [AriaHybridPlanner.todo_item()]} | {:error, atom()}
   def put_method(state, [block, destination]) do
     holding = AriaState.get_fact(state, "holding", "hand")
 
@@ -264,7 +264,7 @@ defmodule AriaBlocksWorld.Domain do
   It decomposes the goal into prerequisite clearing and primitive movement actions.
   """
   @unigoal_method predicate: "pos"
-  @spec achieve_position(AriaState.State.t(), {String.t(), String.t()}) :: {:ok, [AriaHybridPlanner.todo_item()]} | {:error, atom()}
+  @spec achieve_position(AriaState.t(), {String.t(), String.t()}) :: {:ok, [AriaHybridPlanner.todo_item()]} | {:error, atom()}
   def achieve_position(state, {block, destination}) do
     current_pos = AriaState.get_fact(state, "pos", block)
     pickup_action = case current_pos do
@@ -295,7 +295,7 @@ defmodule AriaBlocksWorld.Domain do
   It finds what's on top of the block and moves it away using task methods.
   """
   @unigoal_method predicate: "clear"
-  @spec achieve_clear(AriaHybridPlanner.State.t(), {String.t(), boolean()}) :: {:ok, [AriaHybridPlanner.todo_item()]} | {:error, atom()}
+  @spec achieve_clear(AriaState.t(), {String.t(), boolean()}) :: {:ok, [AriaHybridPlanner.todo_item()]} | {:error, atom()}
   def achieve_clear(state, {block, true}) do
     is_clear = AriaState.get_fact(state, "clear", block)
 
@@ -346,7 +346,7 @@ defmodule AriaBlocksWorld.Domain do
 
   This ensures all goals are achieved and simultaneously true.
   """
-  @spec split_multigoal(AriaHybridPlanner.State.t(), AriaEngineCore.Multigoal.t()) ::
+  @spec split_multigoal(AriaState.t(), AriaEngineCore.Multigoal.t()) ::
     {:ok, [AriaHybridPlanner.todo_item()]} | {:error, atom()}
   def split_multigoal(state, multigoal) do
     # Check if multigoal is already satisfied

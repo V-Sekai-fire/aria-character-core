@@ -7,7 +7,6 @@ defmodule AriaCoreComplianceTest do
 
   alias AriaCore
   alias AriaCore.Domain
-  alias AriaCore.State.Relational, as: AriaState
 
   # Define a test domain module for compliance testing
   defmodule TestDomain do

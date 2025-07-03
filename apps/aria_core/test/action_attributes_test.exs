@@ -6,7 +6,6 @@ defmodule AriaCore.ActionAttributesTest do
   doctest AriaCore.ActionAttributes
 
   alias AriaCore.Domain
-  alias AriaCore.State.Relational, as: AriaState
 
   defmodule TestDomain do
     use AriaCore.Domain

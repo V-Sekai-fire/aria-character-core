@@ -6,7 +6,6 @@ defmodule AriaHybridPlannerTest do
   doctest AriaHybridPlanner
 
   alias AriaHybridPlanner
-  alias AriaHybridPlanner.State
   alias AriaCore.Domain
 
   describe "basic planning functionality" do
@@ -18,8 +17,8 @@ defmodule AriaHybridPlannerTest do
       move_action = %{
         effects: fn state, [from, to] ->
           state
-          |> State.set_fact("location", from, "empty")
-          |> State.set_fact("location", to, "occupied")
+          |> AriaState.set_fact("location", from, "empty")
+          |> AriaState.set_fact("location", to, "occupied")
         end
       }
 
@@ -27,8 +26,8 @@ defmodule AriaHybridPlannerTest do
 
       # Create initial state
       state = AriaHybridPlanner.new_state()
-      |> State.set_fact("location", "a", "occupied")
-      |> State.set_fact("location", "b", "empty")
+      |> AriaState.set_fact("location", "a", "occupied")
+      |> AriaState.set_fact("location", "b", "empty")
 
       %{domain: domain, state: state}
     end

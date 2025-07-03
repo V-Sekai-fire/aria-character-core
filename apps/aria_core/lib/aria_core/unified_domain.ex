@@ -25,7 +25,7 @@ defmodule AriaCore.UnifiedDomain do
         @action duration: "PT2H",
                 requires_entities: [%{type: "agent", capabilities: [:cooking]}]
         def cook_meal(state, [meal_id]) do
-          AriaCore.State.Relational.set_fact(state, "meal_status", meal_id, "ready")
+          AriaCore.set_fact(state, "meal_status", meal_id, "ready")
         end
       end
 

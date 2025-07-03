@@ -19,7 +19,7 @@ defmodule Plan.Utils do
   @doc """
   Create an initial solution tree from a list of todos and initial state.
   """
-  @spec create_initial_solution_tree([Core.todo_item()], State.t()) :: solution_tree()
+  @spec create_initial_solution_tree([Core.todo_item()], AriaState.t()) :: solution_tree()
   def create_initial_solution_tree(todos, initial_state) do
     root_id = generate_node_id()
 
@@ -54,44 +54,12 @@ defmodule Plan.Utils do
   end
 
   @doc """
-  Extract primitive actions from a solution tree using depth-first search.
-  """
-  @spec get_primitive_actions_dfs(solution_tree()) :: [plan_step()]
-  def get_primitive_actions_dfs(solution_tree) do
-    get_primitive_actions_dfs_node(solution_tree, solution_tree.root_id)
-  end
-
-  defp get_primitive_actions_dfs_node(solution_tree, node_id) do
-    case solution_tree.nodes[node_id] do
-      nil ->
-        []
-
-      node ->
-        if node.is_primitive do
-          case node.task do
-            {action_name, args} when is_binary(action_name) ->
-              [{String.to_atom(action_name), args}]
-            {action_name, args} when is_atom(action_name) ->
-              [{action_name, args}]
-            _ ->
-              []
-          end
-        else
-          # Recursively collect from children
-          Enum.flat_map(node.children_ids, fn child_id ->
-            get_primitive_actions_dfs_node(solution_tree, child_id)
-          end)
-        end
-    end
-  end
-
-  @doc """
   Calculate the cost of a plan (number of primitive actions).
   """
   @spec plan_cost(solution_tree()) :: integer()
   def plan_cost(solution_tree) do
     solution_tree
-    |> get_primitive_actions_dfs()
+    |> AriaEngineCore.Plan.get_primitive_actions_dfs()
     |> length()
   end
 
@@ -116,7 +84,7 @@ defmodule Plan.Utils do
   @doc """
   Update cached states in a solution tree after state changes.
   """
-  @spec update_cached_states(solution_tree(), State.t()) :: solution_tree()
+  @spec update_cached_states(solution_tree(), AriaState.t()) :: solution_tree()
   def update_cached_states(solution_tree, new_state) do
     # Update the root node's state and propagate as needed
     root_node = solution_tree.nodes[solution_tree.root_id]

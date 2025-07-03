@@ -20,7 +20,6 @@ defmodule AriaCore.UnifiedActionSpecificationTest do
   doctest AriaCore.TemporalConverter
   doctest AriaCore.Entity.Management
   doctest AriaCore.Temporal.Interval
-  doctest AriaCore.State.Relational
   doctest AriaCore.UnifiedDomain
 
   alias AriaCore.{
@@ -28,7 +27,7 @@ defmodule AriaCore.UnifiedActionSpecificationTest do
     TemporalConverter,
     Entity.Management,
     Temporal.Interval,
-    State.Relational,
+    AriaState,
     UnifiedDomain,
     Examples.GltfInteractivityDomain
   }
@@ -388,7 +387,7 @@ defmodule AriaCore.UnifiedActionSpecificationTest do
       specs = Interval.new_specifications()
       assert %Interval{} = specs
 
-      # 4. State.Relational provides complete state system
+      # 4. AriaState provides complete state system
       state = Relational.new()
       assert %Relational{} = state
 

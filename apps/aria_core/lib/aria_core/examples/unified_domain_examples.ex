@@ -4,7 +4,6 @@
 defmodule AriaCore.Examples.UnifiedDomainExamples do
   use AriaCore.Domain
   use AriaCore.ActionAttributes
-  alias AriaCore.State.Relational, as: RelationalState
   require Logger
 
   @doc """
@@ -13,7 +12,7 @@ defmodule AriaCore.Examples.UnifiedDomainExamples do
   @action duration: "PT2H", requires_entities: [%{type: "agent", capabilities: [:cooking]}]
   @spec cook_meal(AriaState.t(), [String.t()]) :: {:ok, AriaState.t()} | {:error, atom()}
   def cook_meal(state, [meal_id]) do
-    new_state = state |> RelationalState.set_fact("meal_status", meal_id, "ready")
+    new_state = state |> AriaState.set_fact("meal_status", meal_id, "ready")
     {:ok, new_state}
   end
 
@@ -25,7 +24,7 @@ defmodule AriaCore.Examples.UnifiedDomainExamples do
   def cook_meal_command(state, [meal_id]) do
     if :rand.uniform() > 0.8 do # 20% chance of failure
       Logger.info("Cooking succeeded for #{meal_id}")
-      new_state = state |> RelationalState.set_fact("meal_status", meal_id, "ready")
+      new_state = state |> AriaState.set_fact("meal_status", meal_id, "ready")
       {:ok, new_state}
     else
       Logger.warning("Cooking failed for #{meal_id}")

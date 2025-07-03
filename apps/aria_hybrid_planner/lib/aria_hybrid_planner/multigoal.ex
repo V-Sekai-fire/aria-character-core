@@ -2,9 +2,8 @@
 # SPDX-License-Identifier: MIT
 
 defmodule AriaEngineCore.Multigoal do
-  @moduledoc "Represents a collection of goals in the GTPyhop planner.\n\nA multigoal is essentially a desired state represented as a collection of\npredicate-subject-fact triples that should be true in the world state.\n\nExample:\n```elixir\nmultigoal = AriaEngineCore.Multigoal.new()\n|> AriaEngineCore.Multigoal.add_goal(\"location\", \"player\", \"treasure_room\")\n|> AriaEngineCore.Multigoal.add_goal(\"has\", \"player\", \"treasure\")\n\n# Check if goals are satisfied in current state\nsatisfied? = AriaEngineCore.Multigoal.satisfied?(multigoal, current_state)\n```\n"
-  alias AriaHybridPlanner.State
-  @type goal :: {State.predicate(), State.subject(), State.fact_value()}
+  @moduledoc "Represents a collection of goals in the GTPyhop planner.\n\nA multigoal is essentially a desired state represented as a collection of\npredicate-subject-fact triples that should be true in the world AriaState.\n\nExample:\n```elixir\nmultigoal = AriaEngineCore.Multigoal.new()\n|> AriaEngineCore.Multigoal.add_goal(\"location\", \"player\", \"treasure_room\")\n|> AriaEngineCore.Multigoal.add_goal(\"has\", \"player\", \"treasure\")\n\n# Check if goals are satisfied in current state\nsatisfied? = AriaEngineCore.Multigoal.satisfied?(multigoal, current_state)\n```\n"
+  @type goal :: {AriaState.predicate(), AriaState.subject(), AriaState.fact_value()}
   @type t :: %__MODULE__{goals: [goal()]}
   defstruct goals: []
   @doc "Creates a new empty multigoal.\n"
@@ -20,14 +19,14 @@ defmodule AriaEngineCore.Multigoal do
   end
 
   @doc "Creates a multigoal from a State (all triples become goals).\n"
-  @spec from_state(State.t()) :: t()
+  @spec from_state(AriaAriaState.t()) :: t()
   def from_state(state) do
-    goals = State.to_triples(state)
+    goals = AriaState.to_triples(state)
     %__MODULE__{goals: goals}
   end
 
   @doc "Adds a single goal to the multigoal.\n"
-  @spec add_goal(t(), State.predicate(), State.subject(), State.fact_value()) :: t()
+  @spec add_goal(t(), AriaState.predicate(), AriaState.subject(), AriaState.fact_value()) :: t()
   def add_goal(%__MODULE__{goals: goals} = multigoal, predicate, subject, fact_value) do
     new_goal = {predicate, subject, fact_value}
     %{multigoal | goals: [new_goal | goals]}
@@ -40,34 +39,34 @@ defmodule AriaEngineCore.Multigoal do
   end
 
   @doc "Removes a goal from the multigoal.\n"
-  @spec remove_goal(t(), State.predicate(), State.subject(), State.fact_value()) :: t()
+  @spec remove_goal(t(), AriaState.predicate(), AriaState.subject(), AriaState.fact_value()) :: t()
   def remove_goal(%__MODULE__{goals: goals} = multigoal, predicate, subject, fact_value) do
     target_goal = {predicate, subject, fact_value}
     filtered_goals = Enum.reject(goals, fn goal -> goal == target_goal end)
     %{multigoal | goals: filtered_goals}
   end
 
-  @doc "Checks if all goals in the multigoal are satisfied by the given state.\n"
-  @spec satisfied?(t(), State.t()) :: boolean()
+  @doc "Checks if all goals in the multigoal are satisfied by the given AriaState.\n"
+  @spec satisfied?(t(), AriaAriaState.t()) :: boolean()
   def satisfied?(%__MODULE__{goals: goals}, state) do
     Enum.all?(goals, fn {predicate, subject, fact_value} ->
-      State.get_fact(state, predicate, subject) == fact_value
+      AriaState.get_fact(state, predicate, subject) == fact_value
     end)
   end
 
-  @doc "Returns goals that are not yet satisfied in the given state.\n"
-  @spec unsatisfied_goals(t(), State.t()) :: [goal()]
+  @doc "Returns goals that are not yet satisfied in the given AriaState.\n"
+  @spec unsatisfied_goals(t(), AriaAriaState.t()) :: [goal()]
   def unsatisfied_goals(%__MODULE__{goals: goals}, state) do
     Enum.reject(goals, fn {predicate, subject, fact_value} ->
-      State.get_fact(state, predicate, subject) == fact_value
+      AriaState.get_fact(state, predicate, subject) == fact_value
     end)
   end
 
-  @doc "Returns goals that are satisfied in the given state.\n"
-  @spec satisfied_goals(t(), State.t()) :: [goal()]
+  @doc "Returns goals that are satisfied in the given AriaState.\n"
+  @spec satisfied_goals(t(), AriaAriaState.t()) :: [goal()]
   def satisfied_goals(%__MODULE__{goals: goals}, state) do
     Enum.filter(goals, fn {predicate, subject, fact_value} ->
-      State.get_fact(state, predicate, subject) == fact_value
+      AriaState.get_fact(state, predicate, subject) == fact_value
     end)
   end
 
@@ -83,10 +82,10 @@ defmodule AriaEngineCore.Multigoal do
     length(goals)
   end
 
-  @doc "Converts the multigoal to a State.\n"
-  @spec to_state(t()) :: AriaEngineCore.State.t()
+  @doc "Converts the multigoal to a AriaState.\n"
+  @spec to_state(t()) :: AriaEngineCore.AriaAriaState.t()
   def to_state(%__MODULE__{goals: goals}) do
-    State.from_triples(goals)
+    AriaState.from_triples(goals)
   end
 
   @doc "Gets all goals as a list.\n"
@@ -124,7 +123,7 @@ defmodule AriaEngineCore.Multigoal do
   end
 
   @doc "Built-in method to split a multigoal into individual unigoals.\n\nThis method takes a list of goals and returns them as individual\nunigoals to be achieved sequentially. This is useful when no\ndomain-specific multigoal method is available.\n\n## Parameters\n- state: The current planning state\n- goals: A list of goal specifications\n\n## Returns\n- A list of individual goals to be achieved in order\n- `false` if the goals cannot be split or are invalid\n\n## Examples\n\n    iex> state = create_state()\n    iex> goals = [[\"on\", \"a\", \"b\"], [\"on\", \"b\", \"table\"]]\n    iex> Multigoal.split_multigoal(state, goals)\n    [[\"on\", \"a\", \"b\"], [\"on\", \"b\", \"table\"]]\n"
-  @spec split_multigoal(AriaEngineCore.State.t(), list()) :: list() | false
+  @spec split_multigoal(AriaEngineCore.AriaAriaState.t(), list()) :: list() | false
   def split_multigoal(_state, goals) when is_list(goals) do
     valid_goals = Enum.filter(goals, &valid_goal?/1)
 

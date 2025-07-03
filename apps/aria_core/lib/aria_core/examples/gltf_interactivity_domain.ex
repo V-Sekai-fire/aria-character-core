@@ -26,9 +26,9 @@ defmodule AriaCore.Examples.GltfInteractivityDomain do
       domain = AriaCore.UnifiedDomain.create_from_module(GltfInteractivityDomain)
 
       # Set up initial state
-      state = AriaCore.State.Relational.new()
-      |> AriaCore.State.Relational.set_fact("node_position", "cube_1", [0.0, 0.0, 0.0])
-      |> AriaCore.State.Relational.set_fact("animation_status", "rotate_anim", "stopped")
+      state = AriaState.new()
+      |> AriaState.set_fact("node_position", "cube_1", [0.0, 0.0, 0.0])
+      |> AriaState.set_fact("animation_status", "rotate_anim", "stopped")
 
       # Define goals
       goals = [{"node_position", "cube_1", [5.0, 0.0, 0.0]}]
@@ -51,9 +51,9 @@ defmodule AriaCore.Examples.GltfInteractivityDomain do
           ]
   def move_node(state, [node_id, target_position, duration_seconds]) do
     state
-    |> AriaCore.State.Relational.set_fact("node_position", node_id, target_position)
-    |> AriaCore.State.Relational.set_fact("movement_duration", node_id, duration_seconds)
-    |> AriaCore.State.Relational.set_fact("movement_status", node_id, "moving")
+    |> AriaState.set_fact("node_position", node_id, target_position)
+    |> AriaState.set_fact("movement_duration", node_id, duration_seconds)
+    |> AriaState.set_fact("movement_status", node_id, "moving")
   end
 
   # Start a glTF animation with specified speed
@@ -63,9 +63,9 @@ defmodule AriaCore.Examples.GltfInteractivityDomain do
           ]
   def start_animation(state, [animation_id, speed]) do
     state
-    |> AriaCore.State.Relational.set_fact("animation_status", animation_id, "playing")
-    |> AriaCore.State.Relational.set_fact("animation_speed", animation_id, speed)
-    |> AriaCore.State.Relational.set_fact("animation_start_time", animation_id, DateTime.utc_now())
+    |> AriaState.set_fact("animation_status", animation_id, "playing")
+    |> AriaState.set_fact("animation_speed", animation_id, speed)
+    |> AriaState.set_fact("animation_start_time", animation_id, DateTime.utc_now())
   end
 
   # Simple delay action for timing control
@@ -73,8 +73,8 @@ defmodule AriaCore.Examples.GltfInteractivityDomain do
           requires_entities: []
   def wait_time(state, [duration_seconds]) do
     state
-    |> AriaCore.State.Relational.set_fact("wait_completed", "timer", true)
-    |> AriaCore.State.Relational.set_fact("wait_duration", "timer", duration_seconds)
+    |> AriaState.set_fact("wait_completed", "timer", true)
+    |> AriaState.set_fact("wait_duration", "timer", duration_seconds)
   end
 
   # ============================================================================
@@ -141,13 +141,13 @@ defmodule AriaCore.Examples.GltfInteractivityDomain do
   Sets up a simple glTF scene state for testing.
   """
   def create_simple_test_state() do
-    AriaCore.State.Relational.new()
-    |> AriaCore.State.Relational.set_fact("node_exists", "cube_1", true)
-    |> AriaCore.State.Relational.set_fact("node_transformable", "cube_1", true)
-    |> AriaCore.State.Relational.set_fact("node_position", "cube_1", [0.0, 0.0, 0.0])
-    |> AriaCore.State.Relational.set_fact("animation_exists", "rotate_anim", true)
-    |> AriaCore.State.Relational.set_fact("animation_loaded", "rotate_anim", true)
-    |> AriaCore.State.Relational.set_fact("animation_status", "rotate_anim", "stopped")
+    AriaState.new()
+    |> AriaState.set_fact("node_exists", "cube_1", true)
+    |> AriaState.set_fact("node_transformable", "cube_1", true)
+    |> AriaState.set_fact("node_position", "cube_1", [0.0, 0.0, 0.0])
+    |> AriaState.set_fact("animation_exists", "rotate_anim", true)
+    |> AriaState.set_fact("animation_loaded", "rotate_anim", true)
+    |> AriaState.set_fact("animation_status", "rotate_anim", "stopped")
   end
 
   @doc """
