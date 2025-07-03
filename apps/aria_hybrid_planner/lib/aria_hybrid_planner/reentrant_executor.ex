@@ -163,20 +163,51 @@ defmodule Plan.ReentrantExecutor do
 
       {:error, :todo_item_failed, failed_action, partial_state, partial_trace} when retry_count < max_retries ->
         if verbose > 1 do
-          Logger.debug("ReentrantExecutor: Todo item failed, attempting recovery (retry #{retry_count + 1}/#{max_retries})")
+          Logger.debug("ReentrantExecutor: Todo item failed, attempting HTN backtracking (retry #{retry_count + 1}/#{max_retries})")
         end
 
-        # Blacklist the failed todo item using existing infrastructure
-        updated_blacklist_state = Blacklisting.blacklist_command(blacklist_state, failed_action)
+        # HTN Backtracking: Find which method generated this failed action
+        case find_method_for_failed_action(solution_tree, failed_action, verbose) do
+          {:ok, parent_node_id, method_name} ->
+            if verbose > 1 do
+              Logger.debug("ReentrantExecutor: Blacklisting method '#{method_name}' in node #{parent_node_id}")
+            end
 
-        # Update solution tree with new blacklist state
-        updated_tree = Map.put(solution_tree, :blacklisted_commands, updated_blacklist_state.blacklisted_commands)
+            # Blacklist the method that generated the failed action
+            updated_tree = blacklist_method_in_node(solution_tree, parent_node_id, method_name)
 
-        # Re-extract actions with updated blacklist (may choose different methods)
-        updated_actions = extract_primitive_actions(updated_tree)
+            # Re-plan from the parent node with blacklisted method
+            case replan_from_node(domain, updated_tree, parent_node_id, partial_state, opts) do
+              {:ok, replanned_tree} ->
+                # Extract new primitive actions from replanned tree
+                updated_actions = extract_primitive_actions(replanned_tree)
 
-        # Retry execution with updated blacklist
-        execute_with_retry(domain, partial_state, updated_actions, updated_tree, updated_blacklist_state, partial_trace, opts, retry_count + 1, max_retries)
+                if verbose > 1 do
+                  Logger.debug("ReentrantExecutor: Re-planned with #{length(updated_actions)} actions")
+                end
+
+                # Retry execution with replanned tree
+                execute_with_retry(domain, partial_state, updated_actions, replanned_tree, blacklist_state, partial_trace, opts, retry_count + 1, max_retries)
+
+              {:error, replan_reason} ->
+                if verbose > 1 do
+                  Logger.debug("ReentrantExecutor: Re-planning failed: #{replan_reason}")
+                end
+                {:error, "HTN backtracking failed: #{replan_reason}", Enum.reverse(partial_trace)}
+            end
+
+          {:error, :no_method_found} ->
+            if verbose > 1 do
+              Logger.debug("ReentrantExecutor: No method found for failed action, falling back to action blacklisting")
+            end
+
+            # Fallback to action-level blacklisting for primitive actions
+            updated_blacklist_state = Blacklisting.blacklist_command(blacklist_state, failed_action)
+            updated_tree = Map.put(solution_tree, :blacklisted_commands, updated_blacklist_state.blacklisted_commands)
+            updated_actions = extract_primitive_actions(updated_tree)
+
+            execute_with_retry(domain, partial_state, updated_actions, updated_tree, updated_blacklist_state, partial_trace, opts, retry_count + 1, max_retries)
+        end
 
       {:error, reason, _failed_action, _partial_state, partial_trace} ->
         if verbose > 1 do
@@ -251,7 +282,7 @@ defmodule Plan.ReentrantExecutor do
 
     # Try to execute the todo item using domain actions
     cond do
-      # Check if domain is a struct with actions
+      # Check if domain is an AriaCore.Domain struct with actions
       is_map(domain) and Map.has_key?(domain, :actions) ->
         case Map.get(domain.actions, action_atom) do
           nil ->
@@ -260,18 +291,40 @@ defmodule Plan.ReentrantExecutor do
             if verbose > 2 do
               Logger.debug("ReentrantExecutor: Executing domain action: #{action_atom}")
             end
-            # Execute action using its effects function
-            case Map.get(action_def, :effects) do
-              effects_fn when is_function(effects_fn, 2) ->
+            # Try different action function locations in AriaCore domain structure
+            action_fn = cond do
+              # Check for function field (primary location)
+              Map.has_key?(action_def, :function) and is_function(action_def.function, 2) ->
+                action_def.function
+
+              # Check for action_fn in metadata (secondary location)
+              Map.has_key?(action_def, :metadata) and
+              Map.has_key?(action_def.metadata, :action_fn) and
+              is_function(action_def.metadata.action_fn, 2) ->
+                action_def.metadata.action_fn
+
+              # Check for direct action_fn field (legacy support)
+              Map.has_key?(action_def, :action_fn) and is_function(action_def.action_fn, 2) ->
+                action_def.action_fn
+
+              true ->
+                nil
+            end
+
+            case action_fn do
+              nil ->
+                {:error, "Action #{action_name} has no valid function"}
+              action_fn when is_function(action_fn, 2) ->
                 try do
-                  new_state = effects_fn.(state, args)
-                  {:ok, new_state}
+                  case action_fn.(state, args) do
+                    {:ok, new_state} -> {:ok, new_state}
+                    {:error, reason} -> {:error, reason}
+                    new_state -> {:ok, new_state}  # Handle direct state return
+                  end
                 rescue
                   e ->
                     {:error, "Action execution failed: #{Exception.message(e)}"}
                 end
-              _ ->
-                {:error, "Action #{action_name} has no valid effects function"}
             end
         end
 
@@ -311,5 +364,579 @@ defmodule Plan.ReentrantExecutor do
       provided_blacklist_state ->
         provided_blacklist_state
     end
+  end
+
+  # HTN Backtracking Helper Functions
+
+  # Find which method generated a failed action by tracing back through the solution tree.
+  #
+  # This function searches the solution tree to find the parent node that contains
+  # the method responsible for generating the failed primitive action.
+  @spec find_method_for_failed_action(solution_tree(), plan_step(), integer()) ::
+    {:ok, String.t(), String.t()} | {:error, :no_method_found}
+  defp find_method_for_failed_action(solution_tree, failed_action, verbose) do
+    if verbose > 2 do
+      Logger.debug("HTN Backtracking: Searching for method that generated action: #{inspect(failed_action)}")
+    end
+
+    # Find the node containing this action
+    case find_node_with_action(solution_tree, failed_action) do
+      {:ok, action_node_id} ->
+        # Trace back to find parent node with method
+        case find_parent_with_method(solution_tree, action_node_id, verbose) do
+          {:ok, parent_node_id, method_name} ->
+            if verbose > 2 do
+              Logger.debug("HTN Backtracking: Found method '#{method_name}' in parent node #{parent_node_id}")
+            end
+            {:ok, parent_node_id, method_name}
+
+          {:error, reason} ->
+            if verbose > 2 do
+              Logger.debug("HTN Backtracking: Could not find parent method: #{reason}")
+            end
+            {:error, :no_method_found}
+        end
+
+      {:error, reason} ->
+        if verbose > 2 do
+          Logger.debug("HTN Backtracking: Could not find action node: #{reason}")
+        end
+        {:error, :no_method_found}
+    end
+  end
+
+  @spec find_node_with_action(solution_tree(), plan_step()) :: {:ok, String.t()} | {:error, String.t()}
+  defp find_node_with_action(solution_tree, {action_name, args}) do
+    # Search through all nodes to find one with matching task
+    matching_node = Enum.find(solution_tree.nodes, fn {_id, node} ->
+      case node.task do
+        {^action_name, ^args} -> true
+        _ -> false
+      end
+    end)
+
+    case matching_node do
+      {node_id, _node} -> {:ok, node_id}
+      nil -> {:error, "No node found with action #{inspect({action_name, args})}"}
+    end
+  end
+
+  @spec find_parent_with_method(solution_tree(), String.t(), integer()) ::
+    {:ok, String.t(), String.t()} | {:error, String.t()}
+  defp find_parent_with_method(solution_tree, node_id, verbose) do
+    case solution_tree.nodes[node_id] do
+      nil ->
+        {:error, "Node not found: #{node_id}"}
+
+      node ->
+        case node.parent_id do
+          nil ->
+            {:error, "Reached root node without finding method"}
+
+          parent_id ->
+            case solution_tree.nodes[parent_id] do
+              nil ->
+                {:error, "Parent node not found: #{parent_id}"}
+
+              parent_node ->
+                case parent_node.method_tried do
+                  nil ->
+                    # Parent has no method, continue searching up the tree
+                    if verbose > 2 do
+                      Logger.debug("HTN Backtracking: Parent node #{parent_id} has no method, searching further up")
+                    end
+                    find_parent_with_method(solution_tree, parent_id, verbose)
+
+                  method_name ->
+                    # Found parent with method
+                    {:ok, parent_id, method_name}
+                end
+            end
+        end
+    end
+  end
+
+  # Blacklist a method in a specific node by adding it to the node's blacklisted_methods list.
+  @spec blacklist_method_in_node(solution_tree(), String.t(), String.t()) :: solution_tree()
+  defp blacklist_method_in_node(solution_tree, node_id, method_name) do
+    case solution_tree.nodes[node_id] do
+      nil ->
+        # Node not found, return tree unchanged
+        solution_tree
+
+      node ->
+        # Add method to blacklisted_methods list if not already present
+        updated_blacklisted_methods =
+          if method_name in node.blacklisted_methods do
+            node.blacklisted_methods
+          else
+            [method_name | node.blacklisted_methods]
+          end
+
+        # Update the node
+        updated_node = %{node |
+          blacklisted_methods: updated_blacklisted_methods,
+          method_tried: nil,  # Clear current method
+          expanded: false     # Mark for re-expansion
+        }
+
+        # Update the solution tree
+        put_in(solution_tree.nodes[node_id], updated_node)
+    end
+  end
+
+  # Re-plan from a specific node by trying alternative methods.
+  #
+  # This function attempts to expand the given node using methods that haven't
+  # been blacklisted, effectively implementing HTN backtracking.
+  @spec replan_from_node(map(), solution_tree(), String.t(), map(), keyword()) ::
+    {:ok, solution_tree()} | {:error, String.t()}
+  defp replan_from_node(domain, solution_tree, node_id, state, opts) do
+    verbose = Keyword.get(opts, :verbose, 0)
+
+    case solution_tree.nodes[node_id] do
+      nil ->
+        {:error, "Node not found for re-planning: #{node_id}"}
+
+      node ->
+        if verbose > 2 do
+          Logger.debug("HTN Backtracking: Re-planning node #{node_id} with task: #{inspect(node.task)}")
+        end
+
+        # Clear children from failed expansion
+        cleared_node = %{node | children_ids: [], expanded: false}
+        cleared_tree = put_in(solution_tree.nodes[node_id], cleared_node)
+
+        # Try to expand the node with alternative methods
+        case try_alternative_methods(domain, cleared_tree, node_id, state, opts) do
+          {:ok, expanded_tree} ->
+            if verbose > 2 do
+              Logger.debug("HTN Backtracking: Successfully re-planned node #{node_id}")
+            end
+            {:ok, expanded_tree}
+
+          {:error, reason} ->
+            if verbose > 2 do
+              Logger.debug("HTN Backtracking: Re-planning failed for node #{node_id}: #{reason}")
+            end
+            {:error, reason}
+        end
+    end
+  end
+
+  @spec try_alternative_methods(map(), solution_tree(), String.t(), map(), keyword()) ::
+    {:ok, solution_tree()} | {:error, String.t()}
+  defp try_alternative_methods(domain, solution_tree, node_id, state, opts) do
+    verbose = Keyword.get(opts, :verbose, 0)
+
+    case solution_tree.nodes[node_id] do
+      nil ->
+        {:error, "Node not found: #{node_id}"}
+
+      node ->
+        case node.task do
+          {task_name, args} when is_binary(task_name) ->
+            # Task node - try alternative task methods
+            try_task_methods(domain, solution_tree, node_id, task_name, args, state, opts)
+
+          {predicate, subject, value} when is_binary(predicate) ->
+            # Goal node - try alternative unigoal methods
+            try_unigoal_methods(domain, solution_tree, node_id, predicate, subject, value, state, opts)
+
+          {action_name, _args} when is_atom(action_name) ->
+            # Primitive action - mark as primitive (no methods to try)
+            if verbose > 2 do
+              Logger.debug("HTN Backtracking: Marking primitive action as expanded: #{action_name}")
+            end
+            Plan.NodeExpansion.mark_as_primitive(solution_tree, node_id)
+
+          _ ->
+            # Unknown task type - mark as primitive
+            if verbose > 2 do
+              Logger.debug("HTN Backtracking: Unknown task type, marking as primitive")
+            end
+            Plan.NodeExpansion.mark_as_primitive(solution_tree, node_id)
+        end
+    end
+  end
+
+  @spec try_task_methods(map(), solution_tree(), String.t(), String.t(), list(), map(), keyword()) ::
+    {:ok, solution_tree()} | {:error, String.t()}
+  defp try_task_methods(domain, solution_tree, node_id, task_name, args, state, opts) do
+    verbose = Keyword.get(opts, :verbose, 0)
+    node = solution_tree.nodes[node_id]
+
+    # Get available methods for this task
+    task_atom = String.to_atom(task_name)
+    available_methods = AriaCore.get_task_methods_from_domain(domain, task_atom)
+
+    # Filter out blacklisted methods
+    usable_methods = Enum.reject(available_methods, fn method ->
+      method in node.blacklisted_methods
+    end)
+
+    if verbose > 2 do
+      Logger.debug("HTN Backtracking: Task #{task_name} has #{length(usable_methods)} usable methods (#{length(available_methods)} total)")
+    end
+
+    case usable_methods do
+      [] ->
+        # No usable methods left - mark as primitive
+        if verbose > 2 do
+          Logger.debug("HTN Backtracking: No usable methods for task #{task_name}, marking as primitive")
+        end
+        Plan.NodeExpansion.mark_as_primitive(solution_tree, node_id)
+
+      [method_name | _] ->
+        # Try the first available method
+        if verbose > 2 do
+          Logger.debug("HTN Backtracking: Trying method #{method_name} for task #{task_name}")
+        end
+
+        # Execute the task method and create child nodes from result
+        case execute_task_method(domain, state, task_atom, args, method_name, opts) do
+          {:ok, []} ->
+            # Method returned empty list - task already completed
+            if verbose > 2 do
+              Logger.debug("HTN Backtracking: Task method #{method_name} returned empty list - task completed")
+            end
+            updated_node = %{node | method_tried: method_name, expanded: true, is_primitive: true}
+            updated_tree = put_in(solution_tree.nodes[node_id], updated_node)
+            {:ok, updated_tree}
+
+          {:ok, subtasks} ->
+            # Method returned subtasks - create child nodes
+            if verbose > 2 do
+              Logger.debug("HTN Backtracking: Task method #{method_name} returned #{length(subtasks)} subtasks")
+            end
+            case create_child_nodes_from_subtasks(solution_tree, node_id, subtasks, method_name, opts) do
+              {:ok, updated_tree} -> {:ok, updated_tree}
+              {:error, reason} -> {:error, "Failed to create child nodes: #{reason}"}
+            end
+
+          {:error, reason} ->
+            # Method execution failed - try next method or mark as primitive
+            if verbose > 2 do
+              Logger.debug("HTN Backtracking: Task method #{method_name} failed: #{reason}")
+            end
+            # Blacklist this method and try alternatives
+            blacklisted_node = %{node | blacklisted_methods: [method_name | node.blacklisted_methods]}
+            blacklisted_tree = put_in(solution_tree.nodes[node_id], blacklisted_node)
+            try_task_methods(domain, blacklisted_tree, node_id, task_name, args, state, opts)
+        end
+    end
+  end
+
+  @spec try_unigoal_methods(map(), solution_tree(), String.t(), String.t(), String.t(), any(), map(), keyword()) ::
+    {:ok, solution_tree()} | {:error, String.t()}
+  defp try_unigoal_methods(domain, solution_tree, node_id, predicate, subject, value, state, opts) do
+    verbose = Keyword.get(opts, :verbose, 0)
+    node = solution_tree.nodes[node_id]
+
+    # Get available unigoal methods for this predicate
+    predicate_atom = String.to_atom(predicate)
+    available_methods = AriaCore.get_unigoal_methods_from_domain(domain, predicate_atom)
+
+    # Filter out blacklisted methods
+    usable_methods = Enum.reject(available_methods, fn method ->
+      method in node.blacklisted_methods
+    end)
+
+    if verbose > 2 do
+      Logger.debug("HTN Backtracking: Goal #{predicate} has #{length(usable_methods)} usable methods (#{length(available_methods)} total)")
+    end
+
+    case usable_methods do
+      [] ->
+        # No usable methods left - mark as primitive
+        if verbose > 2 do
+          Logger.debug("HTN Backtracking: No usable methods for goal #{predicate}, marking as primitive")
+        end
+        Plan.NodeExpansion.mark_as_primitive(solution_tree, node_id)
+
+      [method_name | _] ->
+        # Try the first available method
+        if verbose > 2 do
+          Logger.debug("HTN Backtracking: Trying unigoal method #{method_name} for goal #{predicate}")
+        end
+
+        # Execute the unigoal method and create child nodes from result
+        case execute_unigoal_method(domain, state, predicate_atom, {subject, value}, method_name, opts) do
+          {:ok, []} ->
+            # Method returned empty list - goal already satisfied
+            if verbose > 2 do
+              Logger.debug("HTN Backtracking: Unigoal method #{method_name} returned empty list - goal satisfied")
+            end
+            updated_node = %{node | method_tried: method_name, expanded: true, is_primitive: true}
+            updated_tree = put_in(solution_tree.nodes[node_id], updated_node)
+            {:ok, updated_tree}
+
+          {:ok, subtasks} ->
+            # Method returned subtasks - create child nodes
+            if verbose > 2 do
+              Logger.debug("HTN Backtracking: Unigoal method #{method_name} returned #{length(subtasks)} subtasks")
+            end
+            case create_child_nodes_from_subtasks(solution_tree, node_id, subtasks, method_name, opts) do
+              {:ok, updated_tree} -> {:ok, updated_tree}
+              {:error, reason} -> {:error, "Failed to create child nodes: #{reason}"}
+            end
+
+          {:error, reason} ->
+            # Method execution failed - try next method or mark as primitive
+            if verbose > 2 do
+              Logger.debug("HTN Backtracking: Unigoal method #{method_name} failed: #{reason}")
+            end
+            # Blacklist this method and try alternatives
+            blacklisted_node = %{node | blacklisted_methods: [method_name | node.blacklisted_methods]}
+            blacklisted_tree = put_in(solution_tree.nodes[node_id], blacklisted_node)
+            try_unigoal_methods(domain, blacklisted_tree, node_id, predicate, subject, value, state, opts)
+        end
+    end
+  end
+
+  # Helper functions for method execution
+
+  # Execute a unigoal method and return the resulting subtasks.
+  #
+  # This function retrieves the unigoal method from the domain and executes it
+  # with the provided state and goal arguments.
+  @spec execute_unigoal_method(map(), map(), atom(), {String.t(), any()}, String.t(), keyword()) ::
+    {:ok, list()} | {:error, String.t()}
+  defp execute_unigoal_method(domain, state, predicate, {subject, value}, method_name, opts) do
+    verbose = Keyword.get(opts, :verbose, 0)
+
+    if verbose > 2 do
+      Logger.debug("HTN Method Execution: Executing unigoal method #{method_name} for #{predicate}(#{subject}, #{value})")
+    end
+
+    try do
+      # Get the method function from the domain
+      case get_unigoal_method_function(domain, predicate, method_name) do
+        {:ok, method_fn} ->
+          # Execute the method with state and goal arguments
+          case method_fn.(state, {subject, value}) do
+            subtasks when is_list(subtasks) ->
+              if verbose > 2 do
+                Logger.debug("HTN Method Execution: Method #{method_name} returned #{length(subtasks)} subtasks")
+              end
+              {:ok, subtasks}
+
+            other_result ->
+              if verbose > 2 do
+                Logger.debug("HTN Method Execution: Method #{method_name} returned non-list result: #{inspect(other_result)}")
+              end
+              {:error, "Method returned non-list result: #{inspect(other_result)}"}
+          end
+
+        {:error, reason} ->
+          {:error, reason}
+      end
+    rescue
+      e ->
+        error_msg = "Method execution failed: #{Exception.message(e)}"
+        if verbose > 1 do
+          Logger.debug("HTN Method Execution: #{error_msg}")
+        end
+        {:error, error_msg}
+    end
+  end
+
+  # Execute a task method and return the resulting subtasks.
+  #
+  # This function retrieves the task method from the domain and executes it
+  # with the provided state and task arguments.
+  @spec execute_task_method(map(), map(), atom(), list(), String.t(), keyword()) ::
+    {:ok, list()} | {:error, String.t()}
+  defp execute_task_method(domain, state, task_name, args, method_name, opts) do
+    verbose = Keyword.get(opts, :verbose, 0)
+
+    if verbose > 2 do
+      Logger.debug("HTN Method Execution: Executing task method #{method_name} for #{task_name}(#{inspect(args)})")
+    end
+
+    try do
+        # Get the method function from the domain
+        case get_task_method_function(domain, method_name) do
+        {:ok, method_fn} ->
+          # Execute the method with state and task arguments
+          case method_fn.(state, args) do
+            subtasks when is_list(subtasks) ->
+              if verbose > 2 do
+                Logger.debug("HTN Method Execution: Method #{method_name} returned #{length(subtasks)} subtasks")
+              end
+              {:ok, subtasks}
+
+            other_result ->
+              if verbose > 2 do
+                Logger.debug("HTN Method Execution: Method #{method_name} returned non-list result: #{inspect(other_result)}")
+              end
+              {:error, "Method returned non-list result: #{inspect(other_result)}"}
+          end
+
+        {:error, reason} ->
+          {:error, reason}
+      end
+    rescue
+      e ->
+        error_msg = "Method execution failed: #{Exception.message(e)}"
+        if verbose > 1 do
+          Logger.debug("HTN Method Execution: #{error_msg}")
+        end
+        {:error, error_msg}
+    end
+  end
+
+  # Get a task method function from the domain.
+  @spec get_task_method_function(map(), String.t()) :: {:ok, function()} | {:error, String.t()}
+  defp get_task_method_function(domain, method_name) do
+    # Try to get the method from AriaCore domain structure
+    case AriaCore.get_method(domain, method_name) do
+      nil ->
+        {:error, "Task method #{method_name} not found in domain"}
+
+      method_spec when is_map(method_spec) ->
+        # Extract function from method spec
+        cond do
+          Map.has_key?(method_spec, :function) and is_function(method_spec.function, 2) ->
+            {:ok, method_spec.function}
+
+          Map.has_key?(method_spec, :method_fn) and is_function(method_spec.method_fn, 2) ->
+            {:ok, method_spec.method_fn}
+
+          true ->
+            {:error, "Method #{method_name} has no valid function"}
+        end
+
+      method_fn when is_function(method_fn, 2) ->
+        {:ok, method_fn}
+
+      _other ->
+        {:error, "Invalid method specification for #{method_name}"}
+    end
+  end
+
+  # Get a unigoal method function from the domain.
+  @spec get_unigoal_method_function(map(), atom(), String.t()) :: {:ok, function()} | {:error, String.t()}
+  defp get_unigoal_method_function(domain, predicate, method_name) do
+    # Try to get the method from AriaCore domain structure by method name first
+    case AriaCore.get_unigoal_method(domain, method_name) do
+      nil ->
+        # If not found by method name, try to get methods for the predicate
+        case AriaCore.get_unigoal_methods_from_domain(domain, predicate) do
+          [] ->
+            {:error, "No unigoal methods found for predicate #{predicate}"}
+
+          [first_method | _] ->
+            # Use the first available method for this predicate
+            case AriaCore.get_unigoal_method(domain, first_method) do
+              nil ->
+                {:error, "Unigoal method #{first_method} not found in domain"}
+
+              method_spec when is_map(method_spec) ->
+                extract_unigoal_function(method_spec, first_method)
+
+              method_fn when is_function(method_fn, 2) ->
+                {:ok, method_fn}
+
+              _other ->
+                {:error, "Invalid method specification for #{first_method}"}
+            end
+        end
+
+      method_spec when is_map(method_spec) ->
+        extract_unigoal_function(method_spec, method_name)
+
+      method_fn when is_function(method_fn, 2) ->
+        {:ok, method_fn}
+
+      _other ->
+        {:error, "Invalid method specification for #{method_name}"}
+    end
+  end
+
+  @spec extract_unigoal_function(map(), String.t()) :: {:ok, function()} | {:error, String.t()}
+  defp extract_unigoal_function(method_spec, method_name) do
+    cond do
+      Map.has_key?(method_spec, :goal_fn) and is_function(method_spec.goal_fn, 2) ->
+        {:ok, method_spec.goal_fn}
+
+      Map.has_key?(method_spec, :function) and is_function(method_spec.function, 2) ->
+        {:ok, method_spec.function}
+
+      true ->
+        {:error, "Method #{method_name} has no valid function"}
+    end
+  end
+
+  # Create child nodes from a list of subtasks returned by a method.
+  #
+  # This function creates new nodes in the solution tree for each subtask
+  #and links them as children of the parent node.
+  @spec create_child_nodes_from_subtasks(solution_tree(), String.t(), list(), String.t(), keyword()) ::
+    {:ok, solution_tree()} | {:error, String.t()}
+  defp create_child_nodes_from_subtasks(solution_tree, parent_node_id, subtasks, method_name, opts) do
+    verbose = Keyword.get(opts, :verbose, 0)
+
+    if verbose > 2 do
+      Logger.debug("HTN Node Creation: Creating #{length(subtasks)} child nodes for parent #{parent_node_id}")
+    end
+
+    try do
+      # Generate unique IDs for child nodes
+      {child_nodes, child_ids} = Enum.with_index(subtasks)
+      |> Enum.map(fn {subtask, index} ->
+        child_id = "#{parent_node_id}_#{method_name}_#{index}"
+        child_node = create_child_node(subtask, parent_node_id, child_id)
+        {child_node, child_id}
+      end)
+      |> Enum.unzip()
+
+      # Update parent node with method and children
+      parent_node = solution_tree.nodes[parent_node_id]
+      updated_parent = %{parent_node |
+        method_tried: method_name,
+        expanded: true,
+        is_primitive: false,
+        children_ids: child_ids
+      }
+
+      # Add all child nodes to the solution tree
+      updated_nodes = child_nodes
+      |> Enum.zip(child_ids)
+      |> Enum.reduce(solution_tree.nodes, fn {{child_node, child_id}, _}, acc_nodes ->
+        Map.put(acc_nodes, child_id, child_node)
+      end)
+      |> Map.put(parent_node_id, updated_parent)
+
+      updated_tree = %{solution_tree | nodes: updated_nodes}
+
+      if verbose > 2 do
+        Logger.debug("HTN Node Creation: Successfully created #{length(child_ids)} child nodes")
+      end
+
+      {:ok, updated_tree}
+    rescue
+      e ->
+        error_msg = "Failed to create child nodes: #{Exception.message(e)}"
+        if verbose > 1 do
+          Logger.debug("HTN Node Creation: #{error_msg}")
+        end
+        {:error, error_msg}
+    end
+  end
+
+  # Create a single child node from a subtask.
+  @spec create_child_node(any(), String.t(), String.t()) :: map()
+  defp create_child_node(subtask, parent_id, node_id) do
+    %{
+      id: node_id,
+      task: subtask,
+      parent_id: parent_id,
+      children_ids: [],
+      expanded: false,
+      is_primitive: false,
+      method_tried: nil,
+      blacklisted_methods: []
+    }
   end
 end
