@@ -54,4 +54,54 @@ defmodule AriaHybridPlanner do
       _ -> "unknown"
     end
   end
+
+  # State management convenience functions (delegate to AriaState)
+
+  @doc """
+  Creates a new empty state.
+  """
+  @spec new_state() :: AriaState.t()
+  def new_state do
+    AriaState.new()
+  end
+
+  @doc """
+  Creates a new state with initial data.
+  """
+  @spec new_state(map()) :: AriaState.t()
+  def new_state(data) when is_map(data) do
+    AriaState.new(data)
+  end
+
+  @doc """
+  Sets a fact in the state.
+  """
+  @spec set_fact(AriaState.t(), String.t(), String.t(), term()) :: AriaState.t()
+  def set_fact(state, predicate, subject, value) do
+    AriaState.set_fact(state, predicate, subject, value)
+  end
+
+  @doc """
+  Gets a fact from the state.
+  """
+  @spec get_fact(AriaState.t(), String.t(), String.t()) :: term()
+  def get_fact(state, predicate, subject) do
+    AriaState.get_fact(state, predicate, subject)
+  end
+
+  @doc """
+  Removes a fact from the state.
+  """
+  @spec remove_fact(AriaState.t(), String.t(), String.t()) :: AriaState.t()
+  def remove_fact(state, predicate, subject) do
+    AriaState.remove_fact(state, predicate, subject)
+  end
+
+  @doc """
+  Checks if a subject exists for a predicate in the state.
+  """
+  @spec has_subject?(AriaState.t(), String.t(), String.t()) :: boolean()
+  def has_subject?(state, predicate, subject) do
+    AriaState.has_subject?(state, predicate, subject)
+  end
 end

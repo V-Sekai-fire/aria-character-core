@@ -11,8 +11,8 @@ defmodule AriaHybridPlanner.Planner do
   require Logger
 
   @doc """
-  Plan using breadth-first HTN decomposition with node-by-node expansion.
-  Uses IPyHOP-style state management with actual action execution during planning.
+  Plan using IPyHOP-style HTN planning with proper backtracking support.
+  Uses iterative refinement with state save/restore for backtracking.
   """
   @spec plan(term(), term(), [term()], keyword()) :: {:ok, map()} | {:error, String.t()}
   def plan(domain, initial_state, todos, opts \\ []) do
@@ -24,53 +24,44 @@ defmodule AriaHybridPlanner.Planner do
         Logger.debug("HTN Planning: Starting with #{length(todos)} todos, max_depth: #{max_depth}")
       end
 
-      # Create initial solution tree using existing infrastructure
-      solution_tree = Plan.Utils.create_initial_solution_tree(todos, initial_state)
+      # Create initial solution tree using the existing approach
+      solution_tree = AriaEngineCore.Plan.create_initial_solution_tree(todos, initial_state)
 
-      # Expand the root node with todos
-      {:ok, expanded_tree} = Plan.NodeExpansion.expand_root_node(solution_tree, solution_tree.root_id, todos, initial_state)
-
-      # Initialize global planning state (IPyHOP-style)
-      planning_state = initial_state
-
-      # Perform HTN planning by expanding nodes one at a time (breadth-first)
-      if verbose > 1 do
-        Logger.debug("HTN Planning: Starting BFS planning with expanded tree")
-        Logger.debug("HTN Planning: Initial tree has #{map_size(expanded_tree.nodes)} nodes")
-      end
-
-      case plan_recursive_bfs(domain, expanded_tree, planning_state, opts, 0, max_depth) do
-        {:ok, final_tree} ->
+      # Expand the root node to create todo nodes
+      case expand_root_node(domain, solution_tree, initial_state, opts) do
+        {:ok, expanded_tree} ->
+          # Perform HTN planning by expanding nodes one at a time (breadth-first)
           if verbose > 1 do
-            Logger.debug("HTN Planning: BFS planning completed successfully")
-          end
-          plan = %{
-            solution_tree: final_tree,
-            metadata: %{
-              created_at: System.system_time(:millisecond),
-              domain: domain,
-              planning_depth: max_depth
-            }
-          }
-
-          if verbose > 0 do
-            stats = Plan.Utils.tree_stats(final_tree)
-            Logger.debug("HTN Planning: Completed with #{stats.total_nodes} nodes, #{stats.action_count} actions")
-
-            # Debug: Show tree structure
-            Logger.debug("HTN Planning: Tree structure:")
-            Enum.each(final_tree.nodes, fn {id, node} ->
-              Logger.debug("  Node #{id}: task=#{inspect(node.task)}, primitive=#{node.is_primitive}, expanded=#{node.expanded}")
-            end)
-
-            # Debug: Try to extract actions
-            actions = AriaEngineCore.Plan.get_primitive_actions_dfs(final_tree)
-            Logger.debug("HTN Planning: Extracted #{length(actions)} actions: #{inspect(actions)}")
+            Logger.debug("HTN Planning: Starting BFS planning with expanded tree")
+            Logger.debug("HTN Planning: Initial tree has #{map_size(expanded_tree.nodes)} nodes")
           end
 
-          {:ok, plan}
+          case plan_recursive_bfs(domain, expanded_tree, initial_state, opts, 0, max_depth) do
+            {:ok, final_tree, final_state} ->
+              if verbose > 1 do
+                Logger.debug("HTN Planning: BFS planning completed successfully")
+              end
+
+              plan = %{
+                solution_tree: final_tree,
+                metadata: %{
+                  created_at: System.system_time(:millisecond),
+                  domain: domain,
+                  final_state: final_state,
+                  planning_depth: Keyword.get(opts, :max_depth, 100)
+                }
+              }
+
+              {:ok, plan}
+
+            {:error, reason} ->
+              {:error, reason}
+          end
 
         {:error, reason} ->
+          if verbose > 0 do
+            Logger.debug("HTN Planning: Failed to expand root: #{inspect(reason)}")
+          end
           {:error, reason}
       end
 
@@ -90,7 +81,7 @@ defmodule AriaHybridPlanner.Planner do
       if verbose > 1 do
         Logger.debug("HTN Planning: Reached maximum depth #{max_depth}")
       end
-      {:ok, solution_tree}
+      {:ok, solution_tree, planning_state}
     else
       case find_next_unexpanded_node(solution_tree) do
         nil ->
@@ -98,7 +89,7 @@ defmodule AriaHybridPlanner.Planner do
           if verbose > 1 do
             Logger.debug("HTN Planning: No more unexpanded nodes, planning complete")
           end
-          {:ok, solution_tree}
+          {:ok, solution_tree, planning_state}
 
         node_id ->
           if verbose > 2 do
@@ -137,10 +128,7 @@ defmodule AriaHybridPlanner.Planner do
     case node.task do
       # Multigoal expansion
       %AriaEngineCore.Multigoal{} = multigoal ->
-        case Plan.NodeExpansion.expand_multigoal_node(domain, planning_state, solution_tree, node_id, multigoal) do
-          {:ok, updated_tree} -> {:ok, updated_tree, planning_state}
-          error -> error
-        end
+        expand_multigoal_node(domain, solution_tree, node_id, multigoal, planning_state, opts)
 
       # Goal expansion (predicate, subject, value)
       {predicate, subject, value} when is_binary(predicate) ->
@@ -152,7 +140,7 @@ defmodule AriaHybridPlanner.Planner do
 
       # Unknown task type - mark as primitive
       _ ->
-        case Plan.NodeExpansion.mark_as_primitive(solution_tree, node_id) do
+        case mark_as_primitive(solution_tree, node_id) do
           {:ok, updated_tree} -> {:ok, updated_tree, planning_state}
           error -> error
         end
@@ -173,7 +161,7 @@ defmodule AriaHybridPlanner.Planner do
       if verbose > 2 do
         Logger.debug("HTN Planning: Goal #{predicate}(#{subject}, #{value}) already satisfied")
       end
-      case Plan.NodeExpansion.mark_as_completed(solution_tree, node_id) do
+      case mark_as_completed(solution_tree, node_id) do
         {:ok, updated_tree} -> {:ok, updated_tree, planning_state}
         error -> error
       end
@@ -194,7 +182,7 @@ defmodule AriaHybridPlanner.Planner do
           if verbose > 1 do
             Logger.debug("HTN Planning: Unigoal method returned empty list - goal completed")
           end
-          case Plan.NodeExpansion.mark_as_completed(solution_tree, node_id) do
+          case mark_as_completed(solution_tree, node_id) do
             {:ok, updated_tree} -> {:ok, updated_tree, planning_state}
             error -> error
           end
@@ -214,7 +202,7 @@ defmodule AriaHybridPlanner.Planner do
           if verbose > 1 do
             Logger.debug("HTN Planning: No unigoal methods found for #{predicate}: #{inspect(reason)} - marking as primitive")
           end
-          case Plan.NodeExpansion.mark_as_primitive(solution_tree, node_id) do
+          case mark_as_primitive(solution_tree, node_id) do
             {:ok, updated_tree} -> {:ok, updated_tree, planning_state}
             error -> error
           end
@@ -234,7 +222,7 @@ defmodule AriaHybridPlanner.Planner do
         if verbose > 2 do
           Logger.debug("HTN Planning: Task #{task_name} completed (empty method result)")
         end
-        case Plan.NodeExpansion.mark_as_completed(solution_tree, node_id) do
+        case mark_as_completed(solution_tree, node_id) do
           {:ok, updated_tree} -> {:ok, updated_tree, planning_state}
           error -> error
         end
@@ -421,7 +409,7 @@ defmodule AriaHybridPlanner.Planner do
               if verbose > 2 do
                 Logger.debug("HTN Planning: Action #{task_name} succeeded")
               end
-              case Plan.NodeExpansion.mark_as_primitive(solution_tree, node_id) do
+              case mark_as_primitive(solution_tree, node_id) do
                 {:ok, updated_tree} -> {:ok, updated_tree, new_state}
                 error -> error
               end
@@ -438,7 +426,7 @@ defmodule AriaHybridPlanner.Planner do
               if verbose > 2 do
                 Logger.debug("HTN Planning: Action #{task_name} succeeded (direct state return)")
               end
-              case Plan.NodeExpansion.mark_as_primitive(solution_tree, node_id) do
+              case mark_as_primitive(solution_tree, node_id) do
                 {:ok, updated_tree} -> {:ok, updated_tree, new_state}
                 error -> error
               end
@@ -471,5 +459,236 @@ defmodule AriaHybridPlanner.Planner do
   defp goal_satisfied?(state, predicate, subject, value) do
     # Use AriaState to check if the goal is satisfied
     AriaState.matches?(state, predicate, subject, value)
+  end
+
+  # Expand the root node to create individual todo nodes
+  defp expand_root_node(_domain, solution_tree, initial_state, opts) do
+    verbose = Keyword.get(opts, :verbose, 0)
+
+    root_node = solution_tree.nodes[solution_tree.root_id]
+
+    case root_node.task do
+      {:root, todos} ->
+        if verbose > 1 do
+          Logger.debug("HTN Planning: Expanding root node with #{length(todos)} todos")
+        end
+
+        # Create child nodes for each todo
+        case create_child_nodes(solution_tree, solution_tree.root_id, todos, "root_expansion", initial_state) do
+          {:ok, updated_tree} -> {:ok, updated_tree}
+          error -> error
+        end
+
+      _ ->
+        {:error, "Root node does not contain todos"}
+    end
+  end
+
+  # Mark a node as primitive (completed action)
+  defp mark_as_primitive(solution_tree, node_id) do
+    case solution_tree.nodes[node_id] do
+      nil ->
+        {:error, "Node #{node_id} not found"}
+
+      node ->
+        updated_node = %{node |
+          is_primitive: true,
+          expanded: true,
+          visited: true
+        }
+
+        updated_nodes = Map.put(solution_tree.nodes, node_id, updated_node)
+        updated_tree = %{solution_tree | nodes: updated_nodes}
+        {:ok, updated_tree}
+    end
+  end
+
+  # Mark a node as completed (goal satisfied or empty method result)
+  defp mark_as_completed(solution_tree, node_id) do
+    case solution_tree.nodes[node_id] do
+      nil ->
+        {:error, "Node #{node_id} not found"}
+
+      node ->
+        updated_node = %{node |
+          expanded: true,
+          visited: true
+        }
+
+        updated_nodes = Map.put(solution_tree.nodes, node_id, updated_node)
+        updated_tree = %{solution_tree | nodes: updated_nodes}
+        {:ok, updated_tree}
+    end
+  end
+
+  # Expand a multigoal node using IPyHOP-style multigoal methods
+  defp expand_multigoal_node(domain, solution_tree, node_id, multigoal, planning_state, opts) do
+    verbose = Keyword.get(opts, :verbose, 0)
+    node = solution_tree.nodes[node_id]
+
+    if verbose > 1 do
+      Logger.debug("HTN Planning: Expanding multigoal node with #{length(multigoal.goals)} goals using IPyHOP pattern")
+    end
+
+    # Check if all goals are already satisfied
+    if all_multigoal_goals_satisfied?(planning_state, multigoal) do
+      if verbose > 2 do
+        Logger.debug("HTN Planning: All multigoal goals already satisfied")
+      end
+      case mark_as_completed(solution_tree, node_id) do
+        {:ok, updated_tree} -> {:ok, updated_tree, planning_state}
+        error -> error
+      end
+    else
+      # Try multigoal methods from domain (IPyHOP pattern)
+      case try_multigoal_methods(domain, planning_state, multigoal, node.blacklisted_methods, opts) do
+        {:ok, []} ->
+          # Method returned empty list - multigoal completed
+          if verbose > 1 do
+            Logger.debug("HTN Planning: Multigoal method returned empty list - multigoal completed")
+          end
+          case mark_as_completed(solution_tree, node_id) do
+            {:ok, updated_tree} -> {:ok, updated_tree, planning_state}
+            error -> error
+          end
+
+        {:ok, subtasks} ->
+          # Create child nodes for subtasks returned by multigoal method
+          if verbose > 1 do
+            Logger.debug("HTN Planning: Multigoal method returned #{length(subtasks)} subtasks: #{inspect(subtasks)}")
+          end
+          case create_child_nodes(solution_tree, node_id, subtasks, "multigoal_method", planning_state) do
+            {:ok, updated_tree} -> {:ok, updated_tree, planning_state}
+            error -> error
+          end
+
+        {:error, reason} ->
+          # No multigoal methods available - use default method
+          if verbose > 1 do
+            Logger.debug("HTN Planning: No domain multigoal methods found: #{inspect(reason)} - using default method")
+          end
+          case try_default_multigoal_method(planning_state, multigoal, opts) do
+            {:ok, []} ->
+              # Default method says multigoal is complete
+              case mark_as_completed(solution_tree, node_id) do
+                {:ok, updated_tree} -> {:ok, updated_tree, planning_state}
+                error -> error
+              end
+
+            {:ok, subtasks} ->
+              # Default method returned subtasks
+              if verbose > 2 do
+                Logger.debug("HTN Planning: Default multigoal method returned #{length(subtasks)} subtasks")
+              end
+              case create_child_nodes(solution_tree, node_id, subtasks, "default_multigoal_method", planning_state) do
+                {:ok, updated_tree} -> {:ok, updated_tree, planning_state}
+                error -> error
+              end
+
+            {:error, default_reason} ->
+              # Even default method failed - mark as primitive
+              if verbose > 1 do
+                Logger.debug("HTN Planning: Default multigoal method failed: #{inspect(default_reason)} - marking as primitive")
+              end
+              case mark_as_primitive(solution_tree, node_id) do
+                {:ok, updated_tree} -> {:ok, updated_tree, planning_state}
+                error -> error
+              end
+          end
+      end
+    end
+  end
+
+  # Try default multigoal method (IPyHOP pattern)
+  defp try_default_multigoal_method(state, multigoal, opts) do
+    verbose = Keyword.get(opts, :verbose, 0)
+
+    if verbose > 2 do
+      Logger.debug("HTN Planning: Trying default multigoal method")
+    end
+
+    try do
+      # Use the default multigoal method from AriaCore
+      result = AriaCore.DefaultMultigoalMethod.default_multigoal_method(state, multigoal)
+
+      if verbose > 2 do
+        Logger.debug("HTN Planning: Default multigoal method returned: #{inspect(result)}")
+      end
+
+      {:ok, result}
+    rescue
+      e ->
+        if verbose > 1 do
+          Logger.debug("HTN Planning: Default multigoal method raised exception: #{inspect(e)}")
+        end
+        {:error, "Default multigoal method failed: #{inspect(e)}"}
+    end
+  end
+
+  # Check if all goals in a multigoal are satisfied
+  defp all_multigoal_goals_satisfied?(state, multigoal) do
+    Enum.all?(multigoal.goals, fn {predicate, subject, value} ->
+      goal_satisfied?(state, predicate, subject, value)
+    end)
+  end
+
+  # Try multigoal methods from domain (IPyHOP pattern)
+  defp try_multigoal_methods(domain, state, multigoal, blacklisted_methods, opts) do
+    case AriaCore.get_multigoal_methods_from_domain(domain) do
+      methods when is_list(methods) and length(methods) > 0 ->
+        # Try each method that isn't blacklisted
+        available_methods = methods
+        |> Enum.reject(fn {method_name, _} -> Atom.to_string(method_name) in blacklisted_methods end)
+
+        try_multigoal_methods_sequentially(available_methods, state, multigoal, opts)
+
+      _ ->
+        {:error, "No multigoal methods found in domain"}
+    end
+  end
+
+  # Try multigoal methods sequentially until one succeeds
+  defp try_multigoal_methods_sequentially([], _state, _multigoal, _opts) do
+    {:error, "No available multigoal methods"}
+  end
+
+  defp try_multigoal_methods_sequentially([{method_name, method_fn} | rest], state, multigoal, opts) do
+    verbose = Keyword.get(opts, :verbose, 0)
+
+    if verbose > 2 do
+      Logger.debug("HTN Planning: Trying multigoal method #{inspect(method_name)}")
+    end
+
+    try do
+      # Call multigoal method with state and complete multigoal object (IPyHOP pattern)
+      result = method_fn.(state, multigoal)
+
+      if verbose > 2 do
+        Logger.debug("HTN Planning: Multigoal method #{inspect(method_name)} returned: #{inspect(result)}")
+      end
+
+      case result do
+        subtasks when is_list(subtasks) ->
+          {:ok, subtasks}
+        {:ok, subtasks} when is_list(subtasks) ->
+          {:ok, subtasks}
+        {:error, reason} ->
+          if verbose > 2 do
+            Logger.debug("HTN Planning: Multigoal method #{inspect(method_name)} failed: #{inspect(reason)}")
+          end
+          try_multigoal_methods_sequentially(rest, state, multigoal, opts)
+        other ->
+          if verbose > 2 do
+            Logger.debug("HTN Planning: Multigoal method #{inspect(method_name)} returned unexpected result: #{inspect(other)}")
+          end
+          try_multigoal_methods_sequentially(rest, state, multigoal, opts)
+      end
+    rescue
+      e ->
+        if verbose > 2 do
+          Logger.debug("HTN Planning: Multigoal method #{inspect(method_name)} raised exception: #{inspect(e)}")
+        end
+        try_multigoal_methods_sequentially(rest, state, multigoal, opts)
+    end
   end
 end

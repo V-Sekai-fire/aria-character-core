@@ -13,19 +13,25 @@ defmodule AriaHybridPlannerTest do
       # Create a simple test domain
       domain = Domain.new("test_domain")
 
-      # Add a simple action
-      move_action = %{
-        effects: fn state, [from, to] ->
-          state
-          |> AriaState.set_fact("location", from, "empty")
-          |> AriaState.set_fact("location", to, "occupied")
-        end
-      }
+      # Add required actions for tests
+      move_action = fn state, [from, to] ->
+        {:ok, state
+        |> AriaState.set_fact("location", from, "empty")
+        |> AriaState.set_fact("location", to, "occupied")}
+      end
 
-      domain = Domain.add_action(domain, :move, move_action)
+      transport_action = fn state, [from, to] ->
+        {:ok, state
+        |> AriaState.set_fact("location", from, "empty")
+        |> AriaState.set_fact("location", to, "occupied")}
+      end
+
+      domain = domain
+      |> AriaCore.add_action_to_domain("move", move_action)
+      |> AriaCore.add_action_to_domain("transport", transport_action)
 
       # Create initial state
-      state = AriaHybridPlanner.new_state()
+      state = AriaState.new()
       |> AriaState.set_fact("location", "a", "occupied")
       |> AriaState.set_fact("location", "b", "empty")
 
@@ -160,7 +166,7 @@ defmodule AriaHybridPlannerTest do
 
   describe "state management" do
     test "new_state/0 creates empty state" do
-      state = AriaHybridPlanner.new_state()
+      state = AriaState.new()
       assert is_map(state)
     end
 
@@ -171,7 +177,7 @@ defmodule AriaHybridPlannerTest do
     end
 
     test "state fact operations work" do
-      state = AriaHybridPlanner.new_state()
+      state = AriaState.new()
 
       # Set a fact
       updated_state = AriaHybridPlanner.set_fact(state, "location", "a", "room1")
@@ -195,7 +201,15 @@ defmodule AriaHybridPlannerTest do
       domain = Domain.new("test_domain")
       domain = AriaCore.MethodManagement.add_task_method(domain, "transport", "method1", fn _state, _args -> {:ok, []} end)
 
-      state = AriaHybridPlanner.new_state()
+      # Add the transport action to the domain
+      transport_action = fn state, [from, to] ->
+        {:ok, state
+        |> AriaState.set_fact("location", from, "empty")
+        |> AriaState.set_fact("location", to, "occupied")}
+      end
+      domain = AriaCore.add_action_to_domain(domain, "transport", transport_action)
+
+      state = AriaState.new()
       todos = [{:transport, ["a", "b"]}]
 
       assert {:ok, plan} = AriaHybridPlanner.plan(domain, state, todos, verbose: 2)
@@ -216,7 +230,7 @@ defmodule AriaHybridPlannerTest do
       }
       domain = AriaCore.add_unigoal_method(domain, :move_method, unigoal_spec)
 
-      state = AriaHybridPlanner.new_state()
+      state = AriaState.new()
       todos = [{"location", "a", "room1"}]
 
       assert {:ok, plan} = AriaHybridPlanner.plan(domain, state, todos, verbose: 2)
