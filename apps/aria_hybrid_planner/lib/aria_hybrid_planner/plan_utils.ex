@@ -9,17 +9,17 @@ defmodule Plan.Utils do
   extracting primitive actions, validating plans, and managing plan state.
   """
 
-  alias Plan.Core
+  alias AriaEngineCore.Plan
 
-  @type solution_tree :: Core.solution_tree()
-  @type solution_node :: Core.solution_node()
-  @type node_id :: Core.node_id()
-  @type plan_step :: Core.plan_step()
+  @type solution_tree :: Plan.solution_tree()
+  @type solution_node :: Plan.solution_node()
+  @type node_id :: Plan.node_id()
+  @type plan_step :: Plan.plan_step()
 
   @doc """
   Create an initial solution tree from a list of todos and initial state.
   """
-  @spec create_initial_solution_tree([Core.todo_item()], AriaState.t()) :: solution_tree()
+  @spec create_initial_solution_tree([Plan.todo_item()], AriaState.t()) :: solution_tree()
   def create_initial_solution_tree(todos, initial_state) do
     root_id = generate_node_id()
 

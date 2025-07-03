@@ -485,7 +485,9 @@ defmodule AriaCore do
       nil -> domain
       action_specs ->
         Enum.reduce(action_specs, domain, fn {action_name, spec}, acc_domain ->
-          add_action_to_domain(acc_domain, action_name, spec.action_fn, spec)
+          # Convert atom action names to strings for consistent lookup
+          action_name_str = if is_atom(action_name), do: Atom.to_string(action_name), else: action_name
+          add_action_to_domain(acc_domain, action_name_str, spec.action_fn, spec)
         end)
     end
 

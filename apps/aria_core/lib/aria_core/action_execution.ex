@@ -81,8 +81,12 @@ defmodule AriaCore.ActionExecution do
   @doc """
   Execute an action in a domain.
   """
-  @spec execute_action(map(), term(), String.t(), list()) :: {:ok, term()} | {:error, String.t()}
-  def execute_action(domain, state, action_name, args) do
+  @spec execute_action(map(), term(), String.t() | atom(), list()) :: {:ok, term()} | {:error, String.t()}
+  def execute_action(domain, state, action_name, args) when is_atom(action_name) do
+    execute_action(domain, state, Atom.to_string(action_name), args)
+  end
+
+  def execute_action(domain, state, action_name, args) when is_binary(action_name) do
     case get_action(domain, action_name) do
       nil ->
         {:error, "Action #{action_name} not found"}
@@ -93,12 +97,16 @@ defmodule AriaCore.ActionExecution do
               result = action_fn.(state, args)
               case result do
                 false -> {:error, "Action #{action_name} failed"}
+                {:ok, new_state} -> {:ok, new_state}
+                {:error, reason} -> {:error, "Action #{action_name} failed: #{reason}"}
                 new_state -> {:ok, new_state}
               end
             {:arity, 1} ->
               result = action_fn.(state)
               case result do
                 false -> {:error, "Action #{action_name} failed"}
+                {:ok, new_state} -> {:ok, new_state}
+                {:error, reason} -> {:error, "Action #{action_name} failed: #{reason}"}
                 new_state -> {:ok, new_state}
               end
             _ ->
@@ -108,11 +116,6 @@ defmodule AriaCore.ActionExecution do
           e -> {:error, "Action execution failed: #{inspect(e)}"}
         end
     end
-  end
-
-  @spec execute_action(map(), term(), atom(), list()) :: {:ok, term()} | {:error, String.t()}
-  def execute_action(domain, state, action_name, args) when is_atom(action_name) do
-    execute_action(domain, state, Atom.to_string(action_name), args)
   end
 
   @doc """

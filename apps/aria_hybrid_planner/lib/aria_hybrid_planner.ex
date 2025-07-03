@@ -62,8 +62,16 @@ defmodule AriaHybridPlanner do
       {:ok, expanded_tree} = Plan.NodeExpansion.expand_root_node(solution_tree, solution_tree.root_id, todos, initial_state)
 
       # Perform HTN planning by expanding nodes one at a time (breadth-first)
+      if verbose > 1 do
+        Logger.debug("HTN Planning: Starting BFS planning with expanded tree")
+        Logger.debug("HTN Planning: Initial tree has #{map_size(expanded_tree.nodes)} nodes")
+      end
+
       case plan_recursive_bfs(domain, expanded_tree, initial_state, opts, 0, max_depth) do
         {:ok, final_tree} ->
+          if verbose > 1 do
+            Logger.debug("HTN Planning: BFS planning completed successfully")
+          end
           plan = %{
             solution_tree: final_tree,
             metadata: %{
@@ -73,9 +81,19 @@ defmodule AriaHybridPlanner do
             }
           }
 
-          if verbose > 1 do
+          if verbose > 0 do
             stats = Plan.Utils.tree_stats(final_tree)
             Logger.debug("HTN Planning: Completed with #{stats.total_nodes} nodes, #{stats.action_count} actions")
+
+            # Debug: Show tree structure
+            Logger.debug("HTN Planning: Tree structure:")
+            Enum.each(final_tree.nodes, fn {id, node} ->
+              Logger.debug("  Node #{id}: task=#{inspect(node.task)}, primitive=#{node.is_primitive}, expanded=#{node.expanded}")
+            end)
+
+            # Debug: Try to extract actions
+            actions = AriaEngineCore.Plan.get_primitive_actions_dfs(final_tree)
+            Logger.debug("HTN Planning: Extracted #{length(actions)} actions: #{inspect(actions)}")
           end
 
           {:ok, plan}
@@ -242,11 +260,11 @@ defmodule AriaHybridPlanner do
         create_child_nodes(solution_tree, node_id, subtasks, "task_method")
 
       {:error, _reason} ->
-        # No methods available - mark as primitive
+        # No methods available - validate as primitive action
         if verbose > 2 do
-          Logger.debug("HTN Planning: No methods for task #{task_name}, marking as primitive")
+          Logger.debug("HTN Planning: No methods for task #{task_name}, validating as primitive action")
         end
-        Plan.NodeExpansion.mark_as_primitive(solution_tree, node_id)
+        validate_primitive_action(domain, solution_tree, node_id, task_name, args, state, opts)
     end
   end
 
@@ -345,6 +363,29 @@ defmodule AriaHybridPlanner do
 
     updated_tree = %{solution_tree | nodes: updated_nodes}
     {:ok, updated_tree}
+  end
+
+  # Validate a primitive action by attempting to execute it
+  defp validate_primitive_action(domain, solution_tree, node_id, task_name, args, state, opts) do
+    verbose = Keyword.get(opts, :verbose, 0)
+    task_atom = String.to_atom(task_name)
+
+    # Try to execute the primitive action to validate preconditions
+    case AriaCore.execute_action(domain, state, task_atom, args) do
+      {:ok, _new_state} ->
+        # Action is valid - mark as primitive
+        if verbose > 2 do
+          Logger.debug("HTN Planning: Primitive action #{task_name} validated successfully")
+        end
+        Plan.NodeExpansion.mark_as_primitive(solution_tree, node_id)
+
+      {:error, reason} ->
+        # Action fails preconditions - planning should fail
+        if verbose > 1 do
+          Logger.debug("HTN Planning: Primitive action #{task_name} failed: #{inspect(reason)}")
+        end
+        {:error, "Primitive action #{task_name} failed: #{reason}"}
+    end
   end
 
   # Check if a goal is satisfied in the current state
