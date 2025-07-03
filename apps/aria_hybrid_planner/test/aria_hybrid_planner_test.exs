@@ -68,12 +68,13 @@ defmodule AriaHybridPlannerTest do
       # Note: This test may fail if execution requires actual domain methods
       # but it should at least test the planning phase
       case AriaHybridPlanner.run_lazy(domain, state, todos) do
-        {:ok, {final_state, solution_tree}} ->
+        {:ok, {solution_tree, final_state}} ->
           # Verify return structure
           assert is_map(final_state)
           assert is_map(solution_tree)
           assert Map.has_key?(solution_tree, :root_id)
           assert Map.has_key?(solution_tree, :nodes)
+          assert [move: ["a", "b"]] == AriaEngineCore.Plan.get_primitive_actions_dfs(solution_tree)
 
         {:error, reason} ->
           # Execution might fail due to missing domain methods, which is expected
@@ -94,11 +95,12 @@ defmodule AriaHybridPlannerTest do
 
       # Then execute it
       case AriaHybridPlanner.run_lazy_tree(domain, state, solution_tree) do
-        {:ok, {final_state, returned_tree}} ->
+        {:ok, {returned_tree, final_state}} ->
           # Verify return structure
           assert is_map(final_state)
           assert is_map(returned_tree)
           assert returned_tree == solution_tree
+          assert [move: ["a", "b"]] == AriaEngineCore.Plan.get_primitive_actions_dfs(solution_tree)
 
         {:error, reason} ->
           # Execution might fail due to missing domain methods, which is expected
