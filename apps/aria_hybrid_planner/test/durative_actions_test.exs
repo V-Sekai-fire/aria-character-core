@@ -33,7 +33,7 @@ defmodule AriaHybridPlanner.DurativeActionsTest do
     def instant_action(state, [task_id]) do
       state
       |> AriaState.set_fact("task_status", task_id, "completed")
-      |> AriaState.set_fact("completion_time", task_id, DateTime.utc_now())
+      |> AriaState.set_fact("completion_time", task_id, Timex.now() |> Timex.format!("{ISO:Extended}"))
       |> then(&{:ok, &1})
     end
 

@@ -29,8 +29,8 @@ defmodule Plan.Blacklisting do
     blacklisted_commands: MapSet.t(command()),
     # Metadata for debugging and tracking
     metadata: %{
-      created_at: integer(),
-      last_updated: integer(),
+      created_at: String.t(),
+      last_updated: String.t(),
       planning_failures: integer(),
       execution_failures: integer()
     }
@@ -45,7 +45,7 @@ defmodule Plan.Blacklisting do
   """
   @spec new() :: blacklist_state()
   def new() do
-    current_time = System.system_time(:millisecond)
+    current_time = Timex.now() |> Timex.format!("{ISO:Extended}")
 
     %{
       blacklisted_methods: MapSet.new(),
@@ -81,7 +81,7 @@ defmodule Plan.Blacklisting do
       | blacklisted_methods: MapSet.put(blacklist_state.blacklisted_methods, method_name),
         metadata: %{
           blacklist_state.metadata
-          | last_updated: System.system_time(:millisecond),
+          | last_updated: Timex.now() |> Timex.format!("{ISO:Extended}"),
             planning_failures: blacklist_state.metadata.planning_failures + 1
         }
     }
@@ -110,7 +110,7 @@ defmodule Plan.Blacklisting do
       | blacklisted_commands: MapSet.put(blacklist_state.blacklisted_commands, command),
         metadata: %{
           blacklist_state.metadata
-          | last_updated: System.system_time(:millisecond),
+          | last_updated: Timex.now() |> Timex.format!("{ISO:Extended}"),
             execution_failures: blacklist_state.metadata.execution_failures + 1
         }
     }
@@ -207,7 +207,7 @@ defmodule Plan.Blacklisting do
       | blacklisted_methods: MapSet.new(),
         metadata: %{
           blacklist_state.metadata
-          | last_updated: System.system_time(:millisecond)
+          | last_updated: Timex.now() |> Timex.format!("{ISO:Extended}")
         }
     }
   end
@@ -233,7 +233,7 @@ defmodule Plan.Blacklisting do
       | blacklisted_commands: MapSet.new(),
         metadata: %{
           blacklist_state.metadata
-          | last_updated: System.system_time(:millisecond)
+          | last_updated: Timex.now() |> Timex.format!("{ISO:Extended}")
         }
     }
   end
@@ -257,7 +257,7 @@ defmodule Plan.Blacklisting do
         blacklisted_commands: MapSet.new(),
         metadata: %{
           blacklist_state.metadata
-          | last_updated: System.system_time(:millisecond)
+          | last_updated: Timex.now() |> Timex.format!("{ISO:Extended}")
         }
     }
   end

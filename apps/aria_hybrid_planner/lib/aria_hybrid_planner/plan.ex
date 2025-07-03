@@ -100,7 +100,7 @@ defmodule AriaEngineCore.Plan do
               plan = %{
                 solution_tree: final_tree,
                 metadata: %{
-                  created_at: System.system_time(:millisecond),
+                  created_at: Timex.now() |> Timex.format!("{ISO:Extended}"),
                   domain: domain,
                   final_state: final_state,
                   planning_depth: Keyword.get(opts, :max_depth, 100)
