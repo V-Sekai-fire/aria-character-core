@@ -405,7 +405,7 @@ defmodule AriaCore do
       nil -> domain_with_methods
       unigoal_specs ->
         Enum.reduce(unigoal_specs, domain_with_methods, fn {method_name, spec}, acc_domain ->
-          add_unigoal_method_to_domain(acc_domain, spec.predicate, method_name, spec.goal_fn)
+          add_unigoal_method(acc_domain, method_name, spec)
         end)
     end
 

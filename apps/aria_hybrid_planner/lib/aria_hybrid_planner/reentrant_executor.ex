@@ -789,68 +789,77 @@ defmodule Plan.ReentrantExecutor do
   # Get a task method function from the domain.
   @spec get_task_method_function(map(), String.t()) :: {:ok, function()} | {:error, String.t()}
   defp get_task_method_function(domain, method_name) do
-    # Try to get the method from AriaCore domain structure
-    case AriaCore.get_method(domain, method_name) do
-      nil ->
+    # Convert method name to atom for lookup
+    method_atom = case method_name do
+      atom when is_atom(atom) -> atom
+      string when is_binary(string) -> String.to_atom(string)
+    end
+
+    # Get task methods for this method name (treating method name as task name)
+    case AriaCore.get_task_methods_from_domain(domain, method_atom) do
+      [] ->
         {:error, "Task method #{method_name} not found in domain"}
 
-      method_spec when is_map(method_spec) ->
-        # Extract function from method spec
-        cond do
-          Map.has_key?(method_spec, :function) and is_function(method_spec.function, 2) ->
-            {:ok, method_spec.function}
+      methods when is_list(methods) ->
+        # Find the method function in the keyword list
+        case Keyword.get(methods, method_atom) do
+          nil ->
+            # If exact match not found, try the first available method
+            case methods do
+              [{_name, method_fn} | _] when is_function(method_fn, 2) ->
+                {:ok, method_fn}
+              _ ->
+                {:error, "No valid method function found for #{method_name}"}
+            end
 
-          Map.has_key?(method_spec, :method_fn) and is_function(method_spec.method_fn, 2) ->
-            {:ok, method_spec.method_fn}
+          method_fn when is_function(method_fn, 2) ->
+            {:ok, method_fn}
 
-          true ->
-            {:error, "Method #{method_name} has no valid function"}
+          _other ->
+            {:error, "Invalid method function for #{method_name}"}
         end
 
-      method_fn when is_function(method_fn, 2) ->
-        {:ok, method_fn}
-
       _other ->
-        {:error, "Invalid method specification for #{method_name}"}
+        {:error, "Invalid task methods structure for #{method_name}"}
     end
   end
 
   # Get a unigoal method function from the domain.
   @spec get_unigoal_method_function(map(), atom(), String.t()) :: {:ok, function()} | {:error, String.t()}
   defp get_unigoal_method_function(domain, predicate, method_name) do
-    # Try to get the method from AriaCore domain structure by method name first
-    case AriaCore.get_unigoal_method(domain, method_name) do
-      nil ->
-        # If not found by method name, try to get methods for the predicate
-        case AriaCore.get_unigoal_methods_from_domain(domain, predicate) do
-          [] ->
-            {:error, "No unigoal methods found for predicate #{predicate}"}
+    # Convert predicate atom to string for AriaCore.Domain API
+    predicate_string = Atom.to_string(predicate)
 
-          [first_method | _] ->
-            # Use the first available method for this predicate
-            case AriaCore.get_unigoal_method(domain, first_method) do
+    # Try to get methods for the predicate using the new Domain API
+    case AriaCore.get_unigoal_methods_for_predicate(domain, predicate_string) do
+      methods when map_size(methods) == 0 ->
+        {:error, "No unigoal methods found for predicate #{predicate}"}
+
+      methods when is_map(methods) ->
+        # Try to find the specific method by name first
+        case Map.get(methods, String.to_atom(method_name)) do
+          nil ->
+            # If specific method not found, use the first available method
+            case Enum.at(methods, 0) do
               nil ->
-                {:error, "Unigoal method #{first_method} not found in domain"}
+                {:error, "No unigoal methods available for predicate #{predicate}"}
 
-              method_spec when is_map(method_spec) ->
-                extract_unigoal_function(method_spec, first_method)
-
-              method_fn when is_function(method_fn, 2) ->
-                {:ok, method_fn}
-
-              _other ->
-                {:error, "Invalid method specification for #{first_method}"}
+              {_method_name, method_spec} ->
+                extract_unigoal_function(method_spec, method_name)
             end
+
+          method_spec when is_map(method_spec) ->
+            extract_unigoal_function(method_spec, method_name)
+
+          method_fn when is_function(method_fn, 2) ->
+            {:ok, method_fn}
+
+          _other ->
+            {:error, "Invalid method specification for #{method_name}"}
         end
 
-      method_spec when is_map(method_spec) ->
-        extract_unigoal_function(method_spec, method_name)
-
-      method_fn when is_function(method_fn, 2) ->
-        {:ok, method_fn}
-
       _other ->
-        {:error, "Invalid method specification for #{method_name}"}
+        {:error, "Invalid unigoal methods structure for predicate #{predicate}"}
     end
   end
 
