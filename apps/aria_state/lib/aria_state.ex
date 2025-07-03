@@ -39,7 +39,41 @@ defmodule AriaState do
   @doc "Creates a new planning state from a map of predicate-subject-object data."
   @spec new(map()) :: t()
   def new(data) when is_map(data) do
-    %__MODULE__{data: data}
+    # Check if data is already in triple format {predicate, subject} => value
+    if is_triple_format?(data) do
+      %__MODULE__{data: data}
+    else
+      # Convert nested predicate maps to triple format
+      converted_data = convert_nested_maps_to_triples(data)
+      %__MODULE__{data: converted_data}
+    end
+  end
+
+  # Check if the data is already in triple format
+  defp is_triple_format?(data) do
+    data
+    |> Map.keys()
+    |> Enum.all?(fn
+      {predicate, subject} when is_binary(predicate) and is_binary(subject) -> true
+      _ -> false
+    end)
+  end
+
+  # Convert nested predicate maps to triple format
+  defp convert_nested_maps_to_triples(data) do
+    data
+    |> Enum.flat_map(fn
+      {predicate, subject_map} when is_map(subject_map) ->
+        predicate_str = to_string(predicate)
+        Enum.map(subject_map, fn {subject, value} ->
+          {{predicate_str, to_string(subject)}, value}
+        end)
+
+      {key, value} ->
+        # Handle direct key-value pairs (already in some triple-like format)
+        [{key, value}]
+    end)
+    |> Map.new()
   end
 
   @doc "Checks if a subject variable exists in any predicate."

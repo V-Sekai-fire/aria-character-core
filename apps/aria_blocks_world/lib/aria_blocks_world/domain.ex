@@ -50,16 +50,18 @@ defmodule AriaBlocksWorld.Domain do
   def pickup(state, [block]) do
     is_clear = AriaState.get_fact(state, "clear", block)
     hand_holding = AriaState.get_fact(state, "holding", "hand")
+    current_pos = AriaState.get_fact(state, "pos", block)
+
     cond do
-        not is_clear -> {:error, :block_not_clear}
-        hand_holding -> {:error, :hand_not_empty}
-        true ->
-          {:error, :fail}
-          # new_state = state
-          # |> AriaState.set_fact("pos", block, "hand")
-          # |> AriaState.set_fact("clear", block, false)
-          # |> AriaState.set_fact("holding", "hand", block)
-          # {:ok, new_state}
+      current_pos != "table" -> {:error, :not_on_table}
+      not is_clear -> {:error, :block_not_clear}
+      hand_holding != false -> {:error, :hand_not_empty}
+      true ->
+        new_state = state
+        |> AriaState.set_fact("pos", block, "hand")
+        |> AriaState.set_fact("clear", block, false)
+        |> AriaState.set_fact("holding", "hand", block)
+        {:ok, new_state}
     end
   end
 
@@ -178,11 +180,13 @@ defmodule AriaBlocksWorld.Domain do
   @spec take(AriaState.t(), [block()]) :: {:ok, [AriaHybridPlanner.todo_item()]} | {:error, atom()}
   def take(state, [block]) do
     current_pos = AriaState.get_fact(state, "pos", block)
-
-    case current_pos do
-      "table" -> {:ok, [{:pickup, [block]}]}
-      other_block when is_binary(other_block) -> {:ok, [{:unstack, [block, other_block]}]}
-      _ -> {:error, :invalid_position}
+    if current_pos == nil do
+      {:error, :block_not_found}
+    else
+      case current_pos do
+        "table" -> {:ok, [{:pickup, [block]}]}
+        other_block when is_binary(other_block) -> {:ok, [{:unstack, [block, other_block]}]}
+      end
     end
   end
 
