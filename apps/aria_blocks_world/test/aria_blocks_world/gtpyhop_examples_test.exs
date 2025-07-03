@@ -37,12 +37,13 @@ defmodule AriaBlocksWorld.GtpyhopExamplesTest do
         actions = AriaEngineCore.Plan.get_primitive_actions_dfs(tree)
         Logger.debug("Primitive Actions: #{inspect(actions)}")
         actions
-      tree when is_map(tree) ->
+      tree when is_map(tree) and is_map_key(tree, :root_id) ->
         actions = AriaEngineCore.Plan.get_primitive_actions_dfs(tree)
         Logger.debug("Primitive Actions: #{inspect(actions)}")
         actions
       _ ->
         Logger.debug("No solution tree available for primitive action extraction")
+        Logger.debug("Solution tree structure: #{inspect(solution_tree)}")
         []
     end
   end
@@ -99,7 +100,7 @@ defmodule AriaBlocksWorld.GtpyhopExamplesTest do
       })
 
       Logger.debug("Goals: #{inspect(goal1a.goals)}")
-      Logger.debug("Expected GTpyhop plan: [('unstack', 'a', 'b'), ('putdown', 'a'), ('pickup', 'b'), ('stack', 'b', 'a'), ('pickup', 'c'), ('stack', 'c', 'b')]")
+      Logger.debug("Expected GTpyhop plan: [{:unstack, ['a', 'b']}, {:putdown, ['a']), {:pickup, ['b']}, {:stack, ['b', 'a']}, {:pickup, ['c']}, {:stack, ['c', 'b']}]")
 
       # Expected plan from GTpyhop:
       # [('unstack', 'a', 'b'), ('putdown', 'a'), ('pickup', 'b'), ('stack', 'b', 'a'), ('pickup', 'c'), ('stack', 'c', 'b')]

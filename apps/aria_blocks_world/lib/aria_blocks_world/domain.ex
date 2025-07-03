@@ -47,8 +47,7 @@ defmodule AriaBlocksWorld.Domain do
   """
   @action true
   @spec pickup(AriaHybridPlanner.State.t(), [block()]) :: {:ok, AriaHybridPlanner.State.t()} | {:error, atom()}
-  def pickup(state, [block]) when is_binary(block) do
-    # Check preconditions
+  def pickup(state, [block]) do
     current_pos = AriaHybridPlanner.get_fact(state, "pos", block)
     is_clear = AriaHybridPlanner.get_fact(state, "clear", block)
     hand_holding = AriaHybridPlanner.get_fact(state, "holding", "hand")
@@ -85,7 +84,7 @@ defmodule AriaBlocksWorld.Domain do
   """
   @action true
   @spec unstack(AriaHybridPlanner.State.t(), [block()]) :: {:ok, AriaHybridPlanner.State.t()} | {:error, atom()}
-  def unstack(state, [block1, block2]) when is_binary(block1) and is_binary(block2) do
+  def unstack(state, [block1, block2]) do
     # Check preconditions
     current_pos = AriaHybridPlanner.get_fact(state, "pos", block1)
     is_clear = AriaHybridPlanner.get_fact(state, "clear", block1)
@@ -174,18 +173,19 @@ defmodule AriaBlocksWorld.Domain do
   end
 
   @doc """
-  Take a block (generic action that can pickup from table or unstack from another block).
+  Take a block (task method that decomposes to pickup or unstack based on position).
 
-  This is an alias for the appropriate pickup/unstack action based on the block's current position.
+  This task method determines the appropriate action based on the block's current position
+  and returns the corresponding subtask.
   """
-  @action true
-  @spec take(AriaHybridPlanner.State.t(), [block()]) :: {:ok, AriaHybridPlanner.State.t()} | {:error, atom()}
-  def take(state, [block]) when is_binary(block) do
+  @task_method true
+  @spec take(AriaHybridPlanner.State.t(), [block()]) :: {:ok, [AriaHybridPlanner.todo_item()]} | {:error, atom()}
+  def take(state, [block]) do
     current_pos = AriaHybridPlanner.get_fact(state, "pos", block)
 
     case current_pos do
-      "table" -> pickup(state, [block])
-      other_block when is_binary(other_block) -> unstack(state, [block, other_block])
+      "table" -> {:ok, [{:pickup, [block]}]}
+      other_block when is_binary(other_block) -> {:ok, [{:unstack, [block, other_block]}]}
       _ -> {:error, :invalid_position}
     end
   end
@@ -237,27 +237,6 @@ defmodule AriaBlocksWorld.Domain do
 
   # Task methods following GTPyhop blocks_gtn pattern
 
-  @doc """
-  Task method for 'take' - generates pickup or unstack action.
-
-  Following GTPyhop m_take pattern: if block is clear, generate appropriate primitive action.
-  """
-  @task_method true
-  @spec take_method(AriaHybridPlanner.State.t(), [block()]) :: {:ok, [AriaHybridPlanner.todo_item()]} | {:error, atom()}
-  def take_method(state, [block]) do
-    is_clear = AriaHybridPlanner.get_fact(state, "clear", block)
-    current_pos = AriaHybridPlanner.get_fact(state, "pos", block)
-
-    if is_clear == true do
-      case current_pos do
-        "table" -> {:ok, [{:pickup, [block]}]}
-        other_block when is_binary(other_block) -> {:ok, [{:unstack, [block, other_block]}]}
-        _ -> {:error, :invalid_position}
-      end
-    else
-      {:error, :block_not_clear}
-    end
-  end
 
   @doc """
   Task method for 'put' - generates putdown or stack action.
@@ -359,12 +338,6 @@ defmodule AriaBlocksWorld.Domain do
     end
   end
 
-  def achieve_clear(_state, {_block, false}) do
-    # Cannot directly make a block not clear - this would require putting something on it
-    # This is typically handled by other goals that stack blocks
-    {:ok, []}
-  end
-
   # Domain creation and helper functions
 
   @doc """
@@ -392,8 +365,9 @@ defmodule AriaBlocksWorld.Domain do
     %{
       name: "Blocks World Domain",
       description: "Classic blocks world planning domain with pickup, unstack, putdown, stack actions",
-      actions: [:pickup, :unstack, :putdown, :stack, :take],
-      task_methods: ["move_block", "validate_move_preconditions", "take", "put"],
+      actions: [:pickup, :unstack, :putdown, :stack, :setup_blocks_scenario],
+      task_methods: ["move_block", "validate_move_preconditions", "take", "put_method"],
+      unigoal_methods: ["achieve_position", "achieve_clear"],
       multigoal_methods: ["split_multigoal"],
       predicates: ["pos", "clear", "holding"],
       entities: ["hand", "table"],

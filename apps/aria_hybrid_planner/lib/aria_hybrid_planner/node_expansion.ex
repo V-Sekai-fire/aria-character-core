@@ -4,7 +4,7 @@
 defmodule Plan.NodeExpansion do
   @moduledoc "Functions for expanding different types of nodes in the solution tree.\n"
   require Logger
-  @type task :: {String.t(), list()}
+  @type task :: {atom(), list()}
   @type goal :: {String.t(), String.t(), any()}
   @type todo_item :: task() | goal() | Multigoal.t()
   @type plan_step :: {atom(), list()}

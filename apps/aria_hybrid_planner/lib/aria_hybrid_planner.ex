@@ -210,7 +210,6 @@ defmodule AriaHybridPlanner do
   # Expand a task node using domain methods
   defp expand_task_node(domain, solution_tree, node_id, node, state, opts) do
     {task_name, args} = node.task
-    verbose = Keyword.get(opts, :verbose, 0)
 
     # Convert task name to atom for domain lookup
     task_atom = case task_name do
@@ -219,50 +218,45 @@ defmodule AriaHybridPlanner do
       other -> other
     end
 
+    Logger.debug("HTN Task Expansion: Starting expansion for task #{inspect(task_name)} -> #{inspect(task_atom)} in node #{node_id}")
+
     # Check if domain has methods for this task
     case AriaCore.get_task_methods_from_domain(domain, task_atom) do
       [] ->
-        if verbose > 2 do
-          Logger.debug("HTN Planning: No methods found for task #{task_name}, marking as primitive")
-        end
+        Logger.debug("HTN Task Expansion: No methods found for task #{task_name}, marking as primitive")
         :failure
 
       methods ->
-        if verbose > 2 do
-          Logger.debug("HTN Planning: Found #{length(methods)} methods for task #{task_name}")
-        end
+        Logger.debug("HTN Task Expansion: Found #{length(methods)} methods for task #{task_name}: #{inspect(methods)}")
 
         # Get the first available method from the list
         case methods do
           [] ->
-            if verbose > 2 do
-              Logger.debug("HTN Planning: No methods available for task #{task_name}")
-            end
+            Logger.debug("HTN Task Expansion: No methods available for task #{task_name}")
             :failure
 
           [{method_name, _method_spec} | _] ->
+            Logger.debug("HTN Task Expansion: Trying task method #{method_name} for task #{task_name}(#{inspect(args)})")
             case execute_task_method_for_planning(domain, state, task_atom, args, method_name, opts) do
               {:ok, []} ->
                 # Method returned empty list - task already completed
-                if verbose > 2 do
-                  Logger.debug("HTN Planning: Task method #{method_name} returned empty list - task completed")
-                end
+                Logger.debug("HTN Task Expansion: Task method #{method_name} returned empty list - task completed")
                 Plan.NodeExpansion.mark_as_completed(solution_tree, node_id)
 
               {:ok, subtasks} ->
                 # Method returned subtasks - create child nodes
-                if verbose > 2 do
-                  Logger.debug("HTN Planning: Task method #{method_name} returned #{length(subtasks)} subtasks")
-                end
+                Logger.debug("HTN Task Expansion: Task method #{method_name} returned #{length(subtasks)} subtasks: #{inspect(subtasks)}")
                 case create_child_nodes_for_planning(solution_tree, node_id, subtasks, method_name, opts) do
-                  {:ok, updated_tree} -> {:ok, updated_tree}
-                  {:error, reason} -> {:error, "Failed to create child nodes: #{reason}"}
+                  {:ok, updated_tree} ->
+                    Logger.debug("HTN Task Expansion: Successfully created child nodes for task #{task_name}")
+                    {:ok, updated_tree}
+                  {:error, reason} ->
+                    Logger.debug("HTN Task Expansion: Failed to create child nodes: #{reason}")
+                    {:error, "Failed to create child nodes: #{reason}"}
                 end
 
               {:error, reason} ->
-                if verbose > 2 do
-                  Logger.debug("HTN Planning: Task method #{method_name} failed: #{reason}")
-                end
+                Logger.debug("HTN Task Expansion: Task method #{method_name} failed: #{reason}")
                 :failure
             end
         end
@@ -344,8 +338,8 @@ defmodule AriaHybridPlanner do
       if is_nil(solution_tree) do
         {:error, "Invalid plan format - missing solution tree"}
       else
-        # Convert string task names to atoms in solution tree before execution
-        normalized_tree = normalize_solution_tree_task_names(solution_tree)
+        # No normalization needed - use solution tree directly
+        normalized_tree = solution_tree
 
         # Extract or create blacklist state from plan metadata
         blacklist_state = case Keyword.get(opts, :blacklist_state) do
@@ -377,22 +371,6 @@ defmodule AriaHybridPlanner do
     end
   end
 
-  # Normalize task names in solution tree from strings to atoms
-  defp normalize_solution_tree_task_names(solution_tree) do
-    normalized_nodes = solution_tree.nodes
-    |> Enum.map(fn {node_id, node} ->
-      normalized_task = case node.task do
-        {task_name, args} when is_binary(task_name) ->
-          {String.to_atom(task_name), args}
-        other ->
-          other
-      end
-      {node_id, %{node | task: normalized_task}}
-    end)
-    |> Enum.into(%{})
-
-    %{solution_tree | nodes: normalized_nodes}
-  end
 
   # Plan and execute in one step.
   defp plan_and_execute(domain, state, goals, opts \\ []) do
@@ -429,12 +407,11 @@ defmodule AriaHybridPlanner do
   Execute a pre-made solution tree.
   """
   def run_lazy_tree(domain, state, solution_tree) do
-    # Normalize the solution tree before execution
-    normalized_tree = normalize_solution_tree_task_names(solution_tree)
-    plan = %{solution_tree: normalized_tree}
+    # No normalization needed - use solution tree directly
+    plan = %{solution_tree: solution_tree}
     case execute(domain, state, plan) do
       {:ok, final_state} ->
-        {:ok, {final_state, normalized_tree}}
+        {:ok, {final_state, solution_tree}}
       {:error, reason} -> {:error, reason}
     end
   end
@@ -678,8 +655,8 @@ defmodule AriaHybridPlanner do
 
   # Unified helper to get task methods from domain
   defp get_task_methods_from_domain(domain, task_name) do
-    # Use AriaCore.MethodManagement directly
-    AriaCore.MethodManagement.get_task_methods(domain, task_name)
+    # Use AriaCore external API consistently
+    AriaCore.get_task_methods_from_domain(domain, task_name)
   end
 
   # Find method function in a list of method tuples
