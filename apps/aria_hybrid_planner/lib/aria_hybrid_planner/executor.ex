@@ -541,6 +541,13 @@ defmodule Plan.ReentrantExecutor do
 
       node ->
         case node.task do
+          {action_name, _args} when is_atom(action_name) ->
+            # Primitive action - mark as primitive (no methods to try)
+            if verbose > 2 do
+              Logger.debug("HTN Backtracking: Marking primitive action as expanded: #{action_name}")
+            end
+            Plan.NodeExpansion.mark_as_primitive(solution_tree, node_id)
+
           {task_name, args} when is_binary(task_name) ->
             # Task node - try alternative task methods
             try_task_methods(domain, solution_tree, node_id, task_name, args, state, opts)
@@ -548,13 +555,6 @@ defmodule Plan.ReentrantExecutor do
           {predicate, subject, value} when is_binary(predicate) ->
             # Goal node - try alternative unigoal methods
             try_unigoal_methods(domain, solution_tree, node_id, predicate, subject, value, state, opts)
-
-          {action_name, _args} when is_atom(action_name) ->
-            # Primitive action - mark as primitive (no methods to try)
-            if verbose > 2 do
-              Logger.debug("HTN Backtracking: Marking primitive action as expanded: #{action_name}")
-            end
-            Plan.NodeExpansion.mark_as_primitive(solution_tree, node_id)
 
           _ ->
             # Unknown task type - mark as primitive

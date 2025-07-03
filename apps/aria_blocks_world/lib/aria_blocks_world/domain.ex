@@ -46,20 +46,20 @@ defmodule AriaBlocksWorld.Domain do
   - Hand holds the block
   """
   @action true
-  @spec setup_blocks_scenario(AriaHybridPlanner.State.t(), []) :: {:ok, AriaHybridPlanner.State.t()} | {:error, atom()}
+  @spec pickup(AriaState.State.t(), []) :: {:ok, AriaHybridPlanner.State.t()} | {:error, atom()}
   def pickup(state, [block]) do
-    is_clear = AriaHybridPlanner.get_fact(state, "clear", block)
-    current_pos = AriaHybridPlanner.get_fact(state, "pos", block)
-    hand_holding = AriaHybridPlanner.get_fact(state, "holding", "hand")
+    is_clear = AriaState.get_fact(state, "clear", block)
+    hand_holding = AriaState.get_fact(state, "holding", "hand")
     cond do
-        current_pos != "table" -> {:error, :not_on_table}
-        is_clear != true -> {:error, :block_not_clear}
-        hand_holding != false -> {:error, :hand_not_empty}
+        not is_clear -> {:error, :block_not_clear}
+        hand_holding -> {:error, :hand_not_empty}
         true ->
-          new_state = AriaHybridPlanner.set_fact(state, "pos", block, "hand")
-          |> AriaHybridPlanner.set_fact("clear", block, false)
-          |> AriaHybridPlanner.set_fact("holding", "hand", block)
-          {:ok, new_state}
+          {:error, :fail}
+          # new_state = state
+          # |> AriaState.set_fact("pos", block, "hand")
+          # |> AriaState.set_fact("clear", block, false)
+          # |> AriaState.set_fact("holding", "hand", block)
+          # {:ok, new_state}
     end
   end
 
@@ -79,12 +79,12 @@ defmodule AriaBlocksWorld.Domain do
   - Block2 becomes clear
   """
   @action true
-  @spec unstack(AriaHybridPlanner.State.t(), [block()]) :: {:ok, AriaHybridPlanner.State.t()} | {:error, atom()}
+  @spec unstack(AriaState.State.t(), [block()]) :: {:ok, AriaHybridPlanner.State.t()} | {:error, atom()}
   def unstack(state, [block1, block2]) do
     # Check preconditions
-    current_pos = AriaHybridPlanner.get_fact(state, "pos", block1)
-    is_clear = AriaHybridPlanner.get_fact(state, "clear", block1)
-    hand_holding = AriaHybridPlanner.get_fact(state, "holding", "hand")
+    current_pos = AriaState.get_fact(state, "pos", block1)
+    is_clear = AriaState.get_fact(state, "clear", block1)
+    hand_holding = AriaState.get_fact(state, "holding", "hand")
 
     cond do
       current_pos != block2 -> {:error, :not_on_target_block}
@@ -94,10 +94,10 @@ defmodule AriaBlocksWorld.Domain do
       true ->
         # Execute action
         new_state = state
-        |> AriaHybridPlanner.set_fact("pos", block1, "hand")
-        |> AriaHybridPlanner.set_fact("clear", block1, false)
-        |> AriaHybridPlanner.set_fact("holding", "hand", block1)
-        |> AriaHybridPlanner.set_fact("clear", block2, true)
+        |> AriaState.set_fact("pos", block1, "hand")
+        |> AriaState.set_fact("clear", block1, false)
+        |> AriaState.set_fact("holding", "hand", block1)
+        |> AriaState.set_fact("clear", block2, true)
 
         {:ok, new_state}
     end
@@ -115,19 +115,19 @@ defmodule AriaBlocksWorld.Domain do
   - Hand becomes empty
   """
   @action true
-  @spec putdown(AriaHybridPlanner.State.t(), [block()]) :: {:ok, AriaHybridPlanner.State.t()} | {:error, atom()}
+  @spec putdown(AriaState.State.t(), [block()]) :: {:ok, AriaHybridPlanner.State.t()} | {:error, atom()}
   def putdown(state, [block]) do
     # Check preconditions
-    hand_holding = AriaHybridPlanner.get_fact(state, "holding", "hand")
+    hand_holding = AriaState.get_fact(state, "holding", "hand")
 
     cond do
       hand_holding != block -> {:error, :not_holding_block}
       true ->
         # Execute action
         new_state = state
-        |> AriaHybridPlanner.set_fact("pos", block, "table")
-        |> AriaHybridPlanner.set_fact("clear", block, true)
-        |> AriaHybridPlanner.set_fact("holding", "hand", false)
+        |> AriaState.set_fact("pos", block, "table")
+        |> AriaState.set_fact("clear", block, true)
+        |> AriaState.set_fact("holding", "hand", false)
 
         {:ok, new_state}
     end
@@ -147,11 +147,11 @@ defmodule AriaBlocksWorld.Domain do
   - Block2 becomes not clear
   """
   @action true
-  @spec stack(AriaHybridPlanner.State.t(), [block()]) :: {:ok, AriaHybridPlanner.State.t()} | {:error, atom()}
+  @spec stack(AriaState.State.t(), [block()]) :: {:ok, AriaHybridPlanner.State.t()} | {:error, atom()}
   def stack(state, [block1, block2]) do
     # Check preconditions
-    hand_holding = AriaHybridPlanner.get_fact(state, "holding", "hand")
-    block2_clear = AriaHybridPlanner.get_fact(state, "clear", block2)
+    hand_holding = AriaState.get_fact(state, "holding", "hand")
+    block2_clear = AriaState.get_fact(state, "clear", block2)
 
     cond do
       hand_holding != block1 -> {:error, :not_holding_block}
@@ -159,10 +159,10 @@ defmodule AriaBlocksWorld.Domain do
       true ->
         # Execute action
         new_state = state
-        |> AriaHybridPlanner.set_fact("pos", block1, block2)
-        |> AriaHybridPlanner.set_fact("clear", block1, true)
-        |> AriaHybridPlanner.set_fact("holding", "hand", false)
-        |> AriaHybridPlanner.set_fact("clear", block2, false)
+        |> AriaState.set_fact("pos", block1, block2)
+        |> AriaState.set_fact("clear", block1, true)
+        |> AriaState.set_fact("holding", "hand", false)
+        |> AriaState.set_fact("clear", block2, false)
 
         {:ok, new_state}
     end
@@ -175,9 +175,9 @@ defmodule AriaBlocksWorld.Domain do
   and returns the corresponding subtask.
   """
   @task_method true
-  @spec take(AriaHybridPlanner.State.t(), [block()]) :: {:ok, [AriaHybridPlanner.todo_item()]} | {:error, atom()}
+  @spec take(AriaState.State.t(), [block()]) :: {:ok, [AriaHybridPlanner.todo_item()]} | {:error, atom()}
   def take(state, [block]) do
-    current_pos = AriaHybridPlanner.get_fact(state, "pos", block)
+    current_pos = AriaState.get_fact(state, "pos", block)
 
     case current_pos do
       "table" -> {:ok, [{:pickup, [block]}]}
@@ -195,9 +195,9 @@ defmodule AriaBlocksWorld.Domain do
   sequence of pickup/unstack and putdown/stack actions.
   """
   @task_method true
-  @spec move_block(AriaHybridPlanner.State.t(), [any()]) :: {:ok, [AriaHybridPlanner.todo_item()]} | {:error, atom()}
+  @spec move_block(AriaState.State.t(), [any()]) :: {:ok, [AriaHybridPlanner.todo_item()]} | {:error, atom()}
   def move_block(state, [block, destination]) do
-    current_pos = AriaHybridPlanner.get_fact(state, "pos", block)
+    current_pos = AriaState.get_fact(state, "pos", block)
 
     # Determine pickup/unstack action
     pickup_action = case current_pos do
@@ -221,7 +221,7 @@ defmodule AriaBlocksWorld.Domain do
   This task method decomposes validation into separate goal checks for the planner to orchestrate.
   """
   @task_method true
-  @spec validate_move_preconditions(AriaHybridPlanner.State.t(), [block() | String.t()]) :: {:ok, [AriaHybridPlanner.todo_item()]} | {:error, atom()}
+  @spec validate_move_preconditions(AriaState.State.t(), [block() | String.t()]) :: {:ok, [AriaHybridPlanner.todo_item()]} | {:error, atom()}
   def validate_move_preconditions(_state, [block, destination]) do
     # Decompose validation into separate goal checks for planner to orchestrate
     {:ok, [
@@ -240,9 +240,9 @@ defmodule AriaBlocksWorld.Domain do
   Following GTPyhop m_put pattern: if holding block, generate appropriate primitive action.
   """
   @task_method true
-  @spec put_method(AriaHybridPlanner.State.t(), [block() | String.t()]) :: {:ok, [AriaHybridPlanner.todo_item()]} | {:error, atom()}
+  @spec put_method(AriaState.State.t(), [block() | String.t()]) :: {:ok, [AriaHybridPlanner.todo_item()]} | {:error, atom()}
   def put_method(state, [block, destination]) do
-    holding = AriaHybridPlanner.get_fact(state, "holding", "hand")
+    holding = AriaState.get_fact(state, "holding", "hand")
 
     if holding == block do
       case destination do
@@ -264,55 +264,27 @@ defmodule AriaBlocksWorld.Domain do
   It decomposes the goal into prerequisite clearing and primitive movement actions.
   """
   @unigoal_method predicate: "pos"
-  @spec achieve_position(AriaHybridPlanner.State.t(), {String.t(), String.t()}) :: {:ok, [AriaHybridPlanner.todo_item()]} | {:error, atom()}
+  @spec achieve_position(AriaState.State.t(), {String.t(), String.t()}) :: {:ok, [AriaHybridPlanner.todo_item()]} | {:error, atom()}
   def achieve_position(state, {block, destination}) do
-    current_pos = AriaHybridPlanner.get_fact(state, "pos", block)
-
-    # If already at destination, no action needed
-    if current_pos == destination do
-      {:ok, []}
-    else
-      is_clear = AriaHybridPlanner.get_fact(state, "clear", block)
-      destination_clear = case destination do
-        "table" -> true  # Table is always available
-        dest_block -> AriaHybridPlanner.get_fact(state, "clear", dest_block)
-      end
-
-      # Build prerequisite goals and primitive movement actions
-      tasks = []
-
-      # First, ensure the block is clear (accessible)
-      tasks = if is_clear != true do
-        [{"clear", block, true} | tasks]
-      else
-        tasks
-      end
-
-      # Second, ensure destination is clear (if it's a block)
-      tasks = if destination != "table" and destination_clear != true do
-        [{"clear", destination, true} | tasks]
-      else
-        tasks
-      end
-
-      # Finally, add the primitive movement actions
-      # Determine pickup/unstack action based on current position
-      pickup_action = case current_pos do
-        "table" -> {:pickup, [block]}
-        other_block when is_binary(other_block) -> {:unstack, [block, other_block]}
-        _ -> {:pickup, [block]}  # Default fallback
-      end
-
-      # Determine putdown/stack action based on destination
-      putdown_action = case destination do
-        "table" -> {:putdown, [block]}
-        target_block -> {:stack, [block, target_block]}
-      end
-
-      movement_tasks = [pickup_action, putdown_action]
-
-      # Return prerequisites first, then movement
-      {:ok, Enum.reverse(tasks) ++ movement_tasks}
+    current_pos = AriaState.get_fact(state, "pos", block)
+    pickup_action = case current_pos do
+      "table" -> {:pickup, [block]}
+      other_block when is_binary(other_block) -> {:unstack, [block, other_block]}
+      _ -> {:pickup, [block]}  # Default fallback
+    end
+    putdown_action = case destination do
+      "table" -> {:putdown, [block]}
+      target_block -> {:stack, [block, target_block]}
+    end
+    destination_clear = case destination do
+      "table" -> true  # Table is always available
+      dest_block -> AriaState.get_fact(state, "clear", dest_block)
+    end
+    is_clear = AriaState.get_fact(state, "clear", block)
+    cond do
+      current_pos == destination -> {:ok, []}
+      destination_clear != true and is_clear != true -> {:error, :block_not_clear}
+      true -> {:ok, [{"clear", block, true}, {"clear", destination, true}, pickup_action, putdown_action]}
     end
   end
 
@@ -325,7 +297,7 @@ defmodule AriaBlocksWorld.Domain do
   @unigoal_method predicate: "clear"
   @spec achieve_clear(AriaHybridPlanner.State.t(), {String.t(), boolean()}) :: {:ok, [AriaHybridPlanner.todo_item()]} | {:error, atom()}
   def achieve_clear(state, {block, true}) do
-    is_clear = AriaHybridPlanner.get_fact(state, "clear", block)
+    is_clear = AriaState.get_fact(state, "clear", block)
 
     # If already clear, no action needed
     if is_clear == true do
@@ -399,9 +371,9 @@ defmodule AriaBlocksWorld.Domain do
 
   defp register_entity(state, [entity_id, type, capabilities]) do
     state
-    |> AriaHybridPlanner.set_fact("type", entity_id, type)
-    |> AriaHybridPlanner.set_fact("capabilities", entity_id, capabilities)
-    |> AriaHybridPlanner.set_fact("status", entity_id, "available")
+    |> AriaState.set_fact("type", entity_id, type)
+    |> AriaState.set_fact("capabilities", entity_id, capabilities)
+    |> AriaState.set_fact("status", entity_id, "available")
   end
 
   defp find_block_on_top(state, target_block) do
@@ -409,14 +381,24 @@ defmodule AriaBlocksWorld.Domain do
     all_blocks = get_all_blocks(state)
 
     Enum.find(all_blocks, fn block ->
-      AriaHybridPlanner.get_fact(state, "pos", block) == target_block
+      AriaState.get_fact(state, "pos", block) == target_block
     end)
   end
 
+  # defdelegate new(), to: AriaState.RelationalState
+  # defdelegate new(data), to: AriaState.RelationalState
+  # defdelegate get_fact(state, subject, predicate), to: AriaState.RelationalState
+  # defdelegate set_fact(state, subject, predicate, value), to: AriaState.RelationalState
+  # defdelegate remove_fact(state, subject, predicate), to: AriaState.RelationalState
+  # defdelegate has_subject?(state, subject), to: AriaState.RelationalState
+  # defdelegate get_subjects(state), to: AriaState.RelationalState
+  # defdelegate merge(state1, state2), to: AriaState.RelationalState
+  # defdelegate copy(state), to: AriaState.RelationalState
+
   defp get_all_blocks(state) do
     # Get all subjects that have a "clear" predicate
-    clear_true = AriaHybridPlanner.get_subjects_with_fact(state, "clear", true)
-    clear_false = AriaHybridPlanner.get_subjects_with_fact(state, "clear", false)
+    clear_true = AriaState.get_fact(state, "clear", true)
+    clear_false = AriaState.get_subjects_with_fact(state, "clear", false)
     (clear_true ++ clear_false) |> Enum.uniq()
   end
 end

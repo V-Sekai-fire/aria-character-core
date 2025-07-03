@@ -14,21 +14,6 @@ defmodule AriaBlocksWorld.GtpyhopExamplesTest do
 
   use ExUnit.Case, async: true
   require Logger
-  doctest AriaBlocksWorld
-
-  # Helper function to log state in readable format
-  defp log_state(state, label) do
-    all_facts = AriaState.RelationalState.get_all_facts(state)
-
-    pos_facts = Enum.filter(all_facts, fn {{pred, _}, _} -> pred == "pos" end)
-    clear_facts = Enum.filter(all_facts, fn {{pred, _}, _} -> pred == "clear" end)
-    holding_facts = Enum.filter(all_facts, fn {{pred, _}, _} -> pred == "holding" end)
-
-    Logger.debug("#{label}:")
-    Logger.debug("  pos: #{inspect(pos_facts)}")
-    Logger.debug("  clear: #{inspect(clear_facts)}")
-    Logger.debug("  holding: #{inspect(holding_facts)}")
-  end
 
   # Helper function to log primitive actions from solution tree
   defp log_primitive_actions(solution_tree) do
@@ -53,58 +38,61 @@ defmodule AriaBlocksWorld.GtpyhopExamplesTest do
       # state1.pos={'a':'b', 'b':'table', 'c':'table'}
       # state1.clear={'c':True, 'b':False,'a':True}
       # state1.holding={'hand':False}
-      state1 = AriaBlocksWorld.create_state(%{
+      state1 = AriaState.new(%{
         pos: %{"a" => "b", "b" => "table", "c" => "table"},
         clear: %{"a" => true, "b" => false, "c" => true},
         holding: %{"hand" => false}
       })
 
+      domain = AriaBlocksWorld.Domain.create()
       # These should fail because 'a' is on 'b' (can't pickup something that's not clear)
       # and 'b' has something on it
-      assert {:error, _} = AriaBlocksWorld.solve_problem(state1, [{:pickup, ["a"]}])
-      assert {:error, _} = AriaBlocksWorld.solve_problem(state1, [{:pickup, ["b"]}])
-      assert {:error, _} = AriaBlocksWorld.solve_problem(state1, [{:take, ["b"]}])
+      assert {:error, _} = AriaHybridPlanner.plan(domain, state1, [{:pickup, ["a"]}])
+      assert {:error, _} = AriaHybridPlanner.plan(domain, state1, [{:pickup, ["b"]}])
+      assert {:error, _} = AriaHybridPlanner.plan(domain, state1, [{:take, ["b"]}])
     end
 
     test "simple pickup operations that should succeed" do
-      state1 = AriaBlocksWorld.create_state(%{
+      state1 = AriaState.new(%{
         pos: %{"a" => "b", "b" => "table", "c" => "table"},
         clear: %{"a" => true, "b" => false, "c" => true},
         holding: %{"hand" => false}
       })
-
+      domain = AriaBlocksWorld.Domain.create()
       # pickup 'c' should work (it's clear and on table)
-      assert {:ok, {_solution_tree, [pickup: ["c"]]}} = AriaBlocksWorld.solve_problem(state1, [{:pickup, ["c"]}])
+      assert {:ok, {_solution_tree, [pickup: ["c"]]}} = AriaHybridPlanner.plan(domain, state1, [{:pickup, ["c"]}])
 
       # take 'a' should work (unstack from 'b')
-      assert {:ok, {_solution_tree, [unstack: ["a", "b"]]}} = AriaBlocksWorld.solve_problem(state1, [{:take, ["a"]}])
+      assert {:ok, {_solution_tree, [unstack: ["a", "b"]]}} = AriaHybridPlanner.plan(domain, state1, [{:take, ["a"]}])
 
       # take 'c' should work (pickup from table)
-      assert {:ok, {_solution_tree, [pickup: ["c"]]}} = AriaBlocksWorld.solve_problem(state1, [{:take, ["c"]}])
+      assert {:ok, {_solution_tree, [pickup: ["c"]]}} = AriaHybridPlanner.plan(domain, state1, [{:take, ["c"]}])
     end
 
     test "multigoal: c on b, b on a, a on table" do
       Logger.debug("=== Test: multigoal: c on b, b on a, a on table ===")
 
-      state1 = AriaBlocksWorld.create_state(%{
+      state1 = AriaState.new(%{
         pos: %{"a" => "b", "b" => "table", "c" => "table"},
         clear: %{"a" => true, "b" => false, "c" => true},
         holding: %{"hand" => false}
       })
 
-      log_state(state1, "Initial State")
-
       # Goal: c on b, b on a, a on table
-      goal1a = AriaBlocksWorld.create_multigoal(%{
-        pos: %{"c" => "b", "b" => "a", "a" => "table"}
-      })
+      goal1a = %AriaEngineCore.Multigoal{
+        goals: [
+          {"pos", "c", "b"},
+          {"pos", "b", "a"},
+          {"pos", "a", "table"}
+        ],
+      }
 
       Logger.debug("Goals: #{inspect(goal1a.goals)}")
       Logger.debug("Expected GTpyhop plan: [{:unstack, ['a', 'b']}, {:putdown, ['a']), {:pickup, ['b']}, {:stack, ['b', 'a']}, {:pickup, ['c']}, {:stack, ['c', 'b']}]")
-
+      domain = AriaBlocksWorld.Domain.create()
       # Expected plan from GTpyhop:
       # [('unstack', 'a', 'b'), ('putdown', 'a'), ('pickup', 'b'), ('stack', 'b', 'a'), ('pickup', 'c'), ('stack', 'c', 'b')]
-      result = AriaBlocksWorld.solve_problem(state1, [goal1a])
+      result = AriaHybridPlanner.plan(domain, state1, [goal1a])
       Logger.debug("Planning result: #{inspect(elem(result, 0))}")
       assert {:ok, {solution_tree, _plan}} = result
       log_primitive_actions(solution_tree)
@@ -116,23 +104,25 @@ defmodule AriaBlocksWorld.GtpyhopExamplesTest do
       # sus_s0.pos={'c':'a', 'a':'table', 'b':'table'}
       # sus_s0.clear={'c':True, 'a':False,'b':True}
       # sus_s0.holding={'hand':False}
-      sussman_initial = AriaBlocksWorld.create_state(%{
+      sussman_initial = AriaState.new(%{
         pos: %{"c" => "a", "a" => "table", "b" => "table"},
         clear: %{"c" => true, "a" => false, "b" => true},
         holding: %{"hand" => false}
       })
 
-      log_state(sussman_initial, "Initial State")
-
       # Goal: a on b, b on c
-      sussman_goal = AriaBlocksWorld.create_multigoal(%{
-        pos: %{"a" => "b", "b" => "c"}
-      })
+      sussman_goal = %AriaEngineCore.Multigoal{
+        goals: [
+          {"pos", "a", "b"},
+          {"pos", "b", "c"}
+        ],
+      }
 
       Logger.debug("Goals: #{inspect(sussman_goal.goals)}")
       Logger.debug("Expected GTpyhop plan: [{:unstack, ['c', 'a']}, {:putdown, ['c']}, {:pickup, ['b']), (:stack, ['b', 'c']}, {:pickup, ['a']}, {:stack, ['a', 'b']}]")
 
-      result = AriaBlocksWorld.solve_problem(sussman_initial, [sussman_goal])
+      domain = AriaBlocksWorld.Domain.create()
+      result = AriaHybridPlanner.plan(domain, sussman_initial, [sussman_goal])
       Logger.debug("Planning result: #{inspect(elem(result, 0))}")
       assert {:ok, {solution_tree, _plan}} = result
       log_primitive_actions(solution_tree)
@@ -144,43 +134,50 @@ defmodule AriaBlocksWorld.GtpyhopExamplesTest do
       # state2.pos={'a':'c', 'b':'d', 'c':'table', 'd':'table'}
       # state2.clear={'a':True, 'c':False,'b':True, 'd':False}
       # state2.holding={'hand':False}
-      state2 = AriaBlocksWorld.create_state(%{
+      state2 = AriaState.new(%{
         pos: %{"a" => "c", "b" => "d", "c" => "table", "d" => "table"},
         clear: %{"a" => true, "b" => true, "c" => false, "d" => false},
         holding: %{"hand" => false}
       })
 
-      log_state(state2, "Initial State")
-
       # Goal: b on c, a on d
-      goal2 = AriaBlocksWorld.create_multigoal(%{
-        pos: %{"b" => "c", "a" => "d"}
-      })
+      goal2 = %AriaEngineCore.Multigoal{
+        goals: [
+          {"pos", "b", "c"},
+          {"pos", "a", "d"}
+        ],
+      }
 
       Logger.debug("Goals: #{inspect(goal2.goals)}")
       Logger.debug("Expected GTpyhop plan: [('unstack', 'a', 'c'), ('putdown', 'a'), ('unstack', 'b', 'd'), ('stack', 'b', 'c'), ('pickup', 'a'), ('stack', 'a', 'd')]")
+      domain = AriaBlocksWorld.Domain.create()
 
       # Expected plan from GTpyhop:
       # [('unstack', 'a', 'c'), ('putdown', 'a'), ('unstack', 'b', 'd'), ('stack', 'b', 'c'), ('pickup', 'a'), ('stack', 'a', 'd')]
-      result = AriaBlocksWorld.solve_problem(state2, [goal2])
+      result = AriaHybridPlanner.plan(domain, state2, [goal2])
       Logger.debug("Planning result: #{inspect(elem(result, 0))}")
       assert {:ok, {solution_tree, _plan}} = result
       log_primitive_actions(solution_tree)
     end
 
     test "planning only (no execution)" do
-      state1 = AriaBlocksWorld.create_state(%{
+      state1 = AriaState.new(%{
         pos: %{"a" => "b", "b" => "table", "c" => "table"},
         clear: %{"a" => true, "b" => false, "c" => true},
         holding: %{"hand" => false}
       })
 
-      goal = AriaBlocksWorld.create_multigoal(%{
-        pos: %{"c" => "b", "b" => "a", "a" => "table"}
-      })
+      goal = %AriaEngineCore.Multigoal{
+        goals: [
+          {"pos", "c", "b"},
+          {"pos", "b", "a"},
+          {"pos", "a", "table"}
+        ],
+      }
+      domain = AriaBlocksWorld.Domain.create()
 
       # Test planning without execution
-      assert {:ok, solution_tree} = AriaBlocksWorld.plan_problem(state1, [goal])
+      assert {:ok, solution_tree} = AriaHybridPlanner.plan(domain, state1, [goal])
       assert is_map(solution_tree)
       # The solution_tree is nested under :solution_tree key
       assert Map.has_key?(solution_tree, :solution_tree)
@@ -191,23 +188,26 @@ defmodule AriaBlocksWorld.GtpyhopExamplesTest do
 
   describe "state validation" do
     test "create_state produces valid state" do
-      state = AriaBlocksWorld.create_state(%{
+      state = AriaState.new(%{
         pos: %{"a" => "table", "b" => "a"},
         clear: %{"a" => false, "b" => true},
         holding: %{"hand" => false}
       })
 
-      assert AriaState.RelationalState.get_fact(state, "pos", "a") == "table"
-      assert AriaState.RelationalState.get_fact(state, "pos", "b") == "a"
-      assert AriaState.RelationalState.get_fact(state, "clear", "a") == false
-      assert AriaState.RelationalState.get_fact(state, "clear", "b") == true
-      assert AriaState.RelationalState.get_fact(state, "holding", "hand") == false
+      assert AriaState.get_fact(state, "pos", "a") == "table"
+      assert AriaState.get_fact(state, "pos", "b") == "a"
+      assert AriaState.get_fact(state, "clear", "a") == false
+      assert AriaState.get_fact(state, "clear", "b") == true
+      assert AriaState.get_fact(state, "holding", "hand") == false
     end
 
     test "create_multigoal produces valid goal" do
-      goal = AriaBlocksWorld.create_multigoal(%{
-        pos: %{"a" => "b", "b" => "table"}
-      })
+      goal = %AriaEngineCore.Multigoal{
+        goals: [
+          {"pos", "a", "b"},
+          {"pos", "b", "table"}
+        ],
+      }
 
       assert %AriaEngineCore.Multigoal{} = goal
       assert goal.goals == [{"pos", "a", "b"}, {"pos", "b", "table"}]
