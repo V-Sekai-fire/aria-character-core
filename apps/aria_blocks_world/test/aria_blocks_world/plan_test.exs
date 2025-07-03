@@ -73,8 +73,8 @@ defmodule AriaBlocksWorld.GtpyhopExamplesTest do
       goal1a = %AriaEngineCore.Multigoal{
         goals: [
           {"pos", "c", "b"},
+          {"pos", "a", "table"},
           {"pos", "b", "a"},
-          {"pos", "a", "table"}
         ],
       }
 
