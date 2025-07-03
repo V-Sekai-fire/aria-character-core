@@ -44,13 +44,45 @@ defmodule AriaHybridPlanner do
 
   # Delegate to internal modules
   @spec plan(domain(), state(), [todo_item()], keyword()) :: plan_result()
-  defdelegate plan(domain, initial_state, todos, opts \\ []), to: AriaHybridPlanner.Planner
+  defdelegate plan(domain, initial_state, todos, opts \\ []), to: AriaEngineCore.Plan
 
   @spec run_lazy(domain(), state(), [todo_item()], keyword()) :: execution_result()
-  defdelegate run_lazy(domain, initial_state, todos, opts \\ []), to: AriaHybridPlanner.Execution
+  def run_lazy(domain, initial_state, todos, opts \\ []) do
+    # First plan the todos
+    case plan(domain, initial_state, todos, opts) do
+      {:ok, plan_result} ->
+        # Extract solution tree from plan result
+        solution_tree = Map.get(plan_result, :solution_tree)
+
+        if solution_tree do
+          # Execute the solution tree
+          execution_opts = Keyword.put(opts, :domain, domain)
+          case Plan.ReentrantExecutor.execute_plan_lazy(solution_tree, initial_state, execution_opts) do
+            {:ok, final_state} ->
+              {:ok, {final_state, solution_tree}}
+            {:error, reason} ->
+              {:error, reason}
+          end
+        else
+          {:error, "No solution tree found in plan result"}
+        end
+
+      {:error, reason} ->
+        {:error, reason}
+    end
+  end
 
   @spec run_lazy_tree(domain(), state(), solution_tree(), keyword()) :: lazy_execution_result()
-  defdelegate run_lazy_tree(domain, initial_state, solution_tree, opts \\ []), to: AriaHybridPlanner.Execution
+  def run_lazy_tree(domain, initial_state, solution_tree, opts \\ []) do
+    # Execute the provided solution tree directly
+    execution_opts = Keyword.put(opts, :domain, domain)
+    case Plan.ReentrantExecutor.execute_plan_lazy(solution_tree, initial_state, execution_opts) do
+      {:ok, final_state} ->
+        {:ok, final_state}
+      {:error, reason} ->
+        {:error, reason}
+    end
+  end
 
   @spec version() :: String.t()
   @doc """
