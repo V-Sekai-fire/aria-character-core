@@ -96,9 +96,8 @@ defmodule AriaCore.ActionAttributes.Converters do
   Task methods are for workflow decomposition only.
   """
   def convert_method_metadata(_metadata, method_name, module) do
-    %{
-      decomposition_fn: Function.capture(module, method_name, 2)
-    }
+    # Return just the function for task method registration
+    Function.capture(module, method_name, 2)
   end
 
   @doc """
@@ -107,9 +106,27 @@ defmodule AriaCore.ActionAttributes.Converters do
   According to ADR-181, @unigoal_method attributes only support the predicate field.
   Priority handling belongs in the planner's method selection logic, not in attribute metadata.
   """
-  def convert_unigoal_metadata(metadata, method_name, module) do
+  def convert_unigoal_metadata(true, method_name, module) do
+    # For @unigoal_method true, infer predicate from method name
+    # In unified namespace, method name should directly indicate the predicate
+    predicate = method_name |> Atom.to_string() |> String.to_atom()
     %{
-      predicate: metadata[:predicate],
+      predicate: predicate,
+      goal_fn: Function.capture(module, method_name, 2)
+    }
+  end
+
+  def convert_unigoal_metadata(metadata, method_name, module) when is_list(metadata) or is_map(metadata) do
+    predicate = case metadata do
+      %{predicate: pred} -> pred
+      [predicate: pred] -> pred
+      _ ->
+        # Fallback: use method name directly in unified namespace
+        method_name |> Atom.to_string() |> String.to_atom()
+    end
+
+    %{
+      predicate: predicate,
       goal_fn: Function.capture(module, method_name, 2)
     }
   end

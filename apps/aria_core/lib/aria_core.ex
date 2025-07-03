@@ -357,13 +357,74 @@ defmodule AriaCore do
   end
 
   @doc """
+  Registers all attribute-defined actions and methods with a domain.
+
+  This function retrieves the specs stored by the attribute compiler and
+  registers them with the provided domain instance.
+
+  ## Parameters
+
+  - `domain`: Domain instance to register with
+  - `module`: Module that has attribute-defined actions/methods
+
+  ## Examples
+
+      iex> domain = AriaCore.new_domain(:test)
+      iex> domain = AriaCore.register_attribute_specs(domain, MyDomainModule)
+      iex> AriaCore.list_actions(domain)
+      [:pickup, :putdown, :stack]
+  """
+  def register_attribute_specs(domain, module) do
+    # Call the module's registration function to populate Process dictionary
+    if function_exported?(module, :__register_action_attributes__, 0) do
+      module.__register_action_attributes__()
+    end
+
+    # Retrieve and register action specs
+    domain_with_actions = case Process.get({module, :action_specs}) do
+      nil -> domain
+      action_specs ->
+        Enum.reduce(action_specs, domain, fn {action_name, spec}, acc_domain ->
+          add_action_to_domain(acc_domain, action_name, spec.action_fn, spec)
+        end)
+    end
+
+    # Retrieve and register method specs (task methods)
+    domain_with_methods = case Process.get({module, :method_specs}) do
+      nil -> domain_with_actions
+      method_specs ->
+        Enum.reduce(method_specs, domain_with_actions, fn {method_name, method_fn}, acc_domain ->
+          # Use method name as task name in unified namespace
+          task_name = Atom.to_string(method_name)
+          add_task_method_to_domain(acc_domain, task_name, method_name, method_fn)
+        end)
+    end
+
+    # Retrieve and register unigoal specs
+    domain_with_unigoals = case Process.get({module, :unigoal_specs}) do
+      nil -> domain_with_methods
+      unigoal_specs ->
+        Enum.reduce(unigoal_specs, domain_with_methods, fn {method_name, spec}, acc_domain ->
+          add_unigoal_method_to_domain(acc_domain, spec.predicate, method_name, spec.goal_fn)
+        end)
+    end
+
+    # Clean up Process dictionary
+    Process.delete({module, :action_specs})
+    Process.delete({module, :method_specs})
+    Process.delete({module, :unigoal_specs})
+
+    domain_with_unigoals
+  end
+
+  @doc """
   Macro for using AriaCore in modules.
 
   This enables the @action, @task_method, and @unigoal_method attributes for domain definition.
   """
   defmacro __using__(_opts) do
     quote do
-      use AriaCore.Domain
+      use AriaCore.ActionAttributes
     end
   end
 end

@@ -215,8 +215,8 @@ defmodule AriaHybridPlanner do
   end
 
   # Expand a goal node using domain unigoal methods
-  defp expand_goal_node(domain, solution_tree, node_id, node, _state, opts) do
-    {predicate, _subject, _value} = node.task
+  defp expand_goal_node(domain, solution_tree, node_id, node, state, opts) do
+    {predicate, subject, value} = node.task
     verbose = Keyword.get(opts, :verbose, 0)
 
     # Convert string predicate to atom for domain lookup
@@ -226,7 +226,7 @@ defmodule AriaHybridPlanner do
     case AriaCore.get_unigoal_methods_from_domain(domain, predicate_atom) do
       [] ->
         if verbose > 2 do
-          Logger.debug("HTN Planning: No unigoal methods found for predicate #{predicate}, marking as primitive")
+          Logger.debug("HTN Planning: No unigoal methods found for predicate #{predicate}, expansion failed")
         end
         :failure
 
@@ -234,9 +234,34 @@ defmodule AriaHybridPlanner do
         if verbose > 2 do
           Logger.debug("HTN Planning: Found #{length(methods)} unigoal methods for predicate #{predicate}")
         end
-        # For now, mark as primitive since we don't have method execution logic
-        # In a full implementation, this would try each method
-        Plan.NodeExpansion.mark_as_primitive(solution_tree, node_id)
+
+        # Try to execute the first available unigoal method
+        [first_method | _] = methods
+
+        case execute_unigoal_method_for_planning(domain, state, predicate_atom, {subject, value}, first_method, opts) do
+          {:ok, []} ->
+            # Goal already satisfied - mark as completed primitive
+            if verbose > 2 do
+              Logger.debug("HTN Planning: Goal #{predicate}(#{subject}, #{value}) already satisfied")
+            end
+            Plan.NodeExpansion.mark_as_primitive(solution_tree, node_id)
+
+          {:ok, subtasks} ->
+            # Method returned subtasks - create child nodes
+            if verbose > 2 do
+              Logger.debug("HTN Planning: Unigoal method #{first_method} returned #{length(subtasks)} subtasks")
+            end
+            case create_child_nodes_for_planning(solution_tree, node_id, subtasks, first_method, opts) do
+              {:ok, updated_tree} -> {:ok, updated_tree}
+              {:error, reason} -> {:error, "Failed to create child nodes: #{reason}"}
+            end
+
+          {:error, reason} ->
+            if verbose > 2 do
+              Logger.debug("HTN Planning: Unigoal method #{first_method} failed: #{reason}")
+            end
+            :failure
+        end
     end
   end
 
@@ -353,6 +378,147 @@ defmodule AriaHybridPlanner do
   defdelegate remove_fact(state, predicate, subject), to: AriaHybridPlanner.State
   defdelegate get_subjects_with_fact(state, predicate, value), to: AriaHybridPlanner.State
 
+
+  # Helper functions for planning-time method execution
+
+  # Execute a unigoal method during planning to get subtasks.
+  defp execute_unigoal_method_for_planning(domain, state, predicate, {subject, value}, method_name, opts) do
+    verbose = Keyword.get(opts, :verbose, 0)
+
+    if verbose > 2 do
+      Logger.debug("HTN Planning: Executing unigoal method #{method_name} for #{predicate}(#{subject}, #{value})")
+    end
+
+    try do
+      # Get the method function from the domain
+      case AriaCore.get_unigoal_method(domain, method_name) do
+        nil ->
+          # Try to get methods for the predicate and use the first one
+          case AriaCore.get_unigoal_methods_from_domain(domain, predicate) do
+            [] ->
+              {:error, "No unigoal methods found for predicate #{predicate}"}
+            [first_method | _] ->
+              case AriaCore.get_unigoal_method(domain, first_method) do
+                nil -> {:error, "Unigoal method #{first_method} not found in domain"}
+                method_spec -> execute_method_spec(method_spec, state, {subject, value}, first_method, verbose)
+              end
+          end
+
+        method_spec ->
+          execute_method_spec(method_spec, state, {subject, value}, method_name, verbose)
+      end
+    rescue
+      e ->
+        error_msg = "Method execution failed: #{Exception.message(e)}"
+        if verbose > 1 do
+          Logger.debug("HTN Planning: #{error_msg}")
+        end
+        {:error, error_msg}
+    end
+  end
+
+  defp execute_method_spec(method_spec, state, goal_args, method_name, verbose) do
+    # Extract function from method spec
+    method_fn = cond do
+      is_function(method_spec, 2) ->
+        method_spec
+
+      is_map(method_spec) and Map.has_key?(method_spec, :goal_fn) and is_function(method_spec.goal_fn, 2) ->
+        method_spec.goal_fn
+
+      is_map(method_spec) and Map.has_key?(method_spec, :function) and is_function(method_spec.function, 2) ->
+        method_spec.function
+
+      true ->
+        nil
+    end
+
+    case method_fn do
+      nil ->
+        {:error, "Method #{method_name} has no valid function"}
+
+      method_fn when is_function(method_fn, 2) ->
+        # Execute the method with state and goal arguments
+        case method_fn.(state, goal_args) do
+          subtasks when is_list(subtasks) ->
+            if verbose > 2 do
+              Logger.debug("HTN Planning: Method #{method_name} returned #{length(subtasks)} subtasks")
+            end
+            {:ok, subtasks}
+
+          other_result ->
+            if verbose > 2 do
+              Logger.debug("HTN Planning: Method #{method_name} returned non-list result: #{inspect(other_result)}")
+            end
+            {:error, "Method returned non-list result: #{inspect(other_result)}"}
+        end
+    end
+  end
+
+  # Create child nodes from subtasks during planning.
+  defp create_child_nodes_for_planning(solution_tree, parent_node_id, subtasks, method_name, opts) do
+    verbose = Keyword.get(opts, :verbose, 0)
+
+    if verbose > 2 do
+      Logger.debug("HTN Planning: Creating #{length(subtasks)} child nodes for parent #{parent_node_id}")
+    end
+
+    try do
+      # Generate unique IDs for child nodes
+      {child_nodes, child_ids} = subtasks
+      |> Enum.with_index()
+      |> Enum.map(fn {subtask, index} ->
+        child_id = "#{parent_node_id}_#{method_name}_#{index}"
+        child_node = %{
+          id: child_id,
+          task: subtask,
+          parent_id: parent_node_id,
+          children_ids: [],
+          expanded: false,
+          is_primitive: false,
+          is_durative: false,
+          method_tried: nil,
+          blacklisted_methods: [],
+          visited: false,
+          state: solution_tree.nodes[parent_node_id].state
+        }
+        {child_node, child_id}
+      end)
+      |> Enum.unzip()
+
+      # Update parent node with method and children
+      parent_node = solution_tree.nodes[parent_node_id]
+      updated_parent = %{parent_node |
+        method_tried: method_name,
+        expanded: true,
+        is_primitive: false,
+        children_ids: child_ids
+      }
+
+      # Add all child nodes to the solution tree
+      updated_nodes = child_nodes
+      |> Enum.zip(child_ids)
+      |> Enum.reduce(solution_tree.nodes, fn {{child_node, child_id}, _}, acc_nodes ->
+        Map.put(acc_nodes, child_id, child_node)
+      end)
+      |> Map.put(parent_node_id, updated_parent)
+
+      updated_tree = %{solution_tree | nodes: updated_nodes}
+
+      if verbose > 2 do
+        Logger.debug("HTN Planning: Successfully created #{length(child_ids)} child nodes")
+      end
+
+      {:ok, updated_tree}
+    rescue
+      e ->
+        error_msg = "Failed to create child nodes: #{Exception.message(e)}"
+        if verbose > 1 do
+          Logger.debug("HTN Planning: #{error_msg}")
+        end
+        {:error, error_msg}
+    end
+  end
 
   @spec version() :: String.t()
   @doc """

@@ -20,35 +20,73 @@ defmodule AriaCore.ActionAttributes.Compiler do
 
   defp check_and_store_attributes(module, function_key) do
     # Check for each attribute type and store with function key
-    if action_attr = Module.get_attribute(module, :action) do
-      Module.put_attribute(module, :action_metadata, {function_key, action_attr})
-      Module.delete_attribute(module, :action)
-    end
+    # Handle both single values and lists of accumulated attributes
 
-    if command_attr = Module.get_attribute(module, :command) do
-      Module.put_attribute(module, :command_metadata, {function_key, command_attr})
-      Module.delete_attribute(module, :command)
-    end
+    # Process @action attributes
+    action_attrs = Module.get_attribute(module, :action) || []
+    action_attrs = if is_list(action_attrs), do: action_attrs, else: [action_attrs]
 
-    if task_method_attr = Module.get_attribute(module, :task_method) do
-      Module.put_attribute(module, :method_metadata, {function_key, task_method_attr})
-      Module.delete_attribute(module, :task_method)
-    end
+    Enum.each(action_attrs, fn attr ->
+      if attr != nil do
+        Module.put_attribute(module, :action_metadata, {function_key, attr})
+      end
+    end)
+    Module.delete_attribute(module, :action)
 
-    if unigoal_attr = Module.get_attribute(module, :unigoal_method) do
-      Module.put_attribute(module, :unigoal_metadata, {function_key, unigoal_attr})
-      Module.delete_attribute(module, :unigoal_method)
-    end
+    # Process @command attributes
+    command_attrs = Module.get_attribute(module, :command) || []
+    command_attrs = if is_list(command_attrs), do: command_attrs, else: [command_attrs]
 
-    if multigoal_attr = Module.get_attribute(module, :multigoal_method) do
-      Module.put_attribute(module, :multigoal_metadata, {function_key, multigoal_attr})
-      Module.delete_attribute(module, :multigoal_method)
-    end
+    Enum.each(command_attrs, fn attr ->
+      if attr != nil do
+        Module.put_attribute(module, :command_metadata, {function_key, attr})
+      end
+    end)
+    Module.delete_attribute(module, :command)
 
-    if multitodo_attr = Module.get_attribute(module, :multitodo_method) do
-      Module.put_attribute(module, :multitodo_metadata, {function_key, multitodo_attr})
-      Module.delete_attribute(module, :multitodo_method)
-    end
+    # Process @task_method attributes
+    task_method_attrs = Module.get_attribute(module, :task_method) || []
+    task_method_attrs = if is_list(task_method_attrs), do: task_method_attrs, else: [task_method_attrs]
+
+    Enum.each(task_method_attrs, fn attr ->
+      if attr != nil do
+        Module.put_attribute(module, :method_metadata, {function_key, attr})
+      end
+    end)
+    Module.delete_attribute(module, :task_method)
+
+    # Process @unigoal_method attributes
+    unigoal_attrs = Module.get_attribute(module, :unigoal_method) || []
+    unigoal_attrs = if is_list(unigoal_attrs), do: unigoal_attrs, else: [unigoal_attrs]
+
+    Enum.each(unigoal_attrs, fn attr ->
+      if attr != nil do
+        Module.put_attribute(module, :unigoal_metadata, {function_key, attr})
+      end
+    end)
+    Module.delete_attribute(module, :unigoal_method)
+
+    # Process @multigoal_method attributes
+    multigoal_attrs = Module.get_attribute(module, :multigoal_method) || []
+    multigoal_attrs = if is_list(multigoal_attrs), do: multigoal_attrs, else: [multigoal_attrs]
+
+    Enum.each(multigoal_attrs, fn attr ->
+      if attr != nil do
+        Module.put_attribute(module, :multigoal_metadata, {function_key, attr})
+      end
+    end)
+    Module.delete_attribute(module, :multigoal_method)
+
+    # Process @multitodo_method attributes
+    multitodo_attrs = Module.get_attribute(module, :multitodo_method) || []
+    multitodo_attrs = if is_list(multitodo_attrs), do: multitodo_attrs, else: [multitodo_attrs]
+
+    Enum.each(multitodo_attrs, fn attr ->
+      if attr != nil do
+        Module.put_attribute(module, :multitodo_metadata, {function_key, attr})
+      end
+    end)
+    Module.delete_attribute(module, :multitodo_method)
   end
 
   @doc false
@@ -61,21 +99,14 @@ defmodule AriaCore.ActionAttributes.Compiler do
     multigoal_metadata = Module.get_attribute(env.module, :multigoal_metadata, [])
     multitodo_metadata = Module.get_attribute(env.module, :multitodo_metadata, [])
 
-    # Also extract raw attributes for compatibility
-    raw_actions = Module.get_attribute(env.module, :action, [])
-    raw_commands = Module.get_attribute(env.module, :command, [])
-    raw_task_methods = Module.get_attribute(env.module, :task_method, [])
-    raw_unigoal_methods = Module.get_attribute(env.module, :unigoal_method, [])
-    raw_multigoal_methods = Module.get_attribute(env.module, :multigoal_method, [])
-    raw_multitodo_methods = Module.get_attribute(env.module, :multitodo_method, [])
-
-    # Convert raw attributes to metadata format
-    processed_action_metadata = action_metadata ++ convert_raw_attributes(raw_actions, env)
-    processed_command_metadata = command_metadata ++ convert_raw_attributes(raw_commands, env)
-    processed_method_metadata = method_metadata ++ convert_raw_attributes(raw_task_methods, env)
-    processed_unigoal_metadata = unigoal_metadata ++ convert_raw_attributes(raw_unigoal_methods, env)
-    processed_multigoal_metadata = multigoal_metadata ++ convert_raw_attributes(raw_multigoal_methods, env)
-    processed_multitodo_metadata = multitodo_metadata ++ convert_raw_attributes(raw_multitodo_methods, env)
+    # Use the metadata collected by the @on_definition hook
+    # No need for raw attribute processing since we handle it in the hook
+    processed_action_metadata = action_metadata
+    processed_command_metadata = command_metadata
+    processed_method_metadata = method_metadata
+    processed_unigoal_metadata = unigoal_metadata
+    processed_multigoal_metadata = multigoal_metadata
+    processed_multitodo_metadata = multitodo_metadata
 
     quote do
       # Define a function to register all metadata with Domain systems
@@ -123,19 +154,6 @@ defmodule AriaCore.ActionAttributes.Compiler do
     end
   end
 
-  # Helper function to convert raw attributes to metadata format
-  defp convert_raw_attributes(raw_attributes, _env) do
-    # Raw attributes are stored in reverse order, so we need to reverse and pair with functions
-    raw_attributes
-    |> Enum.reverse()
-    |> Enum.with_index()
-    |> Enum.map(fn {metadata, index} ->
-      # For now, we'll create a placeholder function name since we can't easily
-      # determine which function the attribute applies to at compile time.
-      # In practice, we need a different approach - let's use an on_definition hook instead.
-      {{:"raw_attribute_#{index}", 0}, metadata}
-    end)
-  end
 
   # Private helper functions for generating registration code
 
@@ -145,21 +163,22 @@ defmodule AriaCore.ActionAttributes.Compiler do
     registrations =
       Enum.map(action_metadata, fn {{function_name, _arity}, metadata} ->
         quote do
-          # TODO: Need proper domain instance management
-          # For now, skip registration until Domain API is updated
           spec = AriaCore.ActionAttributes.Converters.convert_action_metadata(
             unquote(Macro.escape(metadata)),
             unquote(function_name),
             unquote(module)
           )
 
-          # Store for later registration when domain instance is available
-          # AriaCore.Domain.add_action(domain, unquote(function_name), spec)
-          :ok
+          # Store action spec for domain registration
+          {unquote(function_name), spec}
         end
       end)
 
-    quote do: (unquote_splicing(registrations))
+    quote do
+      action_specs = [unquote_splicing(registrations)]
+      Process.put({__MODULE__, :action_specs}, action_specs)
+      :ok
+    end
   end
 
   defp generate_command_registrations([], _module), do: nil
@@ -190,20 +209,22 @@ defmodule AriaCore.ActionAttributes.Compiler do
     registrations =
       Enum.map(method_metadata, fn {{function_name, _arity}, metadata} ->
         quote do
-          # TODO: Domain API expects 3 arguments (domain, name, spec)
           spec = AriaCore.ActionAttributes.Converters.convert_method_metadata(
             unquote(Macro.escape(metadata)),
             unquote(function_name),
             unquote(module)
           )
 
-          # Store for later when domain instance management is implemented
-          # AriaCore.Domain.add_method(domain, unquote(function_name), spec)
-          :ok
+          # Store method spec for domain registration
+          {unquote(function_name), spec}
         end
       end)
 
-    quote do: (unquote_splicing(registrations))
+    quote do
+      method_specs = [unquote_splicing(registrations)]
+      Process.put({__MODULE__, :method_specs}, method_specs)
+      :ok
+    end
   end
 
   defp generate_unigoal_registrations([], _module), do: nil
@@ -212,20 +233,22 @@ defmodule AriaCore.ActionAttributes.Compiler do
     registrations =
       Enum.map(unigoal_metadata, fn {{function_name, _arity}, metadata} ->
         quote do
-          # TODO: Domain API expects 3 arguments (domain, name, spec)
           spec = AriaCore.ActionAttributes.Converters.convert_unigoal_metadata(
             unquote(Macro.escape(metadata)),
             unquote(function_name),
             unquote(module)
           )
 
-          # Store for later when domain instance management is implemented
-          # AriaCore.Domain.add_unigoal_method(domain, unquote(function_name), spec)
-          :ok
+          # Store unigoal spec for domain registration
+          {unquote(function_name), spec}
         end
       end)
 
-    quote do: (unquote_splicing(registrations))
+    quote do
+      unigoal_specs = [unquote_splicing(registrations)]
+      Process.put({__MODULE__, :unigoal_specs}, unigoal_specs)
+      :ok
+    end
   end
 
   defp generate_multigoal_registrations([], _module), do: nil
