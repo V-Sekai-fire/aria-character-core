@@ -45,25 +45,29 @@ defmodule AriaBlocksWorld.Domain do
   - Block becomes not clear
   - Hand holds the block
   """
-  @action true
-  @spec pickup(AriaHybridPlanner.State.t(), [block()]) :: {:ok, AriaHybridPlanner.State.t()} | {:error, atom()}
+  @task_method true
+  @spec pickup(AriaHybridPlanner.State.t(), [block()]) :: {:ok, [AriaHybridPlanner.todo_item()]} | {:error, atom()}
   def pickup(state, [block]) do
-    current_pos = AriaHybridPlanner.get_fact(state, "pos", block)
     is_clear = AriaHybridPlanner.get_fact(state, "clear", block)
-    hand_holding = AriaHybridPlanner.get_fact(state, "holding", "hand")
-
-    cond do
-      current_pos != "table" -> {:error, :not_on_table}
-      is_clear != true -> {:error, :block_not_clear}
-      hand_holding != false -> {:error, :hand_not_empty}
-      true ->
-        # Execute action
-        new_state = state
-        |> AriaHybridPlanner.set_fact("pos", block, "hand")
-        |> AriaHybridPlanner.set_fact("clear", block, false)
-        |> AriaHybridPlanner.set_fact("holding", "hand", block)
-
-        {:ok, new_state}
+    if is_clear == nil do
+      {:error, :block_not_found}
+    else
+      current_pos = AriaHybridPlanner.get_fact(state, "pos", block)
+      hand_holding = AriaHybridPlanner.get_fact(state, "holding", "hand")
+      cond do
+          current_pos != "table" -> {:error, :not_on_table}
+          is_clear != true -> {:error, :block_not_clear}
+          hand_holding != false -> {:error, :hand_not_empty}
+          true ->
+            goal = %AriaEngineCore.Multigoal{
+              goals: [
+                {"pos", block, "hand"},
+                {"clear", block, false},
+                {"holding", "hand", block}
+              ]
+            }
+            {:ok, [goal]}
+        end
     end
   end
 
@@ -355,24 +359,6 @@ defmodule AriaBlocksWorld.Domain do
     domain = AriaCore.add_multigoal_method_to_domain(domain, "split_multigoal", &split_multigoal/2)
 
     domain
-  end
-
-  @doc """
-  Get domain information.
-  """
-  @spec info() :: map()
-  def info do
-    %{
-      name: "Blocks World Domain",
-      description: "Classic blocks world planning domain with pickup, unstack, putdown, stack actions",
-      actions: [:pickup, :unstack, :putdown, :stack, :setup_blocks_scenario],
-      task_methods: ["move_block", "validate_move_preconditions", "take", "put_method"],
-      unigoal_methods: ["achieve_position", "achieve_clear"],
-      multigoal_methods: ["split_multigoal"],
-      predicates: ["pos", "clear", "holding"],
-      entities: ["hand", "table"],
-      capabilities: [:manipulation, :support]
-    }
   end
 
   @doc """

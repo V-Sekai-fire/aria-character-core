@@ -64,10 +64,9 @@ defmodule Plan.NodeExpansion do
           map(),
           solution_tree(),
           node_id(),
-          Multigoal.t(),
-          integer()
+          Multigoal.t()
         ) :: {:ok, solution_tree()} | {:error, String.t()} | :failure
-  def expand_multigoal_node(domain, state, solution_tree, node_id, multigoal, verbose) do
+  def expand_multigoal_node(domain, state, solution_tree, node_id, multigoal) do
     node = solution_tree.nodes[node_id]
 
     if AriaEngineCore.Multigoal.satisfied?(multigoal, state) do
@@ -78,12 +77,10 @@ defmodule Plan.NodeExpansion do
       # Try to use domain's multigoal methods first
       multigoal_methods = AriaCore.get_multigoal_methods_from_domain(domain)
 
-      case try_multigoal_methods(multigoal_methods, state, multigoal, verbose) do
+      case try_multigoal_methods(multigoal_methods, state, multigoal) do
         {:ok, []} ->
           # Method returned empty list - multigoal already completed
-          if verbose > 2 do
-            Logger.debug("Multigoal method returned empty list, marking as completed")
-          end
+          Logger.debug("Multigoal method returned empty list, marking as completed")
           mark_as_completed(solution_tree, node_id)
 
         {:ok, todo_list} ->
@@ -119,9 +116,7 @@ defmodule Plan.NodeExpansion do
           # Fallback to simple unsatisfied goal expansion
           unsatisfied = AriaEngineCore.Multigoal.unsatisfied_goals(multigoal, node.state)
 
-          if verbose > 2 do
-            Logger.debug("Multigoal has #{length(unsatisfied)} unsatisfied goals (no domain methods)")
-          end
+          Logger.debug("Multigoal has #{length(unsatisfied)} unsatisfied goals (no domain methods)")
 
           {new_tree, child_ids} =
             Enum.reduce(unsatisfied, {solution_tree, []}, fn goal, {tree, ids} ->
@@ -157,38 +152,28 @@ defmodule Plan.NodeExpansion do
   end
 
   # Helper function to try multigoal methods
-  defp try_multigoal_methods([], _state, _multigoal, _verbose), do: :no_methods
-  defp try_multigoal_methods([{_method_name, method_fn} | rest], state, multigoal, verbose) do
+  defp try_multigoal_methods([], _state, _multigoal), do: :no_methods
+  defp try_multigoal_methods([{_method_name, method_fn} | rest], state, multigoal) do
     try do
       case method_fn.(state, multigoal) do
         {:ok, []} ->
           # Method returned empty list - multigoal already satisfied
-          if verbose > 2 do
-            Logger.debug("Multigoal method succeeded, returned empty list - multigoal completed")
-          end
+          Logger.debug("Multigoal method succeeded, returned empty list - multigoal completed")
           {:ok, []}
         {:ok, todo_list} when is_list(todo_list) ->
-          if verbose > 2 do
-            Logger.debug("Multigoal method succeeded, returned #{length(todo_list)} todo items")
-          end
+          Logger.debug("Multigoal method succeeded, returned #{length(todo_list)} todo items")
           {:ok, todo_list}
         {:error, reason} ->
-          if verbose > 2 do
-            Logger.debug("Multigoal method failed: #{inspect(reason)}")
-          end
-          try_multigoal_methods(rest, state, multigoal, verbose)
+          Logger.debug("Multigoal method failed: #{inspect(reason)}")
+          try_multigoal_methods(rest, state, multigoal)
         _other ->
-          if verbose > 2 do
-            Logger.debug("Multigoal method returned unexpected result")
-          end
-          try_multigoal_methods(rest, state, multigoal, verbose)
+          Logger.debug("Multigoal method returned unexpected result")
+          try_multigoal_methods(rest, state, multigoal)
       end
     rescue
       error ->
-        if verbose > 2 do
-          Logger.debug("Multigoal method raised error: #{inspect(error)}")
-        end
-        try_multigoal_methods(rest, state, multigoal, verbose)
+        Logger.debug("Multigoal method raised error: #{inspect(error)}")
+        try_multigoal_methods(rest, state, multigoal)
     end
   end
 

@@ -2,6 +2,7 @@
 # SPDX-License-Identifier: MIT
 
 defmodule AriaBlocksWorld do
+  require Logger
   @moduledoc """
   AriaBlocksWorld provides a blocks world planning domain implementation using AriaHybridPlanner.
 
@@ -126,11 +127,16 @@ defmodule AriaBlocksWorld do
 
       {:ok, {final_state, solution_tree}} = AriaBlocksWorld.solve_problem(state, [goal])
   """
-  @spec solve_problem(AriaHybridPlanner.State.t(), [term()]) ::
-    {:ok, {AriaHybridPlanner.State.t(), term()}} | {:error, atom()}
-  def solve_problem(initial_state, goals) do
+  def solve_problem(initial_state, todos) do
     domain = Domain.create()
-    AriaHybridPlanner.run_lazy(domain, initial_state, goals)
+    case AriaHybridPlanner.plan(domain, initial_state, todos) do
+      {:ok, result} ->
+        todo_list = Plan.Utils.get_primitive_actions_dfs(result.solution_tree)
+        Logger.debug("Todo List: #{inspect(todo_list)}")
+        {:ok, todo_list}
+      {:error, reason} ->
+        {:error, reason}
+    end
   end
 
   @doc """
@@ -217,31 +223,5 @@ defmodule AriaBlocksWorld do
   @spec list_examples() :: [atom()]
   def list_examples do
     Examples.list_all()
-  end
-
-  @doc """
-  Get information about the blocks world domain.
-
-  ## Returns
-
-  - Map containing domain information
-
-  ## Examples
-
-      iex> info = AriaBlocksWorld.domain_info()
-      iex> info.name
-      "Blocks World Domain"
-      iex> :pickup in info.actions
-      true
-      iex> :stack in info.actions
-      true
-      iex> "pos" in info.predicates
-      true
-      iex> "clear" in info.predicates
-      true
-  """
-  @spec domain_info() :: map()
-  def domain_info do
-    Domain.info()
   end
 end

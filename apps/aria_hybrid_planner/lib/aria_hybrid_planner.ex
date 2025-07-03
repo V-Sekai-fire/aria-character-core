@@ -147,8 +147,21 @@ defmodule AriaHybridPlanner do
         {:error, reason} ->
           {:halt, {:error, reason}}
 
+        {:all_methods_failed, reason} ->
+          # All methods failed - this should cause planning failure
+          {:halt, {:error, reason}}
+
+        :no_methods ->
+          # No methods available - mark node as primitive
+          case Plan.NodeExpansion.mark_as_primitive(current_tree, node_id) do
+            {:ok, updated_tree} ->
+              {:cont, {:ok, updated_tree}}
+            {:error, reason} ->
+              {:halt, {:error, reason}}
+          end
+
         :failure ->
-          # Mark node as primitive if no methods available
+          # Legacy failure handling - mark node as primitive
           case Plan.NodeExpansion.mark_as_primitive(current_tree, node_id) do
             {:ok, updated_tree} ->
               {:cont, {:ok, updated_tree}}
@@ -168,41 +181,25 @@ defmodule AriaHybridPlanner do
 
   # Expand a node based on its task type
   defp expand_node_by_type(domain, solution_tree, node_id, node, state, opts) do
-    verbose = Keyword.get(opts, :verbose, 0)
-
     case node.task do
-      # Handle multigoals
       %AriaEngineCore.Multigoal{} = multigoal ->
-        if verbose > 2 do
-          Logger.debug("HTN Planning: Expanding multigoal node #{node_id}")
-        end
-        Plan.NodeExpansion.expand_multigoal_node(domain, state, solution_tree, node_id, multigoal, verbose)
+        Logger.debug("HTN Planning: Expanding multigoal node #{node_id}")
+        Plan.NodeExpansion.expand_multigoal_node(domain, state, solution_tree, node_id, multigoal)
 
-      # Handle regular tasks (both string and atom task names)
-      {task_name, _args} when is_binary(task_name) or is_atom(task_name) ->
-        if verbose > 2 do
-          Logger.debug("HTN Planning: Expanding task node #{node_id}: #{task_name}")
-        end
+      {task_name, _args} when is_atom(task_name) ->
+        Logger.debug("HTN Planning: Expanding task node #{node_id}: #{task_name}")
         expand_task_node(domain, solution_tree, node_id, node, state, opts)
 
-      # Handle goals (predicate, subject, value)
       {predicate, _subject, _value} when is_binary(predicate) ->
-        if verbose > 2 do
-          Logger.debug("HTN Planning: Expanding goal node #{node_id}: #{predicate}")
-        end
+        Logger.debug("HTN Planning: Expanding goal node #{node_id}: #{predicate}")
         expand_goal_node(domain, solution_tree, node_id, node, state, opts)
 
-      # Handle primitive actions (atom, args)
       {action_name, _args} when is_atom(action_name) ->
-        if verbose > 2 do
-          Logger.debug("HTN Planning: Marking action node #{node_id} as primitive: #{action_name}")
-        end
+        Logger.debug("HTN Planning: Marking action node #{node_id} as primitive: #{action_name}")
         Plan.NodeExpansion.mark_as_primitive(solution_tree, node_id)
 
       _ ->
-        if verbose > 2 do
-          Logger.debug("HTN Planning: Unknown task type for node #{node_id}, marking as primitive")
-        end
+        Logger.debug("HTN Planning: Unknown task type for node #{node_id}, marking as primitive")
         Plan.NodeExpansion.mark_as_primitive(solution_tree, node_id)
     end
   end
@@ -223,42 +220,34 @@ defmodule AriaHybridPlanner do
     # Check if domain has methods for this task
     case AriaCore.get_task_methods_from_domain(domain, task_atom) do
       [] ->
-        Logger.debug("HTN Task Expansion: No methods found for task #{task_name}, marking as primitive")
-        :failure
+        Logger.debug("HTN Task Expansion: No methods found for task #{task_name}")
+        :no_methods
 
       methods ->
         Logger.debug("HTN Task Expansion: Found #{length(methods)} methods for task #{task_name}: #{inspect(methods)}")
 
-        # Get the first available method from the list
-        case methods do
-          [] ->
-            Logger.debug("HTN Task Expansion: No methods available for task #{task_name}")
-            :failure
+        # Try all methods until one succeeds
+        case try_all_task_methods(domain, state, task_atom, args, methods, opts) do
+          {:ok, []} ->
+            # Method returned empty list - task already completed
+            Logger.debug("HTN Task Expansion: Method returned empty list - task completed")
+            Plan.NodeExpansion.mark_as_completed(solution_tree, node_id)
 
-          [{method_name, _method_spec} | _] ->
-            Logger.debug("HTN Task Expansion: Trying task method #{method_name} for task #{task_name}(#{inspect(args)})")
-            case execute_task_method_for_planning(domain, state, task_atom, args, method_name, opts) do
-              {:ok, []} ->
-                # Method returned empty list - task already completed
-                Logger.debug("HTN Task Expansion: Task method #{method_name} returned empty list - task completed")
-                Plan.NodeExpansion.mark_as_completed(solution_tree, node_id)
-
-              {:ok, subtasks} ->
-                # Method returned subtasks - create child nodes
-                Logger.debug("HTN Task Expansion: Task method #{method_name} returned #{length(subtasks)} subtasks: #{inspect(subtasks)}")
-                case create_child_nodes_for_planning(solution_tree, node_id, subtasks, method_name, opts) do
-                  {:ok, updated_tree} ->
-                    Logger.debug("HTN Task Expansion: Successfully created child nodes for task #{task_name}")
-                    {:ok, updated_tree}
-                  {:error, reason} ->
-                    Logger.debug("HTN Task Expansion: Failed to create child nodes: #{reason}")
-                    {:error, "Failed to create child nodes: #{reason}"}
-                end
-
+          {:ok, subtasks} ->
+            # Method returned subtasks - create child nodes
+            Logger.debug("HTN Task Expansion: Method returned #{length(subtasks)} subtasks: #{inspect(subtasks)}")
+            case create_child_nodes_for_planning(solution_tree, node_id, subtasks, "method", opts) do
+              {:ok, updated_tree} ->
+                Logger.debug("HTN Task Expansion: Successfully created child nodes for task #{task_name}")
+                {:ok, updated_tree}
               {:error, reason} ->
-                Logger.debug("HTN Task Expansion: Task method #{method_name} failed: #{reason}")
-                :failure
+                Logger.debug("HTN Task Expansion: Failed to create child nodes: #{reason}")
+                {:error, "Failed to create child nodes: #{reason}"}
             end
+
+          {:all_methods_failed, reason} ->
+            Logger.debug("HTN Task Expansion: All methods failed for task #{task_name}: #{reason}")
+            {:all_methods_failed, "Task #{task_name} failed: #{reason}"}
         end
     end
   end
@@ -498,6 +487,33 @@ defmodule AriaHybridPlanner do
   end
 
   # Helper functions for planning-time method execution
+
+  # Try all task methods until one succeeds
+  defp try_all_task_methods(_domain, _state, _task_name, _args, [], _opts) do
+    {:all_methods_failed, "no methods available"}
+  end
+
+  defp try_all_task_methods(domain, state, task_name, args, [{method_name, _method_spec} | rest], opts) do
+    Logger.debug("HTN Task Expansion: Trying task method #{method_name} for task #{task_name}(#{inspect(args)})")
+
+    case execute_task_method_for_planning(domain, state, task_name, args, method_name, opts) do
+      {:ok, result} ->
+        Logger.debug("HTN Task Expansion: Task method #{method_name} succeeded")
+        {:ok, result}
+
+      {:error, reason} ->
+        Logger.debug("HTN Task Expansion: Task method #{method_name} failed: #{reason}")
+        # Try the next method
+        case rest do
+          [] ->
+            # No more methods to try
+            {:all_methods_failed, reason}
+          _ ->
+            # Try the next method
+            try_all_task_methods(domain, state, task_name, args, rest, opts)
+        end
+    end
+  end
 
   # Execute a unigoal method during planning to get subtasks.
   defp execute_unigoal_method_for_planning(domain, state, predicate, {subject, value}, method_name, opts) do

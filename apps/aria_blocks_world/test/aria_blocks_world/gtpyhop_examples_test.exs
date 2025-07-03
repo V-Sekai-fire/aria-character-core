@@ -74,13 +74,13 @@ defmodule AriaBlocksWorld.GtpyhopExamplesTest do
       })
 
       # pickup 'c' should work (it's clear and on table)
-      assert {:ok, {_final_state, _solution_tree}} = AriaBlocksWorld.solve_problem(state1, [{:pickup, ["c"]}])
+      assert [pickup: ["c"]] = AriaBlocksWorld.solve_problem(state1, [{:pickup, ["c"]}])
 
       # take 'a' should work (unstack from 'b')
-      assert {:ok, {_final_state, _solution_tree}} = AriaBlocksWorld.solve_problem(state1, [{:take, ["a"]}])
+      assert [unstack: ["a", "b"]] = AriaBlocksWorld.solve_problem(state1, [{:take, ["a"]}])
 
       # take 'c' should work (pickup from table)
-      assert {:ok, {_final_state, _solution_tree}} = AriaBlocksWorld.solve_problem(state1, [{:take, ["c"]}])
+      assert [pickup: ["c"]] = AriaBlocksWorld.solve_problem(state1, [{:take, ["c"]}])
     end
 
     test "multigoal: c on b, b on a, a on table" do
@@ -214,27 +214,6 @@ defmodule AriaBlocksWorld.GtpyhopExamplesTest do
       assert Map.has_key?(solution_tree, :solution_tree)
       assert Map.has_key?(solution_tree.solution_tree, :root_id)
       assert Map.has_key?(solution_tree.solution_tree, :nodes)
-    end
-  end
-
-  describe "domain information" do
-    test "domain info provides correct metadata" do
-      info = AriaBlocksWorld.domain_info()
-
-      assert info.name == "Blocks World Domain"
-      assert is_list(info.actions)
-      assert is_list(info.predicates)
-
-      # Check that key actions are present
-      assert :pickup in info.actions
-      assert :putdown in info.actions
-      assert :stack in info.actions
-      assert :unstack in info.actions
-
-      # Check that key predicates are present
-      assert "pos" in info.predicates
-      assert "clear" in info.predicates
-      assert "holding" in info.predicates
     end
   end
 
