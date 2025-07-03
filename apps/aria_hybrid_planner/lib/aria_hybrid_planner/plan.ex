@@ -638,7 +638,14 @@ defmodule AriaEngineCore.Plan do
       methods when map_size(methods) > 0 ->
         # Try each method that isn't blacklisted
         available_methods = methods
-        |> Enum.reject(fn {method_name, _} -> Atom.to_string(method_name) in blacklisted_methods end)
+        |> Enum.reject(fn {method_name, _} ->
+          method_name_str = case method_name do
+            atom when is_atom(atom) -> Atom.to_string(atom)
+            string when is_binary(string) -> string
+            other -> to_string(other)
+          end
+          method_name_str in blacklisted_methods
+        end)
 
         try_methods_sequentially(available_methods, state, {subject, value}, opts)
 
@@ -655,7 +662,14 @@ defmodule AriaEngineCore.Plan do
       methods when is_list(methods) and length(methods) > 0 ->
         # Try each method that isn't blacklisted
         available_methods = methods
-        |> Enum.reject(fn {method_name, _} -> Atom.to_string(method_name) in blacklisted_methods end)
+        |> Enum.reject(fn {method_name, _} ->
+          method_name_str = case method_name do
+            atom when is_atom(atom) -> Atom.to_string(atom)
+            string when is_binary(string) -> string
+            other -> to_string(other)
+          end
+          method_name_str in blacklisted_methods
+        end)
 
         try_methods_sequentially(available_methods, state, args, opts)
 
@@ -1024,7 +1038,14 @@ defmodule AriaEngineCore.Plan do
       methods when is_list(methods) and length(methods) > 0 ->
         # Try each method that isn't blacklisted
         available_methods = methods
-        |> Enum.reject(fn {method_name, _} -> Atom.to_string(method_name) in blacklisted_methods end)
+        |> Enum.reject(fn {method_name, _} ->
+          method_name_str = case method_name do
+            atom when is_atom(atom) -> Atom.to_string(atom)
+            string when is_binary(string) -> string
+            other -> to_string(other)
+          end
+          method_name_str in blacklisted_methods
+        end)
 
         try_multigoal_methods_sequentially(available_methods, state, multigoal, opts)
 

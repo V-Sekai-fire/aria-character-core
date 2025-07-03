@@ -43,50 +43,43 @@ defmodule Plan.ReentrantExecutor do
       Logger.debug("IPyHOP execution: Starting execution of plan with #{action_count} actions")
     end
 
-    try do
-      domain = Keyword.get(opts, :domain)
+    domain = Keyword.get(opts, :domain)
 
-      case domain do
-        nil ->
-          {:error, "Domain required for execution but not provided in options"}
+    case domain do
+      nil ->
+        {:error, "Domain required for execution but not provided in options"}
 
-        domain when is_map(domain) ->
-          # Extract primitive actions from solution tree
-          primitive_actions = AriaEngineCore.Plan.get_primitive_actions_dfs(solution_tree)
+      domain when is_map(domain) ->
+        # Extract primitive actions from solution tree
+        primitive_actions = AriaEngineCore.Plan.get_primitive_actions_dfs(solution_tree)
 
-          if verbose > 1 do
-            Logger.debug("IPyHOP execution: Executing #{length(primitive_actions)} primitive actions")
-          end
+        if verbose > 1 do
+          Logger.debug("IPyHOP execution: Executing #{length(primitive_actions)} primitive actions")
+        end
 
-          # Execute using reentrant IPyHOP-style executor with recovery
-          case execute_with_recovery(domain, initial_state, solution_tree, opts) do
-            {:ok, final_state, execution_trace} ->
-              if verbose > 1 do
-                Logger.debug("IPyHOP execution: Execution completed successfully")
-                if verbose > 2 do
-                  Logger.debug("IPyHOP execution: Execution trace length: #{length(execution_trace)}")
-                end
+        # Execute using reentrant IPyHOP-style executor with recovery
+        case execute_with_recovery(domain, initial_state, solution_tree, opts) do
+          {:ok, final_state, execution_trace} ->
+            if verbose > 1 do
+              Logger.debug("IPyHOP execution: Execution completed successfully")
+              if verbose > 2 do
+                Logger.debug("IPyHOP execution: Execution trace length: #{length(execution_trace)}")
               end
-              {:ok, final_state}
+            end
+            {:ok, final_state}
 
-            {:error, reason, execution_trace} ->
-              if verbose > 1 do
-                Logger.debug("IPyHOP execution: Execution failed with reason: #{reason}")
-                if verbose > 2 do
-                  Logger.debug("IPyHOP execution: Partial trace length: #{length(execution_trace)}")
-                end
+          {:error, reason, execution_trace} ->
+            if verbose > 1 do
+              Logger.debug("IPyHOP execution: Execution failed with reason: #{reason}")
+              if verbose > 2 do
+                Logger.debug("IPyHOP execution: Partial trace length: #{length(execution_trace)}")
               end
-              {:error, reason}
-          end
+            end
+            {:error, reason}
+        end
 
-        _ ->
-          {:error, "Invalid domain type provided for execution"}
-      end
-    rescue
-      e ->
-        error_msg = "IPyHOP execution error: #{Exception.message(e)}"
-        Logger.error(error_msg)
-        {:error, error_msg}
+      _ ->
+        {:error, "Invalid domain type provided for execution"}
     end
   end
 
