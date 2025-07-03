@@ -31,7 +31,7 @@ defmodule AriaSimpleTravel.MixProject do
 
   defp deps do
     [
-      # Internal dependencies
+      # Internal dependencies - AriaEngine integration
       {:aria_core, in_umbrella: true},
       {:aria_hybrid_planner, in_umbrella: true},
       {:aria_state, in_umbrella: true},

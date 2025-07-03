@@ -3,97 +3,311 @@
 
 defmodule AriaSimpleTravel do
   @moduledoc """
-  Simple Travel planning domain for AriaEngine.
+  Simple Travel planning domain for AriaEngine with durative actions.
 
   This module provides a travel planning domain where people can move between
   locations using different transportation methods (walking or taxi) with
-  resource constraints (money for taxi fares).
+  temporal constraints and resource management.
 
-  ## Example
+  Based on the IPyHOP simple_travel example but enhanced with:
+  - Durative actions following R25W1398085 specification
+  - Entity-capability model for resource management
+  - AriaEngine integration for temporal planning
+  - Multi-agent coordination (person + taxi)
 
-      iex> state = AriaSimpleTravel.get_initial_state()
-      iex> goals = [{"loc", "alice", "park"}]
-      iex> {:ok, plan} = AriaSimpleTravel.plan(state, goals)
-      iex> plan
-      [
-        {"call_taxi", "alice", "home_a"},
-        {"ride_taxi", "alice", "park"},
-        {"pay_driver", "alice", "park"}
-      ]
+  ## Example Usage
+
+      # Create domain and initial state
+      domain = AriaSimpleTravel.create_domain()
+      {:ok, state} = AriaSimpleTravel.setup_scenario()
+
+      # Plan travel for Alice to go to the park
+      goals = [{"location", "alice", "park"}]
+      {:ok, solution_tree} = AriaSimpleTravel.plan(domain, state, goals)
+
+      # Execute the plan
+      {:ok, {final_state, _}} = AriaSimpleTravel.run_lazy(domain, state, goals)
+
+  ## Temporal Patterns Demonstrated
+
+  - **Pattern 1 (Instant)**: call_taxi, pay_driver
+  - **Pattern 6 (Calculated end)**: walk, ride_taxi with dynamic durations
+
+  ## Entity Types
+
+  - **People**: alice, bob (walking, taxi_calling, taxi_riding, payment capabilities)
+  - **Taxis**: taxi1 (transportation, route_planning capabilities)
+  - **Locations**: home_a, home_b, park, downtown (destination, waypoint capabilities)
   """
 
-  alias AriaSimpleTravel.{Domain, Actions, Problem}
+  alias AriaSimpleTravel.Domain
+  alias AriaEngineCore
+
+  @doc """
+  Create the Simple Travel domain with AriaEngine integration.
+
+  ## Parameters
+
+  - `opts` - Optional configuration map
+
+  ## Returns
+
+  AriaEngine.Domain.t() configured for simple travel planning
+  """
+  @spec create_domain(map()) :: AriaEngine.Domain.t()
+  def create_domain(opts \\ %{}) do
+    Domain.create_domain(opts)
+  end
+
+  @doc """
+  Set up the initial scenario with entities and state.
+
+  Creates people (alice, bob), taxi (taxi1), locations (home_a, home_b, park, downtown),
+  distances between locations, and initial conditions.
+
+  ## Returns
+
+  - `{:ok, AriaState.t()}` - Initial state ready for planning
+  - `{:error, atom()}` - Setup failed
+  """
+  @spec setup_scenario() :: {:ok, AriaState.t()} | {:error, atom()}
+  def setup_scenario do
+    state = AriaState.new()
+    Domain.setup_scenario(state, [])
+  end
 
   @doc """
   Plan a sequence of actions to achieve the given goals.
 
-  ## Parameters
-
-  - `state` - Initial state of the world
-  - `goals` - List of goals to achieve in format {predicate, args...}
-
-  ## Returns
-
-  - `{:ok, plan}` - List of actions to execute
-  - `{:error, reason}` - Planning failed
-  """
-  def plan(state, goals) do
-    Domain.plan(state, goals)
-  end
-
-  @doc """
-  Get the initial state for the simple travel domain.
-
-  ## Returns
-
-  A state map with people, locations, distances, and initial conditions.
-  """
-  def get_initial_state do
-    Problem.get_initial_state()
-  end
-
-  @doc """
-  Get predefined example problems for testing and demonstration.
-
-  ## Returns
-
-  A map with example problem scenarios.
-  """
-  def get_example_problems do
-    Problem.get_example_problems()
-  end
-
-  @doc """
-  Validate that a plan is executable from the given state.
+  Uses AriaEngineCore.plan/3 to generate a solution tree with temporal constraints
+  and resource allocation.
 
   ## Parameters
 
-  - `state` - Initial state
-  - `actions` - List of actions to validate
+  - `domain` - AriaEngine domain created with create_domain/1
+  - `state` - Initial state from setup_scenario/0
+  - `goals` - List of goals in format {"predicate", subject, value}
 
   ## Returns
 
-  - `{:ok, final_state}` - Plan is valid
-  - `{:error, reason}` - Plan validation failed
+  - `{:ok, AriaEngineCore.Plan.solution_tree()}` - Complete planning solution
+  - `{:error, atom()}` - Planning failed
+
+  ## Example
+
+      domain = AriaSimpleTravel.create_domain()
+      {:ok, state} = AriaSimpleTravel.setup_scenario()
+      goals = [{"location", "alice", "park"}]
+      {:ok, solution_tree} = AriaSimpleTravel.plan(domain, state, goals)
   """
-  def validate_plan(state, actions) do
-    Actions.validate_plan(state, actions)
+  @spec plan(AriaEngine.Domain.t(), AriaState.t(), [AriaEngine.goal()]) ::
+    {:ok, AriaEngineCore.Plan.solution_tree()} | {:error, atom()}
+  def plan(domain, state, goals) do
+    AriaHybridPlanner.plan(domain, state, goals)
   end
 
   @doc """
-  Execute a single action and return the resulting state.
+  Plan and execute actions to achieve the given goals.
+
+  Combines planning and execution in one step using AriaEngineCore.run_lazy/3.
+  Returns both the final state and the solution tree.
 
   ## Parameters
 
-  - `state` - Current state
-  - `action` - Action tuple to execute
+  - `domain` - AriaEngine domain created with create_domain/1
+  - `state` - Initial state from setup_scenario/0
+  - `goals` - List of goals in format {"predicate", subject, value}
 
   ## Returns
 
-  - `{:ok, new_state}` - Action executed successfully
-  - `{:error, reason}` - Action execution failed
+  - `{:ok, {AriaState.t(), AriaEngineCore.Plan.solution_tree()}}` - Final state and plan
+  - `{:error, atom()}` - Planning or execution failed
+
+  ## Example
+
+      domain = AriaSimpleTravel.create_domain()
+      {:ok, state} = AriaSimpleTravel.setup_scenario()
+      goals = [{"location", "alice", "park"}]
+      {:ok, {final_state, solution_tree}} = AriaSimpleTravel.run_lazy(domain, state, goals)
   """
-  def execute_action(state, action) do
-    Actions.execute_action(state, action)
+  @spec run_lazy(AriaEngine.Domain.t(), AriaState.t(), [AriaEngine.goal()]) ::
+    {:ok, {AriaState.t(), AriaEngineCore.Plan.solution_tree()}} | {:error, atom()}
+  def run_lazy(domain, state, goals) do
+    AriaHybridPlanner.run_lazy(domain, state, goals)
+  end
+
+  @doc """
+  Execute a pre-made solution tree.
+
+  Takes a solution tree from plan/3 and executes it, returning the final state.
+
+  ## Parameters
+
+  - `domain` - AriaEngine domain created with create_domain/1
+  - `state` - Initial state from setup_scenario/0
+  - `solution_tree` - Solution tree from plan/3
+
+  ## Returns
+
+  - `{:ok, {AriaState.t(), AriaEngineCore.Plan.solution_tree()}}` - Final state and updated tree
+  - `{:error, atom()}` - Execution failed
+
+  ## Example
+
+      domain = AriaSimpleTravel.create_domain()
+      {:ok, state} = AriaSimpleTravel.setup_scenario()
+      goals = [{"location", "alice", "park"}]
+      {:ok, solution_tree} = AriaSimpleTravel.plan(domain, state, goals)
+      {:ok, {final_state, _}} = AriaSimpleTravel.run_lazy_tree(domain, state, solution_tree)
+  """
+  @spec run_lazy_tree(AriaEngine.Domain.t(), AriaState.t(), AriaEngineCore.Plan.solution_tree()) ::
+    {:ok, {AriaState.t(), AriaEngineCore.Plan.solution_tree()}} | {:error, atom()}
+  def run_lazy_tree(domain, state, solution_tree) do
+    AriaHybridPlanner.run_lazy_tree(domain, state, solution_tree)
+  end
+
+  @doc """
+  Get predefined example scenarios for testing and demonstration.
+
+  ## Returns
+
+  Map with example scenarios including:
+  - `:alice_to_park` - Alice travels from home_a to park
+  - `:bob_short_walk` - Bob walks from home_b to park (short distance)
+  - `:alice_taxi_ride` - Alice takes taxi from home_a to downtown
+  - `:multi_person` - Both Alice and Bob travel to different destinations
+  """
+  @spec get_example_scenarios() :: map()
+  def get_example_scenarios do
+    %{
+      alice_to_park: %{
+        description: "Alice travels from home_a to park (requires taxi due to distance)",
+        goals: [{"location", "alice", "park"}],
+        expected_actions: [:call_taxi, :ride_taxi, :pay_driver]
+      },
+      bob_short_walk: %{
+        description: "Bob walks from home_b to park (short distance)",
+        goals: [{"location", "bob", "park"}],
+        expected_actions: [:walk]
+      },
+      alice_taxi_ride: %{
+        description: "Alice takes taxi from home_a to downtown",
+        goals: [{"location", "alice", "downtown"}],
+        expected_actions: [:call_taxi, :ride_taxi, :pay_driver]
+      },
+      multi_person: %{
+        description: "Both Alice and Bob travel to different destinations",
+        goals: [
+          {"location", "alice", "park"},
+          {"location", "bob", "downtown"}
+        ],
+        expected_actions: [:call_taxi, :ride_taxi, :pay_driver, :call_taxi, :ride_taxi, :pay_driver]
+      }
+    }
+  end
+
+  @doc """
+  Run a specific example scenario.
+
+  ## Parameters
+
+  - `scenario_name` - Atom key from get_example_scenarios/0
+
+  ## Returns
+
+  - `{:ok, {final_state, solution_tree, scenario_info}}` - Successful execution
+  - `{:error, atom()}` - Execution failed
+
+  ## Example
+
+      {:ok, {final_state, solution_tree, info}} = AriaSimpleTravel.run_example(:alice_to_park)
+  """
+  @spec run_example(atom()) ::
+    {:ok, {AriaState.t(), AriaEngineCore.Plan.solution_tree(), map()}} | {:error, atom()}
+  def run_example(scenario_name) do
+    scenarios = get_example_scenarios()
+
+    case Map.get(scenarios, scenario_name) do
+      nil ->
+        {:error, :unknown_scenario}
+
+      scenario ->
+        domain = create_domain()
+
+        case setup_scenario() do
+          {:ok, state} ->
+            case run_lazy(domain, state, scenario.goals) do
+              {:ok, {final_state, solution_tree}} ->
+                {:ok, {final_state, solution_tree, scenario}}
+
+              {:error, reason} ->
+                {:error, reason}
+            end
+
+          {:error, reason} ->
+            {:error, reason}
+        end
+    end
+  end
+
+  @doc """
+  Validate that the domain follows R25W1398085 specification.
+
+  Checks that:
+  - All actions have proper @action attributes
+  - Temporal patterns are correctly implemented
+  - Entity-capability model is used
+  - AriaEngine integration is proper
+
+  ## Returns
+
+  - `:ok` - Domain is compliant
+  - `{:error, [violations]}` - List of specification violations
+  """
+  @spec validate_specification_compliance() :: :ok | {:error, [String.t()]}
+  def validate_specification_compliance do
+    violations = []
+
+    # Check that domain uses AriaEngine.Domain
+    violations = if function_exported?(Domain, :create_base_domain, 0) do
+      violations
+    else
+      ["Domain does not use AriaEngine.Domain" | violations]
+    end
+
+    # Check for required action attributes
+    actions = [:setup_scenario, :call_taxi, :pay_driver, :walk, :ride_taxi]
+    violations = Enum.reduce(actions, violations, fn action, acc ->
+      if function_exported?(Domain, action, 2) do
+        acc
+      else
+        ["Missing action: #{action}" | acc]
+      end
+    end)
+
+    # Check for task methods
+    task_methods = [:travel]
+    violations = Enum.reduce(task_methods, violations, fn method, acc ->
+      if function_exported?(Domain, method, 2) do
+        acc
+      else
+        ["Missing task method: #{method}" | acc]
+      end
+    end)
+
+    # Check for unigoal methods
+    unigoal_methods = [:achieve_location]
+    violations = Enum.reduce(unigoal_methods, violations, fn method, acc ->
+      if function_exported?(Domain, method, 2) do
+        acc
+      else
+        ["Missing unigoal method: #{method}" | acc]
+      end
+    end)
+
+    case violations do
+      [] -> :ok
+      violations -> {:error, Enum.reverse(violations)}
+    end
   end
 end

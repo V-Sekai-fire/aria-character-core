@@ -2,192 +2,317 @@
 # SPDX-License-Identifier: MIT
 
 defmodule AriaSimpleTravelTest do
-  use ExUnit.Case
+  use ExUnit.Case, async: true
+  doctest AriaSimpleTravel
 
-  alias AriaSimpleTravel.{Problem, Actions, Methods, Domain}
+  alias AriaSimpleTravel
+  alias AriaSimpleTravel.Domain
 
-  describe "initial state" do
-    test "has correct structure" do
-      state = Problem.get_initial_state()
+  describe "domain creation and setup" do
+    test "sets up scenario with entities and initial state" do
+      {:ok, state} = AriaSimpleTravel.setup_scenario()
 
-      assert state.loc["alice"] == "home_a"
-      assert state.loc["bob"] == "home_b"
-      assert state.loc["taxi1"] == "taxi_lot"
-      assert state.cash["alice"] == 20
-      assert state.cash["bob"] == 15
-      assert state.owe["alice"] == 0
-      assert state.owe["bob"] == 0
-    end
+      # Check people are registered
+      assert AriaState.get_fact(state, "type", "alice") == "person"
+      assert AriaState.get_fact(state, "type", "bob") == "person"
+      assert AriaState.get_fact(state, "cash", "alice") == 20.0
+      assert AriaState.get_fact(state, "cash", "bob") == 15.0
 
-    test "has rigid facts" do
-      state = Problem.get_initial_state()
+      # Check taxi is registered
+      assert AriaState.get_fact(state, "type", "taxi1") == "taxi"
+      assert AriaState.get_fact(state, "status", "taxi1") == "available"
 
-      assert state.rigid.dist[{"home_a", "park"}] == 8
-      assert state.rigid.dist[{"home_b", "park"}] == 2
-      assert "alice" in state.rigid.types[:person]
-      assert "park" in state.rigid.types[:location]
-      assert "taxi1" in state.rigid.types[:taxi]
+      # Check locations are registered
+      assert AriaState.get_fact(state, "type", "home_a") == "location"
+      assert AriaState.get_fact(state, "type", "park") == "location"
+
+      # Check initial positions
+      assert AriaState.get_fact(state, "location", "alice") == "home_a"
+      assert AriaState.get_fact(state, "location", "bob") == "home_b"
+      assert AriaState.get_fact(state, "location", "taxi1") == "downtown"
+
+      # Check distances are set up
+      assert AriaState.get_fact(state, "distance", {"home_a", "park"}) == 8
+      assert AriaState.get_fact(state, "distance", {"home_b", "park"}) == 2
     end
   end
 
-  describe "actions" do
+  describe "instant actions" do
     setup do
-      state = Problem.get_initial_state()
+      domain = AriaSimpleTravel.create_domain()
+      {:ok, state} = AriaSimpleTravel.setup_scenario()
+      {:ok, domain: domain, state: state}
+    end
+
+    test "call_taxi brings taxi to person and places person inside", %{state: state} do
+      {:ok, new_state} = Domain.call_taxi(state, ["alice", "taxi1"])
+
+      # Taxi should be at alice's location
+      assert AriaState.get_fact(new_state, "location", "taxi1") == "home_a"
+      # Alice should be in the taxi
+      assert AriaState.get_fact(new_state, "location", "alice") == "taxi1"
+    end
+
+    test "pay_driver processes payment and exits taxi", %{state: state} do
+      # Set up: Alice owes money and is at park
+      state = state
+      |> AriaState.set_fact("owe", "alice", 5.0)
+      |> AriaState.set_fact("location", "alice", "taxi1")
+
+      {:ok, new_state} = Domain.pay_driver(state, ["alice", "park"])
+
+      # Alice should have less cash
+      assert AriaState.get_fact(new_state, "cash", "alice") == 15.0
+      # Alice should owe nothing
+      assert AriaState.get_fact(new_state, "owe", "alice") == 0
+      # Alice should be at park
+      assert AriaState.get_fact(new_state, "location", "alice") == "park"
+    end
+
+    test "pay_driver fails with insufficient funds", %{state: state} do
+      # Set up: Alice owes more than she has
+      state = state
+      |> AriaState.set_fact("owe", "alice", 25.0)
+      |> AriaState.set_fact("location", "alice", "taxi1")
+
+      assert {:error, :insufficient_funds} = Domain.pay_driver(state, ["alice", "park"])
+    end
+  end
+
+  describe "durative actions" do
+    setup do
+      domain = AriaSimpleTravel.create_domain()
+      {:ok, state} = AriaSimpleTravel.setup_scenario()
+      {:ok, domain: domain, state: state}
+    end
+
+    test "walk changes person location", %{state: state} do
+      {:ok, new_state} = Domain.walk(state, ["alice", "home_a", "park"])
+
+      assert AriaState.get_fact(new_state, "location", "alice") == "park"
+    end
+
+    test "walk fails when from equals to", %{state: state} do
+      assert {:error, :same_location} = Domain.walk(state, ["alice", "home_a", "home_a"])
+    end
+
+    test "ride_taxi moves taxi and charges fare", %{state: state} do
+      # Set up: Alice is in taxi at home_a
+      state = state
+      |> AriaState.set_fact("location", "taxi1", "home_a")
+      |> AriaState.set_fact("location", "alice", "taxi1")
+
+      {:ok, new_state} = Domain.ride_taxi(state, ["alice", "park"])
+
+      # Taxi should be at park
+      assert AriaState.get_fact(new_state, "location", "taxi1") == "park"
+      # Alice should owe fare (1.5 + 0.5 * 8 = 5.5)
+      assert AriaState.get_fact(new_state, "owe", "alice") == 5.5
+    end
+
+    test "ride_taxi fails when person not in taxi", %{state: state} do
+      assert {:error, :not_in_taxi} = Domain.ride_taxi(state, ["alice", "park"])
+    end
+  end
+
+  describe "task methods" do
+    setup do
+      domain = AriaSimpleTravel.create_domain()
+      {:ok, state} = AriaSimpleTravel.setup_scenario()
+      {:ok, domain: domain, state: state}
+    end
+
+    test "travel chooses walking for short distances", %{state: state} do
+      # Bob at home_b, park is 2 units away (walkable)
+      {:ok, todos} = Domain.travel(state, ["bob", "park"])
+
+      assert todos == [{:walk, ["bob", "home_b", "park"]}]
+    end
+
+    test "travel chooses taxi for long distances", %{state: state} do
+      # Alice at home_a, park is 8 units away (requires taxi)
+      {:ok, todos} = Domain.travel(state, ["alice", "park"])
+
+      expected = [
+        {:call_taxi, ["alice", "taxi1"]},
+        {:ride_taxi, ["alice", "park"]},
+        {:pay_driver, ["alice", "park"]}
+      ]
+      assert todos == expected
+    end
+
+    test "travel returns empty list when already at destination", %{state: state} do
+      {:ok, todos} = Domain.travel(state, ["alice", "home_a"])
+
+      assert todos == []
+    end
+
+    test "travel fails when no viable transportation", %{state: state} do
+      # Set Alice's cash to 0, so she can't afford taxi for long distance
+      state = AriaState.set_fact(state, "cash", "alice", 0)
+
+      assert {:error, :no_viable_transportation} = Domain.travel(state, ["alice", "park"])
+    end
+  end
+
+  describe "unigoal methods" do
+    setup do
+      domain = AriaSimpleTravel.create_domain()
+      {:ok, state} = AriaSimpleTravel.setup_scenario()
+      {:ok, domain: domain, state: state}
+    end
+
+    test "achieve_location delegates to travel task", %{state: state} do
+      {:ok, todos} = Domain.achieve_location(state, {"alice", "park"})
+
+      assert todos == [{:travel, ["alice", "park"]}]
+    end
+  end
+
+  describe "planning integration" do
+    setup do
+      domain = AriaSimpleTravel.create_domain()
+      {:ok, state} = AriaSimpleTravel.setup_scenario()
+      {:ok, domain: domain, state: state}
+    end
+
+    test "plans simple walking scenario", %{domain: domain, state: state} do
+      goals = [{"location", "bob", "park"}]
+
+      {:ok, _solution_tree} = AriaSimpleTravel.plan(domain, state, goals)
+    end
+
+    test "plans taxi scenario", %{domain: domain, state: state} do
+      goals = [{"location", "alice", "park"}]
+
+      {:ok, _solution_tree} = AriaSimpleTravel.plan(domain, state, goals)
+    end
+
+    test "executes plan with run_lazy", %{domain: domain, state: state} do
+      goals = [{"location", "bob", "park"}]
+
+      {:ok, {_solution_tree, final_state}} = AriaSimpleTravel.run_lazy(domain, state, goals)
+
+      # Bob should be at park
+      assert AriaState.get_fact(final_state, "location", "bob") == "park"
+    end
+
+    test "executes pre-made solution tree", %{domain: domain, state: state} do
+      goals = [{"location", "bob", "park"}]
+      {:ok, solution_tree} = AriaSimpleTravel.plan(domain, state, goals)
+
+      {:ok, {final_state, _}} = AriaSimpleTravel.run_lazy_tree(domain, state, solution_tree)
+
+      # Bob should be at park
+      assert AriaState.get_fact(final_state, "location", "bob") == "park"
+    end
+  end
+
+  describe "example scenarios" do
+    test "gets example scenarios" do
+      scenarios = AriaSimpleTravel.get_example_scenarios()
+
+      assert Map.has_key?(scenarios, :alice_to_park)
+      assert Map.has_key?(scenarios, :bob_short_walk)
+      assert Map.has_key?(scenarios, :alice_taxi_ride)
+      assert Map.has_key?(scenarios, :multi_person)
+
+      alice_scenario = scenarios.alice_to_park
+      assert alice_scenario.goals == [{"location", "alice", "park"}]
+      assert alice_scenario.expected_actions == [:call_taxi, :ride_taxi, :pay_driver]
+    end
+
+    test "runs alice_to_park example" do
+      {:ok, {final_state, _solution_tree, scenario}} = AriaSimpleTravel.run_example(:alice_to_park)
+      # Alice should be at park
+      assert AriaState.get_fact(final_state, "location", "alice") == "park"
+      # Alice should have less cash (paid taxi fare)
+      assert AriaState.get_fact(final_state, "cash", "alice") < 20.0
+      # Alice should owe nothing
+      assert AriaState.get_fact(final_state, "owe", "alice") == 0
+      assert scenario.description =~ "Alice travels from home_a to park"
+    end
+
+    test "runs bob_short_walk example" do
+      {:ok, {final_state, solution_tree, scenario}} = AriaSimpleTravel.run_example(:bob_short_walk)
+      # Bob should be at park
+      assert AriaState.get_fact(final_state, "location", "bob") == "park"
+      # Bob should still have same cash (walking is free)
+      assert AriaState.get_fact(final_state, "cash", "bob") == 15.0
+      assert scenario.description =~ "Bob walks from home_b to park"
+    end
+
+    test "runs multi_person example" do
+      {:ok, {final_state, _solution_tree, scenario}} = AriaSimpleTravel.run_example(:multi_person)
+      # Both people should reach their destinations
+      assert AriaState.get_fact(final_state, "location", "alice") == "park"
+      assert AriaState.get_fact(final_state, "location", "bob") == "downtown"
+      assert scenario.description =~ "Both Alice and Bob travel"
+    end
+
+    test "fails for unknown scenario" do
+      assert {:error, :unknown_scenario} = AriaSimpleTravel.run_example(:nonexistent)
+    end
+  end
+
+  describe "specification compliance" do
+    test "main module has required API" do
+      # Check that main module exports required API functions
+      assert function_exported?(AriaSimpleTravel, :create_domain, 0)
+      assert function_exported?(AriaSimpleTravel, :create_domain, 1)
+      assert function_exported?(AriaSimpleTravel, :setup_scenario, 0)
+      assert function_exported?(AriaSimpleTravel, :plan, 3)
+      assert function_exported?(AriaSimpleTravel, :run_lazy, 3)
+      assert function_exported?(AriaSimpleTravel, :run_lazy_tree, 3)
+      assert function_exported?(AriaSimpleTravel, :get_example_scenarios, 0)
+      assert function_exported?(AriaSimpleTravel, :run_example, 1)
+      assert function_exported?(AriaSimpleTravel, :validate_specification_compliance, 0)
+    end
+  end
+
+  describe "helper functions" do
+    setup do
+      {:ok, state} = AriaSimpleTravel.setup_scenario()
       {:ok, state: state}
     end
 
-    test "walk action works", %{state: state} do
-      # Bob can walk from home_b to park (distance 2)
-      {:ok, new_state} = Actions.walk(state, "bob", "home_b", "park")
-      assert new_state.loc["bob"] == "park"
+    test "distance calculation works correctly", %{state: state} do
+      # Test symmetric distance lookup
+      assert AriaState.get_fact(state, "distance", {"home_a", "park"}) == 8
+      assert AriaState.get_fact(state, "distance", {"park", "home_a"}) == 8
+      assert AriaState.get_fact(state, "distance", {"home_b", "park"}) == 2
     end
 
-    test "walk action fails for long distance", %{state: state} do
-      # Alice cannot walk from home_a to park (distance 8)
-      # But the walk action itself doesn't check distance - that's in methods
-      {:ok, new_state} = Actions.walk(state, "alice", "home_a", "park")
-      assert new_state.loc["alice"] == "park"
+    test "taxi fare calculation", %{state: state} do
+      # Set up taxi scenario
+      state = state
+      |> AriaState.set_fact("location", "taxi1", "home_a")
+      |> AriaState.set_fact("location", "alice", "taxi1")
+
+      {:ok, new_state} = Domain.ride_taxi(state, ["alice", "park"])
+
+      # Fare should be 1.5 + 0.5 * 8 = 5.5
+      assert AriaState.get_fact(new_state, "owe", "alice") == 5.5
     end
 
-    test "call_taxi action works", %{state: state} do
-      {:ok, new_state} = Actions.call_taxi(state, "alice", "home_a")
-      assert new_state.loc["taxi1"] == "home_a"
-      assert new_state.loc["alice"] == "taxi1"
+    test "entity type checking", %{state: state} do
+      # Check entity types are properly set
+      assert AriaState.get_fact(state, "type", "alice") == "person"
+      assert AriaState.get_fact(state, "type", "taxi1") == "taxi"
+      assert AriaState.get_fact(state, "type", "park") == "location"
     end
 
-    test "ride_taxi action works", %{state: state} do
-      # First call taxi
-      {:ok, state1} = Actions.call_taxi(state, "alice", "home_a")
+    test "capability checking", %{state: state} do
+      # Check capabilities are properly set
+      alice_caps = AriaState.get_fact(state, "capabilities", "alice")
+      assert :walking in alice_caps
+      assert :taxi_calling in alice_caps
+      assert :taxi_riding in alice_caps
+      assert :payment in alice_caps
 
-      # Then ride to park
-      {:ok, state2} = Actions.ride_taxi(state1, "alice", "park")
-      assert state2.loc["taxi1"] == "park"
-      assert state2.owe["alice"] == 5.5  # 1.5 + 0.5 * 8
-    end
-
-    test "pay_driver action works", %{state: state} do
-      # Setup: call taxi, ride, then pay
-      {:ok, state1} = Actions.call_taxi(state, "alice", "home_a")
-      {:ok, state2} = Actions.ride_taxi(state1, "alice", "park")
-      {:ok, state3} = Actions.pay_driver(state2, "alice", "park")
-
-      assert state3.loc["alice"] == "park"
-      assert state3.cash["alice"] == 14.5  # 20 - 5.5
-      assert state3.owe["alice"] == 0
-    end
-  end
-
-  describe "methods" do
-    setup do
-      state = Problem.get_initial_state()
-      {:ok, state: state}
-    end
-
-    test "do_nothing when already at location", %{state: state} do
-      {:ok, actions} = Methods.do_nothing(state, "alice", "home_a")
-      assert actions == []
-    end
-
-    test "travel_by_foot for short distance", %{state: state} do
-      {:ok, actions} = Methods.travel_by_foot(state, "bob", "park")
-      assert actions == [{"walk", "bob", "home_b", "park"}]
-    end
-
-    test "travel_by_foot fails for long distance", %{state: state} do
-      {:error, reason} = Methods.travel_by_foot(state, "alice", "park")
-      assert reason =~ "Distance too far for walking"
-    end
-
-    test "travel_by_taxi works when affordable", %{state: state} do
-      {:ok, actions} = Methods.travel_by_taxi(state, "alice", "park")
-      expected = [
-        {"call_taxi", "alice", "home_a"},
-        {"ride_taxi", "alice", "park"},
-        {"pay_driver", "alice", "park"}
-      ]
-      assert actions == expected
-    end
-  end
-
-  describe "domain planning" do
-    setup do
-      state = Problem.get_initial_state()
-      {:ok, state: state}
-    end
-
-    test "plans simple goal for alice to park", %{state: state} do
-      goals = [{"loc", "alice", "park"}]
-      {:ok, plan} = Domain.plan(state, goals)
-
-      # Should be flattened list of actions
-      expected = [
-        {"call_taxi", "alice", "home_a"},
-        {"ride_taxi", "alice", "park"},
-        {"pay_driver", "alice", "park"}
-      ]
-      assert plan == expected
-    end
-
-    test "plans goal for bob to park (walking)", %{state: state} do
-      goals = [{"loc", "bob", "park"}]
-      {:ok, plan} = Domain.plan(state, goals)
-
-      expected = [{"walk", "bob", "home_b", "park"}]
-      assert plan == expected
-    end
-
-    test "plans multiple goals", %{state: state} do
-      goals = [{"loc", "alice", "park"}, {"loc", "bob", "park"}]
-      {:ok, plan} = Domain.plan(state, goals)
-
-      # Should handle both goals in sequence
-      expected = [
-        {"call_taxi", "alice", "home_a"},
-        {"ride_taxi", "alice", "park"},
-        {"pay_driver", "alice", "park"},
-        {"walk", "bob", "home_b", "park"}
-      ]
-      assert plan == expected
-    end
-
-    test "goal_satisfied? works correctly", %{state: state} do
-      assert Domain.goal_satisfied?(state, {"loc", "alice", "home_a"}) == true
-      assert Domain.goal_satisfied?(state, {"loc", "alice", "park"}) == false
-    end
-  end
-
-  describe "integration with AriaSimpleTravel module" do
-    test "main module interface works" do
-      state = AriaSimpleTravel.get_initial_state()
-      goals = [{"loc", "alice", "park"}]
-
-      {:ok, plan} = AriaSimpleTravel.plan(state, goals)
-
-      expected = [
-        {"call_taxi", "alice", "home_a"},
-        {"ride_taxi", "alice", "park"},
-        {"pay_driver", "alice", "park"}
-      ]
-      assert plan == expected
-    end
-
-    test "validate_plan works" do
-      state = AriaSimpleTravel.get_initial_state()
-      actions = [
-        {"call_taxi", "alice", "home_a"},
-        {"ride_taxi", "alice", "park"},
-        {"pay_driver", "alice", "park"}
-      ]
-
-      {:ok, final_state} = AriaSimpleTravel.validate_plan(state, actions)
-      assert final_state.loc["alice"] == "park"
-      assert final_state.cash["alice"] == 14.5
-    end
-
-    test "execute_action works" do
-      state = AriaSimpleTravel.get_initial_state()
-      {:ok, new_state} = AriaSimpleTravel.execute_action(state, {"walk", "bob", "home_b", "park"})
-      assert new_state.loc["bob"] == "park"
+      taxi_caps = AriaState.get_fact(state, "capabilities", "taxi1")
+      assert :transportation in taxi_caps
+      assert :route_planning in taxi_caps
     end
   end
 end
