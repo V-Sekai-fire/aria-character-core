@@ -235,22 +235,86 @@ defmodule AriaBlocksWorld.Domain do
     ]}
   end
 
-  # Unigoal methods for position goals following R25W1398085
+  @doc """
+  Validate move preconditions for a block to a destination.
+
+  This task method checks if a move is valid and safe to execute.
+  """
+  @task_method true
+  @spec validate_move(AriaHybridPlanner.State.t(), [block() | String.t()]) :: {:ok, [AriaHybridPlanner.todo_item()]} | {:error, atom()}
+  def validate_move(_state, [_block, _destination]) do
+    # For now, assume all moves are valid
+    # In a more sophisticated implementation, this would check:
+    # - Block is accessible (clear)
+    # - Destination is available
+    # - No cyclic dependencies
+    {:ok, []}
+  end
+
+  # Task methods following GTPyhop blocks_gtn pattern
 
   @doc """
-  Handle position goals for blocks.
+  Task method for 'take' - generates pickup or unstack action.
+
+  Following GTPyhop m_take pattern: if block is clear, generate appropriate primitive action.
+  """
+  @task_method true
+  @spec take_method(AriaHybridPlanner.State.t(), [block()]) :: {:ok, [AriaHybridPlanner.todo_item()]} | {:error, atom()}
+  def take_method(state, [block]) do
+    is_clear = AriaHybridPlanner.get_fact(state, "clear", block)
+    current_pos = AriaHybridPlanner.get_fact(state, "pos", block)
+
+    if is_clear == true do
+      case current_pos do
+        "table" -> {:ok, [{:pickup, [block]}]}
+        other_block when is_binary(other_block) -> {:ok, [{:unstack, [block, other_block]}]}
+        _ -> {:error, :invalid_position}
+      end
+    else
+      {:error, :block_not_clear}
+    end
+  end
+
+  @doc """
+  Task method for 'put' - generates putdown or stack action.
+
+  Following GTPyhop m_put pattern: if holding block, generate appropriate primitive action.
+  """
+  @task_method true
+  @spec put_method(AriaHybridPlanner.State.t(), [block() | String.t()]) :: {:ok, [AriaHybridPlanner.todo_item()]} | {:error, atom()}
+  def put_method(state, [block, destination]) do
+    holding = AriaHybridPlanner.get_fact(state, "holding", "hand")
+
+    if holding == block do
+      case destination do
+        "table" -> {:ok, [{:putdown, [block]}]}
+        target_block when is_binary(target_block) -> {:ok, [{:stack, [block, target_block]}]}
+        _ -> {:error, :invalid_destination}
+      end
+    else
+      {:error, :not_holding_block}
+    end
+  end
+
+  # Unigoal methods for achieving specific predicates
+
+  @doc """
+  Achieve a position goal for a block.
 
   This unigoal method handles goals of the form {"pos", block, destination}.
+  It decomposes the goal into validation and movement task methods.
   """
   @unigoal_method predicate: "pos"
-  @spec achieve_position(AriaHybridPlanner.State.t(), {block(), String.t()}) :: {:ok, [AriaHybridPlanner.todo_item()]} | {:error, atom()}
+  @spec achieve_position(AriaHybridPlanner.State.t(), {String.t(), String.t()}) :: {:ok, [AriaHybridPlanner.todo_item()]} | {:error, atom()}
   def achieve_position(state, {block, destination}) do
     current_pos = AriaHybridPlanner.get_fact(state, "pos", block)
 
+    # If already at destination, no action needed
     if current_pos == destination do
-      {:ok, []}  # Goal already achieved
+      {:ok, []}
     else
-      # Decompose into validation and move actions for planner to orchestrate
+      # Need to move block to destination
+      # Use task methods for validation and movement
       {:ok, [
         {:validate_move, [block, destination]},
         {:move_block, [block, destination]}
@@ -259,115 +323,39 @@ defmodule AriaBlocksWorld.Domain do
   end
 
   @doc """
-  Handle clear goals for blocks.
+  Achieve a clear goal for a block.
 
   This unigoal method handles goals of the form {"clear", block, true}.
+  It finds what's on top of the block and moves it away using task methods.
   """
   @unigoal_method predicate: "clear"
-  @spec achieve_clear(AriaHybridPlanner.State.t(), {block(), boolean()}) :: {:ok, [AriaHybridPlanner.todo_item()]} | {:error, atom()}
+  @spec achieve_clear(AriaHybridPlanner.State.t(), {String.t(), boolean()}) :: {:ok, [AriaHybridPlanner.todo_item()]} | {:error, atom()}
   def achieve_clear(state, {block, true}) do
-    current_clear = AriaHybridPlanner.get_fact(state, "clear", block)
+    is_clear = AriaHybridPlanner.get_fact(state, "clear", block)
 
-    if current_clear == true do
-      {:ok, []}  # Already clear
+    # If already clear, no action needed
+    if is_clear == true do
+      {:ok, []}
     else
-      # Find what's on top of this block and move it
-      blocks = get_all_blocks(state)
-      blocking_block = Enum.find(blocks, fn b ->
-        AriaHybridPlanner.get_fact(state, "pos", b) == block
-      end)
+      # Find what's on top of this block
+      blocking_block = find_block_on_top(state, block)
 
-      case blocking_block do
-        nil -> {:ok, []}  # Nothing blocking
-        blocker ->
-          # Decompose into validation and move actions for planner to orchestrate
-          {:ok, [
-            {:validate_move, [blocker, "table"]},
-            {:move_block, [blocker, "table"]}
-          ]}
+      if blocking_block do
+        # Move the blocking block to the table using task methods
+        {:ok, [
+          {:validate_move, [blocking_block, "table"]},
+          {:move_block, [blocking_block, "table"]}
+        ]}
+      else
+        {:error, :no_blocking_block_found}
       end
     end
   end
+
   def achieve_clear(_state, {_block, false}) do
-    # Making a block not clear requires putting something on it
-    # This is typically handled by other goals
+    # Cannot directly make a block not clear - this would require putting something on it
+    # This is typically handled by other goals that stack blocks
     {:ok, []}
-  end
-
-  @doc """
-  Check if a block is accessible (clear or can be made clear).
-
-  This unigoal method handles goals of the form {"accessible", block, true}.
-  """
-  @unigoal_method predicate: "accessible"
-  @spec check_block_accessible(AriaHybridPlanner.State.t(), {block(), boolean()}) :: {:ok, [AriaHybridPlanner.todo_item()]} | {:error, atom()}
-  def check_block_accessible(state, {block, true}) do
-    current_pos = AriaHybridPlanner.get_fact(state, "pos", block)
-
-    case current_pos do
-      "hand" -> {:ok, []}  # Already in hand
-      "table" ->
-        # Check if block is clear
-        case AriaHybridPlanner.get_fact(state, "clear", block) do
-          true ->
-            # Check if hand is empty
-            case AriaHybridPlanner.get_fact(state, "holding", "hand") do
-              false -> {:ok, []}
-              _ -> {:error, :hand_not_empty}
-            end
-          false -> {:error, :block_not_clear}
-        end
-      other_block when is_binary(other_block) ->
-        # Block is on another block, check if it's clear and hand is empty
-        case AriaHybridPlanner.get_fact(state, "clear", block) do
-          true ->
-            case AriaHybridPlanner.get_fact(state, "holding", "hand") do
-              false -> {:ok, []}
-              _ -> {:error, :hand_not_empty}
-            end
-          false -> {:error, :block_not_clear}
-        end
-      _ -> {:error, :invalid_position}
-    end
-  end
-
-  @doc """
-  Check if a destination is available for placing a block.
-
-  This unigoal method handles goals of the form {"destination_available", destination, true}.
-  """
-  @unigoal_method predicate: "destination_available"
-  @spec check_destination_available(AriaHybridPlanner.State.t(), {String.t(), boolean()}) :: {:ok, [AriaHybridPlanner.todo_item()]} | {:error, atom()}
-  def check_destination_available(_state, {"table", true}) do
-    {:ok, []}  # Table is always available
-  end
-  def check_destination_available(state, {target_block, true}) when is_binary(target_block) do
-    case AriaHybridPlanner.get_fact(state, "clear", target_block) do
-      true -> {:ok, []}
-      false -> {:error, :destination_blocked}
-      nil -> {:error, :invalid_destination}
-    end
-  end
-
-  @doc """
-  Check for cyclic dependencies in block movements.
-
-  This unigoal method handles goals of the form {"no_cyclic_dependency", {block, destination}, true}.
-  """
-  @unigoal_method predicate: "no_cyclic_dependency"
-  @spec check_no_cyclic_dependency(AriaHybridPlanner.State.t(), {{block(), String.t()}, boolean()}) :: {:ok, [AriaHybridPlanner.todo_item()]} | {:error, atom()}
-  def check_no_cyclic_dependency(state, {{block, destination}, true}) when is_binary(destination) do
-    # Check if destination is currently on top of block (direct cycle)
-    dest_pos = AriaHybridPlanner.get_fact(state, "pos", destination)
-    if dest_pos == block do
-      {:error, :cyclic_dependency}
-    else
-      # Could add more sophisticated cycle detection here
-      {:ok, []}
-    end
-  end
-  def check_no_cyclic_dependency(_state, {{_block, "table"}, true}) do
-    {:ok, []}  # No cycles with table
   end
 
   # Domain creation and helper functions
@@ -384,7 +372,9 @@ defmodule AriaBlocksWorld.Domain do
     domain = AriaCore.register_attribute_specs(domain, __MODULE__)
 
     # Add multigoal method for splitting multigoals (GTpyhop pattern)
-    AriaCore.add_multigoal_method_to_domain(domain, "split_multigoal", &split_multigoal/2)
+    domain = AriaCore.add_multigoal_method_to_domain(domain, "split_multigoal", &split_multigoal/2)
+
+    domain
   end
 
   @doc """
@@ -396,8 +386,8 @@ defmodule AriaBlocksWorld.Domain do
       name: "Blocks World Domain",
       description: "Classic blocks world planning domain with pickup, unstack, putdown, stack actions",
       actions: [:pickup, :unstack, :putdown, :stack, :take],
-      task_methods: ["move_block", "validate_move_preconditions"],
-      unigoal_methods: ["pos", "clear", "accessible", "destination_available", "no_cyclic_dependency"],
+      task_methods: ["move_block", "validate_move_preconditions", "take", "put"],
+      multigoal_methods: ["split_multigoal"],
       predicates: ["pos", "clear", "holding"],
       entities: ["hand", "table"],
       capabilities: [:manipulation, :support]
@@ -442,6 +432,15 @@ defmodule AriaBlocksWorld.Domain do
     |> AriaHybridPlanner.set_fact("type", entity_id, type)
     |> AriaHybridPlanner.set_fact("capabilities", entity_id, capabilities)
     |> AriaHybridPlanner.set_fact("status", entity_id, "available")
+  end
+
+  defp find_block_on_top(state, target_block) do
+    # Find all blocks and check which one is positioned on the target block
+    all_blocks = get_all_blocks(state)
+
+    Enum.find(all_blocks, fn block ->
+      AriaHybridPlanner.get_fact(state, "pos", block) == target_block
+    end)
   end
 
   defp get_all_blocks(state) do

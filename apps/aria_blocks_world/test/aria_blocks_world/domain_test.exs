@@ -257,8 +257,12 @@ defmodule AriaBlocksWorld.DomainTest do
       |> RelationalState.set_fact("clear", "a", true)
       |> RelationalState.set_fact("clear", "b", false)
       |> RelationalState.set_fact("clear", "c", true)
+      |> RelationalState.set_fact("pos", "a", "b")  # Block "a" is on top of block "b"
+      |> RelationalState.set_fact("pos", "b", "table")
+      |> RelationalState.set_fact("pos", "c", "table")
 
       # This is testing the private function indirectly through achieve_clear
+      # Block "b" is not clear because "a" is on top of it
       {:ok, _actions} = Domain.achieve_clear(state, {"b", true})
     end
   end
