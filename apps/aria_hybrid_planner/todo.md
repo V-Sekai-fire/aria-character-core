@@ -1,0 +1,1 @@
+1. restore apps/aria_minizinc_goal
