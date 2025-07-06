@@ -1,5 +1,4 @@
 # Copyright (c) 2025-present K. S. Ernest (iFire) Lee
-# SPDX-License-Identifier: MIT
 
 defmodule Membrane.MiniZincSolverFilter do
   @moduledoc "Membrane filter element that calls MiniZinc solver for constraint satisfaction problems.\n\nThis element receives scheduling requests and uses MiniZinc to solve them,\nproviding ground truth solutions for comparison with other solvers.\n"

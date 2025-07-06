@@ -1,5 +1,4 @@
 # Copyright (c) 2025-present K. S. Ernest (iFire) Lee
-# SPDX-License-Identifier: MIT
 
 [
   # Ignore warnings from dependencies
@@ -11,10 +10,10 @@
   ~r"lib/aria_security/.+",
   ~r"lib/aria_monitor/.+",
   ~r"lib/mix/tasks/.+",
-  
+
   # Ignore callback info missing warnings
   {:warn_matching, :callback_info_missing},
-  
+
   # Ignore generic unknown function warnings for dependencies we can't control
   {:warn_matching, :unknown_function},
 

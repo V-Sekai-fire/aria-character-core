@@ -1,5 +1,4 @@
 # Copyright (c) 2025-present K. S. Ernest (iFire) Lee
-# SPDX-License-Identifier: MIT
 
 defmodule AriaEngineCore.Multigoal do
   @moduledoc "Represents a collection of goals in the GTPyhop planner.\n\nA multigoal is essentially a desired state represented as a collection of\npredicate-subject-fact triples that should be true in the world AriaState.\n\nExample:\n```elixir\nmultigoal = AriaEngineCore.Multigoal.new()\n|> AriaEngineCore.Multigoal.add_goal(\"location\", \"player\", \"treasure_room\")\n|> AriaEngineCore.Multigoal.add_goal(\"has\", \"player\", \"treasure\")\n\n# Check if goals are satisfied in current state\nsatisfied? = AriaEngineCore.Multigoal.satisfied?(multigoal, current_state)\n```\n"

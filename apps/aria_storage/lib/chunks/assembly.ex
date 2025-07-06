@@ -1,5 +1,4 @@
 # Copyright (c) 2025-present K. S. Ernest (iFire) Lee
-# SPDX-License-Identifier: MIT
 
 defmodule AriaStorage.Chunks.Assembly do
   @moduledoc "File assembly utilities for reconstructing files from chunks.\n\nProvides functionality to assemble files from chunks using index information,\nwith support for verification, reflinks, and seed files for efficient reconstruction.\n"

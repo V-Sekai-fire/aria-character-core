@@ -1,5 +1,4 @@
 # Copyright (c) 2025-present K. S. Ernest (iFire) Lee
-# SPDX-License-Identifier: MIT
 
 defmodule AriaTown.IRIHelpers do
   @moduledoc "Helper functions for generating chibifire.com IRIs (Internationalized Resource Identifiers).\nProvides consistent URL generation for all entities in the knowledge base.\n"

@@ -1,5 +1,4 @@
 # Copyright (c) 2025-present K. S. Ernest (iFire) Lee
-# SPDX-License-Identifier: MIT
 
 defmodule Timeline.AgentEntity.AgentManagement do
   @moduledoc "Agent creation and management operations for Timeline.AgentEntity.\n\nHandles the creation, validation, and basic operations for agents in the\ntimeline system.\n"

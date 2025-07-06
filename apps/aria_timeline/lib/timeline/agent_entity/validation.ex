@@ -1,5 +1,4 @@
 # Copyright (c) 2025-present K. S. Ernest (iFire) Lee
-# SPDX-License-Identifier: MIT
 
 defmodule Timeline.AgentEntity.Validation do
   @moduledoc "Validation operations for Timeline.AgentEntity.\n\nHandles validation of participants to ensure they are properly formed\nand meet the requirements for agents and entities.\n"

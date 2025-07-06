@@ -1,5 +1,4 @@
 # Copyright (c) 2025-present K. S. Ernest (iFire) Lee
-# SPDX-License-Identifier: MIT
 
 defmodule AriaStorage.HashVerificationTest do
   @moduledoc "Comprehensive test suite for hash verification functionality.\n\nThis test suite validates the hash verification mechanisms discovered during\nour analysis, ensuring that SHA512/256 is used consistently throughout the\nsystem and that all verification components work correctly.\n"

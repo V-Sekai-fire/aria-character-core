@@ -1,5 +1,4 @@
 # Copyright (c) 2025-present K. S. Ernest (iFire) Lee
-# SPDX-License-Identifier: MIT
 
 defmodule AriaStorage.Parsers.CasyncFormat.Constants do
   @moduledoc "Constants and type definitions for the ARCANA (Aria Content Archive) format.\n\nThis module contains all magic numbers, format constants, and type definitions\nused across the casync format parsers. Based on desync source code analysis.\n"

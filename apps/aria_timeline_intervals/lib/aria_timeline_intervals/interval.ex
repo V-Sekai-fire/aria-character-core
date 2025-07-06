@@ -1,5 +1,4 @@
 # Copyright (c) 2025-present K. S. Ernest (iFire) Lee
-# SPDX-License-Identifier: MIT
 
 defmodule AriaTimelineIntervals.Interval do
   @moduledoc """
@@ -74,7 +73,7 @@ defmodule AriaTimelineIntervals.Interval do
   ## Options
 
   - `:agent` - The agent associated with this interval
-  - `:entity` - The entity associated with this interval  
+  - `:entity` - The entity associated with this interval
   - `:metadata` - Additional metadata for the interval
 
   ## Examples

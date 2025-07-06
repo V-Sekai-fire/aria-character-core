@@ -1,5 +1,4 @@
 # Copyright (c) 2025-present K. S. Ernest (iFire) Lee
-# SPDX-License-Identifier: MIT
 
 defmodule AriaStorage.Storage do
   @moduledoc "Main storage interface for Aria Storage system.\n\nThis module provides high-level functions for file storage operations\nusing various backends including Waffle integration.\n"

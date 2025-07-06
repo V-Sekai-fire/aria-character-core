@@ -1,5 +1,4 @@
 # Copyright (c) 2025-present K. S. Ernest (iFire) Lee
-# SPDX-License-Identifier: MIT
 
 defmodule AriaStorage.WaffleAdapter do
   @moduledoc "Waffle adapter for integrating desync chunk storage with existing chunk stores.\n\nThis adapter allows seamless integration between Waffle's file upload system\nand our desync-compatible chunk storage backends (local, S3, SFTP, HTTP).\n"

@@ -1,5 +1,4 @@
 # Copyright (c) 2025-present K. S. Ernest (iFire) Lee
-# SPDX-License-Identifier: MIT
 
 defmodule AriaStorage.ChunkUploader do
   @moduledoc "Waffle uploader for desync/casync chunks.\n\nThis module defines how chunks are stored using Waffle's flexible storage\nbackends. Chunks are stored with their SHA512/256 hash as the filename\nand can be stored locally, on S3, or any other Waffle-supported backend.\n"

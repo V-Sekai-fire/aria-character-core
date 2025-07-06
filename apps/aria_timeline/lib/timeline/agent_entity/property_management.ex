@@ -1,5 +1,4 @@
 # Copyright (c) 2025-present K. S. Ernest (iFire) Lee
-# SPDX-License-Identifier: MIT
 
 defmodule Timeline.AgentEntity.PropertyManagement do
   @moduledoc "Property management operations for Timeline.AgentEntity.\n\nHandles getting, setting, and updating properties for agents and entities.\n"

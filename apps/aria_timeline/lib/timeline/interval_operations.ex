@@ -1,5 +1,4 @@
 # Copyright (c) 2025-present K. S. Ernest (iFire) Lee
-# SPDX-License-Identifier: MIT
 
 defmodule Timeline.IntervalOperations do
   @moduledoc "Core Timeline operations including interval management, STN solving, and composition operations.\n\nThis module contains the fundamental Timeline functionality:\n- Basic CRUD operations for intervals\n- STN solving and encapsulation\n- Timeline composition operations (intersection, union, chain, parallel)\n- Core utility functions\n\n## Time Representation\n- External API: seconds (float/integer)\n- Internal storage/solving: milliseconds (integer)\n- Precision: 1ms ticks as per ADR-006\n"

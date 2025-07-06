@@ -1,5 +1,4 @@
 # Copyright (c) 2025-present K. S. Ernest (iFire) Lee
-# SPDX-License-Identifier: MIT
 
 defmodule Mix.Tasks.Serial.Decode do
   @serial_number "R25W002DECX"

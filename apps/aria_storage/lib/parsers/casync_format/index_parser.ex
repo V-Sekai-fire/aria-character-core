@@ -1,5 +1,4 @@
 # Copyright (c) 2025-present K. S. Ernest (iFire) Lee
-# SPDX-License-Identifier: MIT
 
 defmodule AriaStorage.Parsers.CasyncFormat.IndexParser do
   @moduledoc "Parser for CAIBX/CAIDX index files in the ARCANA format.\n\nHandles parsing of Content Archive Index files for both blobs (CAIBX)\nand directories (CAIDX) using direct binary pattern matching.\n"

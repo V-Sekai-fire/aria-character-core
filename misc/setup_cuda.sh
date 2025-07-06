@@ -1,6 +1,5 @@
 #!/bin/bash
 # Copyright (c) 2025-present K. S. Ernest (iFire) Lee
-# SPDX-License-Identifier: MIT
 
 # Setup script for CUDA 12.8 support with TorchX on RTX 4090
 

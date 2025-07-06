@@ -1,5 +1,4 @@
 # Copyright (c) 2025-present K. S. Ernest (iFire) Lee
-# SPDX-License-Identifier: MIT
 
 defmodule AriaStorage.Parsers.CasyncFormat.ArchiveParser do
   @moduledoc "Parser for CATAR archive files in the ARCANA format.\n\nCATAR format is a structured archive format similar to tar but with casync-specific\nenhancements. It contains a directory tree with filenames, permissions, and file data.\n"

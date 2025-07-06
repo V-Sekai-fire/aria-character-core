@@ -1,5 +1,4 @@
 # Copyright (c) 2025-present K. S. Ernest (iFire) Lee
-# SPDX-License-Identifier: MIT
 
 defmodule AriaTimelineIntervals.AllenRelations do
   @moduledoc """
@@ -158,7 +157,7 @@ defmodule AriaTimelineIntervals.AllenRelations do
         %Interval{start_time: start1, end_time: end1},
         %Interval{start_time: start2, end_time: end2}
       ) do
-    DateTime.compare(start1, start2) == :lt and 
+    DateTime.compare(start1, start2) == :lt and
     DateTime.compare(start2, end1) == :lt and
     DateTime.compare(end1, end2) == :lt
   end

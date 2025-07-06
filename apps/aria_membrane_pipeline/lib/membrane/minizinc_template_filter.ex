@@ -1,5 +1,4 @@
 # Copyright (c) 2025-present K. S. Ernest (iFire) Lee
-# SPDX-License-Identifier: MIT
 
 defmodule Membrane.MiniZincTemplateFilter do
   @moduledoc "Membrane filter that processes MiniZinc problems using EEx templates and Porcelain execution.\n\nThis filter:\n1. Takes structured problem data as input\n2. Renders appropriate MiniZinc template with problem variables\n3. Executes MiniZinc using Porcelain for robust process management\n4. Parses and formats the solution output\n5. Handles errors and timeouts gracefully\n"

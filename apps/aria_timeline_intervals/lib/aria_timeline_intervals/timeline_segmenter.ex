@@ -1,5 +1,4 @@
 # Copyright (c) 2025-present K. S. Ernest (iFire) Lee
-# SPDX-License-Identifier: MIT
 
 defmodule AriaTimelineIntervals.TimelineSegmenter do
   @moduledoc """
@@ -160,12 +159,12 @@ defmodule AriaTimelineIntervals.TimelineSegmenter do
 
   defp create_time_windows(start_time, end_time, duration_seconds) do
     window_count = ceil(DateTime.diff(end_time, start_time, :second) / duration_seconds)
-    
+
     0..(window_count - 1)
     |> Enum.map(fn index ->
       window_start = DateTime.add(start_time, index * duration_seconds, :second)
       window_end = DateTime.add(start_time, (index + 1) * duration_seconds, :second)
-      
+
       %{
         start_time: window_start,
         end_time: min(window_end, end_time),
@@ -191,7 +190,7 @@ defmodule AriaTimelineIntervals.TimelineSegmenter do
   defp group_overlapping_intervals(intervals) do
     Enum.reduce(intervals, [], fn interval, groups ->
       case find_overlapping_group(interval, groups) do
-        nil -> 
+        nil ->
           groups ++ [[interval]]
         group_index ->
           List.update_at(groups, group_index, fn group -> group ++ [interval] end)
@@ -239,14 +238,14 @@ defmodule AriaTimelineIntervals.TimelineSegmenter do
       DateTime.compare(first.end_time, second.start_time) == :lt
     end)
     |> Enum.map(fn [first, second] ->
-      Interval.new(first.end_time, second.start_time, 
+      Interval.new(first.end_time, second.start_time,
         metadata: %{gap: true, gap_duration_seconds: DateTime.diff(second.start_time, first.end_time, :second)})
     end)
   end
 
   defp create_segment_from_group(group) do
     {start_time, end_time} = calculate_bounds(group)
-    
+
     %{
       intervals: group,
       start_time: start_time,

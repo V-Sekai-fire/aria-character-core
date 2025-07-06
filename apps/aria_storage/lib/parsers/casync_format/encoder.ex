@@ -1,5 +1,4 @@
 # Copyright (c) 2025-present K. S. Ernest (iFire) Lee
-# SPDX-License-Identifier: MIT
 
 defmodule AriaStorage.Parsers.CasyncFormat.Encoder do
   @moduledoc "Encoder for ARCANA format files.\n\nProvides encoding functions for CAIBX/CAIDX index files, CACNK chunk files,\nand CATAR archive files, maintaining compatibility with casync/desync tools.\n"

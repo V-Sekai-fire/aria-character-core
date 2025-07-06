@@ -1,5 +1,4 @@
 # Copyright (c) 2025-present K. S. Ernest (iFire) Lee
-# SPDX-License-Identifier: MIT
 
 # Project-specific vocabulary and technical terms for spellcheckers
 # Add technical terms, proper nouns, and project-specific vocabulary here

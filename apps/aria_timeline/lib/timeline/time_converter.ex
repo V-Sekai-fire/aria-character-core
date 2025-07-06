@@ -1,5 +1,4 @@
 # Copyright (c) 2025-present K. S. Ernest (iFire) Lee
-# SPDX-License-Identifier: MIT
 
 defmodule Timeline.TimeConverter do
   @moduledoc "Time conversion utilities for the Timeline system.\n\nHandles DateTime conversions with float precision for temporal reasoning.\nSupports both relative time (duration in seconds) and absolute time (DateTime).\n\n## Design Principles\n\n- External API accepts seconds (float/integer) or DateTime\n- Internal storage uses DateTime with microsecond precision\n- Float resolution for precise temporal calculations\n- Robust edge case handling and validation\n\n## Examples\n\n    iex> Timeline.TimeConverter.seconds_to_datetime(5.5)\n    ~U[1970-01-01 00:00:05.500000Z]\n    iex> Timeline.TimeConverter.datetime_to_seconds(~U[1970-01-01 00:00:05.500000Z])\n    5.5\n    iex> Timeline.TimeConverter.add_seconds(~U[2025-01-01 10:00:00.000000Z], 1.5)\n    ~U[2025-01-01 10:00:01.500000Z]\n\n## References\n\n- ADR-006: Game Engine Real-time Execution (float precision)\n- ADR-079: Timeline Module Implementation Progress (DateTime with float)\n"

@@ -1,5 +1,4 @@
 # Copyright (c) 2025-present K. S. Ernest (iFire) Lee
-# SPDX-License-Identifier: MIT
 
 defmodule AriaStorage.ChunkStore do
   @moduledoc "Generic chunk store interface for different storage backends.\n\nThis module provides a unified interface for storing and retrieving chunks\nacross different storage backends (local, S3, Waffle, etc.).\n"

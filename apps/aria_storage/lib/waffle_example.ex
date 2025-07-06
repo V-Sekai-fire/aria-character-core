@@ -1,5 +1,4 @@
 # Copyright (c) 2025-present K. S. Ernest (iFire) Lee
-# SPDX-License-Identifier: MIT
 
 defmodule AriaStorage.WaffleExample do
   @moduledoc "Example usage of AriaStorage with Waffle integration.\n\nThis module provides practical examples of how to use the Waffle-based\nstorage system for various use cases.\n"

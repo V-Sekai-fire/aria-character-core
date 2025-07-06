@@ -1,5 +1,4 @@
 # Copyright (c) 2025-present K. S. Ernest (iFire) Lee
-# SPDX-License-Identifier: MIT
 
 defmodule AriaStorage.Chunks.Core do
   @moduledoc "Core chunking algorithms and chunk creation functionality.\n\nThis module contains the main chunking logic that uses rolling hash\nto create content-defined chunks from files.\n"

@@ -1,12 +1,11 @@
 # Copyright (c) 2025-present K. S. Ernest (iFire) Lee
-# SPDX-License-Identifier: MIT
 
 defmodule AriaTimelineIntervals.TimeConverter do
   @moduledoc """
   Time conversion utilities for the AriaTimelineIntervals system.
 
   Handles time conversions between different units and formats with precision
-  for temporal reasoning. Supports both relative time (duration in seconds) 
+  for temporal reasoning. Supports both relative time (duration in seconds)
   and absolute time (DateTime).
 
   ## Design Principles

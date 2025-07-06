@@ -1,5 +1,4 @@
 # Copyright (c) 2025-present K. S. Ernest (iFire) Lee
-# SPDX-License-Identifier: MIT
 
 defmodule AriaSecurity.OpenBao do
   @moduledoc "OpenBao integration module with SoftHSM PKCS#11 seal support.\n\nThis module provides high-level operations for managing OpenBao with\nHardware Security Module (HSM) seal integration using SoftHSM.\n"

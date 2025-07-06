@@ -1,5 +1,4 @@
 # Copyright (c) 2025-present K. S. Ernest (iFire) Lee
-# SPDX-License-Identifier: MIT
 
 defmodule AriaStorage.WaffleConfig do
   @moduledoc "Configuration module for Waffle integration with desync chunk storage.\n\nThis module provides helpers for configuring Waffle with different storage\nbackends and integrating with the aria-character-core configuration system.\n"

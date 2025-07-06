@@ -1,5 +1,4 @@
 # Copyright (c) 2025-present K. S. Ernest (iFire) Lee
-# SPDX-License-Identifier: MIT
 
 defmodule Timeline.AgentEntity.StateTransitions do
   @moduledoc "State transition operations for Timeline.AgentEntity.\n\nHandles transitions between agent and entity states based on capabilities\nand dynamic state changes.\n"

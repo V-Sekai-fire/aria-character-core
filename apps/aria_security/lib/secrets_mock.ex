@@ -1,5 +1,4 @@
 # Copyright (c) 2025-present K. S. Ernest (iFire) Lee
-# SPDX-License-Identifier: MIT
 
 defmodule AriaSecurity.SecretsMock do
   @moduledoc "Mock implementation of the Secrets module for testing.\n\nThis module provides the same interface as AriaSecurity.Secrets but stores\nsecrets in memory instead of connecting to an external OpenBao server.\n"
