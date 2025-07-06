@@ -7,7 +7,6 @@
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 
-
 - [Contributors](#contributors)
 - [Status](#status)
 - [Dependencies](#dependencies)
@@ -38,11 +37,11 @@
 
 ## Contributors
 
-* 進藤 哲郎
-* 廣瀬 淳一
-* 蘇 柏彰
-* 小渕 豊
-* 角 真宇
+- 進藤 哲郎
+- 廣瀬 淳一
+- 蘇 柏彰
+- 小渕 豊
+- 角 真宇
 
 ## Status
 
@@ -56,12 +55,12 @@ Written against the glTF 2.0 spec.
 
 VRMC_vrm 拡張は、これらの拡張と併用して使用することを想定しています。
 
-* KHR_materials_unlit
-* KHR_texture_transform
-* KHR_materials_emissive_strength
-* VRMC_materials_mtoon
-* VRMC_springBone
-* VRMC_node_constraint
+- KHR_materials_unlit
+- KHR_texture_transform
+- KHR_materials_emissive_strength
+- VRMC_materials_mtoon
+- VRMC_springBone
+- VRMC_node_constraint
 
 ## KHR_texture_transform の制限
 
@@ -71,11 +70,11 @@ VRMC_vrm 拡張は、これらの拡張と併用して使用することを想�
 
 glTF 標準のPBRマテリアルの場合、
 
-* pbrMetallicRoughness.baseColorTexture(KHR_materials_unlit の場合はこれのみ)
-* pbrMetallicRoughness.metallicRoughnessTexture
-* normalTexture
-* occlusionTexture
-* emissiveTexture
+- pbrMetallicRoughness.baseColorTexture(KHR_materials_unlit の場合はこれのみ)
+- pbrMetallicRoughness.metallicRoughnessTexture
+- normalTexture
+- occlusionTexture
+- emissiveTexture
 
 です。
 
@@ -84,8 +83,8 @@ glTF 標準のPBRマテリアルの場合、
 実装によっては KHR_texture_transform の拡張する項目が個別に設定できないことがあります。
 そのため、下記の項目については使用しないことを推奨しています。
 
-* rotation
-* texCoord
+- rotation
+- texCoord
 
 ## Overview
 
@@ -132,11 +131,11 @@ VRMでは、VRMモデルを構成するglTFシーンの原点から相対にト�
 }
 ```
 
-* https://github.com/vrm-c/vrm-specification/tree/master/specification/VRMC_vrm-1.0/schema
+- https://github.com/vrm-c/vrm-specification/tree/master/specification/VRMC_vrm-1.0/schema
 
 GLTF-2.0のJsonSchema
 
-* https://github.com/KhronosGroup/glTF/tree/master/specification/2.0/schema
+- https://github.com/KhronosGroup/glTF/tree/master/specification/2.0/schema
 
 ### VRMC_vrm の仕様バージョン
 
@@ -158,8 +157,8 @@ glTFの [coordinate-system-and-units](https://github.com/KhronosGroup/glTF/tree/
 
 以下の項目を使用しません。
 
-* animations
-* cameras
+- animations
+- cameras
 
 ### 保存された TANGENT を無視してもよい
 
@@ -167,25 +166,25 @@ TANGENT を正しく扱うことが技術的に困難なため、書き出しは
 
 #### `meshes[*].primitives[*].attributes.TANGENT`
 
-* import: MikkTSpaceアルゴリズムで計算してください。
+- import: MikkTSpaceアルゴリズムで計算してください。
 
 https://github.com/KhronosGroup/glTF/blob/master/specification/2.0/README.md#meshes
 
 > Implementation note: When tangents are not specified, client implementations should calculate tangents using default MikkTSpace algorithms. For best results, the mesh triangles should also be processed using default MikkTSpace algorithms.
 
-* export: MikkTSpaceアルゴリズムで計算することを期待してエクスポートしないことを推奨。
+- export: MikkTSpaceアルゴリズムで計算することを期待してエクスポートしないことを推奨。
 
 #### `meshes[*].primitives[*].targets.TANGENT`
 
-* morphTarget で tangent がアニメーションすることは非推奨です
-* export: 出力しないことを推奨
-* import: 無視するを推奨
+- morphTarget で tangent がアニメーションすることは非推奨です
+- export: 出力しないことを推奨
+- import: 無視するを推奨
 
 ### `meshes[*].extras.targetNames` モーフターゲットの名前(推奨)
 
 `meshes[*].primitives[*].targets.name` が無いので代替で `meshes[*].extras.targetNames` に格納します。
 
-* https://github.com/KhronosGroup/glTF/issues/1036
+- https://github.com/KhronosGroup/glTF/issues/1036
 
 ## `VRMC_vrm.humanoid` ノードへのヒューマノイドボーンの割り当て(必須)
 
@@ -209,25 +208,29 @@ VRMは、VRを想定した一人称視点の設定を定義しています。
 
 [./firstPerson.ja.md](./firstPerson.ja.md)
 
-## Expression, LookAt, SpringBone, Constraints の適用順 
+## Expression, LookAt, SpringBone, Constraints の適用順
 
-* VRMC_vrm.lookAt
-* VRMC_vrm.expression
-* VRMC_node_constraint
-* VRMC_springBone
+- VRMC_vrm.lookAt
+- VRMC_vrm.expression
+- VRMC_node_constraint
+- VRMC_springBone
 
 は Node, Mesh への変更があり実行順の影響があります。
 推奨される更新の適用順は下記のとおりです。
 
 1. ヒューマノイドボーンを解決
 2. 頭の位置が決まるのでLookAtを解決
-  * Bone型 => leftEye, rightEye ボーンを回転
-  * Expression型 => 次項
+
+- Bone型 => leftEye, rightEye ボーンを回転
+- Expression型 => 次項
+
 3. ExpressionUpdate
-  * 喜怒哀楽 コントローラーなど外部入力 => Expression ウェイトを設定
-  * LipSync => Expression ウェイトを設定
-  * AutoBlink => Expression ウェイトを設定
-  * Expression型のLookAt => Expression のウェイトを設定
+
+- 喜怒哀楽 コントローラーなど外部入力 => Expression ウェイトを設定
+- LipSync => Expression ウェイトを設定
+- AutoBlink => Expression ウェイトを設定
+- Expression型のLookAt => Expression のウェイトを設定
+
 4. Expression を Apply する
 5. コンストレイントを解決
 6. SpringBoneを解決
@@ -252,8 +255,8 @@ VRMは、ヒューマノイド向けに視線制御を定義しています。
 
 ## Known Implementations
 
-* https://vrm.dev/vrm_applications/
+- https://vrm.dev/vrm_applications/
 
 ## Resources
 
-* https://vrm.dev/
+- https://vrm.dev/

@@ -33,8 +33,8 @@ extensions.VRMC_vrm.humanoid = {
 
 ## ヒューマノイドボーンの一覧
 
-* ヒューマノイドボーンは VRM 内で同じものが複数存在してはいけません。
-* 表中の `-` は親ボーンが必ず存在するため、条件を考慮する必要が無いことを示します。
+- ヒューマノイドボーンは VRM 内で同じものが複数存在してはいけません。
+- 表中の `-` は親ボーンが必ず存在するため、条件を考慮する必要が無いことを示します。
 
 ### 胴
 
@@ -118,36 +118,36 @@ extensions.VRMC_vrm.humanoid = {
 
 ## ヒューマノイドボーンの親子関係
 
-* ヒューマノイドボーンは親ボーンが決まっています。必須でない親ボーンが存在しない場合は、親ボーンの親ボーンを探してください。
-* ヒューマノイドボーンの間にヒューマノイドボーンではないノードが入ることは許容されます(UpperLegとLowerLegの間にヒューマノイドボーンでないノードがあるなど)
+- ヒューマノイドボーンは親ボーンが決まっています。必須でない親ボーンが存在しない場合は、親ボーンの親ボーンを探してください。
+- ヒューマノイドボーンの間にヒューマノイドボーンではないノードが入ることは許容されます(UpperLegとLowerLegの間にヒューマノイドボーンでないノードがあるなど)
 
 hips を root として以下のような親子になります。
 
-* root(ヒューマノイドボーンではない。原点)
-  * hips
-    * spine
-      * (chest)
-        * (upperChest)
-          * (neck)
-            * head
-              * (leftEye)
-              * (rightEye)
-              * (jaw)
-          * (leftShoulder)
-            * leftUpperArm
-              * leftLowerArm
-                * leftHand
-                  * (fingers) 省略
-          * (rightShoulder)
-            * rightUpperArm
-              * rightLowerArm
-                * rightHand
-                  * (fingers) 省略
-    * leftUpperLeg
-      * leftLowerLeg
-        * leftFoot
-          * (leftToes)
-    * rightUpperLeg
-      * rightLowerLeg
-        * rightFoot
-          * (leftToes)
+- root(ヒューマノイドボーンではない。原点)
+  - hips
+    - spine
+      - (chest)
+        - (upperChest)
+          - (neck)
+            - head
+              - (leftEye)
+              - (rightEye)
+              - (jaw)
+          - (leftShoulder)
+            - leftUpperArm
+              - leftLowerArm
+                - leftHand
+                  - (fingers) 省略
+          - (rightShoulder)
+            - rightUpperArm
+              - rightLowerArm
+                - rightHand
+                  - (fingers) 省略
+    - leftUpperLeg
+      - leftLowerLeg
+        - leftFoot
+          - (leftToes)
+    - rightUpperLeg
+      - rightLowerLeg
+        - rightFoot
+          - (leftToes)

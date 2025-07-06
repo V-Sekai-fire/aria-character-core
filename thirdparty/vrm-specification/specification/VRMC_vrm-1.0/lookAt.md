@@ -1,6 +1,6 @@
 # `VRMC_vrm.lookAt`
 
-This document provides specifications for the `lookAt` field of the` VRMC_vrm` extension.
+This document provides specifications for the `lookAt` field of the`VRMC_vrm` extension.
 
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
@@ -84,23 +84,24 @@ To determine the direction of gaze where the model is looking at an object, We d
 LookAt space is defined as a space relative to a transform in the world.
 We define the transform by the following:
 
-* The parent of the transform is the head, which follows the head's movement
-* The local position of the transform from the head is defined by the property `offsetFromHeadBone`
-* The local rotation of the transform from the head is the inverse of the head's rest rotation in model space
+- The parent of the transform is the head, which follows the head's movement
+- The local position of the transform from the head is defined by the property `offsetFromHeadBone`
+- The local rotation of the transform from the head is the inverse of the head's rest rotation in model space
 
 > Due to the rest rotation of the head in the model space, the direction of the viewpoint position shift by `offsetFromHeadBone` may not be the same as the axes in the model space.
 > Also, even if the head has a rest rotation in the model space, the forward direction of the sight will match +Z axis in the model space.
 
-In the reference space of the line-of-sight direction, it has the `offsetFromHeadBone`, which is the local coordinate of the` head` bone, as the origin, and has the world reverse rotation of the head bone in the initial posture.
+In the reference space of the line-of-sight direction, it has the `offsetFromHeadBone`, which is the local coordinate of the`head` bone, as the origin, and has the world reverse rotation of the head bone in the initial posture.
 If root has no rotation, it has the same orientation as the world axis.
 
 This document uses glTF's right-handed, Y-Up, and Z-Forward coordinate systems.
 The positive directions of Yaw and Pitch are as follows.
 
-* Yaw: Z-> X direction => Left
-* Pitch: Y-> Z direction => Down
+- Yaw: Z-> X direction => Left
+- Pitch: Y-> Z direction => Down
 
 RightHanded
+
 ```
       Y  Forward
       ^  Z
@@ -117,7 +118,7 @@ Implementation note: If the model does not have `offsetFromHeadBone`, it is reco
 
 ### RangeMap
 
-You can process the line-of-sight values ​​`Yaw` and` Pitch` evaluated in the `LookAt space` before applying them to the` bone` or `expression`.
+You can process the line-of-sight values ​​`Yaw` and`Pitch` evaluated in the `LookAt space` before applying them to the`bone` or `expression`.
 
 ![range_map](./figures/range_map.png)
 
@@ -135,7 +136,7 @@ When inputMaxValue is set to 0, it is RECOMMENDED to apply 0 if the line-of-sigh
 
 #### Interpretation when type is bone
 
-From the line of sight of `yaw`,` pitch`, generate a `local rotation` for the` leftEye` and `rightEye` bones.
+From the line of sight of `yaw`,`pitch`, generate a `local rotation` for the`leftEye` and `rightEye` bones.
 There are four categories: `horizontal inside`, `horizontal outside`, `vertical upper side`, and `vertical lower side`.
 
 The usage of rangeMap on the top, bottom, left, and right is as follows.
@@ -163,8 +164,8 @@ const boneLocalEulerAngle = min(fabs(value), rangeMap.inputMaxValue)/rangeMap.in
 
 #### Interpretation when type is expression
 
-Generates `weight` for` lookUp` Expression, `lookDown` Expression,` lookLeft` Expression, and `lookRight` Expression.
-There are three divisions: `horizontal`, `vertical upper side`, and` vertical lower side`.
+Generates `weight` for`lookUp` Expression, `lookDown` Expression,`lookLeft` Expression, and `lookRight` Expression.
+There are three divisions: `horizontal`, `vertical upper side`, and`vertical lower side`.
 Note that there is no distinction between `horizontal inside` and `horizontal outside` because both eyes change together in one Expression.
 Use `rangeMapHorizontalOuter`.
 

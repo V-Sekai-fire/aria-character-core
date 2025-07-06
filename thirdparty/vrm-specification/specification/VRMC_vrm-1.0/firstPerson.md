@@ -1,6 +1,6 @@
 # `VRMC_vrm.firstPerson`
 
-This document provides specifications for the `firstPerson` field of the` VRMC_vrm` extension.
+This document provides specifications for the `firstPerson` field of the`VRMC_vrm` extension.
 
 ## MeshAnnotation
 

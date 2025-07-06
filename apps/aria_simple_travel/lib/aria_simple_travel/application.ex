@@ -1,3 +1,5 @@
+# Copyright (c) 2025-present K. S. Ernest (iFire) Lee
+
 defmodule AriaSimpleTravel.Application do
   # See https://hexdocs.pm/elixir/Application.html
   # for more information on OTP Applications

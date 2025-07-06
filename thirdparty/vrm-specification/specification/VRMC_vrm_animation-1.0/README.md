@@ -78,7 +78,6 @@ Written against the glTF 2.0 spec.
 
 Also, some definitions in the specifications depend on [`VRMC_vrm`](https://github.com/vrm-c/vrm-specification/blob/master/specification/VRMC_vrm-1.0/README.md).
 
-
 ## Overview
 
 This specification defines the glTF extension `VRMC_VRM_animation` to describe animation for humanoid models.
@@ -103,9 +102,9 @@ Implementations may support multiple animations contained in a single file.
 glTF animations do not have the concept of frame rate because keyframes can be inserted at any time.
 However, to ensure that the animation is played back at a reasonable frame rate, we propose a frame rate of 30 frames per second as a guideline that is not too high or too low, taking into account the following points:
 
-* 60 FPS or 30 FPS is common in games
-* The raw data (before processing) of motion capture may have a high frame rate
-* In video production, there might be 24 FPS, etc.
+- 60 FPS or 30 FPS is common in games
+- The raw data (before processing) of motion capture may have a high frame rate
+- In video production, there might be 24 FPS, etc.
 
 Considering that the animation is interpolated linearly in the implementation, 30 FPS should be sufficient to ensure smoothness.
 
@@ -373,7 +372,6 @@ An object that defines preset expressions.
 
 - Type: `expressions.preset`
 - Required: No
-
 
 #### expressions.custom
 

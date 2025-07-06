@@ -2,6 +2,7 @@
 
 VRM is based on glb format, which is a binary form of [glTF 2.0](https://github.com/KhronosGroup/glTF/blob/master/specification/2.0/README.md). It is a model format for VR.
 VRM specification repository is [VRM specification](https://github.com/vrm-c/vrm-specification).
+
 # Update history
 
 * 20181109: Corrected parts where JsonSchema's `Vector3` type is erroneously set to `array`
@@ -19,46 +20,45 @@ VRM specification repository is [VRM specification](https://github.com/vrm-c/vrm
     }
 }
 ```
+
 # Contents
 
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 
-
-- [File extension](#file-extension)
-- [Json extension](#json-extension)
-- [VRM extension: VRM version, etc.](#vrm-extension-vrm-version-etc)
-- [Savable elements](#savable-elements)
-  - [GLTF-2.0: Texture](#gltf-20-texture)
-  - [GLTF-2.0: Material (json.extensions.VRM.materialProperties)](#gltf-20-material-jsonextensionsvrmmaterialproperties)
-  - [VRM extension: `/extensions/VRM/materialProperties`](#vrm-extension-extensionsvrmmaterialproperties)
-  - [GLTF-2.0: Mesh](#gltf-20-mesh)
-  - [GLTF-2.0: Skinning information](#gltf-20-skinning-information)
-  - [GLTF-2.0: Node](#gltf-20-node)
-- [Rules for saving values](#rules-for-saving-values)
-  - [GLTF2 rules](#gltf2-rules)
-  - [VRM rules](#vrm-rules)
-- [Available shaders in VRM](#available-shaders-in-vrm)
-  - [Unlit type](#unlit-type)
-  - [MToon](#mtoon)
-- [VRM extension: Model's bone mapping (json.extensions.VRM.humanoid)](#vrm-extension-models-bone-mapping-jsonextensionsvrmhumanoid)
-  - [Defined bones](#defined-bones)
-- [VRM extension: Model information (json.extensions.VRM.meta)](#vrm-extension-model-information-jsonextensionsvrmmeta)
-  - [Information](#information)
-  - [Permission / License information](#permission--license-information)
-- [VRM extension: Morph setting (json.extensions.VRM.blendShapeMaster)](#vrm-extension-morph-setting-jsonextensionsvrmblendshapemaster)
-  - [BlendShape groups (json.extensions.VRM.blendShapeMaster.blendShapeGroups)](#blendshape-groups-jsonextensionsvrmblendshapemasterblendshapegroups)
-- [VRM extension: First-person settings (json.extensions.VRM.firstPerson)](#vrm-extension-first-person-settings-jsonextensionsvrmfirstperson)
-  - [firstPersonBone (json.extensions.VRM.firstPerson.firstPersonBone)](#firstpersonbone-jsonextensionsvrmfirstpersonfirstpersonbone)
-  - [firstPersonBoneOffset (json.extensions.VRM.firstPerson.firstPersonBoneOffset)](#firstpersonboneoffset-jsonextensionsvrmfirstpersonfirstpersonboneoffset)
-  - [meshAnnotations (json.extensions.VRM.firstPerson.meshAnnotations)](#meshannotations-jsonextensionsvrmfirstpersonmeshannotations)
-  - [Eye control settings](#eye-control-settings)
-- [VRM extension: Spring bone settings (json.extensions.VRM.secondaryAnimation)](#vrm-extension-spring-bone-settings-jsonextensionsvrmsecondaryanimation)
-  - [Spring bone (secondaryAnimation.boneGroups)](#spring-bone-secondaryanimationbonegroups)
-  - [Collider group settings (json.extensions.VRM.secondaryAnimation.colliderGroups)](#collider-group-settings-jsonextensionsvrmsecondaryanimationcollidergroups)
+* [File extension](#file-extension)
+* [Json extension](#json-extension)
+* [VRM extension: VRM version, etc.](#vrm-extension-vrm-version-etc)
+* [Savable elements](#savable-elements)
+  * [GLTF-2.0: Texture](#gltf-20-texture)
+  * [GLTF-2.0: Material (json.extensions.VRM.materialProperties)](#gltf-20-material-jsonextensionsvrmmaterialproperties)
+  * [VRM extension: `/extensions/VRM/materialProperties`](#vrm-extension-extensionsvrmmaterialproperties)
+  * [GLTF-2.0: Mesh](#gltf-20-mesh)
+  * [GLTF-2.0: Skinning information](#gltf-20-skinning-information)
+  * [GLTF-2.0: Node](#gltf-20-node)
+* [Rules for saving values](#rules-for-saving-values)
+  * [GLTF2 rules](#gltf2-rules)
+  * [VRM rules](#vrm-rules)
+* [Available shaders in VRM](#available-shaders-in-vrm)
+  * [Unlit type](#unlit-type)
+  * [MToon](#mtoon)
+* [VRM extension: Model's bone mapping (json.extensions.VRM.humanoid)](#vrm-extension-models-bone-mapping-jsonextensionsvrmhumanoid)
+  * [Defined bones](#defined-bones)
+* [VRM extension: Model information (json.extensions.VRM.meta)](#vrm-extension-model-information-jsonextensionsvrmmeta)
+  * [Information](#information)
+  * [Permission / License information](#permission--license-information)
+* [VRM extension: Morph setting (json.extensions.VRM.blendShapeMaster)](#vrm-extension-morph-setting-jsonextensionsvrmblendshapemaster)
+  * [BlendShape groups (json.extensions.VRM.blendShapeMaster.blendShapeGroups)](#blendshape-groups-jsonextensionsvrmblendshapemasterblendshapegroups)
+* [VRM extension: First-person settings (json.extensions.VRM.firstPerson)](#vrm-extension-first-person-settings-jsonextensionsvrmfirstperson)
+  * [firstPersonBone (json.extensions.VRM.firstPerson.firstPersonBone)](#firstpersonbone-jsonextensionsvrmfirstpersonfirstpersonbone)
+  * [firstPersonBoneOffset (json.extensions.VRM.firstPerson.firstPersonBoneOffset)](#firstpersonboneoffset-jsonextensionsvrmfirstpersonfirstpersonboneoffset)
+  * [meshAnnotations (json.extensions.VRM.firstPerson.meshAnnotations)](#meshannotations-jsonextensionsvrmfirstpersonmeshannotations)
+  * [Eye control settings](#eye-control-settings)
+* [VRM extension: Spring bone settings (json.extensions.VRM.secondaryAnimation)](#vrm-extension-spring-bone-settings-jsonextensionsvrmsecondaryanimation)
+  * [Spring bone (secondaryAnimation.boneGroups)](#spring-bone-secondaryanimationbonegroups)
+  * [Collider group settings (json.extensions.VRM.secondaryAnimation.colliderGroups)](#collider-group-settings-jsonextensionsvrmsecondaryanimationcollidergroups)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
-
 
 # File extension
 
@@ -90,7 +90,7 @@ GLTF-2.0 JsonSchema:
 
 * https://github.com/KhronosGroup/glTF/tree/master/specification/2.0/schema
 
-# VRM extension: VRM version, etc.
+# VRM extension: VRM version, etc
 
 * Starting from v0.36:`/extensions/VRM/exporterVersion`
 
@@ -131,7 +131,7 @@ GLTF-2.0 JsonSchema:
 
 # Savable elements
 
-The information of an entire humanoid model. 
+The information of an entire humanoid model.
 
 ## GLTF-2.0: Texture
 
@@ -702,7 +702,7 @@ The bone whose rendering should be turned off in first-person view. Usually``Hea
 
 ## firstPersonBoneOffset (json.extensions.VRM.firstPerson.firstPersonBoneOffset)
 
-The target position of the VR headset in first-person view. 
+The target position of the VR headset in first-person view.
 It is assumed that an offset from the head bone to the VR headset is added.
 
 ## meshAnnotations (json.extensions.VRM.firstPerson.meshAnnotations)
@@ -838,7 +838,7 @@ Specify the index of the collider group for collisions with swaying objects.
 
 #### center (json.extensions.VRM.secondaryAnimation.boneGroups[0].center)
 
-The reference point of a swaying object can be set at any location except the origin. When implementing UI moving with warp, the parent node to move with warp can be specified if you don't want to make the object swaying with warp movement. 
+The reference point of a swaying object can be set at any location except the origin. When implementing UI moving with warp, the parent node to move with warp can be specified if you don't want to make the object swaying with warp movement.
 
 #### dragForce (json.extensions.VRM.secondaryAnimation.boneGroups[0].dragForce)
 
@@ -854,7 +854,7 @@ The strength of gravity.
 
 #### hitRadius (json.extensions.VRM.secondaryAnimation.boneGroups[0].hitRadius)
 
-The radius of the sphere used for the collision detection with colliders. 
+The radius of the sphere used for the collision detection with colliders.
 
 #### stiffness (json.extensions.VRM.secondaryAnimation.boneGroups[0].stiffiness)
 

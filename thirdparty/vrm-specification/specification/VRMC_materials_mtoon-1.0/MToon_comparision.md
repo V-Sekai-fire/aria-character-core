@@ -50,4 +50,3 @@
  *1 (0.0 is confused by implementation then no discription)
  *2 (0.0 is value, 1.0draft is offset from basical value(undefined@2019/12/6))
  *3 transparentWithZWrite to alphaMode=transparent and extensions.vrmc_materials_mtoon.transparentWithZWrite=true
- 

@@ -87,9 +87,9 @@ extensions.VRMC_vrm.lookAt = {
 
 LookAt 空間は、ワールド上のあるトランスフォームからの相対的な空間として定義され、このトランスフォームを以下のように定義します。
 
-* トランスフォームの親はheadであり、headの動きに追従して動く
-* トランスフォームのheadからのローカル位置は、プロパティ `offsetFromHeadBone` によって定められる
-* トランスフォームのheadからのローカル回転は、headのモデル空間におけるレスト回転の逆である
+- トランスフォームの親はheadであり、headの動きに追従して動く
+- トランスフォームのheadからのローカル位置は、プロパティ `offsetFromHeadBone` によって定められる
+- トランスフォームのheadからのローカル回転は、headのモデル空間におけるレスト回転の逆である
 
 > headがモデル空間におけるレスト回転によって、 `offsetFromHeadBone` による視点の位置の移動方向がモデル空間の軸と一致しない場合があります。
 > また、headがモデル空間におけるレスト回転を持っている場合も、視線の前方向はモデル座標系における+Z軸と一致します。
@@ -97,8 +97,8 @@ LookAt 空間は、ワールド上のあるトランスフォームからの相�
 本文章では、glTF の右手系, Y-Up, Z-Forward 座標系を用いて説明します。
 Yaw, Pitch の正の方向は下記のとおりです。
 
-* Yaw: Z->X方向 => 左
-* Pitch: Y->Z方向 => 下
+- Yaw: Z->X方向 => 左
+- Pitch: Y->Z方向 => 下
 
 ```
       Y  Forward
@@ -113,7 +113,6 @@ Left      Right
 モデルの一人称視点の位置の取得・反映に用いることができます。
 
 > Implementation note: モデルに `offsetFromHeadBone` が存在しない場合は、実装ごとに適切な値にフォールバックを行うことが推奨されます。
-
 
 ### 範囲マップ
 
@@ -184,6 +183,7 @@ const expressionWeight = min(fabs(value), inputMaxValue)/inputMaxValue * outputS
 ```
 
 ## LookAtのアルゴリズム
+
 ### Yaw and Pitch in lookAt space
 
 ```cs

@@ -2,7 +2,6 @@
 
 *Version 1.0*
 
-
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 
@@ -149,7 +148,7 @@ The constraints are described by adding the `VRMC_springBone_extended_collider` 
 
 ### Exporter Implemantation
 
-> *This section is non-normative. *
+> *This section is non-normative.*
 
 If a collider is defined in the `VRMC_springBone_extended_collider` extension, it is recommended to define a fallback collider in `VRMC_springBone` to ignore or approximate the collider defined in `VRM_springBone_extended_collider`.
 

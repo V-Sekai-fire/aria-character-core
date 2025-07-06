@@ -1,6 +1,6 @@
 # `VRMC_vrm.expressions`
 
-This document provides specifications for the `expressions` field of the` VRMC_vrm` extension.
+This document provides specifications for the `expressions` field of the`VRMC_vrm` extension.
 
 Expression is
 
@@ -10,30 +10,30 @@ Expression is
 
 It is a function to specify the meaning for the group of.
 
-> For example, the combination of `Mouth-to-mouth MorphTarget` and` Eye-closing MorphTarget` should be `sad`.
+> For example, the combination of `Mouth-to-mouth MorphTarget` and`Eye-closing MorphTarget` should be `sad`.
 
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 **Table of Contents**  *generated with [DocToc](https://github.com/thlorenz/doctoc)*
 
-- [Expression Specification](#expression-specification)
-  - [Expression control](#expression-control)
-- [Preset Expressions](#preset-expressions)
-  - [Emotions](#emotions)
-  - [Lip Sync Procedural](#lip-sync-procedural)
-  - [Blink procedural](#blink-procedural)
-  - [gaze procedural](#gaze-procedural)
-  - [Other](#other)
-- [Custom Expressions](#custom-expressions)
-- [Procedural override](#procedural-override)
-  - [Interaction between override and isBinary](#interaction-between-override-and-isbinary)
-  - [MorphTargetBind](#morphtargetbind)
-  - [MaterialColorBind](#materialcolorbind)
-  - [TextureTransformBind](#texturetransformbind)
-- [Expression update algorithm](#expression-update-algorithm)
-  - [MorphTarget](#morphtarget)
-  - [MaterialColor](#materialcolor)
-  - [TextureTransform](#texturetransform)
+* [Expression Specification](#expression-specification)
+  * [Expression control](#expression-control)
+* [Preset Expressions](#preset-expressions)
+  * [Emotions](#emotions)
+  * [Lip Sync Procedural](#lip-sync-procedural)
+  * [Blink procedural](#blink-procedural)
+  * [gaze procedural](#gaze-procedural)
+  * [Other](#other)
+* [Custom Expressions](#custom-expressions)
+* [Procedural override](#procedural-override)
+  * [Interaction between override and isBinary](#interaction-between-override-and-isbinary)
+  * [MorphTargetBind](#morphtargetbind)
+  * [MaterialColorBind](#materialcolorbind)
+  * [TextureTransformBind](#texturetransformbind)
+* [Expression update algorithm](#expression-update-algorithm)
+  * [MorphTarget](#morphtarget)
+  * [MaterialColor](#materialcolor)
+  * [TextureTransform](#texturetransform)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
@@ -135,9 +135,9 @@ The mesh may break.
 
 For example
 
-* `aa` is applied at the same time as` happy` when the mouth opens => The mouth opens too much and becomes strange
-* Close eyes `sad` and` blink` are applied => Eyes close twice and eyelids pierce cheeks
-* `lookRight` is applied at the same time as` blink` => Eyes penetrate the eyelids
+* `aa` is applied at the same time as`happy` when the mouth opens => The mouth opens too much and becomes strange
+* Close eyes `sad` and`blink` are applied => Eyes close twice and eyelids pierce cheeks
+* `lookRight` is applied at the same time as`blink` => Eyes penetrate the eyelids
 
 Etc.
 To protect against these, there is the ability to override the value of a procedural Expression when procedural Expression is enabled at the same time for a non-procedural Expression.
@@ -151,9 +151,9 @@ Each override property affects the following procedural facial expressions:
 
 | Target   | Properties       | ExpressionPreset                               |
 |:---------|:-----------------|:-----------------------------------------------|
-| Lip Sync | `overrideMouth`  | ` aa`, `ih`,` ou`, `ee`,` oh`                  |
-| Blink    | `overrideBlink`  | ` blink`, `blinkLeft`,` blinkRight`            |
-| Gaze     | `overrideLookAt` | ` lookUp`, `lookDown`,` lookLeft`, `lookRight` |
+| Lip Sync | `overrideMouth`  | `aa`, `ih`,`ou`, `ee`,`oh`                  |
+| Blink    | `overrideBlink`  | `blink`, `blinkLeft`,`blinkRight`            |
+| Gaze     | `overrideLookAt` | `lookUp`, `lookDown`,`lookLeft`, `lookRight` |
 
 > The specification does not specifically define whether these override properties work for custom facial expressions.
 > Make the appropriate settings according to the demand on the application side.
@@ -230,9 +230,9 @@ Connects the color changes of Expression and Material.
 
 Each corresponds to the following parameters:
 
-| Name          | `pbrMetallicRoughness`                 | ` KHR_materials_unlit`                  | `VRMC_materials_mtoon`                                     |
+| Name          | `pbrMetallicRoughness`                 | `KHR_materials_unlit`                  | `VRMC_materials_mtoon`                                     |
 |:--------------|:---------------------------------------|:----------------------------------------|:-----------------------------------------------------------|
-| color         | `pbrMetallicRoughness.baseColorFactor` | ` pbrMetallicRoughness.baseColorFactor` | `pbrMetallicRoughness.baseColorFactor`                     |
+| color         | `pbrMetallicRoughness.baseColorFactor` | `pbrMetallicRoughness.baseColorFactor` | `pbrMetallicRoughness.baseColorFactor`                     |
 | emissionColor | `emissiveFactor`                       | Unused                                  | `emissiveFactor`                                           |
 | shadeColor    | Unused                                 | Unused                                  | `extensions.VRMC_materials_mtoon.shadeColorFactor`         |
 | matcapColor   | Unused                                 | Unused                                  | `extensions.VRMC_materials_mtoon.matcapFactor`             |
@@ -269,7 +269,7 @@ The texture that does not have UV access is MToon's `matcap`.
 * Initialize all MaterialColor (not 0)
 * Accumulate the Expression value (Weight) `void AccumulateValue (Exoressuib expression, float value)`
 * Apply the integrated value `Base + (A.Target --Base) * A.Weight + (B.Target --Base) * B.Weight`
-   * Since the initial value of MaterialColor is not always 0, the difference from the initial value is added up.
+  * Since the initial value of MaterialColor is not always 0, the difference from the initial value is added up.
 
 ### TextureTransform
 

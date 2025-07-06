@@ -84,8 +84,8 @@
 
 ## Contributors
 
-* Sumi Masataka
-* Obuchi Yutaka
+- Sumi Masataka
+- Obuchi Yutaka
 
 ## Status
 

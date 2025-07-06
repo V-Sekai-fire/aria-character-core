@@ -16,24 +16,24 @@ Expression は、
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 **Table of Contents**  *generated with [DocToc](https://github.com/thlorenz/doctoc)*
 
-- [Expressionの仕様](#expression%E3%81%AE%E4%BB%95%E6%A7%98)
-  - [Expression の制御](#expression-%E3%81%AE%E5%88%B6%E5%BE%A1)
-- [Preset Expressions](#preset-expressions)
-  - [感情](#%E6%84%9F%E6%83%85)
-  - [リップシンク プロシージャル](#%E3%83%AA%E3%83%83%E3%83%97%E3%82%B7%E3%83%B3%E3%82%AF-%E3%83%97%E3%83%AD%E3%82%B7%E3%83%BC%E3%82%B8%E3%83%A3%E3%83%AB)
-  - [瞬き プロシージャル](#%E7%9E%AC%E3%81%8D-%E3%83%97%E3%83%AD%E3%82%B7%E3%83%BC%E3%82%B8%E3%83%A3%E3%83%AB)
-  - [視線 プロシージャル](#%E8%A6%96%E7%B7%9A-%E3%83%97%E3%83%AD%E3%82%B7%E3%83%BC%E3%82%B8%E3%83%A3%E3%83%AB)
-  - [その他](#%E3%81%9D%E3%81%AE%E4%BB%96)
-- [Custom Expressions](#custom-expressions)
-- [プロシージャルのオーバーライド](#%E3%83%97%E3%83%AD%E3%82%B7%E3%83%BC%E3%82%B8%E3%83%A3%E3%83%AB%E3%81%AE%E3%82%AA%E3%83%BC%E3%83%90%E3%83%BC%E3%83%A9%E3%82%A4%E3%83%89)
-  - [オーバーライドとisBinaryの相互作用について](#%E3%82%AA%E3%83%BC%E3%83%90%E3%83%BC%E3%83%A9%E3%82%A4%E3%83%89%E3%81%A8isbinary%E3%81%AE%E7%9B%B8%E4%BA%92%E4%BD%9C%E7%94%A8%E3%81%AB%E3%81%A4%E3%81%84%E3%81%A6)
-  - [MorphTargetBind](#morphtargetbind)
-  - [MaterialColorBind](#materialcolorbind)
-  - [TextureTransformBind](#texturetransformbind)
-- [Expression 更新のアルゴリズム](#expression-%E6%9B%B4%E6%96%B0%E3%81%AE%E3%82%A2%E3%83%AB%E3%82%B4%E3%83%AA%E3%82%BA%E3%83%A0)
-  - [MorphTarget](#morphtarget)
-  - [MaterialColor](#materialcolor)
-  - [TextureTransform](#texturetransform)
+* [Expressionの仕様](#expression%E3%81%AE%E4%BB%95%E6%A7%98)
+  * [Expression の制御](#expression-%E3%81%AE%E5%88%B6%E5%BE%A1)
+* [Preset Expressions](#preset-expressions)
+  * [感情](#%E6%84%9F%E6%83%85)
+  * [リップシンク プロシージャル](#%E3%83%AA%E3%83%83%E3%83%97%E3%82%B7%E3%83%B3%E3%82%AF-%E3%83%97%E3%83%AD%E3%82%B7%E3%83%BC%E3%82%B8%E3%83%A3%E3%83%AB)
+  * [瞬き プロシージャル](#%E7%9E%AC%E3%81%8D-%E3%83%97%E3%83%AD%E3%82%B7%E3%83%BC%E3%82%B8%E3%83%A3%E3%83%AB)
+  * [視線 プロシージャル](#%E8%A6%96%E7%B7%9A-%E3%83%97%E3%83%AD%E3%82%B7%E3%83%BC%E3%82%B8%E3%83%A3%E3%83%AB)
+  * [その他](#%E3%81%9D%E3%81%AE%E4%BB%96)
+* [Custom Expressions](#custom-expressions)
+* [プロシージャルのオーバーライド](#%E3%83%97%E3%83%AD%E3%82%B7%E3%83%BC%E3%82%B8%E3%83%A3%E3%83%AB%E3%81%AE%E3%82%AA%E3%83%BC%E3%83%90%E3%83%BC%E3%83%A9%E3%82%A4%E3%83%89)
+  * [オーバーライドとisBinaryの相互作用について](#%E3%82%AA%E3%83%BC%E3%83%90%E3%83%BC%E3%83%A9%E3%82%A4%E3%83%89%E3%81%A8isbinary%E3%81%AE%E7%9B%B8%E4%BA%92%E4%BD%9C%E7%94%A8%E3%81%AB%E3%81%A4%E3%81%84%E3%81%A6)
+  * [MorphTargetBind](#morphtargetbind)
+  * [MaterialColorBind](#materialcolorbind)
+  * [TextureTransformBind](#texturetransformbind)
+* [Expression 更新のアルゴリズム](#expression-%E6%9B%B4%E6%96%B0%E3%81%AE%E3%82%A2%E3%83%AB%E3%82%B4%E3%83%AA%E3%82%BA%E3%83%A0)
+  * [MorphTarget](#morphtarget)
+  * [MaterialColor](#materialcolor)
+  * [TextureTransform](#texturetransform)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
@@ -228,9 +228,9 @@ Expression と Material の色の変化を結びつけます。
 
 それぞれ、以下のパラメータに対応します:
 
-| Name          | `pbrMetallicRoughness`                 | ` KHR_materials_unlit`                  | `VRMC_materials_mtoon`                                     |
+| Name          | `pbrMetallicRoughness`                 | `KHR_materials_unlit`                  | `VRMC_materials_mtoon`                                     |
 |:--------------|:---------------------------------------|:----------------------------------------|:-----------------------------------------------------------|
-| color         | `pbrMetallicRoughness.baseColorFactor` | ` pbrMetallicRoughness.baseColorFactor` | `pbrMetallicRoughness.baseColorFactor`                     |
+| color         | `pbrMetallicRoughness.baseColorFactor` | `pbrMetallicRoughness.baseColorFactor` | `pbrMetallicRoughness.baseColorFactor`                     |
 | emissionColor | `emissiveFactor`                       | 未使用                                  | `emissiveFactor`                                           |
 | shadeColor    | 未使用                                 | 未使用                                  | `extensions.VRMC_materials_mtoon.shadeColorFactor`         |
 | matcapColor   | 未使用                                 | 未使用                                  | `extensions.VRMC_materials_mtoon.matcapFactor`             |

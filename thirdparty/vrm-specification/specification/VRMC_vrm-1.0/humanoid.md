@@ -1,6 +1,6 @@
 # `VRMC_vrm.humanoid`
 
-This document provides specifications for the `humanoid` field of the` VRMC_vrm` extension.
+This document provides specifications for the `humanoid` field of the`VRMC_vrm` extension.
 Defines a list of `humanoid bone`.
 
 ```json
@@ -37,8 +37,8 @@ For transforms of humanoid bones, scale components MUST have positive values (ze
 
 ## List of humanoid bones
 
-* Humanoid bones must be unique in VRM.
-* `-` in the table indicates that the parent bone always exists, so the condition doesn't need to be considered.
+- Humanoid bones must be unique in VRM.
+- `-` in the table indicates that the parent bone always exists, so the condition doesn't need to be considered.
 
 ### Torso
 
@@ -50,7 +50,7 @@ For transforms of humanoid bones, scale components MUST have positive values (ze
 | upperChest |          | chest       |                    | Yes               | upperChest can exist only when chest exists           |
 | neck       |          | upperChest  | Base of neck       | No                | 0.X is required                                       |
 
-* The bone equivalent to pelvis towards `Y-` direction from hips is deprecated (inverted pelvis).
+- The bone equivalent to pelvis towards `Y-` direction from hips is deprecated (inverted pelvis).
 
 ### Head
 
@@ -124,37 +124,36 @@ For transforms of humanoid bones, scale components MUST have positive values (ze
 
 ## Humanoid bone parent-child relationship
 
-* The parent bone of the humanoid bone is fixed. If no non-essential parent bone exists, look for the parent bone of the parent bone.
-* It is permissible to have non-humanoid bone nodes between humanoid bones (for example, there are non-humanoid bone nodes between Upper Leg and Lower Leg).
+- The parent bone of the humanoid bone is fixed. If no non-essential parent bone exists, look for the parent bone of the parent bone.
+- It is permissible to have non-humanoid bone nodes between humanoid bones (for example, there are non-humanoid bone nodes between Upper Leg and Lower Leg).
 
 With hips as root, the parent and child are as follows.
 
-* root (not a humanoid bone, origin)
-  * hips
-    * spine
-      * (chest)
-        * (upperChest)
-          * (neck)
-            * head
-              * (leftEye)
-              * (rightEye)
-              * (jaw)
-          * (leftShoulder)
-            * leftUpperArm
-              * leftLowerArm
-                * leftHand
-                  * (fingers)...
-          * (rightShoulder)
-            * rightUpperArm
-              * rightLowerArm
-                * rightHand
-                  * (fingers)...
-    * leftUpperLeg
-      * leftLowerLeg
-        * leftFoot
-          * (leftToes)
-    * rightUpperLeg
-      * rightLowerLeg
-        * rightFoot
-          * (leftToes)
-
+- root (not a humanoid bone, origin)
+  - hips
+    - spine
+      - (chest)
+        - (upperChest)
+          - (neck)
+            - head
+              - (leftEye)
+              - (rightEye)
+              - (jaw)
+          - (leftShoulder)
+            - leftUpperArm
+              - leftLowerArm
+                - leftHand
+                  - (fingers)...
+          - (rightShoulder)
+            - rightUpperArm
+              - rightLowerArm
+                - rightHand
+                  - (fingers)...
+    - leftUpperLeg
+      - leftLowerLeg
+        - leftFoot
+          - (leftToes)
+    - rightUpperLeg
+      - rightLowerLeg
+        - rightFoot
+          - (leftToes)

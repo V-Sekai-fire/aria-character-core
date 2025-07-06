@@ -84,8 +84,8 @@
 
 ## Contributors
 
-* 角 真宇
-* 小渕 豊
+- 角 真宇
+- 小渕 豊
 
 ## Status
 
@@ -140,6 +140,7 @@ MToonシェーダの実装が難しい場合、 `KHR_materials_unlit` にフォ�
 ## Definition
 
 ### Types
+
 型定義のうち Color と Texture は glTF に準じて Linear Colorspace で格納されます。
 
 ### Vertex Colors
@@ -147,11 +148,10 @@ MToonシェーダの実装が難しい場合、 `KHR_materials_unlit` にフォ�
 MToonのマテリアルについては、頂点カラーを無視します。
 
 ### Coordinates
+
 UV 座標系について
 
-
 ### BRDF
-
 
 ### Meta
 

@@ -22,16 +22,19 @@ The Simple Travel domain models people moving between locations using different 
 ### Entities
 
 **People** (alice, bob):
+
 - Capabilities: `:walking`, `:taxi_calling`, `:taxi_riding`, `:payment`
 - Properties: `cash` (money available), `owe` (taxi fare owed)
 - Initial locations: alice at home_a, bob at home_b
 
 **Taxis** (taxi1):
+
 - Capabilities: `:transportation`, `:route_planning`
 - Properties: `status` (available/busy)
 - Initial location: downtown
 
 **Locations** (home_a, home_b, park, downtown):
+
 - Capabilities: `:destination`, `:waypoint`
 - Properties: `distance` between locations
 
@@ -115,6 +118,7 @@ scenarios = AriaSimpleTravel.get_example_scenarios()
 Alice needs to travel from home_a to park (distance: 8 units). Since the distance exceeds walking threshold (2 units), she must take a taxi.
 
 **Expected Plan:**
+
 1. `call_taxi("alice", "taxi1")` - Instant
 2. `ride_taxi("alice", "park")` - 40 minutes (8 units × 5 min/unit)
 3. `pay_driver("alice", "park")` - Instant
@@ -126,6 +130,7 @@ Alice needs to travel from home_a to park (distance: 8 units). Since the distanc
 Bob walks from home_b to park (distance: 2 units). Since distance is within walking threshold, he walks.
 
 **Expected Plan:**
+
 1. `walk("bob", "home_b", "park")` - 20 minutes (2 units × 10 min/unit)
 
 **Cost:** Free

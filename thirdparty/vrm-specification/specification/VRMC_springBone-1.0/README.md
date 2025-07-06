@@ -42,9 +42,9 @@
 
 ## Contributors
 
-* Shindo Tatsuro
-* Su Po-Chang
-* Obuchi Yutaka
+- Shindo Tatsuro
+- Su Po-Chang
+- Obuchi Yutaka
 
 ## Status
 
@@ -53,6 +53,7 @@ Complete
 ## Dependencies
 
 Written against the glTF 2.0 spec.
+
 ## Overview
 
 Implements a procedural animation that behaves like a spring that tries to maintain velocity by inertia and eventually returns to the node's original orientation.
@@ -63,6 +64,7 @@ You can also set the collision between the end (sphere) of each section of Sprin
 ## Structure
 
 ### Terms
+
 The following terms are introduced for explanation.
 
 | Term                                      | Meaning              | json                                             |
@@ -177,6 +179,7 @@ b-(c)-e
 ```
 
 #### Branching SpringChain (undefined)
+
 - Treat as separate `SpringBoneChain`
 
 ```
@@ -185,8 +188,8 @@ b-(c)-e
 a-b-c-d
 ```
 
-* Treat as two SpringChains, `a-b-c-d` and` x-y-z`.
-* The execution order between `a-b-c-d` and` x-y-z` is undefined. The behavior may differ depending on the implementation. Implementation convenience such as parallel execution may be prioritized.
+- Treat as two SpringChains, `a-b-c-d` and`x-y-z`.
+- The execution order between `a-b-c-d` and`x-y-z` is undefined. The behavior may differ depending on the implementation. Implementation convenience such as parallel execution may be prioritized.
 
 ## Evaluation Space
 
@@ -316,7 +319,7 @@ The target node and its shape.
 }            
 ```
 
-shape is exclusive with either `sphere` or` capsule`.
+shape is exclusive with either `sphere` or`capsule`.
 
 | key                  | type    | Remarks                                                                                                                               |
 |:---------------------|:--------|:--------------------------------------------------------------------------------------------------------------------------------------|
@@ -382,7 +385,7 @@ shape is exclusive with either `sphere` or` capsule`.
 joints is a set of nodes that have a continuous parent-child relationship.
 There are the following restrictions.
 
-* joints [n] must be a parent or ancestor of joints[n+1]
+- joints [n] must be a parent or ancestor of joints[n+1]
 
 If joints [n] and joints [n+1] are not direct parent-child nodes, the nodes in between are ignored.
 If the end of joints is not the terminal node, then the descendant nodes will be ignored and will not sway individually.
