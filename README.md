@@ -16,7 +16,7 @@ AI planning research project with working temporal scheduling and hybrid HTN+STN
 ## Quick Start
 
 ```bash
-# Prerequisites: Elixir 1.18+, Erlang/OTP 26+, MiniZinc (required for alpha stage)
+# Prerequisites: Elixir 1.18+, Erlang/OTP 26+, MiniZinc (required for alpha stage), and libgit2_1.8-devel
 mix deps.get && mix compile
 mix test  # All 382 tests passing
 
