@@ -134,8 +134,8 @@ Ensure base datetime flows through:
 ## Related ADRs
 
 - **R25W063FA55**: Canonical Time Unit Seconds and STN Units
-- **R25W0556B01**: STN Timeline Encapsulation
-- **R25W0389D35**: Timeline Module PC-2 STN Implementation
+- **apps/aria_timeline/decisions/R25W0556B01**: STN Timeline Encapsulation
+- **apps/aria_timeline/decisions/R25W0389D35**: Timeline Module PC-2 STN Implementation
 
 ## Current Focus
 

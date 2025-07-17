@@ -123,4 +123,4 @@ This roadmap focuses on systematic enhancement of AriaEngine's NPC planning capa
 * **ADR-086**: Implement Durative Actions (completed foundation work)
 * **R25W041FBCD**: Domain Method Naming Refactor (prerequisite for Phase 1 implementation)
 * **R25W0365EF2**: Complete Temporal Planning Solver
-* **R25W0389D35**: Timeline Module PC-2 STN Implementation
+* **apps/aria_timeline/decisions/R25W0389D35**: Timeline Module PC-2 STN Implementation

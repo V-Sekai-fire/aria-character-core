@@ -366,6 +366,6 @@ AriaEngine.TimelineGraph.ExternalBridge      # VRChat, Discord, web interface co
 ## Related ADRs
 
 - **ADR-085**: Unsolved Planner Problems for NPCs (problems solved by this architecture)
-- **R25W0389D35**: Timeline Module PC-2 STN Implementation (underlying constraint solving)
+- **apps/aria_timeline/decisions/R25W0389D35**: Timeline Module PC-2 STN Implementation (underlying constraint solving)
 - **R25W017DEAF**: Definitive Temporal Planner Architecture (integration point)
-- **R25W040602B**: STN Timeline Segmentation Strategy (superseded by dynamic LOD approach)
+- **apps/aria_timeline/decisions/R25W040602B**: STN Timeline Segmentation Strategy (superseded by dynamic LOD approach)

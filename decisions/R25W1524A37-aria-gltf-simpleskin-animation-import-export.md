@@ -363,8 +363,8 @@ Starting with implementing the missing animation and skinning modules that are r
 
 - **R25W1513883**: Comprehensive glTF 2.0 Implementation (MERGED INTO - contains all requirements from this ADR)
 - **R25W1398085**: Unified Durative Action Specification (MANDATORY - temporal planning foundation)
-- **R25W087E1AE**: Aria Engine Plans glTF KHR Interactivity Implementation
-- **R25W08877E1**: glTF Scene Foundation Implementation Plan
+- **apps/aria_gltf/decisions/R25W087E1AE**: Aria Engine Plans glTF KHR Interactivity Implementation
+- **apps/aria_gltf/decisions/R25W08877E1**: glTF Scene Foundation Implementation Plan
 
 ## References
 

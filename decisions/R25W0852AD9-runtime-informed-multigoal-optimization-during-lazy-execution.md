@@ -420,7 +420,7 @@ This ADR builds on R25W0849E89's proven static optimization foundation (18.8-50%
 - **R25W0849E89**: MiniZinc Multigoal Optimization with Fallback (provides static optimization foundation that this ADR enhances with runtime intelligence)
 - **R25W0839F8C**: Restore run_lazy_refineahead from IPyHOP (provides lazy execution foundation where runtime optimization occurs)
 - **R25W0489307**: Hybrid Planner Dependency Encapsulation (strategy architecture framework)
-- **R25W0389D35**: Timeline Module PC-2 STN Implementation (temporal constraint foundation)
+- **apps/aria_timeline/decisions/R25W0389D35**: Timeline Module PC-2 STN Implementation (temporal constraint foundation)
 
 ## Implementation Strategy
 
