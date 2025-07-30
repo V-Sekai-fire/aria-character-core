@@ -326,3 +326,9 @@ amc:lightingStyle rdf:type owl:DatatypeProperty ;
     rdfs:range xsd:string ;
     rdfs:comment "Style of lighting, e.g., soft, hard." ;
     owl:hasValue "soft" .
+
+amc:feminineMasculineStyle rdf:type owl:DatatypeProperty ;
+    rdfs:domain amc:AvatarModelContext ;
+    rdfs:range xsd:decimal ;
+    rdfs:comment "A value between 0.0 (fully feminine) and 1.0 (fully masculine)." ;
+    owl:hasValue 0.0 .

@@ -10,3 +10,4 @@
 - [https://replicate.com/fire/flux](https://replicate.com/fire/flux)
 - [https://github.com/KhronosGroup/glTF/blob/interactivity/extensions/2.0/Khronos/KHR_interactivity/Specification.adoc\#introduction-general](https://github.com/KhronosGroup/glTF/blob/interactivity/extensions/2.0/Khronos/KHR_interactivity/Specification.adoc#introduction-general)
 - [github.com/thisoverride/BoothPM-SDK](http://github.com/thisoverride/BoothPM-SDK)
+- <https://replicate.com/black-forest-labs/flux-schnell>
