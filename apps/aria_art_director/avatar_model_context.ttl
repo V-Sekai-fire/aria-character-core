@@ -103,6 +103,7 @@ amc:AU26_intensity rdf:type owl:DatatypeProperty ;
     rdfs:domain amc:FacialActionUnits ;
     rdfs:range xsd:decimal ;
     rdfs:comment "Intensity of Jaw Drop (0.0 to 1.0)." .
+
 amc:AttireSystem rdf:type owl:Class .
 amc:ClothingItem rdf:type owl:Class .
 amc:Embellishments rdf:type owl:Class .
@@ -300,3 +301,28 @@ amc:pattern_theme rdf:type rdfs:Datatype ;
 
 amc:thematic_embellishments rdf:type rdfs:Datatype ;
     owl:oneOf ( "fantasy" "cyberprep" "traditional" ) .
+
+# Additional Properties
+amc:poseType rdf:type owl:DatatypeProperty ;
+    rdfs:domain amc:Pose ;
+    rdfs:range xsd:string ;
+    rdfs:comment "Type of pose, e.g., standing, sitting." ;
+    owl:hasValue "A-pose" .
+
+amc:handOrientation rdf:type owl:DatatypeProperty ;
+    rdfs:domain amc:Pose ;
+    rdfs:range xsd:string ;
+    rdfs:comment "Orientation of hands, e.g., palms down, palms up." ;
+    owl:hasValue "palms down" .
+
+amc:backgroundColor rdf:type owl:DatatypeProperty ;
+    rdfs:domain amc:BackgroundSetting ;
+    rdfs:range xsd:string ;
+    rdfs:comment "Color of the background, e.g., beige, blue." ;
+    owl:hasValue "beige" .
+
+amc:lightingStyle rdf:type owl:DatatypeProperty ;
+    rdfs:domain amc:BackgroundSetting ;
+    rdfs:range xsd:string ;
+    rdfs:comment "Style of lighting, e.g., soft, hard." ;
+    owl:hasValue "soft" .
