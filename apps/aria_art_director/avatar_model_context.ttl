@@ -11,6 +11,98 @@ amc:BaseCharacter rdf:type owl:Class .
 amc:OverallTheme rdf:type owl:Class .
 amc:HeadAndFace rdf:type owl:Class .
 amc:FacialActionUnits rdf:type owl:Class .
+
+# FACS Action Units
+amc:AU1 rdf:type owl:Class ;
+    rdfs:label "Inner Brow Raiser" ;
+    rdfs:comment "Represents the inner brow raising action." .
+
+amc:AU2 rdf:type owl:Class ;
+    rdfs:label "Outer Brow Raiser" ;
+    rdfs:comment "Represents the outer brow raising action." .
+
+amc:AU4 rdf:type owl:Class ;
+    rdfs:label "Brow Lowerer" ;
+    rdfs:comment "Represents the brow lowering action." .
+
+amc:AU6 rdf:type owl:Class ;
+    rdfs:label "Cheek Raiser" ;
+    rdfs:comment "Represents the cheek raising action." .
+
+amc:AU9 rdf:type owl:Class ;
+    rdfs:label "Nose Wrinkler" ;
+    rdfs:comment "Represents the nose wrinkling action." .
+
+amc:AU12 rdf:type owl:Class ;
+    rdfs:label "Lip Corner Puller" ;
+    rdfs:comment "Represents the lip corner pulling action." .
+
+amc:AU15 rdf:type owl:Class ;
+    rdfs:label "Lip Corner Depressor" ;
+    rdfs:comment "Represents the lip corner depressing action." .
+
+amc:AU20 rdf:type owl:Class ;
+    rdfs:label "Lip Stretcher" ;
+    rdfs:comment "Represents the lip stretching action." .
+
+amc:AU25 rdf:type owl:Class ;
+    rdfs:label "Lips Part" ;
+    rdfs:comment "Represents the lips parting action." .
+
+amc:AU26 rdf:type owl:Class ;
+    rdfs:label "Jaw Drop" ;
+    rdfs:comment "Represents the jaw dropping action." .
+
+# FACS Intensity Properties
+amc:AU1_intensity rdf:type owl:DatatypeProperty ;
+    rdfs:domain amc:FacialActionUnits ;
+    rdfs:range xsd:decimal ;
+    rdfs:comment "Intensity of Inner Brow Raiser (0.0 to 1.0)." .
+
+amc:AU2_intensity rdf:type owl:DatatypeProperty ;
+    rdfs:domain amc:FacialActionUnits ;
+    rdfs:range xsd:decimal ;
+    rdfs:comment "Intensity of Outer Brow Raiser (0.0 to 1.0)." .
+
+amc:AU4_intensity rdf:type owl:DatatypeProperty ;
+    rdfs:domain amc:FacialActionUnits ;
+    rdfs:range xsd:decimal ;
+    rdfs:comment "Intensity of Brow Lowerer (0.0 to 1.0)." .
+
+amc:AU6_intensity rdf:type owl:DatatypeProperty ;
+    rdfs:domain amc:FacialActionUnits ;
+    rdfs:range xsd:decimal ;
+    rdfs:comment "Intensity of Cheek Raiser (0.0 to 1.0)." .
+
+amc:AU9_intensity rdf:type owl:DatatypeProperty ;
+    rdfs:domain amc:FacialActionUnits ;
+    rdfs:range xsd:decimal ;
+    rdfs:comment "Intensity of Nose Wrinkler (0.0 to 1.0)." .
+
+amc:AU12_intensity rdf:type owl:DatatypeProperty ;
+    rdfs:domain amc:FacialActionUnits ;
+    rdfs:range xsd:decimal ;
+    rdfs:comment "Intensity of Lip Corner Puller (0.0 to 1.0)." .
+
+amc:AU15_intensity rdf:type owl:DatatypeProperty ;
+    rdfs:domain amc:FacialActionUnits ;
+    rdfs:range xsd:decimal ;
+    rdfs:comment "Intensity of Lip Corner Depressor (0.0 to 1.0)." .
+
+amc:AU20_intensity rdf:type owl:DatatypeProperty ;
+    rdfs:domain amc:FacialActionUnits ;
+    rdfs:range xsd:decimal ;
+    rdfs:comment "Intensity of Lip Stretcher (0.0 to 1.0)." .
+
+amc:AU25_intensity rdf:type owl:DatatypeProperty ;
+    rdfs:domain amc:FacialActionUnits ;
+    rdfs:range xsd:decimal ;
+    rdfs:comment "Intensity of Lips Part (0.0 to 1.0)." .
+
+amc:AU26_intensity rdf:type owl:DatatypeProperty ;
+    rdfs:domain amc:FacialActionUnits ;
+    rdfs:range xsd:decimal ;
+    rdfs:comment "Intensity of Jaw Drop (0.0 to 1.0)." .
 amc:AttireSystem rdf:type owl:Class .
 amc:ClothingItem rdf:type owl:Class .
 amc:Embellishments rdf:type owl:Class .
@@ -191,7 +283,14 @@ amc:ear_pointiness rdf:type rdfs:Datatype ;
     owl:withRestrictions ( [ xsd:minInclusive 0.0 ] [ xsd:maxInclusive 1.0 ] ) .
 
 amc:item_type rdf:type rdfs:Datatype ;
-    owl:oneOf ( "applique" "bag-wallet" ... "zipper" ) .
+    owl:oneOf ( 
+        "sleeve" "shoe" "neckline" "pocket" "dress" "top-t-shirt-sweatshirt" "pants" "collar" 
+        "bag-wallet" "zipper" "jacket" "belt" "skirt" "rivet" "lapel" "glasses" 
+        "headband-head-covering-hair-accessory" "bead" "shorts" "coat" "shirt-blouse" 
+        "tights-stockings" "sock" "watch" "ruffle" "hat" "buckle" "applique" "scarf" 
+        "flower" "tassel" "hood" "glove" "fringe" "vest" "jumpsuit" "sweater" 
+        "epaulette" "sequin" "cardigan" "leg-warmer" "ribbon" "bow" "cape" "umbrella" "tie"
+    ) .
 
 amc:color_palette rdf:type rdfs:Datatype ;
     owl:oneOf ( "preset-fantasy" "preset-pastel-cyber" "preset-traditional" "preset-techwear" "preset-monochrome" "custom" ) .
