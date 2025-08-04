@@ -117,12 +117,6 @@ defmodule AriaCharacterCore.MixProject do
       # External Process Execution
       {:porcelain, "~> 2.0"},
 
-      # Git operations
-      {:egit, "~> 0.1.9"},
-
-      # AST parsing and manipulation
-      {:sourceror, "~> 1.0"},
-
       # UUID Generation
       {:elixir_uuid, "~> 1.2"},
       {:uuid, "~> 1.1", app: false},
@@ -135,13 +129,10 @@ defmodule AriaCharacterCore.MixProject do
       {:ex_unit_notifier, "~> 1.3", only: :test},
 
       # Internal applications
-      {:aria_membrane_pipeline, path: "apps/aria_membrane_pipeline"},
       {:aria_math, path: "apps/aria_math"},
       {:aria_joint, path: "apps/aria_joint"},
       {:aria_gltf, path: "apps/aria_gltf"},
       {:aria_qcp, path: "apps/aria_qcp"},
-      {:ast_migrate, path: "apps/ast_migrate"},
-      {:aria_serial, path: "apps/aria_serial"},
     ]
   end
 

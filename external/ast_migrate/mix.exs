@@ -43,6 +43,12 @@ defmodule AstMigrate.MixProject do
       {:dialyxir, "~> 1.4", only: [:dev, :test], runtime: false},
       {:ex_doc, "~> 0.31", only: :dev, runtime: false},
 
+      # Git operations
+      {:egit, "~> 0.1.9"},
+
+      # AST parsing and manipulation
+      {:sourceror, "~> 1.0"},
+
       # Test dependencies
       {:stream_data, "~> 1.2", only: :test},
       {:ex_unit_notifier, "~> 1.3", only: :test}
