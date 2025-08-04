@@ -138,7 +138,7 @@ defmodule AriaCharacterCore.MixProject do
       {:aria_blocks_world, path: "apps/aria_blocks_world"},
       {:aria_core, path: "apps/aria_core"},
       {:aria_town, path: "apps/aria_town"},
-      {:aria_hybrid_planner, path: "apps/aria_hybrid_planner"},
+      {:aria_hybrid_planner, git: "https://github.com/V-Sekai-fire/aria_hybrid_planner.git"},
       {:aria_membrane_pipeline, path: "apps/aria_membrane_pipeline"},
       {:aria_math, path: "apps/aria_math"},
       {:aria_joint, path: "apps/aria_joint"},
