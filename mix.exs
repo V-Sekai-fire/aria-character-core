@@ -135,8 +135,6 @@ defmodule AriaCharacterCore.MixProject do
       {:ex_unit_notifier, "~> 1.3", only: :test},
 
       # Internal applications
-      {:aria_core, path: "apps/aria_core"},
-      {:aria_hybrid_planner, git: "https://github.com/V-Sekai-fire/aria_hybrid_planner.git"},
       {:aria_membrane_pipeline, path: "apps/aria_membrane_pipeline"},
       {:aria_math, path: "apps/aria_math"},
       {:aria_joint, path: "apps/aria_joint"},
