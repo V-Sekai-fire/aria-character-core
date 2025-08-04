@@ -135,9 +135,7 @@ defmodule AriaCharacterCore.MixProject do
       {:ex_unit_notifier, "~> 1.3", only: :test},
 
       # Internal applications
-      {:aria_blocks_world, path: "apps/aria_blocks_world"},
       {:aria_core, path: "apps/aria_core"},
-      {:aria_town, path: "apps/aria_town"},
       {:aria_hybrid_planner, git: "https://github.com/V-Sekai-fire/aria_hybrid_planner.git"},
       {:aria_membrane_pipeline, path: "apps/aria_membrane_pipeline"},
       {:aria_math, path: "apps/aria_math"},
@@ -146,7 +144,6 @@ defmodule AriaCharacterCore.MixProject do
       {:aria_qcp, path: "apps/aria_qcp"},
       {:ast_migrate, path: "apps/ast_migrate"},
       {:aria_serial, path: "apps/aria_serial"},
-      {:aria_simple_travel, path: "apps/aria_simple_travel"}
     ]
   end
 
