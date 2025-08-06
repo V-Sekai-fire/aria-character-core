@@ -1,6 +1,4 @@
 defmodule AriaFate.Application do
-  # See https://hexdocs.pm/elixir/Application.html
-  # for more information on OTP Applications
   @moduledoc false
 
   use Application
@@ -8,7 +6,7 @@ defmodule AriaFate.Application do
   @impl true
   def start(_type, _args) do
     children = [
-      # Starts a worker by calling: AriaFate.Worker.start_link(arg)
+      # Define workers and child supervisors to be supervised
       # {AriaFate.Worker, arg}
     ]
 

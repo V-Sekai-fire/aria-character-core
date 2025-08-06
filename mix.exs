@@ -5,12 +5,9 @@ defmodule AriaCharacterCore.MixProject do
 
   def project do
     [
-      app: :aria_fate,
+      apps_path: "apps",
       version: "0.2.0",
-      elixir: "~> 1.18",
       start_permanent: Mix.env() == :prod,
-      elixirc_paths: elixirc_paths(Mix.env()),
-      elixirc_options: [],
       deps: deps(),
       aliases: aliases(),
       preferred_cli_env: [
@@ -24,15 +21,11 @@ defmodule AriaCharacterCore.MixProject do
     ]
   end
 
-  # Specifies which paths to compile per environment
-  defp elixirc_paths(:test), do: ["lib", "test/support"]
-  defp elixirc_paths(_), do: ["lib"]
-
-  def application do
-    [
-      extra_applications: [:logger]
-    ]
-  end
+  # Dependencies listed here are available only for this
+  # project and cannot be accessed from applications inside
+  # the apps folder.
+  #
+  # Run "mix help deps" for examples and options.
 
   defp deps do
     [
@@ -128,12 +121,6 @@ defmodule AriaCharacterCore.MixProject do
       {:stream_data, "~> 1.2", only: :test},
       {:ex_unit_notifier, "~> 1.3", only: :test},
 
-      # Internal applications
-      {:aria_math, path: "apps/aria_math"},
-      {:aria_joint, path: "apps/aria_joint"},
-      {:aria_gltf, path: "apps/aria_gltf"},
-      {:aria_qcp, path: "apps/aria_qcp"},
-      {:aria_hybrid_planner, path: "apps/aria_hybrid_planner"},
     ]
   end
 

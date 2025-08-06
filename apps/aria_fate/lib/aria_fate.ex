@@ -71,13 +71,12 @@ defmodule AriaFate do
 
   ## Examples
 
-      iex> AriaFate.plan_character_arc(character, episodes: 5)
-      {:ok, %AriaFate.CharacterArc{
-        episodes: [
-          %{title: "The Case Begins", conflicts: [:mystery, :social]},
-          # ... more episodes
-        ]
-      }}
+      iex> character = %AriaFate.Character{name: "Detective", high_concept: "Wizard Detective"}
+      iex> {:ok, arc} = AriaFate.plan_character_arc(character, episodes: 2)
+      iex> arc.character_name
+      "Detective"
+      iex> length(arc.episodes)
+      2
   """
   defdelegate plan_character_arc(character, options \\ []), to: CharacterGenerator
 

@@ -40,8 +40,6 @@ defmodule AriaEwbik.MixProject do
       # Quaternion Characteristic Polynomial algorithm
       {:aria_qcp, in_umbrella: true},
 
-      # State management for VRM1 configuration
-      {:aria_state, in_umbrella: true},
 
       # Development and testing
       {:ex_doc, "~> 0.34", only: :dev, runtime: false}
