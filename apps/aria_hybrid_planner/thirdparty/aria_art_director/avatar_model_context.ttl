@@ -1,0 +1,334 @@
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix amc: <http://example.org/avatarModelContext#> .
+
+# Class Definitions
+amc:AvatarModelContext rdf:type owl:Class .
+amc:CoreConceptStyle rdf:type owl:Class .
+amc:BaseCharacter rdf:type owl:Class .
+amc:OverallTheme rdf:type owl:Class .
+amc:HeadAndFace rdf:type owl:Class .
+amc:FacialActionUnits rdf:type owl:Class .
+
+# FACS Action Units
+amc:AU1 rdf:type owl:Class ;
+    rdfs:label "Inner Brow Raiser" ;
+    rdfs:comment "Represents the inner brow raising action." .
+
+amc:AU2 rdf:type owl:Class ;
+    rdfs:label "Outer Brow Raiser" ;
+    rdfs:comment "Represents the outer brow raising action." .
+
+amc:AU4 rdf:type owl:Class ;
+    rdfs:label "Brow Lowerer" ;
+    rdfs:comment "Represents the brow lowering action." .
+
+amc:AU6 rdf:type owl:Class ;
+    rdfs:label "Cheek Raiser" ;
+    rdfs:comment "Represents the cheek raising action." .
+
+amc:AU9 rdf:type owl:Class ;
+    rdfs:label "Nose Wrinkler" ;
+    rdfs:comment "Represents the nose wrinkling action." .
+
+amc:AU12 rdf:type owl:Class ;
+    rdfs:label "Lip Corner Puller" ;
+    rdfs:comment "Represents the lip corner pulling action." .
+
+amc:AU15 rdf:type owl:Class ;
+    rdfs:label "Lip Corner Depressor" ;
+    rdfs:comment "Represents the lip corner depressing action." .
+
+amc:AU20 rdf:type owl:Class ;
+    rdfs:label "Lip Stretcher" ;
+    rdfs:comment "Represents the lip stretching action." .
+
+amc:AU25 rdf:type owl:Class ;
+    rdfs:label "Lips Part" ;
+    rdfs:comment "Represents the lips parting action." .
+
+amc:AU26 rdf:type owl:Class ;
+    rdfs:label "Jaw Drop" ;
+    rdfs:comment "Represents the jaw dropping action." .
+
+# FACS Intensity Properties
+amc:AU1_intensity rdf:type owl:DatatypeProperty ;
+    rdfs:domain amc:FacialActionUnits ;
+    rdfs:range xsd:decimal ;
+    rdfs:comment "Intensity of Inner Brow Raiser (0.0 to 1.0)." .
+
+amc:AU2_intensity rdf:type owl:DatatypeProperty ;
+    rdfs:domain amc:FacialActionUnits ;
+    rdfs:range xsd:decimal ;
+    rdfs:comment "Intensity of Outer Brow Raiser (0.0 to 1.0)." .
+
+amc:AU4_intensity rdf:type owl:DatatypeProperty ;
+    rdfs:domain amc:FacialActionUnits ;
+    rdfs:range xsd:decimal ;
+    rdfs:comment "Intensity of Brow Lowerer (0.0 to 1.0)." .
+
+amc:AU6_intensity rdf:type owl:DatatypeProperty ;
+    rdfs:domain amc:FacialActionUnits ;
+    rdfs:range xsd:decimal ;
+    rdfs:comment "Intensity of Cheek Raiser (0.0 to 1.0)." .
+
+amc:AU9_intensity rdf:type owl:DatatypeProperty ;
+    rdfs:domain amc:FacialActionUnits ;
+    rdfs:range xsd:decimal ;
+    rdfs:comment "Intensity of Nose Wrinkler (0.0 to 1.0)." .
+
+amc:AU12_intensity rdf:type owl:DatatypeProperty ;
+    rdfs:domain amc:FacialActionUnits ;
+    rdfs:range xsd:decimal ;
+    rdfs:comment "Intensity of Lip Corner Puller (0.0 to 1.0)." .
+
+amc:AU15_intensity rdf:type owl:DatatypeProperty ;
+    rdfs:domain amc:FacialActionUnits ;
+    rdfs:range xsd:decimal ;
+    rdfs:comment "Intensity of Lip Corner Depressor (0.0 to 1.0)." .
+
+amc:AU20_intensity rdf:type owl:DatatypeProperty ;
+    rdfs:domain amc:FacialActionUnits ;
+    rdfs:range xsd:decimal ;
+    rdfs:comment "Intensity of Lip Stretcher (0.0 to 1.0)." .
+
+amc:AU25_intensity rdf:type owl:DatatypeProperty ;
+    rdfs:domain amc:FacialActionUnits ;
+    rdfs:range xsd:decimal ;
+    rdfs:comment "Intensity of Lips Part (0.0 to 1.0)." .
+
+amc:AU26_intensity rdf:type owl:DatatypeProperty ;
+    rdfs:domain amc:FacialActionUnits ;
+    rdfs:range xsd:decimal ;
+    rdfs:comment "Intensity of Jaw Drop (0.0 to 1.0)." .
+
+amc:AttireSystem rdf:type owl:Class .
+amc:ClothingItem rdf:type owl:Class .
+amc:Embellishments rdf:type owl:Class .
+
+# Object Properties
+amc:hasCoreConcept rdf:type owl:ObjectProperty ;
+    rdfs:domain amc:AvatarModelContext ;
+    rdfs:range amc:CoreConceptStyle .
+
+amc:hasHeadAndFace rdf:type owl:ObjectProperty ;
+    rdfs:domain amc:AvatarModelContext ;
+    rdfs:range amc:HeadAndFace .
+
+amc:hasAttireSystem rdf:type owl:ObjectProperty ;
+    rdfs:domain amc:AvatarModelContext ;
+    rdfs:range amc:AttireSystem .
+
+amc:hasBaseCharacter rdf:type owl:ObjectProperty ;
+    rdfs:domain amc:CoreConceptStyle ;
+    rdfs:range amc:BaseCharacter .
+
+amc:hasOverallTheme rdf:type owl:ObjectProperty ;
+    rdfs:domain amc:CoreConceptStyle ;
+    rdfs:range amc:OverallTheme .
+
+amc:hasFacialActionUnits rdf:type owl:ObjectProperty ;
+    rdfs:domain amc:HeadAndFace ;
+    rdfs:range amc:FacialActionUnits .
+
+amc:hasClothingItem rdf:type owl:ObjectProperty ;
+    rdfs:domain amc:AttireSystem ;
+    rdfs:range amc:ClothingItem .
+
+amc:hasEmbellishments rdf:type owl:ObjectProperty ;
+    rdfs:domain [ rdf:type owl:Class ; owl:unionOf ( amc:HeadAndFace amc:ClothingItem ) ] ;
+    rdfs:range amc:Embellishments .
+
+# Cardinality Constraints
+amc:AvatarModelContext rdfs:subClassOf [
+    rdf:type owl:Restriction ;
+    owl:onProperty amc:hasCoreConcept ;
+    owl:minCardinality "1"^^xsd:int
+] ;
+rdfs:subClassOf [
+    rdf:type owl:Restriction ;
+    owl:onProperty amc:hasHeadAndFace ;
+    owl:minCardinality "1"^^xsd:int
+] ;
+rdfs:subClassOf [
+    rdf:type owl:Restriction ;
+    owl:onProperty amc:hasAttireSystem ;
+    owl:minCardinality "1"^^xsd:int
+] .
+
+amc:ClothingItem rdfs:subClassOf [
+    rdf:type owl:Restriction ;
+    owl:onProperty amc:item_type ;
+    owl:minCardinality "1"^^xsd:int
+] .
+
+# Datatype Properties
+amc:species_base_type rdf:type rdfs:Datatype ;
+    owl:oneOf ( "humanoid" "semi-humanoid" "animal" "robotic" "other" ) .
+
+amc:humanoid_archetype rdf:type rdfs:Datatype ;
+    owl:oneOf ( "human" "fox-person" "cat-person" "other_kemonomimi" ) .
+
+amc:face_style rdf:type rdfs:Datatype ;
+    owl:oneOf ( "anime-soft" "anime-sharp" "stylized-non-anime" ) .
+
+amc:kemonomimi_ears rdf:type xsd:boolean .
+amc:kemonomimi_tail rdf:type xsd:boolean .
+
+amc:tail_style rdf:type rdfs:Datatype ;
+    owl:oneOf ( "fluffy" "sleek" "short" "long" "segmented-tech" ) .
+
+amc:hands_style rdf:type rdfs:Datatype ;
+    owl:oneOf ( "normal-human" "subtly-stylized" ) .
+
+amc:primary_theme rdf:type rdfs:Datatype ;
+    owl:oneOf ( "fantasy-east-asian" "cyberprep" "pastel-cyber" "shrine-maiden" "casual-tech" "mori-kei" ) .
+
+amc:rendering_style rdf:type rdfs:Datatype ;
+    owl:oneOf ( "toon-shaded" "painterly" "pixel-art" "voxel-art" ) .
+
+amc:modesty_level rdf:type rdfs:Datatype ;
+    owl:oneOf ( "full-coverage" "moderate" "stylized-revealing" ) .
+
+amc:geometric_complexity rdf:type rdfs:Datatype ;
+    owl:oneOf ( "game-optimized" "high-detail" ) .
+
+amc:skin_tone rdf:type rdfs:Datatype ;
+    owl:onDatatype xsd:integer ;
+    owl:withRestrictions ( [ xsd:minInclusive 1 ] [ xsd:maxInclusive 10 ] ) .
+
+amc:head_shape rdf:type rdfs:Datatype ;
+    owl:onDatatype xsd:decimal ;
+    owl:withRestrictions ( [ xsd:minInclusive 0.0 ] [ xsd:maxInclusive 1.0 ] ) .
+
+amc:jaw_width rdf:type rdfs:Datatype ;
+    owl:onDatatype xsd:decimal ;
+    owl:withRestrictions ( [ xsd:minInclusive 0.0 ] [ xsd:maxInclusive 1.0 ] ) .
+
+amc:chin_shape rdf:type rdfs:Datatype ;
+    owl:onDatatype xsd:decimal ;
+    owl:withRestrictions ( [ xsd:minInclusive 0.0 ] [ xsd:maxInclusive 1.0 ] ) .
+
+amc:cheekbones rdf:type rdfs:Datatype ;
+    owl:onDatatype xsd:decimal ;
+    owl:withRestrictions ( [ xsd:minInclusive 0.0 ] [ xsd:maxInclusive 1.0 ] ) .
+
+amc:forehead_height rdf:type rdfs:Datatype ;
+    owl:onDatatype xsd:decimal ;
+    owl:withRestrictions ( [ xsd:minInclusive 0.0 ] [ xsd:maxInclusive 1.0 ] ) .
+
+amc:eye_size rdf:type rdfs:Datatype ;
+    owl:onDatatype xsd:decimal ;
+    owl:withRestrictions ( [ xsd:minInclusive 0.0 ] [ xsd:maxInclusive 1.0 ] ) .
+
+amc:eye_shape rdf:type rdfs:Datatype ;
+    owl:onDatatype xsd:decimal ;
+    owl:withRestrictions ( [ xsd:minInclusive 0.0 ] [ xsd:maxInclusive 1.0 ] ) .
+
+amc:eye_angle rdf:type rdfs:Datatype ;
+    owl:onDatatype xsd:decimal ;
+    owl:withRestrictions ( [ xsd:minInclusive 0.0 ] [ xsd:maxInclusive 1.0 ] ) .
+
+amc:eye_spacing rdf:type rdfs:Datatype ;
+    owl:onDatatype xsd:decimal ;
+    owl:withRestrictions ( [ xsd:minInclusive 0.0 ] [ xsd:maxInclusive 1.0 ] ) .
+
+amc:eyelid_fold rdf:type rdfs:Datatype ;
+    owl:onDatatype xsd:decimal ;
+    owl:withRestrictions ( [ xsd:minInclusive 0.0 ] [ xsd:maxInclusive 1.0 ] ) .
+
+amc:nose_size rdf:type rdfs:Datatype ;
+    owl:onDatatype xsd:decimal ;
+    owl:withRestrictions ( [ xsd:minInclusive 0.0 ] [ xsd:maxInclusive 1.0 ] ) .
+
+amc:nose_bridge_width rdf:type rdfs:Datatype ;
+    owl:onDatatype xsd:decimal ;
+    owl:withRestrictions ( [ xsd:minInclusive 0.0 ] [ xsd:maxInclusive 1.0 ] ) .
+
+amc:nose_tip_angle rdf:type rdfs:Datatype ;
+    owl:onDatatype xsd:decimal ;
+    owl:withRestrictions ( [ xsd:minInclusive 0.0 ] [ xsd:maxInclusive 1.0 ] ) .
+
+amc:nose_shape rdf:type rdfs:Datatype ;
+    owl:onDatatype xsd:decimal ;
+    owl:withRestrictions ( [ xsd:minInclusive 0.0 ] [ xsd:maxInclusive 1.0 ] ) .
+
+amc:mouth_width rdf:type rdfs:Datatype ;
+    owl:onDatatype xsd:decimal ;
+    owl:withRestrictions ( [ xsd:minInclusive 0.0 ] [ xsd:maxInclusive 1.0 ] ) .
+
+amc:lip_fullness rdf:type rdfs:Datatype ;
+    owl:onDatatype xsd:decimal ;
+    owl:withRestrictions ( [ xsd:minInclusive 0.0 ] [ xsd:maxInclusive 1.0 ] ) .
+
+amc:mouth_position rdf:type rdfs:Datatype ;
+    owl:onDatatype xsd:decimal ;
+    owl:withRestrictions ( [ xsd:minInclusive 0.0 ] [ xsd:maxInclusive 1.0 ] ) .
+
+amc:ear_size rdf:type rdfs:Datatype ;
+    owl:onDatatype xsd:decimal ;
+    owl:withRestrictions ( [ xsd:minInclusive 0.0 ] [ xsd:maxInclusive 1.0 ] ) .
+
+amc:ear_angle rdf:type rdfs:Datatype ;
+    owl:onDatatype xsd:decimal ;
+    owl:withRestrictions ( [ xsd:minInclusive 0.0 ] [ xsd:maxInclusive 1.0 ] ) .
+
+amc:ear_lobe_shape rdf:type rdfs:Datatype ;
+    owl:onDatatype xsd:decimal ;
+    owl:withRestrictions ( [ xsd:minInclusive 0.0 ] [ xsd:maxInclusive 1.0 ] ) .
+
+amc:ear_pointiness rdf:type rdfs:Datatype ;
+    owl:onDatatype xsd:decimal ;
+    owl:withRestrictions ( [ xsd:minInclusive 0.0 ] [ xsd:maxInclusive 1.0 ] ) .
+
+amc:item_type rdf:type rdfs:Datatype ;
+    owl:oneOf ( 
+        "sleeve" "shoe" "neckline" "pocket" "dress" "top-t-shirt-sweatshirt" "pants" "collar" 
+        "bag-wallet" "zipper" "jacket" "belt" "skirt" "rivet" "lapel" "glasses" 
+        "headband-head-covering-hair-accessory" "bead" "shorts" "coat" "shirt-blouse" 
+        "tights-stockings" "sock" "watch" "ruffle" "hat" "buckle" "applique" "scarf" 
+        "flower" "tassel" "hood" "glove" "fringe" "vest" "jumpsuit" "sweater" 
+        "epaulette" "sequin" "cardigan" "leg-warmer" "ribbon" "bow" "cape" "umbrella" "tie"
+    ) .
+
+amc:color_palette rdf:type rdfs:Datatype ;
+    owl:oneOf ( "preset-fantasy" "preset-pastel-cyber" "preset-traditional" "preset-techwear" "preset-monochrome" "custom" ) .
+
+amc:pattern_theme rdf:type rdfs:Datatype ;
+    owl:oneOf ( "traditional-geometric" "cyber-tech" "floral" "mystical-symbols" "cute-icons" "abstract-modern" "none" ) .
+
+amc:thematic_embellishments rdf:type rdfs:Datatype ;
+    owl:oneOf ( "fantasy" "cyberprep" "traditional" ) .
+
+# Additional Properties
+amc:poseType rdf:type owl:DatatypeProperty ;
+    rdfs:domain amc:Pose ;
+    rdfs:range xsd:string ;
+    rdfs:comment "Type of pose, e.g., standing, sitting." ;
+    owl:hasValue "A-pose" .
+
+amc:handOrientation rdf:type owl:DatatypeProperty ;
+    rdfs:domain amc:Pose ;
+    rdfs:range xsd:string ;
+    rdfs:comment "Orientation of hands, e.g., palms down, palms up." ;
+    owl:hasValue "palms down" .
+
+amc:backgroundColor rdf:type owl:DatatypeProperty ;
+    rdfs:domain amc:BackgroundSetting ;
+    rdfs:range xsd:string ;
+    rdfs:comment "Color of the background, e.g., beige, blue." ;
+    owl:hasValue "beige" .
+
+amc:lightingStyle rdf:type owl:DatatypeProperty ;
+    rdfs:domain amc:BackgroundSetting ;
+    rdfs:range xsd:string ;
+    rdfs:comment "Style of lighting, e.g., soft, hard." ;
+    owl:hasValue "soft" .
+
+amc:feminineMasculineStyle rdf:type owl:DatatypeProperty ;
+    rdfs:domain amc:AvatarModelContext ;
+    rdfs:range xsd:decimal ;
+    rdfs:comment "A value between 0.0 (fully feminine) and 1.0 (fully masculine)." ;
+    owl:hasValue 0.0 .

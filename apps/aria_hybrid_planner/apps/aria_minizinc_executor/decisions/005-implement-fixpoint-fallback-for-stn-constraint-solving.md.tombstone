@@ -1,0 +1,38 @@
+# ADR-005: Implement Fixpoint Fallback for STN Constraint Solving and Tombstone Widget Assembly [TOMBSTONED]
+
+**Status:** Superseded  
+**Date:** 2025-06-24  
+**Priority:** HIGH  
+**Tombstoned:** 2025-06-24  
+
+## Tombstone Notice
+
+This ADR has been **TOMBSTONED** and split into focused, single-responsibility ADRs:
+
+- **ADR-005**: Implement Fixpoint Fallback for STN Constraint Solving (focused on fallback solver implementation)
+- **ADR-008**: Tombstone Widget Assembly Functionality (focused on code cleanup)
+
+## Reason for Tombstoning
+
+This ADR violated the single responsibility principle by combining two unrelated concerns:
+
+1. **Fixpoint Fallback Implementation**: New feature for STN constraint solving
+2. **Widget Assembly Tombstoning**: Cleanup task for removing unused functionality
+
+Following the "Targeted solutions over generalized systems" principle (INST-017), these concerns have been separated into dedicated ADRs with clear, focused responsibilities.
+
+## Migration Path
+
+**For Fixpoint Fallback Work**: See ADR-005 (Implement Fixpoint Fallback for STN Constraint Solving)
+**For Widget Assembly Cleanup**: See ADR-008 (Tombstone Widget Assembly Functionality)
+
+## Original Content
+
+The original content of this ADR has been preserved in the git history. The key insights and implementation details have been distributed to the appropriate focused ADRs.
+
+## Related ADRs
+
+- **ADR-005**: Implement Fixpoint Fallback for STN Constraint Solving (successor)
+- **ADR-008**: Tombstone Widget Assembly Functionality (successor)
+- **ADR-007**: Implement True STN Mathematical Foundation (related)
+- **ADR-003**: Separate Goal Solving and STN Problem Domains (parent)
