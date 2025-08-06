@@ -5,7 +5,7 @@ defmodule AriaCharacterCore.MixProject do
 
   def project do
     [
-      app: :aria_character_core,
+      app: :aria_fate,
       version: "0.2.0",
       elixir: "~> 1.18",
       start_permanent: Mix.env() == :prod,
@@ -133,7 +133,7 @@ defmodule AriaCharacterCore.MixProject do
       {:aria_joint, path: "apps/aria_joint"},
       {:aria_gltf, path: "apps/aria_gltf"},
       {:aria_qcp, path: "apps/aria_qcp"},
-      {:aria_fate, path: "apps/aria_fate"},
+      {:aria_hybrid_planner, path: "apps/aria_hybrid_planner"},
     ]
   end
 
