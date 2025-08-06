@@ -133,6 +133,7 @@ defmodule AriaCharacterCore.MixProject do
       {:aria_joint, path: "apps/aria_joint"},
       {:aria_gltf, path: "apps/aria_gltf"},
       {:aria_qcp, path: "apps/aria_qcp"},
+      {:aria_fate, path: "apps/aria_fate"},
     ]
   end
 
