@@ -1,6 +1,6 @@
 # **Elara "iFire" Vex: An Architect of Impossible Realities**
 
-## **Part I: Introduction \- The Architect of Digital Souls**
+## **Part I: Introduction - The Architect of Digital Souls**
 
 The air in the Architect's sanctum hummed, not with the thrum of machinery, but with a deeper, more fundamental resonance. It was the sound of pure potential being given form. In the center of the chamber, suspended in the silent air, a lattice of light pulsed with nascent energy. It was a framework, a digital skeleton waiting for a soul. Before it stood a woman, small in stature, her features composed in an expression of serene focus. This was Elara Vex, known in certain circles only by her handle: "iFire."
 
@@ -8,7 +8,7 @@ Her hands moved in a slow, deliberate ballet, not touching the construct but sha
 
 A colleague once described her as a "chibifire" elemental—a small, unassuming form that contained a roiling, world-shaping inferno.1 Most saw only the quiet exterior, the preference for the background, the soft-spoken guidance. They saw the architect who designed the stage, not the star who commanded it. But in moments like this, in the silent sanctum where impossible realities were born, the fire was visible. It burned not with destructive rage, but with the focused, incandescent passion of pure creation. The lattice solidified, its light softening into the iridescent sheen of a newborn virtual world, a stable system ready to host a million stories. Elara allowed herself a small, satisfied smile. The stage was set. Now, the players could have their adventure.
 
-## **Part II: Character Dossier \- Elara "iFire" Vex**
+## **Part II: Character Dossier - Elara "iFire" Vex**
 
 The following dossier presents a complete, game-ready character sheet for Elara Vex. It is designed to be a functional reference for use in a Fate Core campaign, consolidating all essential mechanical and narrative information. The Fate Core system is designed for proactive, capable characters leading dramatic lives, a framework that perfectly suits Elara's background as a foundational creator.2 This sheet is the mechanical expression of the architect archetype.
 
@@ -20,10 +20,10 @@ The following dossier presents a complete, game-ready character sheet for Elara 
 | **Aspects**          | **High Concept:** _Architect of Impossible Realities_ **Trouble:** _I Build the Stage, I Don't Star in the Show_ **Phase One:** _Forged in the Digital Fires of V-Sekai_ **Phase Two:** _My Code Directed the Flow of Battle in the Squad Wars_ **Phase Three:** _Bound by the Open-Source Soul of the Godot Collective_ |
 | **Skills (Pyramid)** | **Superb (+5):** Crafts **Great (+4):** Lore, Rapport **Good (+3):** Empathy, Notice, Will **Fair (+2):** Investigate, Provoke, Resources, Stealth **Average (+1):** Athletics, Deceive, Drive, Fight, Physique, Shoot                                                                                                   |
 | **Stunts**           | _Watertight Geometry Kernel_ (Crafts) _Many-Bone IK Solver_ (Notice) _Support Main_ (Rapport)                                                                                                                                                                                                                            |
-| **Stress**           | **Physical:** \[ \]\[ \] **Mental:** \[ \]\[ \]\[ \]\[ \]                                                                                                                                                                                                                                                                |
+| **Stress**           | **Physical:** [ ][ ] **Mental:** [ ][ ][ ][ ]                                                                                                                                                                                                                                                                            |
 | **Consequences**     | **Mild (2):** **Moderate (4):** **Severe (6):**                                                                                                                                                                                                                                                                          |
 
-## **Part III: The Core Concept \- Deconstructing the Aspects**
+## **Part III: The Core Concept - Deconstructing the Aspects**
 
 Aspects are the narrative heart of a Fate character, describing who they are, what they believe, and what matters to them.2 They are phrases that can be invoked for a bonus by spending a Fate Point, or compelled by the Game Master (or the player) to introduce a complication in exchange for a Fate Point. Elara's aspects are carefully crafted to translate her professional history and personal philosophy into playable, dramatic truths.
 
@@ -72,16 +72,15 @@ This final backstory aspect defines Elara's core philosophy, inspired by her ext
 - **Invoking:** When working with a team, teaching an ally a new skill, or trying to convince a secretive organization to share its knowledge, this aspect can be invoked to represent her deep-seated belief in collaboration.
 - **Compelling:** Her open-source ethos can be a significant liability. She might be compelled to release a powerful but dangerous piece of technology to the public because her principles demand it. She might refuse a lucrative contract from a corporation that demands proprietary ownership of her work. This creates powerful ethical dilemmas that drive her story forward.
 
-## **Part IV: The Skill Pyramid \- A Foundation of Competence**
+## **Part IV: The Skill Pyramid - A Foundation of Competence**
 
 In Fate, skills represent a character's broad competencies, rated on a ladder from Average (+1) to Superb (+5).2 Elara's skill pyramid is intentionally asymmetrical, reflecting a deep specialization in creation and support, with a corresponding lack of focus on direct confrontation. This structure is a direct translation of the skills and experiences detailed in her professional background.5
 
-### **Apex Skill \- Superb (\+5): Crafts**
+### **Apex Skill - Superb (+5): Crafts**
 
-Placing Crafts at the apex of her pyramid establishes Elara as a master creator, second to none in her field. In Fate, the Crafts skill is not limited to physical objects; it governs the creation, modification, and repair of complex systems of all kinds.6 For Elara, this skill is the synthesis of her entire career: developing with the Godot Engine, creating 3D import systems, working on water simulation and robust geometry kernels.5 It represents her ability to dive into "deep technical challenges" and emerge with elegant, functional solutions.5 Whether she is writing flawless code, designing a magical ward, architecting a starship's engine, or even structuring a legal entity, her Crafts skill of Superb (  
-\+5) means she does it with unparalleled mastery. This is the mechanical core of her _Architect of Impossible Realities_ aspect.
+Placing Crafts at the apex of her pyramid establishes Elara as a master creator, second to none in her field. In Fate, the Crafts skill is not limited to physical objects; it governs the creation, modification, and repair of complex systems of all kinds.6 For Elara, this skill is the synthesis of her entire career: developing with the Godot Engine, creating 3D import systems, working on water simulation and robust geometry kernels.5 It represents her ability to dive into "deep technical challenges" and emerge with elegant, functional solutions.5 Whether she is writing flawless code, designing a magical ward, architecting a starship's engine, or even structuring a legal entity, her Crafts skill of Superb (+5) means she does it with unparalleled mastery. This is the mechanical core of her _Architect of Impossible Realities_ aspect.
 
-### **Secondary Skills \- Great (\+4): Lore & Rapport**
+### **Secondary Skills - Great (+4): Lore & Rapport**
 
 Just below the apex, these two skills define the two halves of her genius: theoretical knowledge and interpersonal connection.
 
@@ -92,11 +91,11 @@ Just below the apex, these two skills define the two halves of her genius: theor
 
 The rest of her skills flesh out her capabilities as a non-combatant specialist.
 
-- **Good (+3) \- Empathy, Notice, Will:** **Empathy** is the natural partner to Rapport, allowing her to understand the emotional state of others, a crucial skill for a community builder and support character. **Notice** is her debugger's eye, honed by years of searching for flaws in complex systems and her tactical analysis during the Squad Wars. **Will** represents her immense mental fortitude and focus, required to solve "fascinating puzzles" and work on deep technical challenges for prolonged periods.5 This also grants her a third mental stress box, making her mentally resilient.
-- **Fair (+2) \- Investigate, Provoke, Resources, Stealth:** **Investigate** allows her to actively piece together clues. **Provoke** is a surprising but logical choice; as a support character, she knows how to push people's buttons to create an opening for her allies, a more subtle form of aggression. **Resources** reflects a successful career, giving her access to funds and equipment. **Stealth** reinforces her desire to remain in the background and observe.
-- **Average (+1) \- The Combat Skills:** Her skills in **Athletics, Deceive, Drive, Fight, Physique,** and **Shoot** are all at the baseline Average (+1). This is a deliberate and critical character choice. She is not a warrior. She is not an action hero. Placing her in a direct physical confrontation is a serious problem, reinforcing her reliance on her allies and her role as a planner and builder. This mechanical weakness is a narrative strength, forcing creative problem-solving and highlighting the importance of teamwork.
+- **Good (+3) - Empathy, Notice, Will:** **Empathy** is the natural partner to Rapport, allowing her to understand the emotional state of others, a crucial skill for a community builder and support character. **Notice** is her debugger's eye, honed by years of searching for flaws in complex systems and her tactical analysis during the Squad Wars. **Will** represents her immense mental fortitude and focus, required to solve "fascinating puzzles" and work on deep technical challenges for prolonged periods.5 This also grants her a third mental stress box, making her mentally resilient.
+- **Fair (+2) - Investigate, Provoke, Resources, Stealth:** **Investigate** allows her to actively piece together clues. **Provoke** is a surprising but logical choice; as a support character, she knows how to push people's buttons to create an opening for her allies, a more subtle form of aggression. **Resources** reflects a successful career, giving her access to funds and equipment. **Stealth** reinforces her desire to remain in the background and observe.
+- **Average (+1) - The Combat Skills:** Her skills in **Athletics, Deceive, Drive, Fight, Physique,** and **Shoot** are all at the baseline Average (+1). This is a deliberate and critical character choice. She is not a warrior. She is not an action hero. Placing her in a direct physical confrontation is a serious problem, reinforcing her reliance on her allies and her role as a planner and builder. This mechanical weakness is a narrative strength, forcing creative problem-solving and highlighting the importance of teamwork.
 
-## **Part V: The Stunt Arsenal \- Code Made Manifest**
+## **Part V: The Stunt Arsenal - Code Made Manifest**
 
 Stunts are special abilities that allow a character to break or bend the rules of the game in a specific way, reflecting unique talents.6 Elara's stunts are direct translations of highly specific technical skills from her resume into flavorful and mechanically sound game abilities.5 They are the ultimate expression of her unique genius.
 
@@ -104,24 +103,24 @@ Stunts are special abilities that allow a character to break or bend the rules o
 
 This stunt is inspired by her work on "CSG with Robust Manifolds for Water Tight 3D Geometry Kernels".5 In 3D modeling, a "watertight" mesh is a perfectly sealed, solid object with no holes or gaps. This concept of flawless, impenetrable design is the basis for the stunt.
 
-- **Mechanic:** Because I create flawless, 'watertight' designs, I gain a \+2 to Crafts when I Create an Advantage related to building a defense, a barrier, or a perfectly logical argument.
+- **Mechanic:** Because I create flawless, 'watertight' designs, I gain a +2 to Crafts when I Create an Advantage related to building a defense, a barrier, or a perfectly logical argument.
 - **Application:** This stunt gives Elara a significant edge when she is in her element. When the team needs to fortify a position, she can use Crafts to design a barrier, and this stunt gives her a bonus to create a situational aspect like _Impenetrable Barricade_. The stunt's genius lies in its flexibility. A "barrier" doesn't have to be physical. She could use it to create a _Watertight Alibi_ during an interrogation or a _Flawless Logical Framework_ in a magical or legal debate, making her a formidable defensive force in both physical and social conflicts.
 
 ### **Stunt 2: Many-Bone IK Solver (Notice)**
 
 This stunt is derived from her development of a "Many Bone IK Pose Solver".5 Inverse Kinematics (IK) is a method in 3D animation for calculating how a complex chain of joints (like a character's skeleton) should move to reach a specific point. A "solver" is the algorithm that does this automatically. A person with this ability would have an intuitive, almost precognitive understanding of biomechanics and movement.
 
-- **Mechanic:** Because I can solve the complex 'rigging' of any system, I can spend a Fate Point to perfectly analyze a target's physical structure and movement. For the rest of the scene, I know one of their Aspects (the GM will tell me which is most relevant to their physical nature or weaknesses), and my allies gain a \+2 when they Overcome obstacles related to that target's movement (e.g., dodging an attack, predicting their path).
+- **Mechanic:** Because I can solve the complex 'rigging' of any system, I can spend a Fate Point to perfectly analyze a target's physical structure and movement. For the rest of the scene, I know one of their Aspects (the GM will tell me which is most relevant to their physical nature or weaknesses), and my allies gain a +2 when they Overcome obstacles related to that target's movement (e.g., dodging an attack, predicting their path).
 - **Application:** This is the quintessential support ability. It provides no direct benefit to Elara herself but gives the entire team a massive tactical advantage. By spending a Fate Point, she can look at a hulking beast or an agile assassin and instantly understand how it moves. The GM might reveal an aspect like _Glitching Servo in Left Leg_ or _Always Leads with a Feint_. This knowledge not only gives the party a narrative hook to exploit but also provides a concrete mechanical bonus for allies trying to evade or anticipate the enemy's actions. It perfectly embodies her role as a force multiplier.
 
 ### **Stunt 3: Support Main (Rapport)**
 
 This is the most direct translation of her personal philosophy and gaming preference into a game mechanic.5 It is a pure, unadulterated support ability that makes her allies better.
 
-- **Mechanic:** Because I excel at enabling others, twice per session, when an ally is about to roll to Create an Advantage, I can give them a \+2 to their roll by offering tactical advice, encouragement, or technical support. This does not cost an action.
-- **Application:** This stunt allows Elara to directly contribute to her allies' success without needing to be in the spotlight. When the party's Face is trying to flatter a noble to create the aspect of Charmed _and Compliant_, Elara can use this stunt to feed them the perfect compliment. When the party's warrior is trying to size up an opponent to create the Analyzed _Weak Point_, Elara can use this stunt to point out a flaw in their stance. It is a simple, elegant mechanic that reinforces her core identity at the table and encourages teamwork and collaborative storytelling.
+- **Mechanic:** Because I excel at enabling others, twice per session, when an ally is about to roll to Create an Advantage, I can give them a +2 to their roll by offering tactical advice, encouragement, or technical support. This does not cost an action.
+- **Application:** This stunt allows Elara to directly contribute to her allies' success without needing to be in the spotlight. When the party's Face is trying to flatter a noble to create the aspect of _Charmed and Compliant_, Elara can use this stunt to feed them the perfect compliment. When the party's warrior is trying to size up an opponent to create the _Analyzed Weak Point_, Elara can use this stunt to point out a flaw in their stance. It is a simple, elegant mechanic that reinforces her core identity at the table and encourages teamwork and collaborative storytelling.
 
-## **Part VI: Narrative Threads \- The Three-Phase Backstory**
+## **Part VI: Narrative Threads - The Three-Phase Backstory**
 
 The Fate Core character creation process is designed to weave the player characters together from the very beginning.4 The following narrative expands on Elara's phase aspects, illustrating the key events that shaped her and connecting her to a hypothetical party of adventurers.
 
@@ -139,10 +138,11 @@ Jax's unit was pinned down in the besieged city of Veridia, their supply lines c
 
 ### **Phase Three: Bound by the Open-Source Soul of the Godot Collective**
 
-After the war, Elara sought work that aligned more with her collaborative ideals. She found a home within the Godot Collective, a loose affiliation of engineers, mages, and artisans dedicated to creating and sharing knowledge freely.5 It was here she met Kael, a brilliant but reckless energy-weaver who was trying to create a stable, portable power source. Kael's prototypes were powerful but dangerously unstable, threatening to breach reality.  
+After the war, Elara sought work that aligned more with her collaborative ideals. She found a home within the Godot Collective, a loose affiliation of engineers, mages, and artisans dedicated to creating and sharing knowledge freely.5 It was here she met Kael, a brilliant but reckless energy-weaver who was trying to create a stable, portable power source. Kael's prototypes were powerful but dangerously unstable, threatening to breach reality.
+
 The Collective's elders wanted to shut down his research. Elara, however, saw the genius in his chaotic work. She saw a system that needed a proper architecture. She didn't try to control his work; she collaborated. She spent weeks with Kael, using her Crafts skill to design a "watertight" containment field and her Lore to map the arcane energy flows. Together, they solved the puzzle. Kael provided the raw, creative fire; Elara provided the flawless, elegant structure to contain and channel it. They published their findings freely for the entire Collective to use, revolutionizing the field. Through this partnership, Elara solidified her core principle and gained her final aspect: **_Bound by the Open-Source Soul of the Godot Collective_**.
 
-## **Part VII: Playing the Architect \- A Guide to Portrayal and Strategy**
+## **Part VII: Playing the Architect - A Guide to Portrayal and Strategy**
 
 Playing Elara Vex is an exercise in subtlety, strategy, and collaborative storytelling. She is not a character who solves problems with brute force, but one who provides the tools and insights for the team to achieve victory together.
 
@@ -158,7 +158,7 @@ Your aspects are your primary resource for influencing the narrative and gaining
 Your role in the party is that of the ultimate enabler and force multiplier.
 
 - **The Enabler:** Your primary function is to make everyone else on your team better. Use your stunts, especially _Support Main_ and _Many-Bone IK Solver_, to give your allies bonuses and critical information. Use your Crafts skill to create advantages for the team, building situational aspects like _Well-Designed Defensive Position_ or _Perfectly Calibrated Scanners_. Your goal is to fill the scene with advantageous aspects that the rest of the party can invoke for free.
-- **The “Chibifire Duality”:** Portray Elara as quiet, observant, and thoughtful. She listens more than she speaks, and when she does speak, her words are precise and impactful. This creates a powerful contrast for the moments when she must unleash her full capabilities. Most NPCs should underestimate her, which you can use to your advantage with skills like Stealth or Deceive. When she finally unveils a brilliant plan or a masterful creation, the effect will be all the more dramatic. She is the quiet fire, unassuming until the moment her heat is needed to forge a victory.
+- **The "Chibifire Duality":** Portray Elara as quiet, observant, and thoughtful. She listens more than she speaks, and when she does speak, her words are precise and impactful. This creates a powerful contrast for the moments when she must unleash her full capabilities. Most NPCs should underestimate her, which you can use to your advantage with skills like Stealth or Deceive. When she finally unveils a brilliant plan or a masterful creation, the effect will be all the more dramatic. She is the quiet fire, unassuming until the moment her heat is needed to forge a victory.
 
 ### **Creative Skill & Stunt Usage**
 
@@ -169,9 +169,9 @@ Think beyond the obvious applications of your abilities.
 
 #### **Works cited**
 
-1. Chibi Fire Elemental \- Julian Cash, accessed August 5, 2025, [https://juliancash.artstation.com/projects/ZlXrzN?album_id=14318979](https://juliancash.artstation.com/projects/ZlXrzN?album_id=14318979)
+1. Chibi Fire Elemental - Julian Cash, accessed August 5, 2025, [https://juliancash.artstation.com/projects/ZlXrzN?album_id=14318979](https://juliancash.artstation.com/projects/ZlXrzN?album_id=14318979)
 2. Basics • Fate Core, accessed August 5, 2025, [https://fate-srd.com/fate-core/basics](https://fate-srd.com/fate-core/basics)
-3. Fate Core System \- Fate TTRPG \- Evil Hat Productions, accessed August 5, 2025, [https://evilhat.com/product/fate-core-system/](https://evilhat.com/product/fate-core-system/)
+3. Fate Core System - Fate TTRPG - Evil Hat Productions, accessed August 5, 2025, [https://evilhat.com/product/fate-core-system/](https://evilhat.com/product/fate-core-system/)
 4. Character Creation • Fate Core, accessed August 5, 2025, [https://fate-srd.com/fate-core/character-creation](https://fate-srd.com/fate-core/character-creation)
 5. Chibifire.com (Pronounced as chee-bee-fire), accessed August 5, 2025, [https://chibifire.com/](https://chibifire.com/)
-6. Fate System Toolkit \- Fate SRD Brasil, accessed August 5, 2025, [https://fatesrdbrasil.gitlab.io/fate-srd/fate-system-toolkit/](https://fatesrdbrasil.gitlab.io/fate-srd/fate-system-toolkit/)
+6. Fate System Toolkit - Fate SRD Brasil, accessed August 5, 2025, [https://fatesrdbrasil.gitlab.io/fate-srd/fate-system-toolkit/](https://fatesrdbrasil.gitlab.io/fate-srd/fate-system-toolkit/)
