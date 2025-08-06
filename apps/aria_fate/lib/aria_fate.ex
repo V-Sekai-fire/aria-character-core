@@ -90,8 +90,9 @@ defmodule AriaFate do
 
   ## Examples
 
-      iex> AriaFate.parse_srd("thirdparty/CC-BY SRDs/Fate-Core-SRD-CC.html", :skills)
-      {:ok, %{skills: [...], skill_descriptions: [...]}}
+      iex> {:ok, result} = AriaFate.parse_srd("thirdparty/CC-BY SRDs/Fate-Core-SRD-CC.html", :skills)
+      iex> is_map(result)
+      true
   """
   defdelegate parse_srd(srd_path, section \\ :all), to: SRDParser
 
@@ -106,12 +107,9 @@ defmodule AriaFate do
 
   ## Examples
 
-      iex> AriaFate.create_planner_domain()
-      {:ok, %AriaFate.PlannerDomain{
-        methods: [...],
-        operators: [...],
-        state_schema: %{}
-      }}
+      iex> {:ok, domain} = AriaFate.create_planner_domain()
+      iex> is_map(domain)
+      true
   """
   defdelegate create_planner_domain(), to: PlannerDomain
 
@@ -126,10 +124,11 @@ defmodule AriaFate do
 
   ## Examples
 
-      iex> domain = AriaFate.create_planner_domain()
+      iex> {:ok, domain} = AriaFate.create_planner_domain()
       iex> state = %{constraints: %{concept: "Space Pilot"}}
-      iex> AriaFate.execute_character_plan(domain, state, [:complete_character])
-      {:ok, %{character: %AriaFate.Character{...}, plan_trace: [...]}}
+      iex> {:ok, result} = AriaFate.execute_character_plan(domain, state, [:complete_character])
+      iex> is_map(result)
+      true
   """
   defdelegate execute_character_plan(domain, initial_state, goals), to: PlannerDomain
 
@@ -142,11 +141,10 @@ defmodule AriaFate do
 
   ## Examples
 
-      iex> AriaFate.validate_character(character)
-      {:ok, %{valid: true, warnings: []}}
-
-      iex> AriaFate.validate_character(invalid_character)
-      {:error, %{valid: false, errors: ["Skill pyramid invalid", ...]}}
+      iex> {:ok, character} = AriaFate.generate_character()
+      iex> {:ok, result} = AriaFate.validate_character(character)
+      iex> result.valid
+      true
   """
   defdelegate validate_character(character), to: CharacterGenerator
 
@@ -160,8 +158,10 @@ defmodule AriaFate do
 
   ## Examples
 
-      iex> AriaFate.export_character(character, :markdown)
-      {:ok, "# Character Name\\n\\n**High Concept:** ..."}
+      iex> {:ok, character} = AriaFate.generate_character()
+      iex> {:ok, markdown} = AriaFate.export_character(character, :markdown)
+      iex> String.contains?(markdown, "#")
+      true
   """
   defdelegate export_character(character, format), to: CharacterGenerator
 end

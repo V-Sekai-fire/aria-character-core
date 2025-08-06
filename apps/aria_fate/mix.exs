@@ -26,7 +26,9 @@ defmodule AriaFate.MixProject do
   # Run "mix help deps" to learn about dependencies.
   defp deps do
     [
-      {:jason, "~> 1.4"}
+      {:jason, "~> 1.4"},
+      {:floki, "~> 0.36"},
+      {:aria_hybrid_planner, in_umbrella: true}
     ]
   end
 end

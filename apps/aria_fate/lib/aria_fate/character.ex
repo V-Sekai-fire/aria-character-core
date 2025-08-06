@@ -172,7 +172,7 @@ defmodule AriaFate.Character do
 
     # Check pyramid rule: each level should have at least as many skills as the level above
     {errors, warnings} =
-      1..max_rating
+      Range.new(1, max_rating, 1)
       |> Enum.reduce({errors, warnings}, fn rating, {acc_errors, acc_warnings} ->
         current_count = Map.get(skill_counts, rating, 0)
         above_count = Map.get(skill_counts, rating + 1, 0)

@@ -78,7 +78,7 @@ defmodule AriaFate.SRDParser do
     {:error, "Unknown section: #{section}"}
   end
 
-  defp extract_skills(document) do
+  defp extract_skills(_document) do
     # Extract skill information from the SRD
     # This would parse the actual HTML structure of the SRD
     # For now, return default Fate Core skills
@@ -106,7 +106,7 @@ defmodule AriaFate.SRDParser do
     ]
   end
 
-  defp extract_stunts(document) do
+  defp extract_stunts(_document) do
     # Extract stunt examples from the SRD
     # This would parse actual stunt descriptions from the HTML
     [
@@ -128,7 +128,7 @@ defmodule AriaFate.SRDParser do
     ]
   end
 
-  defp extract_aspects(document) do
+  defp extract_aspects(_document) do
     # Extract aspect examples from the SRD
     [
       %{
@@ -161,7 +161,7 @@ defmodule AriaFate.SRDParser do
     ]
   end
 
-  defp extract_character_creation_rules(document) do
+  defp extract_character_creation_rules(_document) do
     # Extract character creation guidelines from the SRD
     %{
       skill_points: %{

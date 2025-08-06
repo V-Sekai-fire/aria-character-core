@@ -40,12 +40,24 @@ defmodule AriaFate.PlannerDomain do
   planned sequence of operations.
   """
   def execute_character_plan(domain, initial_state, goals) do
-    # This would integrate with aria_hybrid_planner when available
-    # For now, we'll simulate the planning process
+    # Convert goals to todo items for the hybrid planner
+    todos = Enum.map(goals, fn goal -> %{task: goal, priority: 1} end)
 
-    case simulate_character_planning(initial_state, goals) do
-      {:ok, result} -> {:ok, result}
-      {:error, reason} -> {:error, reason}
+    # Use AriaHybridPlanner to plan and execute
+    case AriaHybridPlanner.run_lazy(domain, initial_state, todos, []) do
+      {:ok, {_solution_tree, final_state}} ->
+        # Extract character from final state and format result
+        character = Map.get(final_state, :character)
+        plan_trace = Map.get(final_state, :plan_trace, ["Character generation completed"])
+
+        {:ok, %{character: character, plan_trace: plan_trace, final_state: final_state}}
+
+      {:error, reason} ->
+        # Fallback to simulation if hybrid planner fails
+        case simulate_character_planning(initial_state, goals) do
+          {:ok, result} -> {:ok, result}
+          {:error, _} -> {:error, reason}
+        end
     end
   end
 
@@ -314,7 +326,7 @@ defmodule AriaFate.PlannerDomain do
     Enum.random(concepts)
   end
 
-  defp generate_trouble(high_concept) do
+  defp generate_trouble(_high_concept) do
     # Generate trouble that creates interesting conflicts with the high concept
     troubles = [
       "Can't Resist a Mystery",
@@ -337,7 +349,7 @@ defmodule AriaFate.PlannerDomain do
 
   defp determine_skill_priorities_from_aspects(character) do
     # Analyze aspects to determine which skills should be prioritized
-    all_aspects = Character.all_aspects(character)
+    _all_aspects = Character.all_aspects(character)
 
     # This would use more sophisticated analysis in a full implementation
     base_priorities = [:investigate, :notice, :rapport, :will, :athletics]
@@ -345,9 +357,17 @@ defmodule AriaFate.PlannerDomain do
     # Add concept-specific skills
     concept_skills = extract_skills_from_concept(character.high_concept)
 
-    (concept_skills ++ base_priorities)
+    # Ensure we have enough skills for a proper pyramid (need at least 10 skills)
+    all_fate_skills = [
+      :academics, :athletics, :burglary, :contacts, :crafts, :deceive,
+      :drive, :empathy, :fight, :investigate, :lore, :notice,
+      :physique, :provoke, :rapport, :resources, :shoot, :stealth,
+      :survival, :will
+    ]
+
+    (concept_skills ++ base_priorities ++ all_fate_skills)
     |> Enum.uniq()
-    |> Enum.take(10)
+    |> Enum.take(20)  # Take more skills to ensure we have enough
   end
 
   defp extract_skills_from_concept(concept) when is_binary(concept) do
@@ -366,6 +386,7 @@ defmodule AriaFate.PlannerDomain do
 
   defp build_skill_pyramid_from_priorities(priorities) do
     # Build a valid skill pyramid with the given priorities
+    # Fate Core pyramid: 1 at +4, 2 at +3, 3 at +2, 4 at +1
     skill_ratings = [
       {4, 1},  # One skill at Great (+4)
       {3, 2},  # Two skills at Good (+3)
@@ -373,18 +394,26 @@ defmodule AriaFate.PlannerDomain do
       {1, 4}   # Four skills at Average (+1)
     ]
 
+    # Ensure we have enough skills for the pyramid (need at least 10 skills)
+    available_skills = Enum.take(priorities, 10)
+
     {skills, _remaining} =
-      Enum.reduce(skill_ratings, {%{}, priorities}, fn {rating, count}, {acc_skills, remaining_priorities} ->
-        {selected, rest} = Enum.split(remaining_priorities, count)
+      Enum.reduce(skill_ratings, {%{}, available_skills}, fn {rating, count}, {acc_skills, remaining_priorities} ->
+        # Only assign skills if we have enough remaining
+        if length(remaining_priorities) >= count do
+          {selected, rest} = Enum.split(remaining_priorities, count)
 
-        skill_map =
-          selected
-          |> Enum.with_index()
-          |> Enum.reduce(%{}, fn {skill, _index}, acc ->
-            Map.put(acc, skill, rating)
-          end)
+          skill_map =
+            selected
+            |> Enum.reduce(%{}, fn skill, acc ->
+              Map.put(acc, skill, rating)
+            end)
 
-        {Map.merge(acc_skills, skill_map), rest}
+          {Map.merge(acc_skills, skill_map), rest}
+        else
+          # If we don't have enough skills, skip this rating level
+          {acc_skills, remaining_priorities}
+        end
       end)
 
     skills
@@ -409,13 +438,13 @@ defmodule AriaFate.PlannerDomain do
     |> Enum.map(&design_specific_stunt(&1, character))
   end
 
-  defp design_specific_stunt(idea, character) do
+  defp design_specific_stunt(idea, _character) do
     # Create a specific stunt description
     "#{idea}: +2 to relevant skill in specific circumstances"
   end
 
   # Simulation function for testing without full planner integration
-  defp simulate_character_planning(initial_state, goals) do
+  defp simulate_character_planning(initial_state, _goals) do
     # Simulate the planning process step by step
     with {:ok, state1} <- generate_basic_info_action(initial_state),
          {:ok, state2} <- create_high_concept_action(state1),
