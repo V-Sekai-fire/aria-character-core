@@ -116,6 +116,9 @@ defmodule AriaCharacterCore.MixProject do
       {:iso8601, "~> 1.3"},
       {:timex, "~> 3.7"},
 
+      # External Git Dependencies
+      {:aria_hybrid_planner, git: "https://github.com/V-Sekai-fire/aria-hybrid-planner.git"},
+
       # Test dependencies
       {:mox, "~> 1.0", only: :test},
       {:stream_data, "~> 1.2", only: :test},
