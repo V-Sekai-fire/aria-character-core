@@ -26,7 +26,7 @@ defmodule AriaBmeshDomain.MixProject do
   # Run "mix help deps" to learn about dependencies.
   defp deps do
     [
-      {:aria_hybrid_planner, git: "https://github.com/V-Sekai-fire/aria-hybrid-planner.git"}
+      {:aria_core, git: "https://github.com/V-Sekai-fire/aria-hybrid-planner.git", sparse: "apps/aria_core"}
     ]
   end
 end

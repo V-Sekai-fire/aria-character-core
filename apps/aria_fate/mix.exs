@@ -28,7 +28,7 @@ defmodule AriaFate.MixProject do
     [
       {:jason, "~> 1.4"},
       {:floki, "~> 0.36"},
-      {:aria_hybrid_planner, git: "https://github.com/V-Sekai-fire/aria-hybrid-planner.git"}
+      {:aria_core, git: "https://github.com/V-Sekai-fire/aria-hybrid-planner.git", sparse: "apps/aria_core"}
     ]
   end
 end

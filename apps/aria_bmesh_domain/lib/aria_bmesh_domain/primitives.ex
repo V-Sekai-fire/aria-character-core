@@ -28,7 +28,7 @@ defmodule AriaBmeshDomain.Primitives do
 
   """
 
-  use AriaHybridPlanner
+  use AriaCore
 
   @type primitive_params :: map()
 
@@ -36,7 +36,7 @@ defmodule AriaBmeshDomain.Primitives do
   Create cone primitive using atomic BMesh actions.
   Tapered circular meshes with configurable resolution.
   """
-  @task_method
+  @task_method true
   def create_cone_task(state, [mesh_id, params]) do
     radius = Map.get(params, :radius, 1.0)
     height = Map.get(params, :height, 2.0)
@@ -99,7 +99,7 @@ defmodule AriaBmeshDomain.Primitives do
   Create ellipsoid primitive using atomic BMesh actions.
   Stretched spherical meshes with configurable radii.
   """
-  @task_method
+  @task_method true
   def create_ellipsoid_task(state, [mesh_id, params]) do
     radius_x = Map.get(params, :radius_x, 1.0)
     radius_y = Map.get(params, :radius_y, 1.0)
@@ -160,7 +160,7 @@ defmodule AriaBmeshDomain.Primitives do
   Create donut (torus) primitive using atomic BMesh actions.
   Ring-shaped meshes with holes.
   """
-  @task_method
+  @task_method true
   def create_donut_task(state, [mesh_id, params]) do
     major_radius = Map.get(params, :major_radius, 2.0)
     minor_radius = Map.get(params, :minor_radius, 0.5)
@@ -220,7 +220,7 @@ defmodule AriaBmeshDomain.Primitives do
   Create pyramid primitive using atomic BMesh actions.
   Pointed apex meshes with square base.
   """
-  @task_method
+  @task_method true
   def create_pyramid_task(state, [mesh_id, params]) do
     base_width = Map.get(params, :base_width, 2.0)
     height = Map.get(params, :height, 2.0)
@@ -267,7 +267,7 @@ defmodule AriaBmeshDomain.Primitives do
   Create cylinder primitive using atomic BMesh actions.
   Circular cross-section extrusions with configurable resolution.
   """
-  @task_method
+  @task_method true
   def create_cylinder_task(state, [mesh_id, params]) do
     radius = Map.get(params, :radius, 1.0)
     height = Map.get(params, :height, 2.0)
@@ -345,7 +345,7 @@ defmodule AriaBmeshDomain.Primitives do
   Create cuboid primitive using atomic BMesh actions.
   Rectangular box primitives with configurable dimensions.
   """
-  @task_method
+  @task_method true
   def create_cuboid_task(state, [mesh_id, params]) do
     width = Map.get(params, :width, 2.0)
     height = Map.get(params, :height, 2.0)
@@ -397,7 +397,7 @@ defmodule AriaBmeshDomain.Primitives do
   Create triangular prism primitive using atomic BMesh actions.
   Triangular cross-section extrusions.
   """
-  @task_method
+  @task_method true
   def create_triangular_prism_task(state, [mesh_id, params]) do
     base_width = Map.get(params, :base_width, 2.0)
     height = Map.get(params, :height, 2.0)
