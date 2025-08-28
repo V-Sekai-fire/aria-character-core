@@ -1,1 +1,0 @@
-A smiling girl wears formal party attire: offshoulder Silhouette, high heels, Depiction: full/upper body, standing/sitting. Visuals: cel shading, black/brown/short hair, hair between eyes, animal ears, brown/blue eyes, closed mouth, medium breasts, collarbone, neckline, looking at viewer, blush, ribbon/bow, twintails/ponytail, sparkle.
