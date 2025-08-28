@@ -1,0 +1,12 @@
+; DO NOT EDIT (unless you know what you are doing)
+;
+; This subdirectory is a git "subrepo", and this file is maintained by the
+; git-subrepo command. See https://github.com/ingydotnet/git-subrepo#readme
+;
+[subrepo]
+	remote = https://github.com/eliemichel/BMeshUnity.git
+	branch = master
+	commit = 448252f7c336bb57283800feeb786b943f32821a
+	parent = 19e1e20160628a27d77b330dfcd2ddc1287b2d9c
+	method = merge
+	cmdver = 0.4.9
