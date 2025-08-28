@@ -32,14 +32,13 @@ defmodule AriaEwbik.MixProject do
   defp deps do
     [
       # Mathematical foundation
-      {:aria_math, in_umbrella: true},
+      {:aria_math, git: "https://github.com/V-Sekai-fire/aria-math.git"},
 
       # Joint hierarchy management
       {:aria_joint, in_umbrella: true},
 
       # Quaternion Characteristic Polynomial algorithm
-      {:aria_qcp, in_umbrella: true},
-
+      {:aria_qcp, git: "https://github.com/V-Sekai-fire/aria-qcp.git"},
 
       # Development and testing
       {:ex_doc, "~> 0.34", only: :dev, runtime: false}

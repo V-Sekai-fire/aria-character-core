@@ -118,6 +118,7 @@ defmodule AriaCharacterCore.MixProject do
 
       # External Git Dependencies
       {:aria_core, git: "https://github.com/V-Sekai-fire/aria-hybrid-planner.git", sparse: "apps/aria_core"},
+      {:aria_state, git: "https://github.com/V-Sekai-fire/aria-hybrid-planner.git", sparse: "apps/aria_state", override: true},
 
       # Test dependencies
       {:mox, "~> 1.0", only: :test},
