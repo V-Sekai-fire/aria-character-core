@@ -94,3 +94,6 @@ apps/.DS_Store
 /.migration_backup/
 
 /.statev2_fixer_backup/
+deps/
+_build/
+.elixir_ls/

@@ -1,3 +1,6 @@
+# SPDX-License-Identifier: MIT
+# Copyright (c) 2025-present K. S. Ernest (iFire) Lee
+
 defmodule AriaTemporalBlocks.TimeLoggerTest do
   use ExUnit.Case
   doctest AriaTemporalBlocks.TimeLogger

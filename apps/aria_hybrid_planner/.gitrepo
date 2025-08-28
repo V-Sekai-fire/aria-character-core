@@ -6,7 +6,7 @@
 [subrepo]
 	remote = https://github.com/V-Sekai-fire/aria-hybrid-planner.git
 	branch = main
-	commit = f3a576315800805b1e0c360b93cb5dc1de4f7c28
-	parent = cd6e12de8ccd8db151c7826b48ceb09a4411a692
+	commit = 6709a59f95851ae920f33890db4b5f1c568aa4d8
+	parent = 9d52f50cbaf283b8b9bbd79e54c25222780fc02b
 	method = merge
 	cmdver = 0.4.9
