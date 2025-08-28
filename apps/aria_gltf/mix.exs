@@ -36,7 +36,7 @@ defmodule AriaGltf.MixProject do
   defp deps do
     [
       # Mathematical operations and tensor support
-      {:aria_math, in_umbrella: true},
+      {:aria_math, git: "https://github.com/V-Sekai-fire/aria-math.git"},
 
       # Joint hierarchy and skeletal animation support
       {:aria_joint, in_umbrella: true},

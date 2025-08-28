@@ -1,4 +1,8 @@
 %{
+  "aria_core": {:git, "https://github.com/V-Sekai-fire/aria-hybrid-planner.git", "6709a59f95851ae920f33890db4b5f1c568aa4d8", [sparse: "apps/aria_core"]},
+  "aria_hybrid_planner": {:git, "https://github.com/V-Sekai-fire/aria-hybrid-planner.git", "6709a59f95851ae920f33890db4b5f1c568aa4d8", []},
+  "aria_math": {:git, "https://github.com/V-Sekai-fire/aria-math.git", "cbd3af559ed7d45165a38b69133226f6e5150277", []},
+  "aria_qcp": {:git, "https://github.com/V-Sekai-fire/aria-qcp.git", "451fcb62e07dd30d6da7df9b8b133f5313bfadc5", []},
   "bandit": {:hex, :bandit, "1.7.0", "d1564f30553c97d3e25f9623144bb8df11f3787a26733f00b21699a128105c0c", [:mix], [{:hpax, "~> 1.0", [hex: :hpax, repo: "hexpm", optional: false]}, {:plug, "~> 1.18", [hex: :plug, repo: "hexpm", optional: false]}, {:telemetry, "~> 0.4 or ~> 1.0", [hex: :telemetry, repo: "hexpm", optional: false]}, {:thousand_island, "~> 1.0", [hex: :thousand_island, repo: "hexpm", optional: false]}, {:websock, "~> 0.5", [hex: :websock, repo: "hexpm", optional: false]}], "hexpm", "3e2f7a98c7a11f48d9d8c037f7177cd39778e74d55c7af06fe6227c742a8168a"},
   "bcrypt_elixir": {:hex, :bcrypt_elixir, "3.3.2", "d50091e3c9492d73e17fc1e1619a9b09d6a5ef99160eb4d736926fd475a16ca3", [:make, :mix], [{:comeonin, "~> 5.3", [hex: :comeonin, repo: "hexpm", optional: false]}, {:elixir_make, "~> 0.6", [hex: :elixir_make, repo: "hexpm", optional: false]}], "hexpm", "471be5151874ae7931911057d1467d908955f93554f7a6cd1b7d804cac8cef53"},
   "bunch": {:hex, :bunch, "1.6.1", "5393d827a64d5f846092703441ea50e65bc09f37fd8e320878f13e63d410aec7", [:mix], [], "hexpm", "286cc3add551628b30605efbe2fca4e38cc1bea89bcd0a1a7226920b3364fe4a"},

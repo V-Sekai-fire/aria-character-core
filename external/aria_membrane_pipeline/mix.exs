@@ -26,7 +26,7 @@ defmodule AriaMembranePipeline.MixProject do
   defp deps do
     [
       # Internal dependencies
-      {:aria_hybrid_planner, path: "../aria_hybrid_planner"},
+      {:aria_hybrid_planner, git: "https://github.com/V-Sekai-fire/aria-hybrid-planner.git"},
       {:aria_minizinc_goal, path: "../aria_minizinc_goal"},
 
       # External dependencies
