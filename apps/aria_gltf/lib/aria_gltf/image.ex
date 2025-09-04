@@ -6,14 +6,14 @@ defmodule AriaGltf.Image do
   """
 
   @type t :: %__MODULE__{
-    uri: String.t() | nil,
-    mime_type: String.t() | nil,
-    buffer_view: non_neg_integer() | nil,
-    name: String.t() | nil,
-    extensions: map() | nil,
-    extras: any() | nil,
-    data: binary() | nil
-  }
+          uri: String.t() | nil,
+          mime_type: String.t() | nil,
+          buffer_view: non_neg_integer() | nil,
+          name: String.t() | nil,
+          extensions: map() | nil,
+          extras: any() | nil,
+          data: binary() | nil
+        }
 
   defstruct [
     :uri,

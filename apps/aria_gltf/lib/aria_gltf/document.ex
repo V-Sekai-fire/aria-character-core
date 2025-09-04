@@ -7,29 +7,44 @@ defmodule AriaGltf.Document do
   This module represents the top-level glTF document structure as defined in the glTF 2.0 specification.
   """
 
-  alias AriaGltf.{Asset, Scene, Node, Mesh, Material, Texture, Image, Sampler, Accessor, BufferView, Buffer, Camera, Skin, Animation}
+  alias AriaGltf.{
+    Asset,
+    Scene,
+    Node,
+    Mesh,
+    Material,
+    Texture,
+    Image,
+    Sampler,
+    Accessor,
+    BufferView,
+    Buffer,
+    Camera,
+    Skin,
+    Animation
+  }
 
   @type t :: %__MODULE__{
-    extensions_used: [String.t()] | nil,
-    extensions_required: [String.t()] | nil,
-    accessors: [Accessor.t()] | nil,
-    animations: [Animation.t()] | nil,
-    asset: Asset.t(),
-    buffers: [Buffer.t()] | nil,
-    buffer_views: [BufferView.t()] | nil,
-    cameras: [Camera.t()] | nil,
-    images: [Image.t()] | nil,
-    materials: [Material.t()] | nil,
-    meshes: [Mesh.t()] | nil,
-    nodes: [Node.t()] | nil,
-    samplers: [Sampler.t()] | nil,
-    scene: non_neg_integer() | nil,
-    scenes: [Scene.t()] | nil,
-    skins: [Skin.t()] | nil,
-    textures: [Texture.t()] | nil,
-    extensions: map() | nil,
-    extras: any() | nil
-  }
+          extensions_used: [String.t()] | nil,
+          extensions_required: [String.t()] | nil,
+          accessors: [Accessor.t()] | nil,
+          animations: [Animation.t()] | nil,
+          asset: Asset.t(),
+          buffers: [Buffer.t()] | nil,
+          buffer_views: [BufferView.t()] | nil,
+          cameras: [Camera.t()] | nil,
+          images: [Image.t()] | nil,
+          materials: [Material.t()] | nil,
+          meshes: [Mesh.t()] | nil,
+          nodes: [Node.t()] | nil,
+          samplers: [Sampler.t()] | nil,
+          scene: non_neg_integer() | nil,
+          scenes: [Scene.t()] | nil,
+          skins: [Skin.t()] | nil,
+          textures: [Texture.t()] | nil,
+          extensions: map() | nil,
+          extras: any() | nil
+        }
 
   @enforce_keys [:asset]
   defstruct [
@@ -76,6 +91,7 @@ defmodule AriaGltf.Document do
   defp parse_asset(%{"asset" => asset_json}) do
     Asset.from_json(asset_json)
   end
+
   defp parse_asset(_), do: {:error, :missing_asset}
 
   defp parse_document(json, asset) do
@@ -110,7 +126,9 @@ defmodule AriaGltf.Document do
 
   defp parse_array_field(document, json, field_name, parser_fn) do
     case Map.get(json, field_name) do
-      nil -> document
+      nil ->
+        document
+
       array when is_list(array) ->
         parsed_items =
           array
@@ -125,7 +143,9 @@ defmodule AriaGltf.Document do
 
         field_atom = String.to_atom(field_name)
         Map.put(document, field_atom, parsed_items)
-      _ -> document
+
+      _ ->
+        document
     end
   end
 
@@ -164,6 +184,7 @@ defmodule AriaGltf.Document do
 
   defp put_array_if_present(map, _key, nil, _converter), do: map
   defp put_array_if_present(map, _key, [], _converter), do: map
+
   defp put_array_if_present(map, key, array, converter) when is_list(array) do
     Map.put(map, key, Enum.map(array, converter))
   end

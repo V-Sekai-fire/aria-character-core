@@ -68,7 +68,11 @@ defmodule AriaGltf.Material.PbrMetallicRoughness do
     |> put_if_present("baseColorTexture", pbr.base_color_texture, &TextureInfo.to_map/1)
     |> put_if_present("metallicFactor", pbr.metallic_factor, 1.0)
     |> put_if_present("roughnessFactor", pbr.roughness_factor, 1.0)
-    |> put_if_present("metallicRoughnessTexture", pbr.metallic_roughness_texture, &TextureInfo.to_map/1)
+    |> put_if_present(
+      "metallicRoughnessTexture",
+      pbr.metallic_roughness_texture,
+      &TextureInfo.to_map/1
+    )
     |> put_if_present("extensions", pbr.extensions)
     |> put_if_present("extras", pbr.extras)
   end
@@ -79,7 +83,8 @@ defmodule AriaGltf.Material.PbrMetallicRoughness do
   @spec from_map(map()) :: {:ok, t()} | {:error, String.t()}
   def from_map(map) when is_map(map) do
     with {:ok, base_color_texture} <- parse_texture_info(Map.get(map, "baseColorTexture")),
-         {:ok, metallic_roughness_texture} <- parse_texture_info(Map.get(map, "metallicRoughnessTexture")) do
+         {:ok, metallic_roughness_texture} <-
+           parse_texture_info(Map.get(map, "metallicRoughnessTexture")) do
       pbr = %__MODULE__{
         base_color_factor: Map.get(map, "baseColorFactor", [1.0, 1.0, 1.0, 1.0]),
         base_color_texture: base_color_texture,
@@ -109,10 +114,16 @@ defmodule AriaGltf.Material.PbrMetallicRoughness do
 
   defp validate_base_color_factor(_), do: {:error, "base_color_factor must be array of 4 numbers"}
 
-  defp validate_metallic_factor(factor) when is_number(factor) and factor >= 0.0 and factor <= 1.0, do: :ok
+  defp validate_metallic_factor(factor)
+       when is_number(factor) and factor >= 0.0 and factor <= 1.0,
+       do: :ok
+
   defp validate_metallic_factor(_), do: {:error, "metallic_factor must be between 0.0 and 1.0"}
 
-  defp validate_roughness_factor(factor) when is_number(factor) and factor >= 0.0 and factor <= 1.0, do: :ok
+  defp validate_roughness_factor(factor)
+       when is_number(factor) and factor >= 0.0 and factor <= 1.0,
+       do: :ok
+
   defp validate_roughness_factor(_), do: {:error, "roughness_factor must be between 0.0 and 1.0"}
 
   defp validate_base_color_texture(nil), do: :ok
@@ -121,7 +132,8 @@ defmodule AriaGltf.Material.PbrMetallicRoughness do
     TextureInfo.validate(texture)
   end
 
-  defp validate_base_color_texture(_), do: {:error, "base_color_texture must be TextureInfo struct"}
+  defp validate_base_color_texture(_),
+    do: {:error, "base_color_texture must be TextureInfo struct"}
 
   defp validate_metallic_roughness_texture(nil), do: :ok
 
@@ -129,13 +141,17 @@ defmodule AriaGltf.Material.PbrMetallicRoughness do
     TextureInfo.validate(texture)
   end
 
-  defp validate_metallic_roughness_texture(_), do: {:error, "metallic_roughness_texture must be TextureInfo struct"}
+  defp validate_metallic_roughness_texture(_),
+    do: {:error, "metallic_roughness_texture must be TextureInfo struct"}
 
   # Helper functions
 
   defp put_if_present(map, _key, nil), do: map
   defp put_if_present(map, key, value), do: Map.put(map, key, value)
-  defp put_if_present(map, key, value, transform_fn) when is_function(transform_fn, 1), do: Map.put(map, key, transform_fn.(value))
+
+  defp put_if_present(map, key, value, transform_fn) when is_function(transform_fn, 1),
+    do: Map.put(map, key, transform_fn.(value))
+
   defp put_if_present(map, _key, value, default) when value == default, do: map
   defp put_if_present(map, key, value, _default), do: Map.put(map, key, value)
 

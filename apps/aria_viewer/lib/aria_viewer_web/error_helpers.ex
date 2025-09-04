@@ -10,9 +10,7 @@ defmodule AriaViewerWeb.ErrorHelpers do
   """
   def error_tag(form, field) do
     Enum.map(Keyword.get_values(form.errors, field), fn error ->
-      content_tag(:span, translate_error(error),
-        class: "invalid-feedback"
-      )
+      content_tag(:span, translate_error(error), class: "invalid-feedback")
     end)
   end
 
@@ -31,6 +29,7 @@ defmodule AriaViewerWeb.ErrorHelpers do
   def translate_errors(errors, field) when is_list(errors) do
     for {^field, {msg, opts}} <- errors, do: translate_error({msg, opts})
   end
+
   def translate_errors(errors, field) when is_map(errors) do
     for {^field, {msg, opts}} <- errors, do: translate_error({msg, opts})
   end

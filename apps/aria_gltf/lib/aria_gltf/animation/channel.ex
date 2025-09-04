@@ -12,11 +12,11 @@ defmodule AriaGltf.Animation.Channel do
   alias AriaGltf.Animation.Channel.Target
 
   @type t :: %__MODULE__{
-    sampler: non_neg_integer(),
-    target: Target.t(),
-    extensions: map() | nil,
-    extras: any() | nil
-  }
+          sampler: non_neg_integer(),
+          target: Target.t(),
+          extensions: map() | nil,
+          extras: any() | nil
+        }
 
   @enforce_keys [:sampler, :target]
   defstruct [
@@ -30,7 +30,8 @@ defmodule AriaGltf.Animation.Channel do
   Creates a new animation channel with the required sampler index and target.
   """
   @spec new(non_neg_integer(), Target.t()) :: t()
-  def new(sampler_index, %Target{} = target) when is_integer(sampler_index) and sampler_index >= 0 do
+  def new(sampler_index, %Target{} = target)
+      when is_integer(sampler_index) and sampler_index >= 0 do
     %__MODULE__{
       sampler: sampler_index,
       target: target
@@ -50,6 +51,7 @@ defmodule AriaGltf.Animation.Channel do
         extensions: Map.get(json, "extensions"),
         extras: Map.get(json, "extras")
       }
+
       {:ok, channel}
     end
   end
@@ -57,11 +59,13 @@ defmodule AriaGltf.Animation.Channel do
   defp parse_sampler(%{"sampler" => sampler}) when is_integer(sampler) and sampler >= 0 do
     {:ok, sampler}
   end
+
   defp parse_sampler(_), do: {:error, :missing_or_invalid_sampler}
 
   defp parse_target(%{"target" => target_json}) when is_map(target_json) do
     Target.from_json(target_json)
   end
+
   defp parse_target(_), do: {:error, :missing_target}
 
   @doc """

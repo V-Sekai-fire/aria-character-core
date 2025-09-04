@@ -13,10 +13,10 @@ defmodule AriaJoint.Registry do
   @type node_id() :: reference()
   @type joint_id() :: term()
   @type joint_error ::
-    :registry_unavailable |
-    :node_not_found |
-    :registry_timeout |
-    :registry_sync_failed
+          :registry_unavailable
+          | :node_not_found
+          | :registry_timeout
+          | :registry_sync_failed
 
   @doc """
   Updates an existing joint in the registry.
@@ -94,6 +94,7 @@ defmodule AriaJoint.Registry do
         case Registry.update_value(registry_name, joint_id, update_fn) do
           {new_value, _old_value} -> {:ok, new_value}
         end
+
       [] ->
         {:error, :not_found}
     end

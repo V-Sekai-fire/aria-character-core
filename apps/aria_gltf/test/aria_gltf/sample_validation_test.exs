@@ -12,12 +12,12 @@ defmodule AriaGltf.SampleValidationTest do
       assert {:ok, report} = SampleValidation.validate_simple_skin()
 
       assert %{
-        document: document,
-        skin_report: skin_report,
-        joint_report: joint_report,
-        animation_report: animation_report,
-        validation_passed: true
-      } = report
+               document: document,
+               skin_report: skin_report,
+               joint_report: joint_report,
+               animation_report: animation_report,
+               validation_passed: true
+             } = report
 
       # Verify document structure
       assert document != nil
@@ -27,10 +27,10 @@ defmodule AriaGltf.SampleValidationTest do
 
       # Verify skin report
       assert %{
-        joint_count: joint_count,
-        has_inverse_bind_matrices: has_inverse_bind_matrices,
-        skin_index: 0
-      } = skin_report
+               joint_count: joint_count,
+               has_inverse_bind_matrices: has_inverse_bind_matrices,
+               skin_index: 0
+             } = skin_report
 
       assert joint_count > 0
       assert has_inverse_bind_matrices == true
@@ -67,12 +67,12 @@ defmodule AriaGltf.SampleValidationTest do
       case SampleValidation.validate_simple_morph() do
         {:ok, report} ->
           assert %{
-            document: document,
-            mesh_report: mesh_report,
-            target_report: _target_report,
-            weight_report: _weight_report,
-            validation_passed: true
-          } = report
+                   document: document,
+                   mesh_report: mesh_report,
+                   target_report: _target_report,
+                   weight_report: _weight_report,
+                   validation_passed: true
+                 } = report
 
           # Verify document structure
           assert document != nil
@@ -82,10 +82,10 @@ defmodule AriaGltf.SampleValidationTest do
 
           # Verify mesh report
           assert %{
-            has_morph_targets: has_morph_targets,
-            morph_target_count: morph_target_count,
-            mesh_index: 0
-          } = mesh_report
+                   has_morph_targets: has_morph_targets,
+                   morph_target_count: morph_target_count,
+                   mesh_index: 0
+                 } = mesh_report
 
           assert is_boolean(has_morph_targets)
           assert is_integer(morph_target_count)
@@ -126,18 +126,20 @@ defmodule AriaGltf.SampleValidationTest do
       # Use SimpleSkin.gltf for skeletal animation testing
       case SampleValidation.validate_simple_skin() do
         {:ok, %{document: document}} ->
-          timestamp = 0.5  # 0.5 seconds into animation
+          # 0.5 seconds into animation
+          timestamp = 0.5
 
-          assert {:ok, processed_state} = SampleValidation.process_frame_accurate(document, timestamp)
+          assert {:ok, processed_state} =
+                   SampleValidation.process_frame_accurate(document, timestamp)
 
           assert %{
-            type: :skeletal,
-            timestamp: ^timestamp,
-            joint_count: joint_count,
-            aria_joint_integration: true,
-            aria_math_integration: true,
-            placeholder: true
-          } = processed_state
+                   type: :skeletal,
+                   timestamp: ^timestamp,
+                   joint_count: joint_count,
+                   aria_joint_integration: true,
+                   aria_math_integration: true,
+                   placeholder: true
+                 } = processed_state
 
           assert joint_count > 0
 
@@ -155,8 +157,10 @@ defmodule AriaGltf.SampleValidationTest do
           %AriaGltf.Mesh{
             primitives: [
               %AriaGltf.Mesh.Primitive{
-                attributes: %{"POSITION" => 0},  # Required field
-                targets: [%{}, %{}]  # Two morph targets
+                # Required field
+                attributes: %{"POSITION" => 0},
+                # Two morph targets
+                targets: [%{}, %{}]
               }
             ]
           }
@@ -178,14 +182,15 @@ defmodule AriaGltf.SampleValidationTest do
 
       timestamp = 1.0
 
-      assert {:ok, processed_state} = SampleValidation.process_frame_accurate(mock_document, timestamp)
+      assert {:ok, processed_state} =
+               SampleValidation.process_frame_accurate(mock_document, timestamp)
 
       assert %{
-        type: :morph,
-        timestamp: ^timestamp,
-        morph_target_count: 2,
-        placeholder: true
-      } = processed_state
+               type: :morph,
+               timestamp: ^timestamp,
+               morph_target_count: 2,
+               placeholder: true
+             } = processed_state
     end
 
     test "handles missing animation gracefully" do
@@ -204,7 +209,9 @@ defmodule AriaGltf.SampleValidationTest do
         animations: [%AriaGltf.Animation{channels: [], samplers: []}]
       }
 
-      assert {:error, reason} = SampleValidation.process_frame_accurate(mock_document, 0.0, animation_index: 5)
+      assert {:error, reason} =
+               SampleValidation.process_frame_accurate(mock_document, 0.0, animation_index: 5)
+
       assert reason =~ "out of bounds"
     end
 
@@ -213,12 +220,13 @@ defmodule AriaGltf.SampleValidationTest do
         {:ok, %{document: document}} ->
           options = [use_aria_joint: false, use_aria_math: false]
 
-          assert {:ok, processed_state} = SampleValidation.process_frame_accurate(document, 0.0, options)
+          assert {:ok, processed_state} =
+                   SampleValidation.process_frame_accurate(document, 0.0, options)
 
           assert %{
-            aria_joint_integration: false,
-            aria_math_integration: false
-          } = processed_state
+                   aria_joint_integration: false,
+                   aria_math_integration: false
+                 } = processed_state
 
         {:error, _reason} ->
           # SimpleSkin.gltf not available, skip test
@@ -246,13 +254,16 @@ defmodule AriaGltf.SampleValidationTest do
       # Document without skins but with morph targets should be identified as morph
       mock_document = %AriaGltf.Document{
         asset: %AriaGltf.Asset{version: "2.0", generator: "Test"},
-        skins: nil,  # No skins
+        # No skins
+        skins: nil,
         meshes: [
           %AriaGltf.Mesh{
             primitives: [
               %AriaGltf.Mesh.Primitive{
-                attributes: %{"POSITION" => 0},  # Required field
-                targets: [%{}]  # Has morph targets
+                # Required field
+                attributes: %{"POSITION" => 0},
+                # Has morph targets
+                targets: [%{}]
               }
             ]
           }

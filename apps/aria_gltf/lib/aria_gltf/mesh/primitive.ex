@@ -186,7 +186,18 @@ defmodule AriaGltf.Mesh.Primitive do
 
   defp validate_attributes(_), do: {:error, "attributes must be a non-empty map"}
 
-  defp validate_mode(mode) when mode in [@points, @lines, @line_loop, @line_strip, @triangles, @triangle_strip, @triangle_fan], do: :ok
+  defp validate_mode(mode)
+       when mode in [
+              @points,
+              @lines,
+              @line_loop,
+              @line_strip,
+              @triangles,
+              @triangle_strip,
+              @triangle_fan
+            ],
+       do: :ok
+
   defp validate_mode(_), do: {:error, "Invalid primitive mode"}
 
   defp validate_indices(nil), do: :ok

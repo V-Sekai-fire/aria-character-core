@@ -21,6 +21,7 @@ defmodule AriaGltf.Import.Parser.Utility do
   """
   @spec parse_matrix(list() | nil) :: list() | nil
   def parse_matrix(nil), do: nil
+
   def parse_matrix(matrix) when is_list(matrix) and length(matrix) == 16 do
     matrix
   end
@@ -38,6 +39,7 @@ defmodule AriaGltf.Import.Parser.Utility do
   """
   @spec parse_quaternion(list() | nil) :: list() | nil
   def parse_quaternion(nil), do: nil
+
   def parse_quaternion(quat) when is_list(quat) and length(quat) == 4 do
     quat
   end
@@ -55,6 +57,7 @@ defmodule AriaGltf.Import.Parser.Utility do
   """
   @spec parse_vec3(list() | nil) :: list() | nil
   def parse_vec3(nil), do: nil
+
   def parse_vec3(vec) when is_list(vec) and length(vec) == 3 do
     vec
   end
@@ -72,6 +75,7 @@ defmodule AriaGltf.Import.Parser.Utility do
   """
   @spec parse_vec4(list() | nil) :: list() | nil
   def parse_vec4(nil), do: nil
+
   def parse_vec4(vec) when is_list(vec) and length(vec) == 4 do
     vec
   end

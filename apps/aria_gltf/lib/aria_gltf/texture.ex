@@ -6,12 +6,12 @@ defmodule AriaGltf.Texture do
   """
 
   @type t :: %__MODULE__{
-    sampler: non_neg_integer() | nil,
-    source: non_neg_integer() | nil,
-    name: String.t() | nil,
-    extensions: map() | nil,
-    extras: any() | nil
-  }
+          sampler: non_neg_integer() | nil,
+          source: non_neg_integer() | nil,
+          name: String.t() | nil,
+          extensions: map() | nil,
+          extras: any() | nil
+        }
 
   defstruct [
     :sampler,

@@ -30,7 +30,7 @@ defmodule AriaJoint.MixProject do
     [
       {:aria_math, git: "https://github.com/V-Sekai-fire/aria-math.git"},
       {:nx, "~> 0.10.0"},
-      {:torchx, "~> 0.10"},
+      {:torchx, "~> 0.10"}
     ]
   end
 end

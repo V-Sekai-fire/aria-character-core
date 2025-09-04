@@ -11,11 +11,11 @@ defmodule AriaJoint.DirtyState do
   import Bitwise
 
   @type dirty_state() ::
-    :dirty_none |
-    :dirty_vectors |
-    :dirty_local |
-    :dirty_global |
-    [:dirty_vectors | :dirty_local | :dirty_global]
+          :dirty_none
+          | :dirty_vectors
+          | :dirty_local
+          | :dirty_global
+          | [:dirty_vectors | :dirty_local | :dirty_global]
 
   # Dirty state constants
   @dirty_none :dirty_none
@@ -28,6 +28,7 @@ defmodule AriaJoint.DirtyState do
   """
   @spec add_dirty_flag(dirty_state(), atom()) :: dirty_state()
   def add_dirty_flag(@dirty_none, flag), do: flag
+
   def add_dirty_flag(current_flags, flag) when is_list(current_flags) do
     if flag in current_flags do
       current_flags
@@ -35,6 +36,7 @@ defmodule AriaJoint.DirtyState do
       [flag | current_flags]
     end
   end
+
   def add_dirty_flag(current_flag, flag) when is_atom(current_flag) do
     if current_flag == flag do
       current_flag
@@ -48,14 +50,17 @@ defmodule AriaJoint.DirtyState do
   """
   @spec remove_dirty_flag(dirty_state(), atom()) :: dirty_state()
   def remove_dirty_flag(@dirty_none, _flag), do: @dirty_none
+
   def remove_dirty_flag(current_flags, flag) when is_list(current_flags) do
     remaining = List.delete(current_flags, flag)
+
     case remaining do
       [] -> @dirty_none
       [single_flag] -> single_flag
       multiple -> multiple
     end
   end
+
   def remove_dirty_flag(current_flag, flag) when is_atom(current_flag) do
     if current_flag == flag do
       @dirty_none
@@ -69,9 +74,11 @@ defmodule AriaJoint.DirtyState do
   """
   @spec has_dirty_flag?(dirty_state(), atom()) :: boolean()
   def has_dirty_flag?(@dirty_none, _flag), do: false
+
   def has_dirty_flag?(current_flags, flag) when is_list(current_flags) do
     flag in current_flags
   end
+
   def has_dirty_flag?(current_flag, flag) when is_atom(current_flag) do
     current_flag == flag
   end
@@ -119,6 +126,7 @@ defmodule AriaJoint.DirtyState do
   def to_integer(@dirty_vectors), do: 1
   def to_integer(@dirty_local), do: 2
   def to_integer(@dirty_global), do: 4
+
   def to_integer(flags) when is_list(flags) do
     Enum.reduce(flags, 0, fn flag, acc ->
       acc + to_integer(flag)
@@ -144,6 +152,7 @@ defmodule AriaJoint.DirtyState do
   def from_integer(1), do: @dirty_vectors
   def from_integer(2), do: @dirty_local
   def from_integer(4), do: @dirty_global
+
   def from_integer(int) when is_integer(int) and int > 0 do
     flags = []
     flags = if (int &&& 4) != 0, do: [@dirty_global | flags], else: flags
@@ -156,5 +165,6 @@ defmodule AriaJoint.DirtyState do
       multiple -> multiple
     end
   end
+
   def from_integer(_), do: @dirty_none
 end

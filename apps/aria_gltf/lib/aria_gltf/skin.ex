@@ -54,13 +54,13 @@ defmodule AriaGltf.Skin do
   @type joint_index :: non_neg_integer()
 
   @type t :: %__MODULE__{
-    joints: [joint_index()],
-    inverse_bind_matrices: non_neg_integer() | nil,
-    skeleton: joint_index() | nil,
-    name: String.t() | nil,
-    extensions: map() | nil,
-    extras: any() | nil
-  }
+          joints: [joint_index()],
+          inverse_bind_matrices: non_neg_integer() | nil,
+          skeleton: joint_index() | nil,
+          name: String.t() | nil,
+          extensions: map() | nil,
+          extras: any() | nil
+        }
 
   defstruct [:joints, :inverse_bind_matrices, :skeleton, :name, :extensions, :extras]
 
@@ -92,9 +92,9 @@ defmodule AriaGltf.Skin do
   @spec new(keyword()) :: {:ok, t()} | {:error, term()}
   def new(options) when is_list(options) do
     with {:ok, joints} <- validate_joints(Keyword.get(options, :joints)),
-         {:ok, inverse_bind_matrices} <- validate_inverse_bind_matrices(Keyword.get(options, :inverse_bind_matrices)),
+         {:ok, inverse_bind_matrices} <-
+           validate_inverse_bind_matrices(Keyword.get(options, :inverse_bind_matrices)),
          {:ok, skeleton} <- validate_skeleton(Keyword.get(options, :skeleton), joints) do
-
       skin = %__MODULE__{
         joints: joints,
         inverse_bind_matrices: inverse_bind_matrices,
@@ -120,6 +120,7 @@ defmodule AriaGltf.Skin do
       skeleton: Map.get(options, :skeleton),
       name: Map.get(options, :name)
     ]
+
     new(keyword_options)
   end
 
@@ -147,6 +148,7 @@ defmodule AriaGltf.Skin do
       skeleton: Map.get(json, "skeleton"),
       name: Map.get(json, "name")
     ]
+
     new(options)
   end
 
@@ -196,7 +198,8 @@ defmodule AriaGltf.Skin do
       # Access specific joint
       root_joint = joint_hierarchy[skin.skeleton]
   """
-  @spec build_joint_hierarchy(t(), [map()], keyword()) :: {:ok, %{joint_index() => term()}} | {:error, term()}
+  @spec build_joint_hierarchy(t(), [map()], keyword()) ::
+          {:ok, %{joint_index() => term()}} | {:error, term()}
   def build_joint_hierarchy(%__MODULE__{} = skin, nodes, options \\ []) when is_list(nodes) do
     with :ok <- validate_nodes_coverage(skin.joints, nodes),
          {:ok, joint_map} <- create_joint_instances(skin.joints, nodes, options),
@@ -231,10 +234,16 @@ defmodule AriaGltf.Skin do
         inverse_bind_matrices
       )
   """
-  @spec apply_skinning(t(), [tuple()], %{joint_index() => Matrix4.t()}, [Matrix4.t()] | nil) :: [tuple()]
-  def apply_skinning(%__MODULE__{} = _skin, vertices, _joint_transforms, _inverse_bind_matrices \\ nil)
-    when is_list(vertices) do
-
+  @spec apply_skinning(t(), [tuple()], %{joint_index() => Matrix4.t()}, [Matrix4.t()] | nil) :: [
+          tuple()
+        ]
+  def apply_skinning(
+        %__MODULE__{} = _skin,
+        vertices,
+        _joint_transforms,
+        _inverse_bind_matrices \\ nil
+      )
+      when is_list(vertices) do
     # For now, return vertices unchanged (basic implementation)
     # Full skinning implementation would apply joint weights and transforms
     vertices
@@ -260,6 +269,7 @@ defmodule AriaGltf.Skin do
           {index, transform}
         end)
         |> Map.new()
+
       {:error, _} ->
         # Fallback: return identity matrices for each joint
         joint_hierarchy
@@ -278,6 +288,7 @@ defmodule AriaGltf.Skin do
           transform = AriaJoint.get_global_transform(joint)
           AriaMath.Matrix4.to_tuple_list(transform)
         end)
+
       {:error, _} ->
         # Fallback: return identity matrices for each joint
         Enum.map(joints, fn _joint ->
@@ -298,8 +309,11 @@ defmodule AriaGltf.Skin do
 
   Updated joint hierarchy with new transforms
   """
-  @spec update_joint_transforms(%{joint_index() => term()}, %{joint_index() => Matrix4.t()}) :: %{joint_index() => term()}
-  def update_joint_transforms(joint_hierarchy, transforms) when is_map(joint_hierarchy) and is_map(transforms) do
+  @spec update_joint_transforms(%{joint_index() => term()}, %{joint_index() => Matrix4.t()}) :: %{
+          joint_index() => term()
+        }
+  def update_joint_transforms(joint_hierarchy, transforms)
+      when is_map(joint_hierarchy) and is_map(transforms) do
     case Code.ensure_loaded(AriaJoint) do
       {:module, AriaJoint} ->
         joint_hierarchy
@@ -310,6 +324,7 @@ defmodule AriaGltf.Skin do
           end
         end)
         |> Map.new()
+
       {:error, _} ->
         # Fallback: return hierarchy unchanged
         joint_hierarchy
@@ -341,6 +356,7 @@ defmodule AriaGltf.Skin do
 
   defp validate_joints(nil), do: {:error, {:missing_required_field, :joints}}
   defp validate_joints([]), do: {:error, {:invalid_joints, [], "must not be empty"}}
+
   defp validate_joints(joints) when is_list(joints) do
     if Enum.all?(joints, &(is_integer(&1) and &1 >= 0)) do
       {:ok, joints}
@@ -348,13 +364,19 @@ defmodule AriaGltf.Skin do
       {:error, {:invalid_joints, joints, "all joint indices must be non-negative integers"}}
     end
   end
+
   defp validate_joints(joints), do: {:error, {:invalid_joints, joints, "must be a list"}}
 
   defp validate_inverse_bind_matrices(nil), do: {:ok, nil}
-  defp validate_inverse_bind_matrices(accessor) when is_integer(accessor) and accessor >= 0, do: {:ok, accessor}
-  defp validate_inverse_bind_matrices(accessor), do: {:error, {:invalid_inverse_bind_matrices, accessor, "must be a non-negative integer"}}
+
+  defp validate_inverse_bind_matrices(accessor) when is_integer(accessor) and accessor >= 0,
+    do: {:ok, accessor}
+
+  defp validate_inverse_bind_matrices(accessor),
+    do: {:error, {:invalid_inverse_bind_matrices, accessor, "must be a non-negative integer"}}
 
   defp validate_skeleton(nil, _joints), do: {:ok, nil}
+
   defp validate_skeleton(skeleton, joints) when is_integer(skeleton) and skeleton >= 0 do
     if skeleton in joints do
       {:ok, skeleton}
@@ -362,10 +384,13 @@ defmodule AriaGltf.Skin do
       {:error, {:invalid_skeleton, skeleton, "must be included in joints list"}}
     end
   end
-  defp validate_skeleton(skeleton, _joints), do: {:error, {:invalid_skeleton, skeleton, "must be a non-negative integer"}}
+
+  defp validate_skeleton(skeleton, _joints),
+    do: {:error, {:invalid_skeleton, skeleton, "must be a non-negative integer"}}
 
   defp validate_nodes_coverage(joints, nodes) do
     max_joint_index = Enum.max(joints)
+
     if length(nodes) > max_joint_index do
       :ok
     else
@@ -376,29 +401,33 @@ defmodule AriaGltf.Skin do
   defp create_joint_instances(joints, nodes, options) do
     case Code.ensure_loaded(AriaJoint) do
       {:module, AriaJoint} ->
-        joint_map = joints
-        |> Enum.map(fn joint_index ->
-          _node = Enum.at(nodes, joint_index)
-          case AriaJoint.new(options) do
-            {:ok, joint} -> {joint_index, joint}
-            error -> error
-          end
-        end)
-        |> Enum.reduce_while({:ok, %{}}, fn
-          {:error, reason}, _acc -> {:halt, {:error, reason}}
-          {index, joint}, {:ok, acc} -> {:cont, {:ok, Map.put(acc, index, joint)}}
-        end)
+        joint_map =
+          joints
+          |> Enum.map(fn joint_index ->
+            _node = Enum.at(nodes, joint_index)
+
+            case AriaJoint.new(options) do
+              {:ok, joint} -> {joint_index, joint}
+              error -> error
+            end
+          end)
+          |> Enum.reduce_while({:ok, %{}}, fn
+            {:error, reason}, _acc -> {:halt, {:error, reason}}
+            {index, joint}, {:ok, acc} -> {:cont, {:ok, Map.put(acc, index, joint)}}
+          end)
 
         joint_map
+
       {:error, _} ->
         # Fallback: create simple joint representations
-        joint_map = joints
-        |> Enum.map(fn joint_index ->
-          # Simple joint representation without AriaJoint
-          joint = %{index: joint_index, transform: AriaMath.Matrix4.identity()}
-          {joint_index, joint}
-        end)
-        |> Map.new()
+        joint_map =
+          joints
+          |> Enum.map(fn joint_index ->
+            # Simple joint representation without AriaJoint
+            joint = %{index: joint_index, transform: AriaMath.Matrix4.identity()}
+            {joint_index, joint}
+          end)
+          |> Map.new()
 
         {:ok, joint_map}
     end
@@ -408,24 +437,28 @@ defmodule AriaGltf.Skin do
     case Code.ensure_loaded(AriaJoint) do
       {:module, AriaJoint} ->
         # Set up parent-child relationships based on node hierarchy
-        updated_joints = joints
-        |> Enum.reduce(joint_map, fn joint_index, acc ->
-          _node = Enum.at(nodes, joint_index)
-          joint = Map.get(acc, joint_index)
+        updated_joints =
+          joints
+          |> Enum.reduce(joint_map, fn joint_index, acc ->
+            _node = Enum.at(nodes, joint_index)
+            joint = Map.get(acc, joint_index)
 
-          # Find parent joint based on node hierarchy
-          parent_index = find_parent_joint(joint_index, nodes, joints)
+            # Find parent joint based on node hierarchy
+            parent_index = find_parent_joint(joint_index, nodes, joints)
 
-          case parent_index do
-            nil -> acc
-            parent_idx ->
-              parent_joint = Map.get(acc, parent_idx)
-              updated_joint = AriaJoint.set_parent(joint, parent_joint)
-              Map.put(acc, joint_index, updated_joint)
-          end
-        end)
+            case parent_index do
+              nil ->
+                acc
+
+              parent_idx ->
+                parent_joint = Map.get(acc, parent_idx)
+                updated_joint = AriaJoint.set_parent(joint, parent_joint)
+                Map.put(acc, joint_index, updated_joint)
+            end
+          end)
 
         {:ok, updated_joints}
+
       {:error, _} ->
         # Fallback: return joints without hierarchy setup
         {:ok, joint_map}

@@ -2,29 +2,29 @@ defmodule AriaViewerWeb.Router do
   use AriaViewerWeb, :router
 
   pipeline :browser do
-    plug :accepts, ["html"]
-    plug :fetch_session
-    plug :fetch_live_flash
-    plug :put_root_layout, {AriaViewerWeb.LayoutView, :app}
-    plug :protect_from_forgery
-    plug :put_secure_browser_headers
+    plug(:accepts, ["html"])
+    plug(:fetch_session)
+    plug(:fetch_live_flash)
+    plug(:put_root_layout, {AriaViewerWeb.LayoutView, :app})
+    plug(:protect_from_forgery)
+    plug(:put_secure_browser_headers)
   end
 
   pipeline :api do
-    plug :accepts, ["json"]
+    plug(:accepts, ["json"])
   end
 
   scope "/", AriaViewerWeb do
-    pipe_through :browser
+    pipe_through(:browser)
 
-    get "/", PageController, :index
+    get("/", PageController, :index)
   end
 
   # Serve static files
   scope "/js" do
-    pipe_through :browser
+    pipe_through(:browser)
 
-    get "/app.js", AriaViewerWeb.AssetController, :js
+    get("/app.js", AriaViewerWeb.AssetController, :js)
   end
 
   # Other scopes may use custom stacks.

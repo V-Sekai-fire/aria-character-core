@@ -77,10 +77,11 @@ defmodule AriaJoint.Transform.TensorGPU do
     updated_transforms = Nx.dot(parent_transforms, [2], [0], local_transforms, [1], [0])
 
     # Vectorized selection between current and updated transforms
-    has_parent_mask = has_parent
-    |> Nx.new_axis(-1)
-    |> Nx.new_axis(-1)
-    |> Nx.broadcast(Nx.shape(current_global))
+    has_parent_mask =
+      has_parent
+      |> Nx.new_axis(-1)
+      |> Nx.new_axis(-1)
+      |> Nx.broadcast(Nx.shape(current_global))
 
     Nx.select(has_parent_mask, updated_transforms, current_global)
   end
@@ -202,22 +203,27 @@ defmodule AriaJoint.Transform.TensorGPU do
     size = length(transforms_list)
 
     # Create tensors directly on GPU with proper backend
-    local_transforms = transforms_list
-    |> Nx.tensor(type: :f32)
-    |> Nx.backend_copy({Torchx.Backend, device: :cuda})
+    local_transforms =
+      transforms_list
+      |> Nx.tensor(type: :f32)
+      |> Nx.backend_copy({Torchx.Backend, device: :cuda})
 
     # Simple chain hierarchy optimized for GPU
-    parent_indices = 0..(size-1)
-    |> Enum.map(fn
-      0 -> -1  # Root has no parent
-      i -> i - 1  # Chain hierarchy
-    end)
-    |> Nx.tensor(type: :s32)
-    |> Nx.backend_copy({Torchx.Backend, device: :cuda})
+    parent_indices =
+      0..(size - 1)
+      |> Enum.map(fn
+        # Root has no parent
+        0 -> -1
+        # Chain hierarchy
+        i -> i - 1
+      end)
+      |> Nx.tensor(type: :s32)
+      |> Nx.backend_copy({Torchx.Backend, device: :cuda})
 
     %{
       local_transforms: local_transforms,
-      global_transforms: local_transforms,  # Initialize with local
+      # Initialize with local
+      global_transforms: local_transforms,
       parent_indices: parent_indices
     }
   end
@@ -229,10 +235,11 @@ defmodule AriaJoint.Transform.TensorGPU do
   @spec gpu_joint_pipeline(map()) :: map()
   def gpu_joint_pipeline(joint_data) do
     # All operations stay on GPU for maximum performance
-    global_transforms = batch_hierarchy_propagation_gpu(
-      joint_data.local_transforms,
-      joint_data.parent_indices
-    )
+    global_transforms =
+      batch_hierarchy_propagation_gpu(
+        joint_data.local_transforms,
+        joint_data.parent_indices
+      )
 
     positions = extract_positions_gpu(global_transforms)
     rotations = extract_rotations_gpu(global_transforms)
@@ -250,17 +257,18 @@ defmodule AriaJoint.Transform.TensorGPU do
   @spec simple_gpu_test(integer()) :: Nx.Tensor.t()
   def simple_gpu_test(size \\ 1000) do
     # Create simple test data on GPU
-    transforms = 1..size
-    |> Enum.map(fn i ->
-      [
-        [1.0, 0.0, 0.0, i * 0.1],
-        [0.0, 1.0, 0.0, 0.0],
-        [0.0, 0.0, 1.0, 0.0],
-        [0.0, 0.0, 0.0, 1.0]
-      ]
-    end)
-    |> Nx.tensor(type: :f32)
-    |> Nx.backend_copy({Torchx.Backend, device: :cuda})
+    transforms =
+      1..size
+      |> Enum.map(fn i ->
+        [
+          [1.0, 0.0, 0.0, i * 0.1],
+          [0.0, 1.0, 0.0, 0.0],
+          [0.0, 0.0, 1.0, 0.0],
+          [0.0, 0.0, 0.0, 1.0]
+        ]
+      end)
+      |> Nx.tensor(type: :f32)
+      |> Nx.backend_copy({Torchx.Backend, device: :cuda})
 
     # Simple GPU computation
     simple_computation_defn(transforms)

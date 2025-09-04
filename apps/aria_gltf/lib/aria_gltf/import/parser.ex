@@ -80,8 +80,10 @@ defmodule AriaGltf.Import.Parser do
     case gltf_json do
       %{"asset" => %{"version" => _version}} ->
         :ok
+
       %{"asset" => _} ->
         {:error, "Missing required field: asset.version"}
+
       _ ->
         {:error, "Missing required field: asset"}
     end
@@ -100,6 +102,7 @@ defmodule AriaGltf.Import.Parser do
   """
   @spec validate_version(String.t()) :: :ok | {:error, String.t()}
   def validate_version("2.0"), do: :ok
+
   def validate_version(version) do
     {:error, "Unsupported glTF version: #{version}. Only version 2.0 is supported."}
   end

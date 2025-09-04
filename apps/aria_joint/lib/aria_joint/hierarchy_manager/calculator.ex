@@ -26,7 +26,9 @@ defmodule AriaJoint.HierarchyManager.Calculator do
 
   Global transform matrix for the joint.
   """
-  @spec calculate_functional(Joint.t(), %{Joint.node_id() => Matrix4.t()}, %{Joint.node_id() => Joint.t()}) :: Matrix4.t()
+  @spec calculate_functional(Joint.t(), %{Joint.node_id() => Matrix4.t()}, %{
+          Joint.node_id() => Joint.t()
+        }) :: Matrix4.t()
   def calculate_functional(joint, transforms_cache, node_lookup) do
     case joint.parent do
       nil ->
@@ -39,7 +41,9 @@ defmodule AriaJoint.HierarchyManager.Calculator do
           nil ->
             # Parent not cached, calculate using node lookup (functional approach)
             case Map.get(node_lookup, parent_id) do
-              nil -> joint.local_transform
+              nil ->
+                joint.local_transform
+
               parent_joint ->
                 parent_global = calculate_functional(parent_joint, transforms_cache, node_lookup)
                 Matrix4.multiply(parent_global, joint.local_transform)
@@ -86,7 +90,9 @@ defmodule AriaJoint.HierarchyManager.Calculator do
           nil ->
             # Parent not cached, calculate from registry (fallback)
             case get_joint_by_id(parent_id) do
-              nil -> joint.local_transform
+              nil ->
+                joint.local_transform
+
               parent_joint ->
                 parent_global = Joint.get_global_transform(parent_joint)
                 Matrix4.multiply(parent_global, joint.local_transform)
@@ -121,7 +127,9 @@ defmodule AriaJoint.HierarchyManager.Calculator do
   @spec calculate_and_cache(Joint.node_id(), %{Joint.node_id() => Matrix4.t()}) :: Matrix4.t()
   def calculate_and_cache(joint_id, transforms_cache) do
     case get_joint_by_id(joint_id) do
-      nil -> Matrix4.identity()
+      nil ->
+        Matrix4.identity()
+
       joint ->
         calculate_optimized(joint, transforms_cache)
     end

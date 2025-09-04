@@ -13,20 +13,18 @@ defmodule AriaGltf.Validation.Report do
   @type validation_mode :: :strict | :permissive | :warning_only
 
   @type t :: %__MODULE__{
-    errors: [Error.t()],
-    warnings: [Warning.t()],
-    validation_mode: validation_mode(),
-    duration_ms: integer(),
-    validated_at: DateTime.t()
-  }
+          errors: [Error.t()],
+          warnings: [Warning.t()],
+          validation_mode: validation_mode(),
+          duration_ms: integer(),
+          validated_at: DateTime.t()
+        }
 
-  defstruct [
-    errors: [],
-    warnings: [],
-    validation_mode: :strict,
-    duration_ms: 0,
-    validated_at: nil
-  ]
+  defstruct errors: [],
+            warnings: [],
+            validation_mode: :strict,
+            duration_ms: 0,
+            validated_at: nil
 
   @doc """
   Creates a new validation report.
@@ -88,9 +86,11 @@ defmodule AriaGltf.Validation.Report do
   def successful?(%__MODULE__{validation_mode: :strict} = report) do
     not has_errors?(report)
   end
+
   def successful?(%__MODULE__{validation_mode: :permissive} = report) do
     not has_critical_errors?(report)
   end
+
   def successful?(%__MODULE__{validation_mode: :warning_only}), do: true
 
   @doc """
@@ -121,7 +121,11 @@ defmodule AriaGltf.Validation.Report do
     |> Enum.join("\n\n")
   end
 
-  defp format_header(%__MODULE__{validation_mode: mode, validated_at: timestamp, duration_ms: duration}) do
+  defp format_header(%__MODULE__{
+         validation_mode: mode,
+         validated_at: timestamp,
+         duration_ms: duration
+       }) do
     timestamp_str = if timestamp, do: DateTime.to_iso8601(timestamp), else: "unknown"
 
     """
@@ -133,9 +137,10 @@ defmodule AriaGltf.Validation.Report do
   end
 
   defp format_errors(errors) do
-    error_lines = Enum.map(errors, fn error ->
-      "  #{Error.format_location(error.location)}: #{error.message}"
-    end)
+    error_lines =
+      Enum.map(errors, fn error ->
+        "  #{Error.format_location(error.location)}: #{error.message}"
+      end)
 
     ["ERRORS:", error_lines]
     |> List.flatten()
@@ -143,9 +148,10 @@ defmodule AriaGltf.Validation.Report do
   end
 
   defp format_warnings(warnings) do
-    warning_lines = Enum.map(warnings, fn warning ->
-      "  #{Warning.format_location(warning.location)}: #{warning.message}"
-    end)
+    warning_lines =
+      Enum.map(warnings, fn warning ->
+        "  #{Warning.format_location(warning.location)}: #{warning.message}"
+      end)
 
     ["WARNINGS:", warning_lines]
     |> List.flatten()

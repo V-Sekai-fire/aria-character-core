@@ -91,7 +91,8 @@ defmodule AriaGltf.Helpers.DocumentCreation do
 
     %Scene{
       name: name,
-      nodes: [0]  # Reference to first node
+      # Reference to first node
+      nodes: [0]
     }
   end
 

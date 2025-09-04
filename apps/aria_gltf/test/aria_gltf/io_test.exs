@@ -63,7 +63,8 @@ defmodule AriaGltf.IOTest do
       document_with_old_version = %{document | asset: %Asset{version: "1.0"}}
       file_path = Path.join(@tmp_dir, "test_old_version.gltf")
 
-      assert {:error, {:unsupported_version, "1.0"}} = IO.export_to_file(document_with_old_version, file_path)
+      assert {:error, {:unsupported_version, "1.0"}} =
+               IO.export_to_file(document_with_old_version, file_path)
     end
 
     test "handles file write errors gracefully" do
@@ -97,7 +98,8 @@ defmodule AriaGltf.IOTest do
       document = IO.create_minimal_document()
       document_with_old_version = %{document | asset: %Asset{version: "1.0"}}
 
-      assert {:error, {:unsupported_version, "1.0"}} = IO.validate_document(document_with_old_version)
+      assert {:error, {:unsupported_version, "1.0"}} =
+               IO.validate_document(document_with_old_version)
     end
   end
 
@@ -168,6 +170,7 @@ defmodule AriaGltf.IOTest do
 
       # Create a malformed but recoverable JSON file
       recoverable_file = Path.join(@tmp_dir, "test_recoverable.gltf")
+
       recoverable_content = """
       {
         "asset": {
@@ -177,6 +180,7 @@ defmodule AriaGltf.IOTest do
         "scenes": [],
       }
       """
+
       :ok = File.write(recoverable_file, recoverable_content)
 
       on_exit(fn ->
@@ -225,7 +229,8 @@ defmodule AriaGltf.IOTest do
     test "handles validation errors in strict mode", %{test_file: _test_file} do
       # Create a file with validation issues - missing required asset version
       invalid_document = %{
-        "asset" => %{"generator" => "test"},  # Missing required version field
+        # Missing required version field
+        "asset" => %{"generator" => "test"},
         "scenes" => []
       }
 
@@ -238,7 +243,8 @@ defmodule AriaGltf.IOTest do
 
       case result do
         {:error, %AriaGltf.Validation.Report{}} -> :ok
-        {:error, _other} -> :ok  # Other validation errors are also acceptable
+        # Other validation errors are also acceptable
+        {:error, _other} -> :ok
         {:ok, _} -> flunk("Expected validation to fail in strict mode")
       end
 

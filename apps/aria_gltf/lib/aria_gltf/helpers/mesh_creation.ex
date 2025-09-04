@@ -46,7 +46,8 @@ defmodule AriaGltf.Helpers.MeshCreation do
   @spec create_simple_mesh(keyword()) :: Mesh.t()
   def create_simple_mesh(opts \\ []) do
     name = Keyword.get(opts, :name)
-    mode = Keyword.get(opts, :mode, 4)  # TRIANGLES
+    # TRIANGLES
+    mode = Keyword.get(opts, :mode, 4)
     position_accessor = Keyword.get(opts, :position_accessor)
     normal_accessor = Keyword.get(opts, :normal_accessor)
     texcoord_accessor = Keyword.get(opts, :texcoord_accessor)
@@ -55,9 +56,19 @@ defmodule AriaGltf.Helpers.MeshCreation do
 
     # Build attributes map
     attributes = %{}
-    attributes = if position_accessor, do: Map.put(attributes, "POSITION", position_accessor), else: attributes
-    attributes = if normal_accessor, do: Map.put(attributes, "NORMAL", normal_accessor), else: attributes
-    attributes = if texcoord_accessor, do: Map.put(attributes, "TEXCOORD_0", texcoord_accessor), else: attributes
+
+    attributes =
+      if position_accessor,
+        do: Map.put(attributes, "POSITION", position_accessor),
+        else: attributes
+
+    attributes =
+      if normal_accessor, do: Map.put(attributes, "NORMAL", normal_accessor), else: attributes
+
+    attributes =
+      if texcoord_accessor,
+        do: Map.put(attributes, "TEXCOORD_0", texcoord_accessor),
+        else: attributes
 
     primitive = %Mesh.Primitive{
       mode: mode,
@@ -101,93 +112,112 @@ defmodule AriaGltf.Helpers.MeshCreation do
       4
   """
   @spec create_cube_mesh(keyword()) :: %{
-    mesh: Mesh.t(),
-    buffers: [Buffer.t()],
-    buffer_views: [BufferView.t()],
-    accessors: [Accessor.t()]
-  }
+          mesh: Mesh.t(),
+          buffers: [Buffer.t()],
+          buffer_views: [BufferView.t()],
+          accessors: [Accessor.t()]
+        }
   def create_cube_mesh(opts \\ []) do
     name = Keyword.get(opts, :name, "Cube")
     material = Keyword.get(opts, :material)
 
     # Cube vertices (8 vertices, each with position, normal, texcoord)
     # Each vertex: position (3 floats) + normal (3 floats) + texcoord (2 floats) = 8 floats = 32 bytes
-    vertex_data_size = 8 * 8 * 4  # 8 vertices * 8 floats * 4 bytes = 256 bytes
+    # 8 vertices * 8 floats * 4 bytes = 256 bytes
+    vertex_data_size = 8 * 8 * 4
 
     # Cube indices (12 triangles * 3 indices = 36 indices)
     # Each index: unsigned short = 2 bytes
-    index_data_size = 36 * 2  # 36 indices * 2 bytes = 72 bytes
+    # 36 indices * 2 bytes = 72 bytes
+    index_data_size = 36 * 2
 
-    total_buffer_size = vertex_data_size + index_data_size  # 328 bytes
+    # 328 bytes
+    total_buffer_size = vertex_data_size + index_data_size
 
     # Create buffer
     buffer = BufferManagement.create_buffer(byte_length: total_buffer_size, name: "#{name} Data")
 
     # Create buffer views
-    vertex_buffer_view = BufferManagement.create_buffer_view(
-      buffer: 0,
-      byte_offset: 0,
-      byte_length: vertex_data_size,
-      byte_stride: 32,  # 8 floats * 4 bytes
-      target: 34962,  # ARRAY_BUFFER
-      name: "#{name} Vertices"
-    )
+    vertex_buffer_view =
+      BufferManagement.create_buffer_view(
+        buffer: 0,
+        byte_offset: 0,
+        byte_length: vertex_data_size,
+        # 8 floats * 4 bytes
+        byte_stride: 32,
+        # ARRAY_BUFFER
+        target: 34962,
+        name: "#{name} Vertices"
+      )
 
-    index_buffer_view = BufferManagement.create_buffer_view(
-      buffer: 0,
-      byte_offset: vertex_data_size,
-      byte_length: index_data_size,
-      target: 34963,  # ELEMENT_ARRAY_BUFFER
-      name: "#{name} Indices"
-    )
+    index_buffer_view =
+      BufferManagement.create_buffer_view(
+        buffer: 0,
+        byte_offset: vertex_data_size,
+        byte_length: index_data_size,
+        # ELEMENT_ARRAY_BUFFER
+        target: 34963,
+        name: "#{name} Indices"
+      )
 
     # Create accessors
-    position_accessor = BufferManagement.create_accessor(
-      buffer_view: 0,
-      component_type: 5126,  # FLOAT
-      count: 8,
-      type: "VEC3",
-      byte_offset: 0,
-      name: "#{name} Positions",
-      min: [-0.5, -0.5, -0.5],
-      max: [0.5, 0.5, 0.5]
-    )
+    position_accessor =
+      BufferManagement.create_accessor(
+        buffer_view: 0,
+        # FLOAT
+        component_type: 5126,
+        count: 8,
+        type: "VEC3",
+        byte_offset: 0,
+        name: "#{name} Positions",
+        min: [-0.5, -0.5, -0.5],
+        max: [0.5, 0.5, 0.5]
+      )
 
-    normal_accessor = BufferManagement.create_accessor(
-      buffer_view: 0,
-      component_type: 5126,  # FLOAT
-      count: 8,
-      type: "VEC3",
-      byte_offset: 12,  # 3 floats * 4 bytes
-      name: "#{name} Normals"
-    )
+    normal_accessor =
+      BufferManagement.create_accessor(
+        buffer_view: 0,
+        # FLOAT
+        component_type: 5126,
+        count: 8,
+        type: "VEC3",
+        # 3 floats * 4 bytes
+        byte_offset: 12,
+        name: "#{name} Normals"
+      )
 
-    texcoord_accessor = BufferManagement.create_accessor(
-      buffer_view: 0,
-      component_type: 5126,  # FLOAT
-      count: 8,
-      type: "VEC2",
-      byte_offset: 24,  # 6 floats * 4 bytes
-      name: "#{name} TexCoords"
-    )
+    texcoord_accessor =
+      BufferManagement.create_accessor(
+        buffer_view: 0,
+        # FLOAT
+        component_type: 5126,
+        count: 8,
+        type: "VEC2",
+        # 6 floats * 4 bytes
+        byte_offset: 24,
+        name: "#{name} TexCoords"
+      )
 
-    index_accessor = BufferManagement.create_accessor(
-      buffer_view: 1,
-      component_type: 5123,  # UNSIGNED_SHORT
-      count: 36,
-      type: "SCALAR",
-      name: "#{name} Indices"
-    )
+    index_accessor =
+      BufferManagement.create_accessor(
+        buffer_view: 1,
+        # UNSIGNED_SHORT
+        component_type: 5123,
+        count: 36,
+        type: "SCALAR",
+        name: "#{name} Indices"
+      )
 
     # Create mesh
-    mesh = create_simple_mesh(
-      name: name,
-      position_accessor: 0,
-      normal_accessor: 1,
-      texcoord_accessor: 2,
-      indices_accessor: 3,
-      material: material
-    )
+    mesh =
+      create_simple_mesh(
+        name: name,
+        position_accessor: 0,
+        normal_accessor: 1,
+        texcoord_accessor: 2,
+        indices_accessor: 3,
+        material: material
+      )
 
     %{
       mesh: mesh,

@@ -10,10 +10,13 @@ defmodule AriaGltf.Import.BinaryLoader do
   alias AriaGltf.{Document, Buffer, Image}
 
   # GLB format constants
-  @glb_magic 0x46546C67  # "glTF" in little endian
+  # "glTF" in little endian
+  @glb_magic 0x46546C67
   @glb_version 2
-  @json_chunk_type 0x4E4F534A  # "JSON" in little endian
-  @bin_chunk_type 0x004E4942   # "BIN\0" in little endian
+  # "JSON" in little endian
+  @json_chunk_type 0x4E4F534A
+  # "BIN\0" in little endian
+  @bin_chunk_type 0x004E4942
 
   @type glb_result :: {:ok, {binary(), binary()}} | {:error, term()}
   @type load_result :: {:ok, Document.t()} | {:error, term()}
@@ -32,7 +35,6 @@ defmodule AriaGltf.Import.BinaryLoader do
     with {:ok, header, rest} <- parse_glb_header(data),
          {:ok, json_chunk, rest} <- parse_chunk(rest, @json_chunk_type),
          {:ok, bin_chunk, _rest} <- parse_chunk(rest, @bin_chunk_type, optional: true) do
-
       validate_glb_version(header.version)
       {:ok, {json_chunk, bin_chunk}}
     end
@@ -53,6 +55,7 @@ defmodule AriaGltf.Import.BinaryLoader do
     case load_buffer_data(buffers, base_uri, []) do
       {:ok, loaded_buffers} ->
         {:ok, %{document | buffers: loaded_buffers}}
+
       {:error, _} = error ->
         error
     end
@@ -73,6 +76,7 @@ defmodule AriaGltf.Import.BinaryLoader do
     case load_image_data(images, document.buffer_views, document.buffers, base_uri, []) do
       {:ok, loaded_images} ->
         {:ok, %{document | images: loaded_images}}
+
       {:error, _} = error ->
         error
     end
@@ -90,6 +94,7 @@ defmodule AriaGltf.Import.BinaryLoader do
         version: version,
         length: length
       }
+
       {:ok, header, rest}
     else
       {:error, "Invalid GLB magic number: #{magic}"}
@@ -104,7 +109,8 @@ defmodule AriaGltf.Import.BinaryLoader do
     optional = Keyword.get(opts, :optional, false)
 
     case data do
-      <<chunk_length::little-32, chunk_type::little-32, rest::binary>> when byte_size(rest) >= chunk_length ->
+      <<chunk_length::little-32, chunk_type::little-32, rest::binary>>
+      when byte_size(rest) >= chunk_length ->
         if chunk_type == expected_type do
           <<chunk_data::binary-size(chunk_length), remaining::binary>> = rest
           # Chunks are padded to 4-byte boundaries
@@ -117,6 +123,7 @@ defmodule AriaGltf.Import.BinaryLoader do
             {:error, "Expected chunk type #{chunk_type}, got #{expected_type}"}
           end
         end
+
       _ ->
         if optional do
           {:ok, nil, data}
@@ -145,6 +152,7 @@ defmodule AriaGltf.Import.BinaryLoader do
     case load_single_buffer(buffer, base_uri) do
       {:ok, loaded_buffer} ->
         load_buffer_data(rest, base_uri, [loaded_buffer | acc])
+
       {:error, _} = error ->
         error
     end
@@ -164,6 +172,7 @@ defmodule AriaGltf.Import.BinaryLoader do
     case load_buffer_from_uri(uri, base_uri) do
       {:ok, data} ->
         {:ok, %{buffer | data: data}}
+
       {:error, _} = error ->
         error
     end
@@ -189,30 +198,36 @@ defmodule AriaGltf.Import.BinaryLoader do
     case load_single_image(image, buffer_views, buffers, base_uri) do
       {:ok, loaded_image} ->
         load_image_data(rest, buffer_views, buffers, base_uri, [loaded_image | acc])
+
       {:error, _} = error ->
         error
     end
   end
 
-  defp load_single_image(%Image{data: data} = image, _buffer_views, _buffers, _base_uri) when is_binary(data) do
+  defp load_single_image(%Image{data: data} = image, _buffer_views, _buffers, _base_uri)
+       when is_binary(data) do
     # Image already has data
     {:ok, image}
   end
 
-  defp load_single_image(%Image{buffer_view: bv_index} = image, buffer_views, buffers, _base_uri) when is_integer(bv_index) do
+  defp load_single_image(%Image{buffer_view: bv_index} = image, buffer_views, buffers, _base_uri)
+       when is_integer(bv_index) do
     # Load image from buffer view
     case extract_buffer_view_data(bv_index, buffer_views, buffers) do
       {:ok, data} ->
         {:ok, %{image | data: data}}
+
       {:error, _} = error ->
         error
     end
   end
 
-  defp load_single_image(%Image{uri: uri} = image, _buffer_views, _buffers, base_uri) when is_binary(uri) do
+  defp load_single_image(%Image{uri: uri} = image, _buffer_views, _buffers, base_uri)
+       when is_binary(uri) do
     case load_image_from_uri(uri, base_uri) do
       {:ok, data} ->
         {:ok, %{image | data: data}}
+
       {:error, _} = error ->
         error
     end
@@ -241,6 +256,7 @@ defmodule AriaGltf.Import.BinaryLoader do
     case Enum.at(buffer_views, bv_index) do
       nil ->
         {:error, "Invalid buffer view index: #{bv_index}"}
+
       buffer_view ->
         extract_from_buffer_view(buffer_view, buffers)
     end
@@ -252,8 +268,10 @@ defmodule AriaGltf.Import.BinaryLoader do
     case Enum.at(buffers, buffer_index) do
       nil ->
         {:error, "Invalid buffer index: #{buffer_index}"}
+
       %Buffer{data: nil} ->
         {:error, "Buffer #{buffer_index} has no data"}
+
       %Buffer{data: buffer_data} ->
         offset = buffer_view.byte_offset
         length = buffer_view.byte_length
@@ -277,6 +295,7 @@ defmodule AriaGltf.Import.BinaryLoader do
           {:ok, data} -> {:ok, data}
           :error -> {:error, "Invalid base64 data in data URI"}
         end
+
       _ ->
         {:error, "Invalid data URI format"}
     end
@@ -288,6 +307,7 @@ defmodule AriaGltf.Import.BinaryLoader do
       %URI{scheme: nil} ->
         # Relative URI
         Path.join(base_uri, uri)
+
       %URI{} ->
         # Absolute URI - for file:// schemes we'd extract the path
         # For now, just return the URI as-is

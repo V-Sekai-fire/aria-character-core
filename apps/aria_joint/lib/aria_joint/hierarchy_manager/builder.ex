@@ -27,9 +27,10 @@ defmodule AriaJoint.HierarchyManager.Builder do
   @spec rebuild_from_registry([Joint.node_id()]) :: NestedSet.nested_set()
   def rebuild_from_registry(root_node_ids) do
     # Get all root joints from registry
-    root_joints = root_node_ids
-                  |> Enum.map(&get_joint_by_id/1)
-                  |> Enum.reject(&is_nil/1)
+    root_joints =
+      root_node_ids
+      |> Enum.map(&get_joint_by_id/1)
+      |> Enum.reject(&is_nil/1)
 
     # Build new nested set structure
     new_nested_set = NestedSet.build_nested_set(root_joints)
@@ -78,15 +79,15 @@ defmodule AriaJoint.HierarchyManager.Builder do
     # Update each joint in registry with its nested set offset and span
     for {node_id, %{offset: offset, span: span}} <- nested_set.node_id_to_metadata do
       case get_joint_by_id(node_id) do
-        nil -> :ok
+        nil ->
+          :ok
+
         joint ->
-          updated_joint = %{joint |
-            nested_set_offset: offset,
-            nested_set_span: span
-          }
+          updated_joint = %{joint | nested_set_offset: offset, nested_set_span: span}
           safe_update_joint_in_registry(updated_joint)
       end
     end
+
     :ok
   end
 
@@ -105,21 +106,24 @@ defmodule AriaJoint.HierarchyManager.Builder do
 
   Updated hierarchy manager with joint added and nested set rebuilt.
   """
-  @spec add_joint_and_rebuild(AriaJoint.HierarchyManager.t(), Joint.t()) :: AriaJoint.HierarchyManager.t()
+  @spec add_joint_and_rebuild(AriaJoint.HierarchyManager.t(), Joint.t()) ::
+          AriaJoint.HierarchyManager.t()
   def add_joint_and_rebuild(manager, joint) do
     # Check if this is a root node (no parent)
-    updated_manager = if joint.parent == nil do
-      %{manager | root_nodes: [joint.id | manager.root_nodes]}
-    else
-      manager
-    end
+    updated_manager =
+      if joint.parent == nil do
+        %{manager | root_nodes: [joint.id | manager.root_nodes]}
+      else
+        manager
+      end
 
     # Rebuild nested set structure
     new_nested_set = rebuild_from_registry(updated_manager.root_nodes)
 
-    %{updated_manager |
-      nested_set: new_nested_set,
-      hierarchy_version: updated_manager.hierarchy_version + 1
+    %{
+      updated_manager
+      | nested_set: new_nested_set,
+        hierarchy_version: updated_manager.hierarchy_version + 1
     }
   end
 
@@ -138,19 +142,22 @@ defmodule AriaJoint.HierarchyManager.Builder do
 
   Updated hierarchy manager with joint removed and nested set rebuilt.
   """
-  @spec remove_joint_and_rebuild(AriaJoint.HierarchyManager.t(), Joint.node_id()) :: AriaJoint.HierarchyManager.t()
+  @spec remove_joint_and_rebuild(AriaJoint.HierarchyManager.t(), Joint.node_id()) ::
+          AriaJoint.HierarchyManager.t()
   def remove_joint_and_rebuild(manager, joint_id) do
-    updated_manager = %{manager |
-      root_nodes: List.delete(manager.root_nodes, joint_id),
-      global_transforms: Map.delete(manager.global_transforms, joint_id)
+    updated_manager = %{
+      manager
+      | root_nodes: List.delete(manager.root_nodes, joint_id),
+        global_transforms: Map.delete(manager.global_transforms, joint_id)
     }
 
     # Rebuild nested set structure
     new_nested_set = rebuild_from_registry(updated_manager.root_nodes)
 
-    %{updated_manager |
-      nested_set: new_nested_set,
-      hierarchy_version: updated_manager.hierarchy_version + 1
+    %{
+      updated_manager
+      | nested_set: new_nested_set,
+        hierarchy_version: updated_manager.hierarchy_version + 1
     }
   end
 
@@ -171,6 +178,7 @@ defmodule AriaJoint.HierarchyManager.Builder do
         [{_pid, _old_joint}] ->
           Registry.update_value(:joint_registry, joint.id, fn _old -> joint end)
           :ok
+
         [] ->
           :ok
       end

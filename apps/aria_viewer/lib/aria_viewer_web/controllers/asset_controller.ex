@@ -9,6 +9,7 @@ defmodule AriaViewerWeb.AssetController do
         conn
         |> put_resp_content_type("application/javascript")
         |> send_resp(200, content)
+
       {:error, _reason} ->
         conn
         |> put_status(404)

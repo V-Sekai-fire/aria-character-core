@@ -36,7 +36,8 @@ defmodule AriaViewer.MixProject do
       {:plug_cowboy, "~> 2.6"},
       {:jason, "~> 1.4"},
       {:gettext, "~> 0.20"},
-      {:mox, "~> 1.0", only: [:test]},  # Required for WebSocket testing
+      # Required for WebSocket testing
+      {:mox, "~> 1.0", only: [:test]},
       {:aria_ewbik, in_umbrella: true},
       {:aria_joint, in_umbrella: true},
       {:aria_gltf, in_umbrella: true}

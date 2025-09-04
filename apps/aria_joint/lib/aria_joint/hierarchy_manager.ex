@@ -42,23 +42,21 @@ defmodule AriaJoint.HierarchyManager do
   alias AriaMath.Matrix4
 
   @type t() :: %__MODULE__{
-    nested_set: NestedSet.nested_set(),
-    global_transforms: %{Joint.node_id() => Matrix4.t()},
-    root_nodes: [Joint.node_id()],
-    hierarchy_version: non_neg_integer()
-  }
+          nested_set: NestedSet.nested_set(),
+          global_transforms: %{Joint.node_id() => Matrix4.t()},
+          root_nodes: [Joint.node_id()],
+          hierarchy_version: non_neg_integer()
+        }
 
-  defstruct [
-    nested_set: %{
-      offset_to_node_id: %{},
-      node_id_to_metadata: %{},
-      dirty_flags: %{},
-      size: 0
-    },
-    global_transforms: %{},
-    root_nodes: [],
-    hierarchy_version: 0
-  ]
+  defstruct nested_set: %{
+              offset_to_node_id: %{},
+              node_id_to_metadata: %{},
+              dirty_flags: %{},
+              size: 0
+            },
+            global_transforms: %{},
+            root_nodes: [],
+            hierarchy_version: 0
 
   @doc """
   Create a new hierarchy manager.
@@ -108,10 +106,11 @@ defmodule AriaJoint.HierarchyManager do
     # Build new nested set structure from complete node collection
     new_nested_set = NestedSet.build_nested_set(all_nodes)
 
-    %{manager |
-      nested_set: new_nested_set,
-      root_nodes: root_node_ids,
-      hierarchy_version: manager.hierarchy_version + 1
+    %{
+      manager
+      | nested_set: new_nested_set,
+        root_nodes: root_node_ids,
+        hierarchy_version: manager.hierarchy_version + 1
     }
   end
 
@@ -194,30 +193,29 @@ defmodule AriaJoint.HierarchyManager do
 
     # Process dirty nodes in optimal order using functional approach
     {updated_nested_set, updated_transforms} =
-      Enum.reduce(dirty_nodes, {manager.nested_set, manager.global_transforms},
-        fn {offset, node_id}, {ns_acc, transforms_acc} ->
-          case Map.get(node_lookup, node_id) do
-            nil ->
-              {ns_acc, transforms_acc}
+      Enum.reduce(dirty_nodes, {manager.nested_set, manager.global_transforms}, fn {offset,
+                                                                                    node_id},
+                                                                                   {ns_acc,
+                                                                                    transforms_acc} ->
+        case Map.get(node_lookup, node_id) do
+          nil ->
+            {ns_acc, transforms_acc}
 
-            joint ->
-              # Calculate global transform functionally
-              global_transform = Calculator.calculate_functional(joint, transforms_acc, node_lookup)
+          joint ->
+            # Calculate global transform functionally
+            global_transform = Calculator.calculate_functional(joint, transforms_acc, node_lookup)
 
-              # Update transforms cache
-              updated_transforms = Map.put(transforms_acc, node_id, global_transform)
+            # Update transforms cache
+            updated_transforms = Map.put(transforms_acc, node_id, global_transform)
 
-              # Clear dirty flag for this offset
-              updated_ns = NestedSet.clear_dirty_flag(ns_acc, offset)
+            # Clear dirty flag for this offset
+            updated_ns = NestedSet.clear_dirty_flag(ns_acc, offset)
 
-              {updated_ns, updated_transforms}
-          end
-        end)
+            {updated_ns, updated_transforms}
+        end
+      end)
 
-    %{manager |
-      nested_set: updated_nested_set,
-      global_transforms: updated_transforms
-    }
+    %{manager | nested_set: updated_nested_set, global_transforms: updated_transforms}
   end
 
   @doc """
@@ -249,30 +247,29 @@ defmodule AriaJoint.HierarchyManager do
 
     # Process dirty nodes in optimal order
     {updated_nested_set, updated_transforms} =
-      Enum.reduce(dirty_nodes, {manager.nested_set, manager.global_transforms},
-        fn {offset, node_id}, {ns_acc, transforms_acc} ->
-          case get_joint_by_id(node_id) do
-            nil ->
-              {ns_acc, transforms_acc}
+      Enum.reduce(dirty_nodes, {manager.nested_set, manager.global_transforms}, fn {offset,
+                                                                                    node_id},
+                                                                                   {ns_acc,
+                                                                                    transforms_acc} ->
+        case get_joint_by_id(node_id) do
+          nil ->
+            {ns_acc, transforms_acc}
 
-            joint ->
-              # Calculate global transform for this joint
-              global_transform = Calculator.calculate_optimized(joint, transforms_acc)
+          joint ->
+            # Calculate global transform for this joint
+            global_transform = Calculator.calculate_optimized(joint, transforms_acc)
 
-              # Update transforms cache
-              updated_transforms = Map.put(transforms_acc, node_id, global_transform)
+            # Update transforms cache
+            updated_transforms = Map.put(transforms_acc, node_id, global_transform)
 
-              # Clear dirty flag for this offset
-              updated_ns = NestedSet.clear_dirty_flag(ns_acc, offset)
+            # Clear dirty flag for this offset
+            updated_ns = NestedSet.clear_dirty_flag(ns_acc, offset)
 
-              {updated_ns, updated_transforms}
-          end
-        end)
+            {updated_ns, updated_transforms}
+        end
+      end)
 
-    %{manager |
-      nested_set: updated_nested_set,
-      global_transforms: updated_transforms
-    }
+    %{manager | nested_set: updated_nested_set, global_transforms: updated_transforms}
   end
 
   @doc """
@@ -303,6 +300,7 @@ defmodule AriaJoint.HierarchyManager do
         nil ->
           # Not cached, need to calculate
           Calculator.calculate_and_cache(joint_id, manager.global_transforms)
+
         cached_transform ->
           cached_transform
       end
@@ -351,15 +349,16 @@ defmodule AriaJoint.HierarchyManager do
   Map with performance and structure statistics.
   """
   @spec get_stats(t()) :: %{
-    total_nodes: non_neg_integer(),
-    dirty_nodes: non_neg_integer(),
-    cached_transforms: non_neg_integer(),
-    hierarchy_version: non_neg_integer()
-  }
+          total_nodes: non_neg_integer(),
+          dirty_nodes: non_neg_integer(),
+          cached_transforms: non_neg_integer(),
+          hierarchy_version: non_neg_integer()
+        }
   def get_stats(manager) do
-    dirty_count = manager.nested_set.dirty_flags
-                  |> Map.values()
-                  |> Enum.count(& &1)
+    dirty_count =
+      manager.nested_set.dirty_flags
+      |> Map.values()
+      |> Enum.count(& &1)
 
     %{
       total_nodes: manager.nested_set.size,

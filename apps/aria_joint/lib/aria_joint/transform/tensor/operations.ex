@@ -30,10 +30,7 @@ defmodule AriaJoint.Transform.Tensor.Operations do
     dirty_global_flag = DirtyState.to_integer(DirtyState.dirty_global())
     updated_dirty = Nx.broadcast(dirty_global_flag, {num_joints})
 
-    %{joint_tensor |
-      local_transforms: updated_local,
-      dirty_flags: updated_dirty
-    }
+    %{joint_tensor | local_transforms: updated_local, dirty_flags: updated_dirty}
   end
 
   @doc """
@@ -54,10 +51,7 @@ defmodule AriaJoint.Transform.Tensor.Operations do
     dirty_global_flag = DirtyState.to_integer(DirtyState.dirty_global())
     updated_dirty = Nx.broadcast(dirty_global_flag, {num_joints})
 
-    %{joint_tensor |
-      local_transforms: updated_local,
-      dirty_flags: updated_dirty
-    }
+    %{joint_tensor | local_transforms: updated_local, dirty_flags: updated_dirty}
   end
 
   @doc """
@@ -81,10 +75,7 @@ defmodule AriaJoint.Transform.Tensor.Operations do
     dirty_global_flag = DirtyState.to_integer(DirtyState.dirty_global())
     updated_dirty = Nx.broadcast(dirty_global_flag, {num_joints})
 
-    %{joint_tensor |
-      local_transforms: updated_local,
-      dirty_flags: updated_dirty
-    }
+    %{joint_tensor | local_transforms: updated_local, dirty_flags: updated_dirty}
   end
 
   @doc """
@@ -95,20 +86,19 @@ defmodule AriaJoint.Transform.Tensor.Operations do
       # t: interpolation factor (0.0 to 1.0)
       interpolated = AriaJoint.Transform.Tensor.Operations.interpolate_batch(joint_tensor_a, joint_tensor_b, 0.5)
   """
-  @spec interpolate_batch(Core.joint_tensor(), Core.joint_tensor(), float()) :: Core.joint_tensor()
+  @spec interpolate_batch(Core.joint_tensor(), Core.joint_tensor(), float()) ::
+          Core.joint_tensor()
   def interpolate_batch(tensor_a, tensor_b, t) when is_float(t) and t >= 0.0 and t <= 1.0 do
     # Interpolate local transforms using matrix interpolation
-    interpolated_local = Matrix4.Tensor.lerp_batch(tensor_a.local_transforms, tensor_b.local_transforms, t)
+    interpolated_local =
+      Matrix4.Tensor.lerp_batch(tensor_a.local_transforms, tensor_b.local_transforms, t)
 
     # Mark as dirty for global transform recomputation
     num_joints = Nx.axis_size(tensor_a.local_transforms, 0)
     dirty_global_flag = DirtyState.to_integer(DirtyState.dirty_global())
     updated_dirty = Nx.broadcast(dirty_global_flag, {num_joints})
 
-    %{tensor_a |
-      local_transforms: interpolated_local,
-      dirty_flags: updated_dirty
-    }
+    %{tensor_a | local_transforms: interpolated_local, dirty_flags: updated_dirty}
   end
 
   @doc """

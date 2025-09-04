@@ -188,13 +188,18 @@ defmodule AriaJointTest do
   describe "rotation operations" do
     test "rotate_local_with_global/3 applies global rotation" do
       {:ok, parent} = Joint.new()
-      parent_transform = Matrix4.rotation(Quaternion.from_axis_angle({0.0, 0.0, 1.0}, :math.pi / 2))
+
+      parent_transform =
+        Matrix4.rotation(Quaternion.from_axis_angle({0.0, 0.0, 1.0}, :math.pi() / 2))
+
       parent = Joint.set_transform(parent, parent_transform)
 
       {:ok, child} = Joint.new(parent: parent)
 
       # Apply a global rotation
-      global_rotation = Matrix4.rotation(Quaternion.from_axis_angle({1.0, 0.0, 0.0}, :math.pi / 4))
+      global_rotation =
+        Matrix4.rotation(Quaternion.from_axis_angle({1.0, 0.0, 0.0}, :math.pi() / 4))
+
       updated_child = Joint.rotate_local_with_global(child, global_rotation)
 
       # Should have updated local transform

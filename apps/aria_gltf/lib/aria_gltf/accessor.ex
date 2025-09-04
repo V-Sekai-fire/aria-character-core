@@ -166,7 +166,14 @@ defmodule AriaGltf.Accessor do
   """
   @spec new(component_type(), pos_integer(), accessor_type(), keyword()) :: t()
   def new(component_type, count, type, opts \\ [])
-      when component_type in [@byte, @unsigned_byte, @short, @unsigned_short, @unsigned_int, @float] and
+      when component_type in [
+             @byte,
+             @unsigned_byte,
+             @short,
+             @unsigned_short,
+             @unsigned_int,
+             @float
+           ] and
              is_integer(count) and count >= 1 and
              type in [:scalar, :vec2, :vec3, :vec4, :mat2, :mat3, :mat4] do
     %__MODULE__{
@@ -191,9 +198,16 @@ defmodule AriaGltf.Accessor do
   @spec new(non_neg_integer(), accessor_type(), component_type(), pos_integer(), map()) :: t()
   def new(buffer_view, type, component_type, count, options)
       when is_integer(buffer_view) and
-           type in [:scalar, :vec2, :vec3, :vec4, :mat2, :mat3, :mat4] and
-           component_type in [@byte, @unsigned_byte, @short, @unsigned_short, @unsigned_int, @float] and
-           is_integer(count) and count >= 1 and is_map(options) do
+             type in [:scalar, :vec2, :vec3, :vec4, :mat2, :mat3, :mat4] and
+             component_type in [
+               @byte,
+               @unsigned_byte,
+               @short,
+               @unsigned_short,
+               @unsigned_int,
+               @float
+             ] and
+             is_integer(count) and count >= 1 and is_map(options) do
     %__MODULE__{
       buffer_view: buffer_view,
       type: type,
@@ -233,7 +247,12 @@ defmodule AriaGltf.Accessor do
     with :ok <- validate_component_type(accessor.component_type),
          :ok <- validate_count(accessor.count),
          :ok <- validate_type(accessor.type),
-         :ok <- validate_byte_offset(accessor.byte_offset, accessor.buffer_view, accessor.component_type),
+         :ok <-
+           validate_byte_offset(
+             accessor.byte_offset,
+             accessor.buffer_view,
+             accessor.component_type
+           ),
          :ok <- validate_normalized(accessor.normalized, accessor.component_type),
          :ok <- validate_bounds(accessor.max, accessor.min, accessor.type) do
       :ok
@@ -352,13 +371,18 @@ defmodule AriaGltf.Accessor do
 
   # Private validation functions
 
-  defp validate_component_type(type) when type in [@byte, @unsigned_byte, @short, @unsigned_short, @unsigned_int, @float], do: :ok
+  defp validate_component_type(type)
+       when type in [@byte, @unsigned_byte, @short, @unsigned_short, @unsigned_int, @float],
+       do: :ok
+
   defp validate_component_type(_), do: {:error, "Invalid component type"}
 
   defp validate_count(count) when is_integer(count) and count >= 1, do: :ok
   defp validate_count(_), do: {:error, "count must be >= 1"}
 
-  defp validate_type(type) when type in [:scalar, :vec2, :vec3, :vec4, :mat2, :mat3, :mat4], do: :ok
+  defp validate_type(type) when type in [:scalar, :vec2, :vec3, :vec4, :mat2, :mat3, :mat4],
+    do: :ok
+
   defp validate_type(_), do: {:error, "Invalid accessor type"}
 
   defp validate_byte_offset(byte_offset, buffer_view, component_type) do

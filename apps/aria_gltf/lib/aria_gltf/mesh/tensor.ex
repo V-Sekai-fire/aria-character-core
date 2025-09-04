@@ -36,13 +36,13 @@ defmodule AriaGltf.Mesh.Tensor do
   @type uv_tensor() :: Nx.Tensor.t()
 
   @type mesh_tensor() :: %{
-    vertices: vertex_tensor(),
-    normals: normal_tensor() | nil,
-    uvs: uv_tensor() | nil,
-    indices: index_tensor() | nil,
-    vertex_count: integer(),
-    triangle_count: integer()
-  }
+          vertices: vertex_tensor(),
+          normals: normal_tensor() | nil,
+          uvs: uv_tensor() | nil,
+          indices: index_tensor() | nil,
+          vertex_count: integer(),
+          triangle_count: integer()
+        }
 
   @doc """
   Convert vertex position list to Nx tensor.
@@ -109,33 +109,40 @@ defmodule AriaGltf.Mesh.Tensor do
 
       mesh = AriaGltf.Mesh.Tensor.create_mesh_tensor(vertices, normals, uvs, indices)
   """
-  @spec create_mesh_tensor([{float(), float(), float()}],
-                          [{float(), float(), float()}] | nil,
-                          [{float(), float()}] | nil,
-                          [integer()] | nil) :: mesh_tensor()
+  @spec create_mesh_tensor(
+          [{float(), float(), float()}],
+          [{float(), float(), float()}] | nil,
+          [{float(), float()}] | nil,
+          [integer()] | nil
+        ) :: mesh_tensor()
   def create_mesh_tensor(vertices, normals \\ nil, uvs \\ nil, indices \\ nil) do
     vertex_tensor = vertices_to_tensor(vertices)
     vertex_count = length(vertices)
 
-    normal_tensor = case normals do
-      nil -> nil
-      normals_list -> vertices_to_tensor(normals_list)
-    end
+    normal_tensor =
+      case normals do
+        nil -> nil
+        normals_list -> vertices_to_tensor(normals_list)
+      end
 
-    uv_tensor = case uvs do
-      nil -> nil
-      uv_list -> uvs_to_tensor(uv_list)
-    end
+    uv_tensor =
+      case uvs do
+        nil -> nil
+        uv_list -> uvs_to_tensor(uv_list)
+      end
 
-    index_tensor = case indices do
-      nil -> nil
-      index_list -> indices_to_tensor(index_list)
-    end
+    index_tensor =
+      case indices do
+        nil -> nil
+        index_list -> indices_to_tensor(index_list)
+      end
 
-    triangle_count = case indices do
-      nil -> div(vertex_count, 3)  # Assume triangle list
-      index_list -> div(length(index_list), 3)
-    end
+    triangle_count =
+      case indices do
+        # Assume triangle list
+        nil -> div(vertex_count, 3)
+        index_list -> div(length(index_list), 3)
+      end
 
     %{
       vertices: vertex_tensor,
@@ -158,10 +165,11 @@ defmodule AriaGltf.Mesh.Tensor do
   @spec transform_vertices_batch(vertex_tensor(), Matrix4.t()) :: vertex_tensor()
   def transform_vertices_batch(vertex_tensor, transform_matrix) do
     # Convert Matrix4 to Nx tensor
-    transform_nx = transform_matrix
-    |> Matrix4.to_tuple_list()
-    |> Nx.tensor(type: :f32)
-    |> Nx.reshape({4, 4})
+    transform_nx =
+      transform_matrix
+      |> Matrix4.to_tuple_list()
+      |> Nx.tensor(type: :f32)
+      |> Nx.reshape({4, 4})
 
     # Transform vertices (assuming homogeneous coordinates with w=1)
     Matrix4.Tensor.transform_points_batch(
@@ -184,8 +192,9 @@ defmodule AriaGltf.Mesh.Tensor do
     vertex_batches
     |> Enum.with_index()
     |> Enum.map(fn {vertices, index} ->
-      transform = Nx.slice_along_axis(transforms, index, 1, axis: 0)
-      |> Nx.squeeze(axes: [0])
+      transform =
+        Nx.slice_along_axis(transforms, index, 1, axis: 0)
+        |> Nx.squeeze(axes: [0])
 
       transform_vertices_batch(vertices, Matrix4.from_tuple_list(Nx.to_list(transform)))
     end)
@@ -238,14 +247,17 @@ defmodule AriaGltf.Mesh.Tensor do
 
     # For each triangle, add its normal to all three vertices
     # This is a simplified version - a full implementation would use more efficient operations
-    vertex_normals = Enum.reduce(0..(Nx.axis_size(face_normals, 0) - 1), vertex_normals, fn tri_idx, acc_normals ->
-      _face_normal = Nx.slice_along_axis(face_normals, tri_idx, 1, axis: 0)
-      |> Nx.squeeze(axes: [0])
+    vertex_normals =
+      Enum.reduce(0..(Nx.axis_size(face_normals, 0) - 1), vertex_normals, fn tri_idx,
+                                                                             acc_normals ->
+        _face_normal =
+          Nx.slice_along_axis(face_normals, tri_idx, 1, axis: 0)
+          |> Nx.squeeze(axes: [0])
 
-      # Add this face normal to all three vertices of the triangle
-      # This is a placeholder - real implementation would use scatter operations
-      acc_normals
-    end)
+        # Add this face normal to all three vertices of the triangle
+        # This is a placeholder - real implementation would use scatter operations
+        acc_normals
+      end)
 
     # Normalize the accumulated normals
     Vector3.Tensor.normalize_batch(vertex_normals)
@@ -258,7 +270,8 @@ defmodule AriaGltf.Mesh.Tensor do
 
       tangents = AriaGltf.Mesh.Tensor.calculate_tangents(vertices, normals, uvs, indices)
   """
-  @spec calculate_tangents(vertex_tensor(), normal_tensor(), uv_tensor(), index_tensor()) :: normal_tensor()
+  @spec calculate_tangents(vertex_tensor(), normal_tensor(), uv_tensor(), index_tensor()) ::
+          normal_tensor()
   def calculate_tangents(vertices, _normals, _uvs, indices) do
     num_vertices = Nx.axis_size(vertices, 0)
     _triangle_indices = Nx.reshape(indices, {:auto, 3})
@@ -278,7 +291,8 @@ defmodule AriaGltf.Mesh.Tensor do
 
       skinned_vertices = AriaGltf.Mesh.Tensor.apply_skinning(vertices, joint_matrices, joint_indices, joint_weights)
   """
-  @spec apply_skinning(vertex_tensor(), Nx.Tensor.t(), Nx.Tensor.t(), Nx.Tensor.t()) :: vertex_tensor()
+  @spec apply_skinning(vertex_tensor(), Nx.Tensor.t(), Nx.Tensor.t(), Nx.Tensor.t()) ::
+          vertex_tensor()
   def apply_skinning(vertices, joint_matrices, joint_indices, joint_weights) do
     # joint_matrices: {num_joints, 4, 4}
     # joint_indices: {num_vertices, 4} - indices of joints affecting each vertex
@@ -288,18 +302,22 @@ defmodule AriaGltf.Mesh.Tensor do
 
     # For each vertex, blend the transformations from all influencing joints
     Enum.reduce(0..(num_vertices - 1), vertices, fn vertex_idx, acc_vertices ->
-      vertex = Nx.slice_along_axis(vertices, vertex_idx, 1, axis: 0)
-      |> Nx.squeeze(axes: [0])
+      vertex =
+        Nx.slice_along_axis(vertices, vertex_idx, 1, axis: 0)
+        |> Nx.squeeze(axes: [0])
 
       # Get joint influences for this vertex
-      vertex_joint_indices = Nx.slice_along_axis(joint_indices, vertex_idx, 1, axis: 0)
-      |> Nx.squeeze(axes: [0])
+      vertex_joint_indices =
+        Nx.slice_along_axis(joint_indices, vertex_idx, 1, axis: 0)
+        |> Nx.squeeze(axes: [0])
 
-      vertex_joint_weights = Nx.slice_along_axis(joint_weights, vertex_idx, 1, axis: 0)
-      |> Nx.squeeze(axes: [0])
+      vertex_joint_weights =
+        Nx.slice_along_axis(joint_weights, vertex_idx, 1, axis: 0)
+        |> Nx.squeeze(axes: [0])
 
       # Blend transformations (simplified - would use more efficient operations)
-      skinned_vertex = blend_joint_transforms(vertex, joint_matrices, vertex_joint_indices, vertex_joint_weights)
+      skinned_vertex =
+        blend_joint_transforms(vertex, joint_matrices, vertex_joint_indices, vertex_joint_weights)
 
       # Update the accumulated vertices
       Nx.put_slice(acc_vertices, [vertex_idx, 0], Nx.reshape(skinned_vertex, {1, 3}))
@@ -317,9 +335,10 @@ defmodule AriaGltf.Mesh.Tensor do
   def generate_lod_levels(mesh_tensor, reduction_factors) when is_list(reduction_factors) do
     Enum.map(reduction_factors, fn factor ->
       # Simplified LOD generation - would implement edge collapse or other algorithms
-      %{mesh_tensor |
-        vertex_count: round(mesh_tensor.vertex_count * factor),
-        triangle_count: round(mesh_tensor.triangle_count * factor)
+      %{
+        mesh_tensor
+        | vertex_count: round(mesh_tensor.vertex_count * factor),
+          triangle_count: round(mesh_tensor.triangle_count * factor)
       }
     end)
   end
@@ -347,13 +366,16 @@ defmodule AriaGltf.Mesh.Tensor do
 
       {min_bounds, max_bounds} = AriaGltf.Mesh.Tensor.calculate_bounds(vertex_tensor)
   """
-  @spec calculate_bounds(vertex_tensor()) :: {{float(), float(), float()}, {float(), float(), float()}}
+  @spec calculate_bounds(vertex_tensor()) ::
+          {{float(), float(), float()}, {float(), float(), float()}}
   def calculate_bounds(vertex_tensor) do
-    min_coords = Nx.reduce_min(vertex_tensor, axes: [0])
-    |> Nx.to_list()
+    min_coords =
+      Nx.reduce_min(vertex_tensor, axes: [0])
+      |> Nx.to_list()
 
-    max_coords = Nx.reduce_max(vertex_tensor, axes: [0])
-    |> Nx.to_list()
+    max_coords =
+      Nx.reduce_max(vertex_tensor, axes: [0])
+      |> Nx.to_list()
 
     {List.to_tuple(min_coords), List.to_tuple(max_coords)}
   end
@@ -365,7 +387,9 @@ defmodule AriaGltf.Mesh.Tensor do
 
       bounds_list = AriaGltf.Mesh.Tensor.calculate_bounds_batch([mesh1, mesh2, mesh3])
   """
-  @spec calculate_bounds_batch([vertex_tensor()]) :: [{{float(), float(), float()}, {float(), float(), float()}}]
+  @spec calculate_bounds_batch([vertex_tensor()]) :: [
+          {{float(), float(), float()}, {float(), float(), float()}}
+        ]
   def calculate_bounds_batch(vertex_tensors) when is_list(vertex_tensors) do
     Enum.map(vertex_tensors, &calculate_bounds/1)
   end
@@ -380,41 +404,52 @@ defmodule AriaGltf.Mesh.Tensor do
   @spec merge_meshes([mesh_tensor()]) :: mesh_tensor()
   def merge_meshes(mesh_tensors) when is_list(mesh_tensors) do
     # Concatenate all vertex data
-    all_vertices = mesh_tensors
-    |> Enum.map(& &1.vertices)
-    |> Nx.concatenate(axis: 0)
+    all_vertices =
+      mesh_tensors
+      |> Enum.map(& &1.vertices)
+      |> Nx.concatenate(axis: 0)
 
     # Handle normals if present
-    all_normals = case Enum.all?(mesh_tensors, & &1.normals != nil) do
-      true ->
-        mesh_tensors
-        |> Enum.map(& &1.normals)
-        |> Nx.concatenate(axis: 0)
-      false -> nil
-    end
+    all_normals =
+      case Enum.all?(mesh_tensors, &(&1.normals != nil)) do
+        true ->
+          mesh_tensors
+          |> Enum.map(& &1.normals)
+          |> Nx.concatenate(axis: 0)
+
+        false ->
+          nil
+      end
 
     # Handle UVs if present
-    all_uvs = case Enum.all?(mesh_tensors, & &1.uvs != nil) do
-      true ->
-        mesh_tensors
-        |> Enum.map(& &1.uvs)
-        |> Nx.concatenate(axis: 0)
-      false -> nil
-    end
+    all_uvs =
+      case Enum.all?(mesh_tensors, &(&1.uvs != nil)) do
+        true ->
+          mesh_tensors
+          |> Enum.map(& &1.uvs)
+          |> Nx.concatenate(axis: 0)
+
+        false ->
+          nil
+      end
 
     # Merge indices with proper offset
-    all_indices = case Enum.all?(mesh_tensors, & &1.indices != nil) do
-      true ->
-        {merged_indices, _} = Enum.reduce(mesh_tensors, {[], 0}, fn mesh, {acc_indices, vertex_offset} ->
-          offset_indices = Nx.add(mesh.indices, vertex_offset)
-          {[offset_indices | acc_indices], vertex_offset + mesh.vertex_count}
-        end)
+    all_indices =
+      case Enum.all?(mesh_tensors, &(&1.indices != nil)) do
+        true ->
+          {merged_indices, _} =
+            Enum.reduce(mesh_tensors, {[], 0}, fn mesh, {acc_indices, vertex_offset} ->
+              offset_indices = Nx.add(mesh.indices, vertex_offset)
+              {[offset_indices | acc_indices], vertex_offset + mesh.vertex_count}
+            end)
 
-        merged_indices
-        |> Enum.reverse()
-        |> Nx.concatenate(axis: 0)
-      false -> nil
-    end
+          merged_indices
+          |> Enum.reverse()
+          |> Nx.concatenate(axis: 0)
+
+        false ->
+          nil
+      end
 
     total_vertex_count = Enum.sum(Enum.map(mesh_tensors, & &1.vertex_count))
     total_triangle_count = Enum.sum(Enum.map(mesh_tensors, & &1.triangle_count))
@@ -430,7 +465,8 @@ defmodule AriaGltf.Mesh.Tensor do
   end
 
   # Helper function for joint blending
-  @spec blend_joint_transforms(Nx.Tensor.t(), Nx.Tensor.t(), Nx.Tensor.t(), Nx.Tensor.t()) :: Nx.Tensor.t()
+  @spec blend_joint_transforms(Nx.Tensor.t(), Nx.Tensor.t(), Nx.Tensor.t(), Nx.Tensor.t()) ::
+          Nx.Tensor.t()
   defp blend_joint_transforms(vertex, _joint_matrices, _joint_indices, _joint_weights) do
     # Simplified implementation - would use more efficient tensor operations
     vertex

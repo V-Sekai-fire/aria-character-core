@@ -40,16 +40,16 @@ defmodule AriaJoint.NestedSet do
   alias AriaJoint.Joint
 
   @type nested_set_metadata :: %{
-    offset: non_neg_integer(),
-    span: non_neg_integer()
-  }
+          offset: non_neg_integer(),
+          span: non_neg_integer()
+        }
 
   @type nested_set :: %{
-    offset_to_node_id: %{non_neg_integer() => Joint.node_id()},
-    node_id_to_metadata: %{Joint.node_id() => nested_set_metadata()},
-    dirty_flags: %{non_neg_integer() => boolean()},
-    size: non_neg_integer()
-  }
+          offset_to_node_id: %{non_neg_integer() => Joint.node_id()},
+          node_id_to_metadata: %{Joint.node_id() => nested_set_metadata()},
+          dirty_flags: %{non_neg_integer() => boolean()},
+          size: non_neg_integer()
+        }
 
   @doc """
   Build nested set representation from root nodes.
@@ -85,12 +85,14 @@ defmodule AriaJoint.NestedSet do
       }
     else
       # Get fresh root nodes from registry to ensure we have latest children lists
-      fresh_root_nodes = Enum.map(root_nodes, fn node ->
-        case get_joint_from_registry(node.id) do
-          nil -> node  # Fallback to original if not in registry
-          fresh_node -> fresh_node
-        end
-      end)
+      fresh_root_nodes =
+        Enum.map(root_nodes, fn node ->
+          case get_joint_from_registry(node.id) do
+            # Fallback to original if not in registry
+            nil -> node
+            fresh_node -> fresh_node
+          end
+        end)
 
       # Collect complete hierarchy from fresh root nodes
       all_nodes = Joint.collect_hierarchy(fresh_root_nodes)
@@ -99,9 +101,10 @@ defmodule AriaJoint.NestedSet do
       node_lookup = Map.new(all_nodes, fn node -> {node.id, node} end)
 
       # Find actual root nodes (nodes with no parent or parent not in hierarchy)
-      actual_root_nodes = Enum.filter(all_nodes, fn node ->
-        node.parent == nil or not Map.has_key?(node_lookup, node.parent)
-      end)
+      actual_root_nodes =
+        Enum.filter(all_nodes, fn node ->
+          node.parent == nil or not Map.has_key?(node_lookup, node.parent)
+        end)
 
       initial_nested_set = %{
         offset_to_node_id: %{},
@@ -111,8 +114,11 @@ defmodule AriaJoint.NestedSet do
       }
 
       {final_nested_set, _final_offset} =
-        Enum.reduce(actual_root_nodes, {initial_nested_set, 0}, fn root_node, {acc_nested_set, offset} ->
-          {updated_nested_set, next_offset} = build_nested_set_recursive(root_node, offset, acc_nested_set, node_lookup)
+        Enum.reduce(actual_root_nodes, {initial_nested_set, 0}, fn root_node,
+                                                                   {acc_nested_set, offset} ->
+          {updated_nested_set, next_offset} =
+            build_nested_set_recursive(root_node, offset, acc_nested_set, node_lookup)
+
           {updated_nested_set, next_offset}
         end)
 
@@ -120,8 +126,10 @@ defmodule AriaJoint.NestedSet do
     end
   end
 
-  @spec build_nested_set_recursive(Joint.t(), non_neg_integer(), nested_set(), %{Joint.node_id() => Joint.t()}) ::
-    {nested_set(), non_neg_integer()}
+  @spec build_nested_set_recursive(Joint.t(), non_neg_integer(), nested_set(), %{
+          Joint.node_id() => Joint.t()
+        }) ::
+          {nested_set(), non_neg_integer()}
   defp build_nested_set_recursive(node, offset, nested_set, node_lookup) do
     current_offset = offset
 
@@ -130,10 +138,10 @@ defmodule AriaJoint.NestedSet do
 
     # Process children recursively, each child gets the next available offset
     {updated_nested_set, next_offset} =
-      Enum.reduce(child_nodes, {nested_set, current_offset + 1},
-        fn child_node, {acc_nested_set, child_offset} ->
-          build_nested_set_recursive(child_node, child_offset, acc_nested_set, node_lookup)
-        end)
+      Enum.reduce(child_nodes, {nested_set, current_offset + 1}, fn child_node,
+                                                                    {acc_nested_set, child_offset} ->
+        build_nested_set_recursive(child_node, child_offset, acc_nested_set, node_lookup)
+      end)
 
     # Calculate span: from current_offset to (next_offset - 1), inclusive
     # This includes this node and all its descendants
@@ -142,11 +150,12 @@ defmodule AriaJoint.NestedSet do
     # Add this node to nested set
     metadata = %{offset: current_offset, span: span}
 
-    final_nested_set = %{updated_nested_set |
-      offset_to_node_id: Map.put(updated_nested_set.offset_to_node_id, current_offset, node.id),
-      node_id_to_metadata: Map.put(updated_nested_set.node_id_to_metadata, node.id, metadata),
-      dirty_flags: Map.put(updated_nested_set.dirty_flags, current_offset, true),
-      size: max(updated_nested_set.size, next_offset)
+    final_nested_set = %{
+      updated_nested_set
+      | offset_to_node_id: Map.put(updated_nested_set.offset_to_node_id, current_offset, node.id),
+        node_id_to_metadata: Map.put(updated_nested_set.node_id_to_metadata, node.id, metadata),
+        dirty_flags: Map.put(updated_nested_set.dirty_flags, current_offset, true),
+        size: max(updated_nested_set.size, next_offset)
     }
 
     {final_nested_set, next_offset}
@@ -178,7 +187,8 @@ defmodule AriaJoint.NestedSet do
   def mark_subtree_dirty(nested_set, node_id, dirty_value \\ true) do
     case Map.get(nested_set.node_id_to_metadata, node_id) do
       nil ->
-        nested_set  # Node not in nested set
+        # Node not in nested set
+        nested_set
 
       %{offset: offset, span: span} ->
         # Skip if already dirty (optimization from Godot PR)
@@ -193,7 +203,8 @@ defmodule AriaJoint.NestedSet do
 
           %{nested_set | dirty_flags: updated_dirty_flags}
         else
-          nested_set  # Already dirty, skip
+          # Already dirty, skip
+          nested_set
         end
     end
   end

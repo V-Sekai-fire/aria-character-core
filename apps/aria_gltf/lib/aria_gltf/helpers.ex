@@ -12,7 +12,13 @@ defmodule AriaGltf.Helpers do
   backward compatibility and convenience.
   """
 
-  alias AriaGltf.Helpers.{DocumentCreation, MeshCreation, MaterialCreation, AnimationCreation, BufferManagement}
+  alias AriaGltf.Helpers.{
+    DocumentCreation,
+    MeshCreation,
+    MaterialCreation,
+    AnimationCreation,
+    BufferManagement
+  }
 
   # Document and Scene Creation
   defdelegate create_minimal_document(opts \\ []), to: DocumentCreation

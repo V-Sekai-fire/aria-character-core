@@ -21,6 +21,7 @@ defmodule AriaGltf.Import.Parser.Material do
   """
   @spec parse_materials(list() | nil) :: [Material.t()]
   def parse_materials(nil), do: []
+
   def parse_materials(materials_data) when is_list(materials_data) do
     Enum.map(materials_data, &parse_material/1)
   end
@@ -44,6 +45,7 @@ defmodule AriaGltf.Import.Parser.Material do
 
   @spec parse_pbr_metallic_roughness(map() | nil) :: Material.PbrMetallicRoughness.t() | nil
   defp parse_pbr_metallic_roughness(nil), do: nil
+
   defp parse_pbr_metallic_roughness(pbr_data) when is_map(pbr_data) do
     %Material.PbrMetallicRoughness{
       base_color_factor: Utility.parse_vec4(pbr_data["baseColorFactor"]) || [1.0, 1.0, 1.0, 1.0],
@@ -67,6 +69,7 @@ defmodule AriaGltf.Import.Parser.Material do
   """
   @spec parse_texture_info(map() | nil) :: TextureInfo.t() | nil
   def parse_texture_info(nil), do: nil
+
   def parse_texture_info(texture_info) when is_map(texture_info) do
     %TextureInfo{
       index: texture_info["index"],
@@ -78,6 +81,7 @@ defmodule AriaGltf.Import.Parser.Material do
 
   @spec parse_normal_texture_info(map() | nil) :: Material.NormalTextureInfo.t() | nil
   defp parse_normal_texture_info(nil), do: nil
+
   defp parse_normal_texture_info(texture_info) when is_map(texture_info) do
     %Material.NormalTextureInfo{
       index: texture_info["index"],
@@ -90,6 +94,7 @@ defmodule AriaGltf.Import.Parser.Material do
 
   @spec parse_occlusion_texture_info(map() | nil) :: Material.OcclusionTextureInfo.t() | nil
   defp parse_occlusion_texture_info(nil), do: nil
+
   defp parse_occlusion_texture_info(texture_info) when is_map(texture_info) do
     %Material.OcclusionTextureInfo{
       index: texture_info["index"],
@@ -111,6 +116,7 @@ defmodule AriaGltf.Import.Parser.Material do
   """
   @spec parse_textures(list() | nil) :: [Texture.t()]
   def parse_textures(nil), do: []
+
   def parse_textures(textures_data) when is_list(textures_data) do
     Enum.map(textures_data, &parse_texture/1)
   end
@@ -137,6 +143,7 @@ defmodule AriaGltf.Import.Parser.Material do
   """
   @spec parse_images(list() | nil) :: [Image.t()]
   def parse_images(nil), do: []
+
   def parse_images(images_data) when is_list(images_data) do
     Enum.map(images_data, &parse_image/1)
   end
@@ -164,6 +171,7 @@ defmodule AriaGltf.Import.Parser.Material do
   """
   @spec parse_samplers(list() | nil) :: [Sampler.t()]
   def parse_samplers(nil), do: []
+
   def parse_samplers(samplers_data) when is_list(samplers_data) do
     Enum.map(samplers_data, &parse_sampler/1)
   end
@@ -174,8 +182,10 @@ defmodule AriaGltf.Import.Parser.Material do
       name: sampler_data["name"],
       mag_filter: sampler_data["magFilter"],
       min_filter: sampler_data["minFilter"],
-      wrap_s: sampler_data["wrapS"] || 10497,  # REPEAT
-      wrap_t: sampler_data["wrapT"] || 10497,  # REPEAT
+      # REPEAT
+      wrap_s: sampler_data["wrapS"] || 10497,
+      # REPEAT
+      wrap_t: sampler_data["wrapT"] || 10497,
       extensions: sampler_data["extensions"],
       extras: sampler_data["extras"]
     }

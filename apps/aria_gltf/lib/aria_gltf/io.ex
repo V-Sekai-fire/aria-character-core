@@ -51,9 +51,11 @@ defmodule AriaGltf.IO do
   """
   @spec validate_document(Document.t()) :: :ok | {:error, term()}
   def validate_document(%Document{asset: nil}), do: {:error, :missing_asset}
+
   def validate_document(%Document{asset: %{version: version}}) when version != "2.0" do
     {:error, {:unsupported_version, version}}
   end
+
   def validate_document(%Document{}), do: :ok
 
   @doc """
@@ -214,8 +216,10 @@ defmodule AriaGltf.IO do
     case Jason.decode(content) do
       {:ok, json_data} when is_map(json_data) ->
         {:ok, json_data}
+
       {:ok, _} ->
         {:error, :invalid_json_structure}
+
       {:error, %Jason.DecodeError{} = error} ->
         if continue_on_errors do
           # Try to recover from common JSON issues
@@ -229,7 +233,9 @@ defmodule AriaGltf.IO do
   @spec parse_document_with_recovery(map(), boolean()) :: {:ok, Document.t()} | {:error, term()}
   defp parse_document_with_recovery(json_data, continue_on_errors) do
     case Document.from_json(json_data) do
-      {:ok, document} -> {:ok, document}
+      {:ok, document} ->
+        {:ok, document}
+
       {:error, reason} ->
         if continue_on_errors do
           # Try to create a partial document from available data
@@ -240,14 +246,16 @@ defmodule AriaGltf.IO do
     end
   end
 
-  @spec validate_imported_document(Document.t(), keyword()) :: {:ok, Document.t()} | {:error, term()}
+  @spec validate_imported_document(Document.t(), keyword()) ::
+          {:ok, Document.t()} | {:error, term()}
   defp validate_imported_document(document, opts) do
     validation_mode = Keyword.get(opts, :validation_mode, :strict)
     validation_overrides = Keyword.get(opts, :validation_overrides, [])
 
-    validation_opts = opts
-                     |> Keyword.put(:mode, validation_mode)
-                     |> Keyword.put(:overrides, validation_overrides)
+    validation_opts =
+      opts
+      |> Keyword.put(:mode, validation_mode)
+      |> Keyword.put(:overrides, validation_overrides)
 
     case AriaGltf.Validation.validate(document, validation_opts) do
       {:ok, validated_document} -> {:ok, validated_document}
@@ -275,6 +283,7 @@ defmodule AriaGltf.IO do
     case Map.get(json_data, "asset") do
       nil ->
         {:error, :missing_required_asset}
+
       asset_data ->
         case create_partial_document(json_data, asset_data) do
           {:ok, document} -> {:ok, document}
@@ -305,6 +314,7 @@ defmodule AriaGltf.IO do
         accessors: Map.get(json_data, "accessors", []),
         animations: Map.get(json_data, "animations", [])
       }
+
       {:ok, document}
     rescue
       _ -> {:error, :partial_document_creation_failed}

@@ -99,12 +99,18 @@ defmodule AriaGltf do
   defdelegate sampler_to_json(sampler), to: AriaGltf.Sampler, as: :to_json
 
   # Accessor Management API
-  defdelegate create_accessor(buffer_view, type, component_type, count, options \\ %{}), to: AriaGltf.Accessor, as: :new
+  defdelegate create_accessor(buffer_view, type, component_type, count, options \\ %{}),
+    to: AriaGltf.Accessor,
+    as: :new
+
   defdelegate parse_accessor(json), to: AriaGltf.Accessor, as: :from_json
   defdelegate accessor_to_json(accessor), to: AriaGltf.Accessor, as: :to_json
 
   # BufferView Management API
-  defdelegate create_buffer_view(buffer, byte_length, options \\ %{}), to: AriaGltf.BufferView, as: :new
+  defdelegate create_buffer_view(buffer, byte_length, options \\ %{}),
+    to: AriaGltf.BufferView,
+    as: :new
+
   defdelegate parse_buffer_view(json), to: AriaGltf.BufferView, as: :from_json
   defdelegate buffer_view_to_json(buffer_view), to: AriaGltf.BufferView, as: :to_json
 
@@ -124,7 +130,10 @@ defmodule AriaGltf do
   defdelegate skin_to_json(skin), to: AriaGltf.Skin, as: :to_json
 
   # Animation Management API
-  defdelegate create_animation(channels, samplers, options \\ %{}), to: AriaGltf.Animation, as: :new
+  defdelegate create_animation(channels, samplers, options \\ %{}),
+    to: AriaGltf.Animation,
+    as: :new
+
   defdelegate parse_animation(json), to: AriaGltf.Animation, as: :from_json
   defdelegate animation_to_json(animation), to: AriaGltf.Animation, as: :to_json
 
@@ -143,7 +152,10 @@ defmodule AriaGltf do
   defdelegate resolve_file_path(uri_info, base_path), to: AriaGltf.ExternalFiles
 
   # Helper Functions API (AriaGltf.Helpers)
-  defdelegate create_minimal_gltf_document(opts \\ []), to: AriaGltf.Helpers, as: :create_minimal_document
+  defdelegate create_minimal_gltf_document(opts \\ []),
+    to: AriaGltf.Helpers,
+    as: :create_minimal_document
+
   defdelegate create_simple_scene(opts \\ []), to: AriaGltf.Helpers
   defdelegate create_helper_node(opts \\ []), to: AriaGltf.Helpers, as: :create_node
   defdelegate create_simple_mesh(opts \\ []), to: AriaGltf.Helpers
@@ -224,25 +236,28 @@ defmodule AriaGltf do
     errors = []
 
     # Basic asset validation
-    errors = if document.asset do
-      errors
-    else
-      [{:missing_asset, "Document must have asset information"} | errors]
-    end
+    errors =
+      if document.asset do
+        errors
+      else
+        [{:missing_asset, "Document must have asset information"} | errors]
+      end
 
     # Reference validation
-    errors = if check_references do
-      validate_internal_references(document, errors)
-    else
-      errors
-    end
+    errors =
+      if check_references do
+        validate_internal_references(document, errors)
+      else
+        errors
+      end
 
     # Strict validation checks
-    errors = if strict do
-      validate_strict_requirements(document, errors)
-    else
-      errors
-    end
+    errors =
+      if strict do
+        validate_strict_requirements(document, errors)
+      else
+        errors
+      end
 
     case errors do
       [] -> {:ok, :valid}
@@ -296,7 +311,9 @@ defmodule AriaGltf do
 
       positions = AriaGltf.tensor_to_vertices_nx(vertex_tensor)
   """
-  defdelegate tensor_to_vertices_nx(vertex_tensor), to: AriaGltf.Mesh.Tensor, as: :tensor_to_vertices
+  defdelegate tensor_to_vertices_nx(vertex_tensor),
+    to: AriaGltf.Mesh.Tensor,
+    as: :tensor_to_vertices
 
   @doc """
   Create comprehensive mesh tensor from various attribute lists.
@@ -305,7 +322,9 @@ defmodule AriaGltf do
 
       mesh = AriaGltf.create_mesh_tensor_nx(vertices, normals, uvs, indices)
   """
-  defdelegate create_mesh_tensor_nx(vertices, normals \\ nil, uvs \\ nil, indices \\ nil), to: AriaGltf.Mesh.Tensor, as: :create_mesh_tensor
+  defdelegate create_mesh_tensor_nx(vertices, normals \\ nil, uvs \\ nil, indices \\ nil),
+    to: AriaGltf.Mesh.Tensor,
+    as: :create_mesh_tensor
 
   @doc """
   Apply transformation matrix to vertices using batch operations.
@@ -315,7 +334,9 @@ defmodule AriaGltf do
       transform = AriaMath.Matrix4.translation({1.0, 0.0, 0.0})
       transformed_vertices = AriaGltf.transform_vertices_batch_nx(vertex_tensor, transform)
   """
-  defdelegate transform_vertices_batch_nx(vertex_tensor, transform_matrix), to: AriaGltf.Mesh.Tensor, as: :transform_vertices_batch
+  defdelegate transform_vertices_batch_nx(vertex_tensor, transform_matrix),
+    to: AriaGltf.Mesh.Tensor,
+    as: :transform_vertices_batch
 
   @doc """
   Apply multiple transformations to multiple meshes efficiently.
@@ -324,7 +345,9 @@ defmodule AriaGltf do
 
       transformed_batches = AriaGltf.transform_mesh_batch_nx(vertex_batches, transforms)
   """
-  defdelegate transform_mesh_batch_nx(vertex_batches, transforms), to: AriaGltf.Mesh.Tensor, as: :transform_mesh_batch
+  defdelegate transform_mesh_batch_nx(vertex_batches, transforms),
+    to: AriaGltf.Mesh.Tensor,
+    as: :transform_mesh_batch
 
   @doc """
   Calculate face normals for triangulated mesh using cross product.
@@ -333,7 +356,9 @@ defmodule AriaGltf do
 
       normals = AriaGltf.calculate_face_normals_nx(vertices, indices)
   """
-  defdelegate calculate_face_normals_nx(vertices, indices), to: AriaGltf.Mesh.Tensor, as: :calculate_face_normals
+  defdelegate calculate_face_normals_nx(vertices, indices),
+    to: AriaGltf.Mesh.Tensor,
+    as: :calculate_face_normals
 
   @doc """
   Calculate smooth vertex normals by averaging adjacent face normals.
@@ -342,7 +367,9 @@ defmodule AriaGltf do
 
       vertex_normals = AriaGltf.calculate_vertex_normals_nx(vertices, indices)
   """
-  defdelegate calculate_vertex_normals_nx(vertices, indices), to: AriaGltf.Mesh.Tensor, as: :calculate_vertex_normals
+  defdelegate calculate_vertex_normals_nx(vertices, indices),
+    to: AriaGltf.Mesh.Tensor,
+    as: :calculate_vertex_normals
 
   @doc """
   Calculate tangent vectors for normal mapping support.
@@ -351,7 +378,9 @@ defmodule AriaGltf do
 
       tangents = AriaGltf.calculate_tangents_nx(vertices, normals, uvs, indices)
   """
-  defdelegate calculate_tangents_nx(vertices, normals, uvs, indices), to: AriaGltf.Mesh.Tensor, as: :calculate_tangents
+  defdelegate calculate_tangents_nx(vertices, normals, uvs, indices),
+    to: AriaGltf.Mesh.Tensor,
+    as: :calculate_tangents
 
   @doc """
   Apply skinning transformations using joint matrices and weights.
@@ -360,7 +389,9 @@ defmodule AriaGltf do
 
       skinned_vertices = AriaGltf.apply_skinning_nx(vertices, joint_matrices, joint_indices, joint_weights)
   """
-  defdelegate apply_skinning_nx(vertices, joint_matrices, joint_indices, joint_weights), to: AriaGltf.Mesh.Tensor, as: :apply_skinning
+  defdelegate apply_skinning_nx(vertices, joint_matrices, joint_indices, joint_weights),
+    to: AriaGltf.Mesh.Tensor,
+    as: :apply_skinning
 
   @doc """
   Generate level-of-detail (LOD) versions of mesh by vertex decimation.
@@ -369,7 +400,9 @@ defmodule AriaGltf do
 
       lod_meshes = AriaGltf.generate_lod_levels_nx(mesh_tensor, [0.5, 0.25, 0.1])
   """
-  defdelegate generate_lod_levels_nx(mesh_tensor, reduction_factors), to: AriaGltf.Mesh.Tensor, as: :generate_lod_levels
+  defdelegate generate_lod_levels_nx(mesh_tensor, reduction_factors),
+    to: AriaGltf.Mesh.Tensor,
+    as: :generate_lod_levels
 
   @doc """
   Optimize mesh by removing duplicate vertices and updating indices.
@@ -378,7 +411,9 @@ defmodule AriaGltf do
 
       optimized_mesh = AriaGltf.optimize_mesh_nx(mesh_tensor, tolerance: 0.001)
   """
-  defdelegate optimize_mesh_nx(mesh_tensor, opts \\ []), to: AriaGltf.Mesh.Tensor, as: :optimize_mesh
+  defdelegate optimize_mesh_nx(mesh_tensor, opts \\ []),
+    to: AriaGltf.Mesh.Tensor,
+    as: :optimize_mesh
 
   @doc """
   Calculate bounding box for mesh vertices.
@@ -396,7 +431,9 @@ defmodule AriaGltf do
 
       bounds_list = AriaGltf.calculate_bounds_batch_nx([mesh1, mesh2, mesh3])
   """
-  defdelegate calculate_bounds_batch_nx(vertex_tensors), to: AriaGltf.Mesh.Tensor, as: :calculate_bounds_batch
+  defdelegate calculate_bounds_batch_nx(vertex_tensors),
+    to: AriaGltf.Mesh.Tensor,
+    as: :calculate_bounds_batch
 
   @doc """
   Merge multiple meshes into a single mesh tensor.
@@ -430,7 +467,9 @@ defmodule AriaGltf do
   # Sample Validation API (Phase 8 requirements)
   defdelegate validate_simple_skin(opts \\ []), to: AriaGltf.SampleValidation
   defdelegate validate_simple_morph(opts \\ []), to: AriaGltf.SampleValidation
-  defdelegate process_frame_accurate(document, timestamp, options \\ []), to: AriaGltf.SampleValidation
+
+  defdelegate process_frame_accurate(document, timestamp, options \\ []),
+    to: AriaGltf.SampleValidation
 
   @doc """
   Hello world.
@@ -449,16 +488,20 @@ defmodule AriaGltf do
 
   defp validate_internal_references(document, errors) do
     # Scene references
-    errors = case document.scene do
-      nil -> errors
-      scene_index ->
-        scene_count = length(document.scenes || [])
-        if scene_index >= 0 and scene_index < scene_count do
+    errors =
+      case document.scene do
+        nil ->
           errors
-        else
-          [{:invalid_scene_reference, "Scene index #{scene_index} out of range"} | errors]
-        end
-    end
+
+        scene_index ->
+          scene_count = length(document.scenes || [])
+
+          if scene_index >= 0 and scene_index < scene_count do
+            errors
+          else
+            [{:invalid_scene_reference, "Scene index #{scene_index} out of range"} | errors]
+          end
+      end
 
     # Node reference validation would go here
     errors
@@ -467,11 +510,12 @@ defmodule AriaGltf do
   defp validate_strict_requirements(document, errors) do
     # Strict validation rules would be implemented here
     # For now, just basic checks
-    errors = if document.scenes && length(document.scenes) == 0 do
-      [{:empty_scenes, "Document should have at least one scene"} | errors]
-    else
-      errors
-    end
+    errors =
+      if document.scenes && length(document.scenes) == 0 do
+        [{:empty_scenes, "Document should have at least one scene"} | errors]
+      else
+        errors
+      end
 
     errors
   end

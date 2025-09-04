@@ -13,10 +13,10 @@ defmodule AriaGltf.Validation.Warning do
   @type location :: Error.location()
 
   @type t :: %__MODULE__{
-    location: location(),
-    message: String.t(),
-    timestamp: DateTime.t()
-  }
+          location: location(),
+          message: String.t(),
+          timestamp: DateTime.t()
+        }
 
   defstruct [
     :location,

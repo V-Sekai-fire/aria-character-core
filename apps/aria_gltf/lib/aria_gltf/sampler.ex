@@ -6,14 +6,14 @@ defmodule AriaGltf.Sampler do
   """
 
   @type t :: %__MODULE__{
-    mag_filter: non_neg_integer() | nil,
-    min_filter: non_neg_integer() | nil,
-    wrap_s: non_neg_integer(),
-    wrap_t: non_neg_integer(),
-    name: String.t() | nil,
-    extensions: map() | nil,
-    extras: any() | nil
-  }
+          mag_filter: non_neg_integer() | nil,
+          min_filter: non_neg_integer() | nil,
+          wrap_s: non_neg_integer(),
+          wrap_t: non_neg_integer(),
+          name: String.t() | nil,
+          extensions: map() | nil,
+          extras: any() | nil
+        }
 
   defstruct [
     :mag_filter,
@@ -21,8 +21,10 @@ defmodule AriaGltf.Sampler do
     :name,
     :extensions,
     :extras,
-    wrap_s: 10497,  # GL_REPEAT
-    wrap_t: 10497   # GL_REPEAT
+    # GL_REPEAT
+    wrap_s: 10497,
+    # GL_REPEAT
+    wrap_t: 10497
   ]
 
   @doc """

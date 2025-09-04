@@ -12,12 +12,12 @@ defmodule AriaGltf.Animation do
   alias AriaGltf.Animation.{Channel, Sampler}
 
   @type t :: %__MODULE__{
-    channels: [Channel.t()],
-    samplers: [Sampler.t()],
-    name: String.t() | nil,
-    extensions: map() | nil,
-    extras: any() | nil
-  }
+          channels: [Channel.t()],
+          samplers: [Sampler.t()],
+          name: String.t() | nil,
+          extensions: map() | nil,
+          extras: any() | nil
+        }
 
   @enforce_keys [:channels, :samplers]
   defstruct [
@@ -43,7 +43,8 @@ defmodule AriaGltf.Animation do
   Creates a new animation with channels, samplers, and options.
   """
   @spec new([Channel.t()], [Sampler.t()], map()) :: t()
-  def new(channels, samplers, options) when is_list(channels) and is_list(samplers) and is_map(options) do
+  def new(channels, samplers, options)
+      when is_list(channels) and is_list(samplers) and is_map(options) do
     %__MODULE__{
       channels: channels,
       samplers: samplers,
@@ -67,28 +68,33 @@ defmodule AriaGltf.Animation do
         extensions: Map.get(json, "extensions"),
         extras: Map.get(json, "extras")
       }
+
       {:ok, animation}
     end
   end
 
   defp parse_channels(%{"channels" => channels_json}) when is_list(channels_json) do
     channels = Enum.map(channels_json, &Channel.from_json/1)
+
     if Enum.all?(channels, &match?({:ok, _}, &1)) do
       {:ok, Enum.map(channels, fn {:ok, channel} -> channel end)}
     else
       {:error, :invalid_channels}
     end
   end
+
   defp parse_channels(_), do: {:error, :missing_channels}
 
   defp parse_samplers(%{"samplers" => samplers_json}) when is_list(samplers_json) do
     samplers = Enum.map(samplers_json, &Sampler.from_json/1)
+
     if Enum.all?(samplers, &match?({:ok, _}, &1)) do
       {:ok, Enum.map(samplers, fn {:ok, sampler} -> sampler end)}
     else
       {:error, :invalid_samplers}
     end
   end
+
   defp parse_samplers(_), do: {:error, :missing_samplers}
 
   @doc """

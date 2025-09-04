@@ -25,12 +25,15 @@ defmodule AriaViewerWeb.IKChannel do
                 # Broadcast new pose to all clients
                 broadcast!(socket, "new_pose", %{joints: joint_rotations})
                 {:reply, :ok, socket}
+
               {:error, reason} ->
                 {:reply, {:error, %{reason: reason}}, socket}
             end
+
           {:error, reason} ->
             {:reply, {:error, %{reason: "Invalid position: #{reason}"}}, socket}
         end
+
       {:error, reason} ->
         {:reply, {:error, %{reason: "Invalid end effector: #{reason}"}}, socket}
     end
@@ -42,6 +45,7 @@ defmodule AriaViewerWeb.IKChannel do
         # Store skeleton data in socket for future IK operations
         socket = assign(socket, :skeleton, skeleton_data)
         {:reply, {:ok, %{message: "Model loaded successfully"}}, socket}
+
       {:error, reason} ->
         {:reply, {:error, %{reason: reason}}, socket}
     end
@@ -83,6 +87,7 @@ defmodule AriaViewerWeb.IKChannel do
         case find_first_skin(document) do
           nil ->
             {:error, "No skin found in VRM document"}
+
           skin_data ->
             case AriaGltf.Skin.from_json(skin_data) do
               {:ok, skin} ->
@@ -95,13 +100,16 @@ defmodule AriaViewerWeb.IKChannel do
                         manager = HierarchyManager.rebuild_from_nodes(manager, joint_list)
                         {:ok, %{manager: manager, hierarchy: joint_hierarchy, skin: skin}}
                     end
+
                   {:error, reason} ->
                     {:error, "Failed to build joint hierarchy: #{reason}"}
                 end
+
               {:error, reason} ->
                 {:error, "Failed to parse skin: #{reason}"}
             end
         end
+
       {:error, reason} ->
         {:error, "Failed to load VRM file: #{reason}"}
     end
@@ -121,6 +129,7 @@ defmodule AriaViewerWeb.IKChannel do
     case socket.assigns[:skeleton] do
       nil ->
         {:error, "No skeleton data loaded. Please load a VRM model first."}
+
       skeleton_data ->
         {:ok, skeleton_data}
     end
@@ -128,7 +137,8 @@ defmodule AriaViewerWeb.IKChannel do
 
   # Map VRM bone name to joint index
   defp map_vrm_bone_to_index(bone_name, skin, _hierarchy) do
-    _ = skin  # Explicitly mark as intentionally unused for now
+    # Explicitly mark as intentionally unused for now
+    _ = skin
     # VRM bone name mapping (simplified for common bones)
     vrm_bone_mapping = %{
       "hips" => 0,
@@ -155,6 +165,7 @@ defmodule AriaViewerWeb.IKChannel do
     case Map.get(vrm_bone_mapping, bone_name) do
       nil ->
         {:error, "Unknown VRM bone: #{bone_name}"}
+
       joint_index ->
         # Validate that joint index exists in skin joints
         if joint_index in skin.joints do
@@ -175,12 +186,14 @@ defmodule AriaViewerWeb.IKChannel do
         # Extract joint rotations for the current animation frame
         # For now, return a sample frame from the animation
         get_animation_frame_rotations(animation_data, joint_index)
+
       {:error, _reason} ->
         # Fallback to basic rotations if VRMA loading fails
-        {:ok, [
-          %{joint_index: joint_index, rotation: {0.0, 0.0, 0.0, 1.0}},
-          %{joint_index: joint_index - 1, rotation: {0.1, 0.2, 0.3, 0.9}}
-        ]}
+        {:ok,
+         [
+           %{joint_index: joint_index, rotation: {0.0, 0.0, 0.0, 1.0}},
+           %{joint_index: joint_index - 1, rotation: {0.1, 0.2, 0.3, 0.9}}
+         ]}
     end
   end
 
@@ -232,9 +245,11 @@ defmodule AriaViewerWeb.IKChannel do
                 vrm_rotations = convert_to_vrm_format(joint_rotations, hierarchy, skin)
                 {:ok, vrm_rotations}
             end
+
           {:error, reason} ->
             {:error, "Bone mapping failed: #{reason}"}
         end
+
       {:error, reason} ->
         {:error, "No skeleton data available: #{reason}"}
     end
@@ -251,9 +266,11 @@ defmodule AriaViewerWeb.IKChannel do
           {:ok, document} ->
             # Extract animation data from the document
             extract_animation_data(document)
+
           {:error, reason} ->
             {:error, "Failed to parse VRMA: #{reason}"}
         end
+
       {:error, reason} ->
         {:error, "Failed to read VRMA file: #{reason}"}
     end
@@ -264,8 +281,10 @@ defmodule AriaViewerWeb.IKChannel do
     case document.animations do
       nil ->
         {:error, "No animations found in VRMA"}
+
       [] ->
         {:error, "Empty animations array in VRMA"}
+
       animations ->
         # Use the first animation for now
         [animation | _] = animations
@@ -274,21 +293,27 @@ defmodule AriaViewerWeb.IKChannel do
   end
 
   # Get joint rotations for a specific animation frame
-  defp get_animation_frame_rotations(%{animation: animation, document: document}, target_joint_index) do
+  defp get_animation_frame_rotations(
+         %{animation: animation, document: document},
+         target_joint_index
+       ) do
     # For mock IK, we'll return rotations that simulate reaching toward the target
     # In a real implementation, this would interpolate between animation frames
 
     # Create mock rotations that affect the target joint and its chain
     mock_rotations = [
       %{joint_index: target_joint_index, rotation: {0.1, 0.2, 0.3, 0.9}},
-      %{joint_index: target_joint_index - 1, rotation: {0.05, 0.1, 0.15, 0.98}},  # Parent
-      %{joint_index: target_joint_index - 2, rotation: {0.02, 0.05, 0.08, 0.99}}   # Grandparent
+      # Parent
+      %{joint_index: target_joint_index - 1, rotation: {0.05, 0.1, 0.15, 0.98}},
+      # Grandparent
+      %{joint_index: target_joint_index - 2, rotation: {0.02, 0.05, 0.08, 0.99}}
     ]
 
     # Filter out invalid joint indices
-    valid_rotations = Enum.filter(mock_rotations, fn %{joint_index: idx} ->
-      idx >= 0
-    end)
+    valid_rotations =
+      Enum.filter(mock_rotations, fn %{joint_index: idx} ->
+        idx >= 0
+      end)
 
     {:ok, valid_rotations}
   end

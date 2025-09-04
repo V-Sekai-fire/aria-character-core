@@ -12,9 +12,9 @@ defmodule AriaJoint.Transform.Tensor.Advanced do
   alias AriaJoint.Transform.Tensor.{Core, Operations, Hierarchy}
 
   @type batch_result() :: %{
-    joints: [Joint.t()],
-    tensor_data: Core.joint_tensor()
-  }
+          joints: [Joint.t()],
+          tensor_data: Core.joint_tensor()
+        }
 
   @doc """
   Perform batch IK operations on joint chains.
@@ -38,9 +38,7 @@ defmodule AriaJoint.Transform.Tensor.Advanced do
     # TODO: Implement actual IK solving logic using tensor operations
     # This would involve iterative optimization to reach target positions
 
-    %{joint_tensor |
-      dirty_flags: updated_dirty
-    }
+    %{joint_tensor | dirty_flags: updated_dirty}
   end
 
   @doc """
@@ -78,9 +76,10 @@ defmodule AriaJoint.Transform.Tensor.Advanced do
       joint_tensor = Core.from_joints(joints)
 
       # Apply transforms
-      updated_tensor = joint_tensor
-      |> Operations.apply_local_transforms_batch(transforms)
-      |> Hierarchy.compute_global_transforms_batch()
+      updated_tensor =
+        joint_tensor
+        |> Operations.apply_local_transforms_batch(transforms)
+        |> Hierarchy.compute_global_transforms_batch()
 
       # Convert back to joints
       updated_joints = Core.to_joints(updated_tensor, joints)

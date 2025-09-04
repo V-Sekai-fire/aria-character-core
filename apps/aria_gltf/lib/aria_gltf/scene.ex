@@ -9,11 +9,11 @@ defmodule AriaGltf.Scene do
   """
 
   @type t :: %__MODULE__{
-    nodes: [non_neg_integer()] | nil,
-    name: String.t() | nil,
-    extensions: map() | nil,
-    extras: any() | nil
-  }
+          nodes: [non_neg_integer()] | nil,
+          name: String.t() | nil,
+          extensions: map() | nil,
+          extras: any() | nil
+        }
 
   defstruct [
     :nodes,

@@ -20,6 +20,7 @@ defmodule AriaGltf.Import.Parser.Animation do
   """
   @spec parse_skins(list() | nil) :: [Skin.t()]
   def parse_skins(nil), do: []
+
   def parse_skins(skins_data) when is_list(skins_data) do
     Enum.map(skins_data, &parse_skin/1)
   end
@@ -47,6 +48,7 @@ defmodule AriaGltf.Import.Parser.Animation do
   """
   @spec parse_animations(list() | nil) :: [Animation.t()]
   def parse_animations(nil), do: []
+
   def parse_animations(animations_data) when is_list(animations_data) do
     Enum.map(animations_data, &parse_animation/1)
   end
@@ -64,6 +66,7 @@ defmodule AriaGltf.Import.Parser.Animation do
 
   @spec parse_animation_channels(list() | nil) :: [Animation.Channel.t()]
   defp parse_animation_channels(nil), do: []
+
   defp parse_animation_channels(channels_data) when is_list(channels_data) do
     Enum.map(channels_data, &parse_animation_channel/1)
   end
@@ -80,6 +83,7 @@ defmodule AriaGltf.Import.Parser.Animation do
 
   @spec parse_animation_target(map() | nil) :: Animation.Channel.Target.t() | nil
   defp parse_animation_target(nil), do: nil
+
   defp parse_animation_target(target_data) when is_map(target_data) do
     %Animation.Channel.Target{
       node: target_data["node"],
@@ -91,6 +95,7 @@ defmodule AriaGltf.Import.Parser.Animation do
 
   @spec parse_animation_samplers(list() | nil) :: [Animation.Sampler.t()]
   defp parse_animation_samplers(nil), do: []
+
   defp parse_animation_samplers(samplers_data) when is_list(samplers_data) do
     Enum.map(samplers_data, &parse_animation_sampler/1)
   end

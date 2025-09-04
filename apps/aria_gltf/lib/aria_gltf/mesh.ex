@@ -136,7 +136,6 @@ defmodule AriaGltf.Mesh do
     end
   end
 
-
   @doc """
   Converts a Mesh struct to JSON-compatible map.
   """

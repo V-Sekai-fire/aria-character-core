@@ -44,11 +44,14 @@ defmodule AriaGltf.SampleValidation do
     # Override buffer view validation for sample files that may have edge cases
     validation_overrides = [:buffer_view_indices]
 
-    with {:ok, document} <- IO.import_from_file(file_path, validation_mode: :strict, validation_overrides: validation_overrides),
+    with {:ok, document} <-
+           IO.import_from_file(file_path,
+             validation_mode: :strict,
+             validation_overrides: validation_overrides
+           ),
          {:ok, skin_report} <- validate_skin_structure(document),
          {:ok, joint_report} <- maybe_validate_joints(document, validate_joints),
          {:ok, animation_report} <- maybe_validate_animation(document, validate_animation) do
-
       validation_report = %{
         document: document,
         skin_report: skin_report,
@@ -88,7 +91,6 @@ defmodule AriaGltf.SampleValidation do
          {:ok, mesh_report} <- validate_morph_structure(document),
          {:ok, target_report} <- maybe_validate_morph_targets(document, validate_targets),
          {:ok, weight_report} <- maybe_validate_morph_weights(document, validate_weights) do
-
       validation_report = %{
         document: document,
         mesh_report: mesh_report,
@@ -133,12 +135,19 @@ defmodule AriaGltf.SampleValidation do
     case get_animation(document, animation_index) do
       {:ok, animation} ->
         if has_skeletal_animation?(document) do
-          process_skeletal_animation(document, animation, timestamp, use_aria_joint, use_aria_math)
+          process_skeletal_animation(
+            document,
+            animation,
+            timestamp,
+            use_aria_joint,
+            use_aria_math
+          )
         else
           process_morph_animation(document, animation, timestamp)
         end
 
-      {:error, reason} -> {:error, reason}
+      {:error, reason} ->
+        {:error, reason}
     end
   end
 
@@ -152,6 +161,7 @@ defmodule AriaGltf.SampleValidation do
           has_inverse_bind_matrices: skin.inverse_bind_matrices != nil,
           skin_index: 0
         }
+
         {:ok, report}
 
       [] ->
@@ -173,6 +183,7 @@ defmodule AriaGltf.SampleValidation do
           morph_target_count: if(morph_targets, do: length(morph_targets), else: 0),
           mesh_index: 0
         }
+
         {:ok, report}
 
       [] ->
@@ -186,6 +197,7 @@ defmodule AriaGltf.SampleValidation do
   defp maybe_validate_joints(document, true) do
     validate_joint_hierarchy(document)
   end
+
   defp maybe_validate_joints(_document, false) do
     {:ok, %{skipped: true}}
   end
@@ -193,6 +205,7 @@ defmodule AriaGltf.SampleValidation do
   defp maybe_validate_animation(document, true) do
     validate_animation_data(document)
   end
+
   defp maybe_validate_animation(_document, false) do
     {:ok, %{skipped: true}}
   end
@@ -200,6 +213,7 @@ defmodule AriaGltf.SampleValidation do
   defp maybe_validate_morph_targets(document, true) do
     validate_morph_target_data(document)
   end
+
   defp maybe_validate_morph_targets(_document, false) do
     {:ok, %{skipped: true}}
   end
@@ -207,6 +221,7 @@ defmodule AriaGltf.SampleValidation do
   defp maybe_validate_morph_weights(document, true) do
     validate_morph_weight_data(document)
   end
+
   defp maybe_validate_morph_weights(_document, false) do
     {:ok, %{skipped: true}}
   end
@@ -216,13 +231,14 @@ defmodule AriaGltf.SampleValidation do
     # This is a placeholder implementation
     case document.nodes do
       nodes when is_list(nodes) and length(nodes) > 0 ->
-        joint_nodes = Enum.filter(nodes, & &1.children != nil or &1.translation != nil)
+        joint_nodes = Enum.filter(nodes, &(&1.children != nil or &1.translation != nil))
 
         report = %{
           total_nodes: length(nodes),
           joint_nodes: length(joint_nodes),
           has_hierarchy: length(joint_nodes) > 1
         }
+
         {:ok, report}
 
       _ ->
@@ -241,6 +257,7 @@ defmodule AriaGltf.SampleValidation do
           sampler_count: length(samplers),
           has_valid_animation: length(channels) > 0 and length(samplers) > 0
         }
+
         {:ok, report}
 
       [] ->
@@ -306,7 +323,7 @@ defmodule AriaGltf.SampleValidation do
     # This is a placeholder implementation
 
     skin = List.first(document.skins || [])
-    joints = skin && skin.joints || []
+    joints = (skin && skin.joints) || []
 
     processed_state = %{
       type: :skeletal,
@@ -326,7 +343,7 @@ defmodule AriaGltf.SampleValidation do
 
     mesh = List.first(document.meshes || [])
     primitive = mesh && List.first(mesh.primitives || [])
-    targets = primitive && primitive.targets || []
+    targets = (primitive && primitive.targets) || []
 
     processed_state = %{
       type: :morph,

@@ -89,19 +89,24 @@ defmodule AriaGltf.Validation do
       _ -> {:error, "Invalid glTF version: #{version}. Only version 2.0 is supported"}
     end
   end
+
   defp validate_asset_version(_), do: {:error, "Asset version is required and must be a string"}
 
   # Scene reference validation
   defp validate_scene_references(%Context{document: document} = context) do
     case document.scene do
-      nil -> context
+      nil ->
+        context
+
       scene_index when is_integer(scene_index) ->
         if scene_index >= 0 and scene_index < length(document.scenes || []) do
           context
         else
           Context.add_error(context, :scene, "Scene index #{scene_index} is out of bounds")
         end
-      _ -> Context.add_error(context, :scene, "Scene index must be a non-negative integer")
+
+      _ ->
+        Context.add_error(context, :scene, "Scene index must be a non-negative integer")
     end
   end
 
@@ -128,7 +133,8 @@ defmodule AriaGltf.Validation do
     end)
   end
 
-  defp validate_node_children(context, %{children: children}, node_index, total_nodes) when is_list(children) do
+  defp validate_node_children(context, %{children: children}, node_index, total_nodes)
+       when is_list(children) do
     Enum.reduce(children, context, fn child_index, ctx ->
       if is_integer(child_index) and child_index >= 0 and child_index < total_nodes do
         ctx
@@ -137,33 +143,40 @@ defmodule AriaGltf.Validation do
       end
     end)
   end
+
   defp validate_node_children(context, _, _, _), do: context
 
-  defp validate_node_mesh_reference(context, %{mesh: mesh_index}, node_index, meshes) when is_integer(mesh_index) do
+  defp validate_node_mesh_reference(context, %{mesh: mesh_index}, node_index, meshes)
+       when is_integer(mesh_index) do
     if mesh_index >= 0 and mesh_index < length(meshes || []) do
       context
     else
       Context.add_error(context, {:node, node_index}, "Invalid mesh index: #{mesh_index}")
     end
   end
+
   defp validate_node_mesh_reference(context, _, _, _), do: context
 
-  defp validate_node_camera_reference(context, %{camera: camera_index}, node_index, cameras) when is_integer(camera_index) do
+  defp validate_node_camera_reference(context, %{camera: camera_index}, node_index, cameras)
+       when is_integer(camera_index) do
     if camera_index >= 0 and camera_index < length(cameras || []) do
       context
     else
       Context.add_error(context, {:node, node_index}, "Invalid camera index: #{camera_index}")
     end
   end
+
   defp validate_node_camera_reference(context, _, _, _), do: context
 
-  defp validate_node_skin_reference(context, %{skin: skin_index}, node_index, skins) when is_integer(skin_index) do
+  defp validate_node_skin_reference(context, %{skin: skin_index}, node_index, skins)
+       when is_integer(skin_index) do
     if skin_index >= 0 and skin_index < length(skins || []) do
       context
     else
       Context.add_error(context, {:node, node_index}, "Invalid skin index: #{skin_index}")
     end
   end
+
   defp validate_node_skin_reference(context, _, _, _), do: context
 
   defp validate_mesh_indices(context, meshes) do
@@ -217,7 +230,9 @@ defmodule AriaGltf.Validation do
         |> Enum.reduce(context, fn {primitive, prim_index}, ctx ->
           validate_primitive_references(ctx, primitive, {mesh_index, prim_index}, document)
         end)
-      _ -> context
+
+      _ ->
+        context
     end
   end
 
@@ -231,10 +246,15 @@ defmodule AriaGltf.Validation do
           if material_index >= 0 and material_index < length(materials) do
             context
           else
-            Context.add_error(context, {:mesh, mesh_index, :primitive, prim_index},
-              "Invalid material index: #{material_index}")
+            Context.add_error(
+              context,
+              {:mesh, mesh_index, :primitive, prim_index},
+              "Invalid material index: #{material_index}"
+            )
           end
-        _ -> context
+
+        _ ->
+          context
       end
 
     # Validate accessor references for attributes and indices
@@ -242,14 +262,20 @@ defmodule AriaGltf.Validation do
       case primitive do
         %{attributes: attributes} when is_map(attributes) ->
           Enum.reduce(attributes, context, fn {attr_name, accessor_index}, ctx ->
-            if is_integer(accessor_index) and accessor_index >= 0 and accessor_index < length(accessors) do
+            if is_integer(accessor_index) and accessor_index >= 0 and
+                 accessor_index < length(accessors) do
               ctx
             else
-              Context.add_error(ctx, {:mesh, mesh_index, :primitive, prim_index},
-                "Invalid accessor index for attribute #{attr_name}: #{accessor_index}")
+              Context.add_error(
+                ctx,
+                {:mesh, mesh_index, :primitive, prim_index},
+                "Invalid accessor index for attribute #{attr_name}: #{accessor_index}"
+              )
             end
           end)
-        _ -> context
+
+        _ ->
+          context
       end
 
     case primitive do
@@ -257,10 +283,15 @@ defmodule AriaGltf.Validation do
         if indices_accessor >= 0 and indices_accessor < length(accessors) do
           context
         else
-          Context.add_error(context, {:mesh, mesh_index, :primitive, prim_index},
-            "Invalid indices accessor index: #{indices_accessor}")
+          Context.add_error(
+            context,
+            {:mesh, mesh_index, :primitive, prim_index},
+            "Invalid indices accessor index: #{indices_accessor}"
+          )
         end
-      _ -> context
+
+      _ ->
+        context
     end
   end
 
@@ -270,7 +301,12 @@ defmodule AriaGltf.Validation do
     # Validate texture references in material
     context
     |> validate_texture_info_reference(material, :base_color_texture, material_index, textures)
-    |> validate_texture_info_reference(material, :metallic_roughness_texture, material_index, textures)
+    |> validate_texture_info_reference(
+      material,
+      :metallic_roughness_texture,
+      material_index,
+      textures
+    )
     |> validate_texture_info_reference(material, :normal_texture, material_index, textures)
     |> validate_texture_info_reference(material, :occlusion_texture, material_index, textures)
     |> validate_texture_info_reference(material, :emissive_texture, material_index, textures)
@@ -282,10 +318,15 @@ defmodule AriaGltf.Validation do
         if texture_index >= 0 and texture_index < length(textures) do
           context
         else
-          Context.add_error(context, {:material, material_index},
-            "Invalid texture index for #{field}: #{texture_index}")
+          Context.add_error(
+            context,
+            {:material, material_index},
+            "Invalid texture index for #{field}: #{texture_index}"
+          )
         end
-      _ -> context
+
+      _ ->
+        context
     end
   end
 
@@ -299,10 +340,15 @@ defmodule AriaGltf.Validation do
           if image_index >= 0 and image_index < length(images) do
             context
           else
-            Context.add_error(context, {:texture, texture_index},
-              "Invalid image index: #{image_index}")
+            Context.add_error(
+              context,
+              {:texture, texture_index},
+              "Invalid image index: #{image_index}"
+            )
           end
-        _ -> context
+
+        _ ->
+          context
       end
 
     case texture do
@@ -310,10 +356,15 @@ defmodule AriaGltf.Validation do
         if sampler_index >= 0 and sampler_index < length(samplers) do
           context
         else
-          Context.add_error(context, {:texture, texture_index},
-            "Invalid sampler index: #{sampler_index}")
+          Context.add_error(
+            context,
+            {:texture, texture_index},
+            "Invalid sampler index: #{sampler_index}"
+          )
         end
-      _ -> context
+
+      _ ->
+        context
     end
   end
 
@@ -327,13 +378,20 @@ defmodule AriaGltf.Validation do
         else
           # Check if buffer_view_indices validation should be overridden
           if Context.has_override?(context, :buffer_view_indices) do
-            Context.add_warning(context, {:accessor, accessor_index},
-              "Invalid bufferView index: #{buffer_view_index} (validation overridden)")
+            Context.add_warning(
+              context,
+              {:accessor, accessor_index},
+              "Invalid bufferView index: #{buffer_view_index} (validation overridden)"
+            )
           else
-            Context.add_error(context, {:accessor, accessor_index},
-              "Invalid bufferView index: #{buffer_view_index}")
+            Context.add_error(
+              context,
+              {:accessor, accessor_index},
+              "Invalid bufferView index: #{buffer_view_index}"
+            )
           end
         end
+
       _ ->
         # Check if accessor_buffer_views validation should be overridden
         if Context.has_override?(context, :accessor_buffer_views) do
@@ -352,12 +410,19 @@ defmodule AriaGltf.Validation do
         if buffer_index >= 0 and buffer_index < length(buffers) do
           context
         else
-          Context.add_error(context, {:buffer_view, buffer_view_index},
-            "Invalid buffer index: #{buffer_index}")
+          Context.add_error(
+            context,
+            {:buffer_view, buffer_view_index},
+            "Invalid buffer index: #{buffer_index}"
+          )
         end
+
       _ ->
-        Context.add_error(context, {:buffer_view, buffer_view_index},
-          "Buffer index is required for bufferView")
+        Context.add_error(
+          context,
+          {:buffer_view, buffer_view_index},
+          "Buffer index is required for bufferView"
+        )
     end
   end
 
@@ -376,7 +441,11 @@ defmodule AriaGltf.Validation do
 
     context =
       Enum.reduce(missing_required, context, fn ext, ctx ->
-        Context.add_error(ctx, :extensions, "Required extension '#{ext}' not listed in extensionsUsed")
+        Context.add_error(
+          ctx,
+          :extensions,
+          "Required extension '#{ext}' not listed in extensionsUsed"
+        )
       end)
 
     # Validate known extensions
@@ -432,6 +501,7 @@ defmodule AriaGltf.Validation do
 
   defp validate_array_bounds(context, _field, nil), do: context
   defp validate_array_bounds(context, _field, []), do: context
+
   defp validate_array_bounds(context, field, array) when is_list(array) do
     if length(array) > 0 do
       context
@@ -439,7 +509,9 @@ defmodule AriaGltf.Validation do
       Context.add_warning(context, field, "Empty array - consider omitting field")
     end
   end
-  defp validate_array_bounds(context, field, _), do: Context.add_error(context, field, "Must be an array")
+
+  defp validate_array_bounds(context, field, _),
+    do: Context.add_error(context, field, "Must be an array")
 
   # Required fields validation
   defp validate_required_fields(%Context{document: document} = context) do

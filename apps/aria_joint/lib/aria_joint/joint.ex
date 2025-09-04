@@ -65,18 +65,18 @@ defmodule AriaJoint.Joint do
   @type dirty_state() :: DirtyState.dirty_state()
 
   @type t() :: %__MODULE__{
-    id: node_id(),
-    global_transform: transform(),
-    local_transform: transform(),
-    rotation: basis(),
-    scale: Vector3.t(),
-    dirty: dirty_state(),
-    parent: node_id() | nil,
-    children: [node_id()],
-    disable_scale: boolean(),
-    nested_set_offset: non_neg_integer() | nil,
-    nested_set_span: non_neg_integer() | nil
-  }
+          id: node_id(),
+          global_transform: transform(),
+          local_transform: transform(),
+          rotation: basis(),
+          scale: Vector3.t(),
+          dirty: dirty_state(),
+          parent: node_id() | nil,
+          children: [node_id()],
+          disable_scale: boolean(),
+          nested_set_offset: non_neg_integer() | nil,
+          nested_set_span: non_neg_integer() | nil
+        }
 
   defstruct [
     :id,
@@ -93,14 +93,14 @@ defmodule AriaJoint.Joint do
   ]
 
   @type joint_error ::
-    :registry_unavailable |
-    :node_not_found |
-    :circular_dependency |
-    :hierarchy_too_deep |
-    :too_many_children |
-    :invalid_transform |
-    :registry_timeout |
-    :memory_limit_exceeded
+          :registry_unavailable
+          | :node_not_found
+          | :circular_dependency
+          | :hierarchy_too_deep
+          | :too_many_children
+          | :invalid_transform
+          | :registry_timeout
+          | :memory_limit_exceeded
 
   @doc """
   Create a new Joint with optional parent relationship.
@@ -129,7 +129,9 @@ defmodule AriaJoint.Joint do
   def new(opts \\ []) do
     # Ensure registry exists
     case Registry.ensure_registry() do
-      {:error, reason} -> {:error, reason}
+      {:error, reason} ->
+        {:error, reason}
+
       :ok ->
         node = %__MODULE__{
           id: make_ref(),
@@ -158,6 +160,7 @@ defmodule AriaJoint.Joint do
                     case Registry.get_node_by_id(parent_node.id) do
                       nil ->
                         {:error, :parent_not_found}
+
                       final_parent ->
                         if updated_child.id in final_parent.children do
                           {:ok, updated_child}
@@ -165,9 +168,13 @@ defmodule AriaJoint.Joint do
                           {:error, :registry_sync_failed}
                         end
                     end
-                  {:error, reason} -> {:error, reason}
+
+                  {:error, reason} ->
+                    {:error, reason}
                 end
-              {:error, reason} -> {:error, reason}
+
+              {:error, reason} ->
+                {:error, reason}
             end
         end
     end
@@ -262,12 +269,13 @@ defmodule AriaJoint.Joint do
          :ok <- Validation.validate_node_struct(parent_node),
          :ok <- Validation.validate_no_circular_dependency(node, parent_node),
          :ok <- Validation.validate_hierarchy_constraints(parent_node) do
-
       # Remove from current parent if exists
-      node_without_parent = case Hierarchy.remove_from_parent(node) do
-        %__MODULE__{} = updated_node -> updated_node
-        {:error, _reason} -> node  # Continue despite cleanup failure
-      end
+      node_without_parent =
+        case Hierarchy.remove_from_parent(node) do
+          %__MODULE__{} = updated_node -> updated_node
+          # Continue despite cleanup failure
+          {:error, _reason} -> node
+        end
 
       # Add to new parent
       Hierarchy.add_to_parent(node_without_parent, parent_node)
@@ -287,7 +295,8 @@ defmodule AriaJoint.Joint do
   def get_parent(node) do
     # First check if the node is still in the registry
     case Registry.get_node_by_id(node.id) do
-      nil -> nil  # Node was cleaned up, no parent
+      # Node was cleaned up, no parent
+      nil -> nil
       current_node -> Hierarchy.get_parent_node(current_node)
     end
   end
@@ -439,5 +448,4 @@ defmodule AriaJoint.Joint do
         :ok
     end
   end
-
 end

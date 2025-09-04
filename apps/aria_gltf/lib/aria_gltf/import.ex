@@ -14,12 +14,12 @@ defmodule AriaGltf.Import do
 
   @type import_source :: String.t() | binary() | URI.t()
   @type import_options :: [
-    validate: boolean(),
-    validation_mode: Validation.validation_mode(),
-    load_buffers: boolean(),
-    load_images: boolean(),
-    base_uri: String.t() | nil
-  ]
+          validate: boolean(),
+          validation_mode: Validation.validation_mode(),
+          load_buffers: boolean(),
+          load_images: boolean(),
+          base_uri: String.t() | nil
+        ]
   @type import_result :: {:ok, Document.t()} | {:error, term()}
 
   @doc """
@@ -48,7 +48,6 @@ defmodule AriaGltf.Import do
   def from_file(file_path, opts \\ []) when is_binary(file_path) do
     with {:ok, content} <- File.read(file_path),
          base_uri <- opts[:base_uri] || Path.dirname(file_path) do
-
       opts = Keyword.put(opts, :base_uri, base_uri)
 
       case Path.extname(file_path) do
@@ -74,7 +73,6 @@ defmodule AriaGltf.Import do
   def from_json(json_content, opts \\ []) when is_binary(json_content) do
     with {:ok, parsed} <- Jason.decode(json_content),
          result <- Parser.parse_and_validate(parsed) do
-
       case result do
         {:ok, document} ->
           if Keyword.get(opts, :validate, true) do
@@ -82,7 +80,9 @@ defmodule AriaGltf.Import do
           else
             finalize_document(document, opts)
           end
-        {:error, _} = error -> error
+
+        {:error, _} = error ->
+          error
       end
     else
       error -> error
@@ -103,7 +103,6 @@ defmodule AriaGltf.Import do
     with {:ok, {json_chunk, bin_chunk}} <- BinaryLoader.parse_glb(glb_content),
          {:ok, parsed} <- Jason.decode(json_chunk),
          result <- Parser.parse_and_validate(parsed) do
-
       case result do
         {:ok, document} ->
           # Inject binary buffer data
@@ -114,7 +113,9 @@ defmodule AriaGltf.Import do
           else
             finalize_document(document, opts)
           end
-        {:error, _} = error -> error
+
+        {:error, _} = error ->
+          error
       end
     else
       error -> error
@@ -133,7 +134,6 @@ defmodule AriaGltf.Import do
   def from_url(url, opts \\ []) when is_binary(url) do
     with {:ok, response} <- fetch_url(url),
          base_uri <- opts[:base_uri] || extract_base_uri(url) do
-
       opts = Keyword.put(opts, :base_uri, base_uri)
 
       case detect_content_type(response.headers, url) do
@@ -155,7 +155,8 @@ defmodule AriaGltf.Import do
       iex> AriaGltf.Import.validate(document)
       {:ok, document}
   """
-  @spec validate(Document.t(), import_options()) :: {:ok, Document.t()} | {:error, Validation.Report.t()}
+  @spec validate(Document.t(), import_options()) ::
+          {:ok, Document.t()} | {:error, Validation.Report.t()}
   def validate(%Document{} = document, opts \\ []) do
     validation_mode = Keyword.get(opts, :validation_mode, :strict)
 
@@ -200,7 +201,9 @@ defmodule AriaGltf.Import do
         else
           {:ok, doc}
         end
-      other -> other
+
+      other ->
+        other
     end
   end
 
@@ -210,10 +213,12 @@ defmodule AriaGltf.Import do
         # GLB format: first buffer is the binary chunk
         updated_buffer = %{first_buffer | data: bin_chunk}
         %{document | buffers: [updated_buffer | rest]}
+
       [] ->
         document
     end
   end
+
   defp inject_binary_buffer(document, _), do: document
 
   defp fetch_url(url) do
@@ -227,6 +232,7 @@ defmodule AriaGltf.Import do
       %URI{path: path} when is_binary(path) ->
         base_path = Path.dirname(path)
         URI.to_string(%URI{URI.parse(url) | path: base_path})
+
       _ ->
         url
     end
@@ -234,10 +240,11 @@ defmodule AriaGltf.Import do
 
   defp detect_content_type(headers, url) do
     # Check Content-Type header first
-    content_type = headers
-                  |> Enum.find_value(fn {key, value} ->
-                    if String.downcase(key) == "content-type", do: value
-                  end)
+    content_type =
+      headers
+      |> Enum.find_value(fn {key, value} ->
+        if String.downcase(key) == "content-type", do: value
+      end)
 
     case content_type do
       "application/json" -> :json

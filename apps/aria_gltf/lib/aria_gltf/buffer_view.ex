@@ -9,23 +9,33 @@ defmodule AriaGltf.BufferView do
   """
 
   @type t :: %__MODULE__{
-    buffer: non_neg_integer(),
-    byte_offset: non_neg_integer(),
-    byte_length: non_neg_integer(),
-    byte_stride: non_neg_integer() | nil,
-    target: non_neg_integer() | nil,
-    name: String.t() | nil,
-    extensions: map() | nil,
-    extras: any() | nil
-  }
+          buffer: non_neg_integer(),
+          byte_offset: non_neg_integer(),
+          byte_length: non_neg_integer(),
+          byte_stride: non_neg_integer() | nil,
+          target: non_neg_integer() | nil,
+          name: String.t() | nil,
+          extensions: map() | nil,
+          extras: any() | nil
+        }
 
-  defstruct [:buffer, :byte_offset, :byte_length, :byte_stride, :target, :name, :extensions, :extras]
+  defstruct [
+    :buffer,
+    :byte_offset,
+    :byte_length,
+    :byte_stride,
+    :target,
+    :name,
+    :extensions,
+    :extras
+  ]
 
   @doc """
   Creates a new buffer view with buffer, byte_length, and options.
   """
   @spec new(non_neg_integer(), non_neg_integer(), map()) :: t()
-  def new(buffer, byte_length, options \\ %{}) when is_integer(buffer) and is_integer(byte_length) do
+  def new(buffer, byte_length, options \\ %{})
+      when is_integer(buffer) and is_integer(byte_length) do
     %__MODULE__{
       buffer: buffer,
       byte_length: byte_length,

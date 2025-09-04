@@ -11,12 +11,12 @@ defmodule AriaGltf.Animation.Sampler do
   @type interpolation_t :: :linear | :step | :cubicspline
 
   @type t :: %__MODULE__{
-    input: non_neg_integer(),
-    output: non_neg_integer(),
-    interpolation: interpolation_t(),
-    extensions: map() | nil,
-    extras: any() | nil
-  }
+          input: non_neg_integer(),
+          output: non_neg_integer(),
+          interpolation: interpolation_t(),
+          extensions: map() | nil,
+          extras: any() | nil
+        }
 
   @enforce_keys [:input, :output]
   defstruct [
@@ -35,8 +35,8 @@ defmodule AriaGltf.Animation.Sampler do
   @spec new(non_neg_integer(), non_neg_integer(), interpolation_t()) :: t()
   def new(input_index, output_index, interpolation \\ :linear)
       when is_integer(input_index) and input_index >= 0 and
-           is_integer(output_index) and output_index >= 0 and
-           interpolation in @valid_interpolations do
+             is_integer(output_index) and output_index >= 0 and
+             interpolation in @valid_interpolations do
     %__MODULE__{
       input: input_index,
       output: output_index,
@@ -59,6 +59,7 @@ defmodule AriaGltf.Animation.Sampler do
         extensions: Map.get(json, "extensions"),
         extras: Map.get(json, "extras")
       }
+
       {:ok, sampler}
     end
   end
@@ -66,14 +67,17 @@ defmodule AriaGltf.Animation.Sampler do
   defp parse_input(%{"input" => input}) when is_integer(input) and input >= 0 do
     {:ok, input}
   end
+
   defp parse_input(_), do: {:error, :missing_or_invalid_input}
 
   defp parse_output(%{"output" => output}) when is_integer(output) and output >= 0 do
     {:ok, output}
   end
+
   defp parse_output(_), do: {:error, :missing_or_invalid_output}
 
-  defp parse_interpolation(%{"interpolation" => interpolation_string}) when is_binary(interpolation_string) do
+  defp parse_interpolation(%{"interpolation" => interpolation_string})
+       when is_binary(interpolation_string) do
     case String.upcase(interpolation_string) do
       "LINEAR" -> {:ok, :linear}
       "STEP" -> {:ok, :step}
@@ -81,6 +85,7 @@ defmodule AriaGltf.Animation.Sampler do
       _ -> {:error, :invalid_interpolation}
     end
   end
+
   defp parse_interpolation(_) do
     # Default interpolation is LINEAR
     {:ok, :linear}
@@ -107,7 +112,8 @@ defmodule AriaGltf.Animation.Sampler do
   defp interpolation_to_string(:cubicspline), do: "CUBICSPLINE"
 
   defp put_if_present(map, _key, nil), do: map
-  defp put_if_present(map, _key, :linear), do: map  # LINEAR is default, don't include
+  # LINEAR is default, don't include
+  defp put_if_present(map, _key, :linear), do: map
   defp put_if_present(map, key, value), do: Map.put(map, key, value)
 
   @doc """

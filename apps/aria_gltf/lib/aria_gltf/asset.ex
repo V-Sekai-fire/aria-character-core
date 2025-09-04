@@ -9,13 +9,13 @@ defmodule AriaGltf.Asset do
   """
 
   @type t :: %__MODULE__{
-    copyright: String.t() | nil,
-    generator: String.t() | nil,
-    version: String.t(),
-    min_version: String.t() | nil,
-    extensions: map() | nil,
-    extras: any() | nil
-  }
+          copyright: String.t() | nil,
+          generator: String.t() | nil,
+          version: String.t(),
+          min_version: String.t() | nil,
+          extensions: map() | nil,
+          extras: any() | nil
+        }
 
   @enforce_keys [:version]
   defstruct [
@@ -102,6 +102,7 @@ defmodule AriaGltf.Asset do
   def valid_version?(version) when is_binary(version) do
     Regex.match?(~r/^[0-9]+\.[0-9]+$/, version)
   end
+
   def valid_version?(_), do: false
 
   @doc """
@@ -109,6 +110,7 @@ defmodule AriaGltf.Asset do
   """
   @spec valid_min_version?(t()) :: boolean()
   def valid_min_version?(%__MODULE__{min_version: nil}), do: true
+
   def valid_min_version?(%__MODULE__{version: version, min_version: min_version}) do
     with true <- valid_version?(version),
          true <- valid_version?(min_version) do

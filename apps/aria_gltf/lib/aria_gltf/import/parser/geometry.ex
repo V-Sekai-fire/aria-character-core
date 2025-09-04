@@ -21,6 +21,7 @@ defmodule AriaGltf.Import.Parser.Geometry do
   """
   @spec parse_meshes(list() | nil) :: [Mesh.t()]
   def parse_meshes(nil), do: []
+
   def parse_meshes(meshes_data) when is_list(meshes_data) do
     Enum.map(meshes_data, &parse_mesh/1)
   end
@@ -38,6 +39,7 @@ defmodule AriaGltf.Import.Parser.Geometry do
 
   @spec parse_primitives(list() | nil) :: [Mesh.Primitive.t()]
   defp parse_primitives(nil), do: []
+
   defp parse_primitives(primitives_data) when is_list(primitives_data) do
     Enum.map(primitives_data, &parse_primitive/1)
   end
@@ -48,7 +50,8 @@ defmodule AriaGltf.Import.Parser.Geometry do
       attributes: primitive_data["attributes"] || %{},
       indices: primitive_data["indices"],
       material: primitive_data["material"],
-      mode: primitive_data["mode"] || 4,  # TRIANGLES
+      # TRIANGLES
+      mode: primitive_data["mode"] || 4,
       targets: parse_morph_targets(primitive_data["targets"]),
       extensions: primitive_data["extensions"],
       extras: primitive_data["extras"]
@@ -57,6 +60,7 @@ defmodule AriaGltf.Import.Parser.Geometry do
 
   @spec parse_morph_targets(list() | nil) :: list()
   defp parse_morph_targets(nil), do: []
+
   defp parse_morph_targets(targets_data) when is_list(targets_data) do
     targets_data
   end
@@ -72,6 +76,7 @@ defmodule AriaGltf.Import.Parser.Geometry do
   """
   @spec parse_accessors(list() | nil) :: [Accessor.t()]
   def parse_accessors(nil), do: []
+
   def parse_accessors(accessors_data) when is_list(accessors_data) do
     Enum.map(accessors_data, &parse_accessor/1)
   end
@@ -96,6 +101,7 @@ defmodule AriaGltf.Import.Parser.Geometry do
 
   @spec parse_sparse(map() | nil) :: Accessor.Sparse.t() | nil
   defp parse_sparse(nil), do: nil
+
   defp parse_sparse(sparse_data) when is_map(sparse_data) do
     %Accessor.Sparse{
       count: sparse_data["count"],
@@ -108,6 +114,7 @@ defmodule AriaGltf.Import.Parser.Geometry do
 
   @spec parse_sparse_indices(map() | nil) :: Accessor.Sparse.Indices.t() | nil
   defp parse_sparse_indices(nil), do: nil
+
   defp parse_sparse_indices(indices_data) when is_map(indices_data) do
     %Accessor.Sparse.Indices{
       buffer_view: indices_data["bufferView"],
@@ -120,6 +127,7 @@ defmodule AriaGltf.Import.Parser.Geometry do
 
   @spec parse_sparse_values(map() | nil) :: Accessor.Sparse.Values.t() | nil
   defp parse_sparse_values(nil), do: nil
+
   defp parse_sparse_values(values_data) when is_map(values_data) do
     %Accessor.Sparse.Values{
       buffer_view: values_data["bufferView"],
@@ -140,6 +148,7 @@ defmodule AriaGltf.Import.Parser.Geometry do
   """
   @spec parse_buffer_views(list() | nil) :: [BufferView.t()]
   def parse_buffer_views(nil), do: []
+
   def parse_buffer_views(buffer_views_data) when is_list(buffer_views_data) do
     Enum.map(buffer_views_data, &parse_buffer_view/1)
   end
@@ -169,6 +178,7 @@ defmodule AriaGltf.Import.Parser.Geometry do
   """
   @spec parse_buffers(list() | nil) :: [Buffer.t()]
   def parse_buffers(nil), do: []
+
   def parse_buffers(buffers_data) when is_list(buffers_data) do
     Enum.map(buffers_data, &parse_buffer/1)
   end

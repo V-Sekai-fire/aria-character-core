@@ -90,7 +90,10 @@ defmodule AriaGltf.Material.OcclusionTextureInfo do
   defp validate_tex_coord(tex_coord) when is_integer(tex_coord) and tex_coord >= 0, do: :ok
   defp validate_tex_coord(_), do: {:error, "tex_coord must be non-negative integer"}
 
-  defp validate_strength(strength) when is_number(strength) and strength >= 0.0 and strength <= 1.0, do: :ok
+  defp validate_strength(strength)
+       when is_number(strength) and strength >= 0.0 and strength <= 1.0,
+       do: :ok
+
   defp validate_strength(_), do: {:error, "strength must be between 0.0 and 1.0"}
 
   # Helper functions

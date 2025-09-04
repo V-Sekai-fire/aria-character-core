@@ -61,7 +61,8 @@ defmodule AriaGltf.Buffer do
   Creates a new buffer with byte_length, uri, and options.
   """
   @spec new(non_neg_integer(), String.t(), map()) :: t()
-  def new(byte_length, uri, options) when is_integer(byte_length) and byte_length >= 1 and is_binary(uri) and is_map(options) do
+  def new(byte_length, uri, options)
+      when is_integer(byte_length) and byte_length >= 1 and is_binary(uri) and is_map(options) do
     %__MODULE__{
       byte_length: byte_length,
       uri: uri,
@@ -97,7 +98,9 @@ defmodule AriaGltf.Buffer do
     end
   end
 
-  defp validate_byte_length(byte_length) when is_integer(byte_length) and byte_length >= 1, do: :ok
+  defp validate_byte_length(byte_length) when is_integer(byte_length) and byte_length >= 1,
+    do: :ok
+
   defp validate_byte_length(_), do: {:error, "byte_length must be >= 1"}
 
   defp validate_uri(nil), do: :ok

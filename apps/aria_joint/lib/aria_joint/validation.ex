@@ -15,10 +15,10 @@ defmodule AriaJoint.Validation do
   @max_children_per_node 1000
 
   @type joint_error ::
-    :invalid_transform |
-    :circular_dependency |
-    :hierarchy_too_deep |
-    :too_many_children
+          :invalid_transform
+          | :circular_dependency
+          | :hierarchy_too_deep
+          | :too_many_children
 
   @doc """
   Validate a node structure.
@@ -39,6 +39,7 @@ defmodule AriaJoint.Validation do
         :ok
     end
   end
+
   def validate_node_struct(_), do: {:error, :invalid_transform}
 
   @doc """
@@ -79,18 +80,20 @@ defmodule AriaJoint.Validation do
     |> Tuple.to_list()
     |> Enum.all?(fn element ->
       is_number(element) and
-      element != :nan and
-      element != :infinity and
-      element != :neg_infinity and
-      abs(element) < 1.0e12
+        element != :nan and
+        element != :infinity and
+        element != :neg_infinity and
+        abs(element) < 1.0e12
     end)
   end
+
   def is_valid_transform?(_), do: false
 
   @doc """
   Validate no circular dependency would be created.
   """
-  @spec validate_no_circular_dependency(AriaJoint.Joint.t(), AriaJoint.Joint.t()) :: :ok | {:error, joint_error()}
+  @spec validate_no_circular_dependency(AriaJoint.Joint.t(), AriaJoint.Joint.t()) ::
+          :ok | {:error, joint_error()}
   def validate_no_circular_dependency(child_node, potential_parent) do
     if would_create_cycle?(child_node, potential_parent) do
       {:error, :circular_dependency}
@@ -109,10 +112,12 @@ defmodule AriaJoint.Validation do
         true
 
       MapSet.member?(visited, potential_parent.id) ->
-        false  # Already visited, no cycle through this path
+        # Already visited, no cycle through this path
+        false
 
       true ->
         new_visited = MapSet.put(visited, potential_parent.id)
+
         case get_parent_node(potential_parent) do
           nil -> false
           ancestor -> would_create_cycle?(child_node, ancestor, new_visited)

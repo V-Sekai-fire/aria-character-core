@@ -9,7 +9,8 @@ defmodule AriaGltf.ExternalFilesTest do
 
   describe "parse_uri/1" do
     test "parses data URIs correctly" do
-      data_uri = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8/5+hHgAHggJ/PchI7wAAAABJRU5ErkJggg=="
+      data_uri =
+        "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8/5+hHgAHggJ/PchI7wAAAABJRU5ErkJggg=="
 
       assert {:ok, uri_info} = ExternalFiles.parse_uri(data_uri)
       assert uri_info.scheme == "data"
@@ -101,7 +102,8 @@ defmodule AriaGltf.ExternalFilesTest do
       uri_info = %{is_data_uri: false, scheme: nil, path: "../../../etc/passwd"}
       base_path = "/safe/models"
 
-      assert {:error, {:path_escape_attempt, _}} = ExternalFiles.resolve_file_path(uri_info, base_path)
+      assert {:error, {:path_escape_attempt, _}} =
+               ExternalFiles.resolve_file_path(uri_info, base_path)
     end
 
     test "rejects external URLs in file path resolution" do
@@ -119,12 +121,12 @@ defmodule AriaGltf.ExternalFilesTest do
       File.mkdir_p!(test_dir)
 
       # Create a small test image (1x1 PNG)
-      png_data = <<0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A, 0x00, 0x00, 0x00, 0x0D,
-                   0x49, 0x48, 0x44, 0x52, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x01,
-                   0x08, 0x02, 0x00, 0x00, 0x00, 0x90, 0x77, 0x53, 0xDE, 0x00, 0x00, 0x00,
-                   0x0C, 0x49, 0x44, 0x41, 0x54, 0x08, 0xD7, 0x63, 0xF8, 0x0F, 0x00, 0x01,
-                   0x01, 0x01, 0x00, 0x18, 0xDD, 0x8D, 0xB4, 0x00, 0x00, 0x00, 0x00, 0x49,
-                   0x45, 0x4E, 0x44, 0xAE, 0x42, 0x60, 0x82>>
+      png_data =
+        <<0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A, 0x00, 0x00, 0x00, 0x0D, 0x49, 0x48,
+          0x44, 0x52, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x01, 0x08, 0x02, 0x00, 0x00,
+          0x00, 0x90, 0x77, 0x53, 0xDE, 0x00, 0x00, 0x00, 0x0C, 0x49, 0x44, 0x41, 0x54, 0x08,
+          0xD7, 0x63, 0xF8, 0x0F, 0x00, 0x01, 0x01, 0x01, 0x00, 0x18, 0xDD, 0x8D, 0xB4, 0x00,
+          0x00, 0x00, 0x00, 0x49, 0x45, 0x4E, 0x44, 0xAE, 0x42, 0x60, 0x82>>
 
       test_image = Path.join(test_dir, "test.png")
       :ok = File.write(test_image, png_data)
@@ -161,20 +163,25 @@ defmodule AriaGltf.ExternalFilesTest do
     end
 
     test "handles file not found errors", %{test_dir: test_dir} do
-      assert {:error, {:file_stat_error, :enoent}} = ExternalFiles.load_file("nonexistent.png", base_path: test_dir)
+      assert {:error, {:file_stat_error, :enoent}} =
+               ExternalFiles.load_file("nonexistent.png", base_path: test_dir)
     end
 
     test "enforces file size limits", %{test_dir: test_dir} do
-      assert {:error, {:file_too_large, _}} = ExternalFiles.load_file("test.png", base_path: test_dir, max_file_size: 10)
+      assert {:error, {:file_too_large, _}} =
+               ExternalFiles.load_file("test.png", base_path: test_dir, max_file_size: 10)
     end
 
     test "rejects HTTP URLs by default" do
-      assert {:error, {:http_not_allowed, _}} = ExternalFiles.load_file("https://example.com/image.png")
+      assert {:error, {:http_not_allowed, _}} =
+               ExternalFiles.load_file("https://example.com/image.png")
     end
 
     test "handles malformed data URIs" do
       assert {:error, {:invalid_data_uri, _}} = ExternalFiles.load_file("data:invalid")
-      assert {:error, {:base64_decode_error, _}} = ExternalFiles.load_file("data:text/plain;base64,invalid_base64!")
+
+      assert {:error, {:base64_decode_error, _}} =
+               ExternalFiles.load_file("data:text/plain;base64,invalid_base64!")
     end
   end
 
@@ -184,17 +191,18 @@ defmodule AriaGltf.ExternalFilesTest do
       File.mkdir_p!(test_dir)
 
       # Create a minimal 1x1 PNG
-      png_data = <<0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A, 0x00, 0x00, 0x00, 0x0D,
-                   0x49, 0x48, 0x44, 0x52, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x01,
-                   0x08, 0x02, 0x00, 0x00, 0x00, 0x90, 0x77, 0x53, 0xDE, 0x00, 0x00, 0x00,
-                   0x0C, 0x49, 0x44, 0x41, 0x54, 0x08, 0xD7, 0x63, 0xF8, 0x0F, 0x00, 0x01,
-                   0x01, 0x01, 0x00, 0x18, 0xDD, 0x8D, 0xB4, 0x00, 0x00, 0x00, 0x00, 0x49,
-                   0x45, 0x4E, 0x44, 0xAE, 0x42, 0x60, 0x82>>
+      png_data =
+        <<0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A, 0x00, 0x00, 0x00, 0x0D, 0x49, 0x48,
+          0x44, 0x52, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x01, 0x08, 0x02, 0x00, 0x00,
+          0x00, 0x90, 0x77, 0x53, 0xDE, 0x00, 0x00, 0x00, 0x0C, 0x49, 0x44, 0x41, 0x54, 0x08,
+          0xD7, 0x63, 0xF8, 0x0F, 0x00, 0x01, 0x01, 0x01, 0x00, 0x18, 0xDD, 0x8D, 0xB4, 0x00,
+          0x00, 0x00, 0x00, 0x49, 0x45, 0x4E, 0x44, 0xAE, 0x42, 0x60, 0x82>>
 
       # Create a minimal JPEG (just header)
-      jpeg_data = <<0xFF, 0xD8, 0xFF, 0xE0, 0x00, 0x10, 0x4A, 0x46, 0x49, 0x46, 0x00, 0x01,
-                    0xFF, 0xC0, 0x00, 0x11, 0x08, 0x00, 0x01, 0x00, 0x01, 0x01, 0x01, 0x11,
-                    0x00, 0x02, 0x11, 0x01, 0x03, 0x11, 0x01, 0xFF, 0xD9>>
+      jpeg_data =
+        <<0xFF, 0xD8, 0xFF, 0xE0, 0x00, 0x10, 0x4A, 0x46, 0x49, 0x46, 0x00, 0x01, 0xFF, 0xC0,
+          0x00, 0x11, 0x08, 0x00, 0x01, 0x00, 0x01, 0x01, 0x01, 0x11, 0x00, 0x02, 0x11, 0x01,
+          0x03, 0x11, 0x01, 0xFF, 0xD9>>
 
       test_png = Path.join(test_dir, "test.png")
       test_jpg = Path.join(test_dir, "test.jpg")
@@ -227,10 +235,12 @@ defmodule AriaGltf.ExternalFilesTest do
     end
 
     test "skips validation when disabled", %{test_dir: test_dir, png_data: png_data} do
-      assert {:ok, image_info} = ExternalFiles.load_image("test.png",
-        base_path: test_dir,
-        validate_format: false
-      )
+      assert {:ok, image_info} =
+               ExternalFiles.load_image("test.png",
+                 base_path: test_dir,
+                 validate_format: false
+               )
+
       assert image_info.data == png_data
       assert image_info.mime_type == "application/octet-stream"
       assert image_info.width == nil
@@ -243,20 +253,23 @@ defmodule AriaGltf.ExternalFilesTest do
       unsupported_file = Path.join(test_dir, "test.txt")
       :ok = File.write(unsupported_file, "not an image")
 
-      assert {:error, {:unknown_image_format, _}} = ExternalFiles.load_image("test.txt", base_path: test_dir)
+      assert {:error, {:unknown_image_format, _}} =
+               ExternalFiles.load_image("test.txt", base_path: test_dir)
     end
 
     test "enforces supported format restrictions", %{test_dir: test_dir} do
       # Restrict to only JPEG
-      assert {:error, {:unsupported_format, _}} = ExternalFiles.load_image("test.png",
-        base_path: test_dir,
-        supported_formats: ["image/jpeg"]
-      )
+      assert {:error, {:unsupported_format, _}} =
+               ExternalFiles.load_image("test.png",
+                 base_path: test_dir,
+                 supported_formats: ["image/jpeg"]
+               )
     end
 
     test "loads images from data URIs" do
       # Base64 encoded 1x1 PNG
-      data_uri = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8/5+hHgAHggJ/PchI7wAAAABJRU5ErkJggg=="
+      data_uri =
+        "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8/5+hHgAHggJ/PchI7wAAAABJRU5ErkJggg=="
 
       assert {:ok, image_info} = ExternalFiles.load_image(data_uri)
       assert image_info.mime_type == "image/png"
@@ -304,31 +317,51 @@ defmodule AriaGltf.ExternalFilesTest do
 
       # We'll test this indirectly through load_image since detect_image_format is private
       # but we can test the public interface behavior
-      assert match?({:ok, %{mime_type: "image/jpeg"}},
-        AriaGltf.ExternalFiles.analyze_image_data(jpeg_header <> <<0::size(800)>>, true, ["image/jpeg", "image/png"]))
+      assert match?(
+               {:ok, %{mime_type: "image/jpeg"}},
+               AriaGltf.ExternalFiles.analyze_image_data(jpeg_header <> <<0::size(800)>>, true, [
+                 "image/jpeg",
+                 "image/png"
+               ])
+             )
     end
 
     test "detects PNG format" do
       png_header = <<0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A>>
 
       # Test through the public interface
-      assert match?({:ok, %{mime_type: "image/png"}},
-        AriaGltf.ExternalFiles.analyze_image_data(png_header <> <<0::size(800)>>, true, ["image/jpeg", "image/png"]))
+      assert match?(
+               {:ok, %{mime_type: "image/png"}},
+               AriaGltf.ExternalFiles.analyze_image_data(png_header <> <<0::size(800)>>, true, [
+                 "image/jpeg",
+                 "image/png"
+               ])
+             )
     end
 
     test "rejects unknown formats" do
       unknown_data = <<0x00, 0x00, 0x00, 0x00>>
 
-      assert match?({:error, {:unknown_image_format, _}},
-        AriaGltf.ExternalFiles.analyze_image_data(unknown_data, true, ["image/jpeg", "image/png"]))
+      assert match?(
+               {:error, {:unknown_image_format, _}},
+               AriaGltf.ExternalFiles.analyze_image_data(unknown_data, true, [
+                 "image/jpeg",
+                 "image/png"
+               ])
+             )
     end
   end
 
   # Test the private analyze_image_data function through a module function
   # since it's used in load_image
   def analyze_image_data(data, validate, supported_formats) do
-    case AriaGltf.ExternalFiles.load_image("dummy", validate_format: validate, supported_formats: supported_formats) do
-      {:ok, %{data: ^data} = info} -> {:ok, Map.delete(info, :data)}
+    case AriaGltf.ExternalFiles.load_image("dummy",
+           validate_format: validate,
+           supported_formats: supported_formats
+         ) do
+      {:ok, %{data: ^data} = info} ->
+        {:ok, Map.delete(info, :data)}
+
       {:error, _} = _error ->
         # Simulate the analyze_image_data call directly
         if validate do
@@ -339,17 +372,20 @@ defmodule AriaGltf.ExternalFilesTest do
               else
                 {:error, {:unsupported_format, "Format image/jpeg not in supported list"}}
               end
+
             <<0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A, _rest::binary>> ->
               if "image/png" in supported_formats do
                 {:ok, %{mime_type: "image/png", width: nil, height: nil, validated: true}}
               else
                 {:error, {:unsupported_format, "Format image/png not in supported list"}}
               end
+
             _ ->
               {:error, {:unknown_image_format, "Could not detect image format"}}
           end
         else
-          {:ok, %{mime_type: "application/octet-stream", width: nil, height: nil, validated: false}}
+          {:ok,
+           %{mime_type: "application/octet-stream", width: nil, height: nil, validated: false}}
         end
     end
   end

@@ -15,13 +15,13 @@ defmodule AriaGltf.Validation.Context do
   @type error_location :: atom() | {atom(), integer()} | [atom() | integer()]
 
   @type t :: %__MODULE__{
-    document: Document.t(),
-    mode: validation_mode(),
-    overrides: [atom()],
-    errors: [Error.t()],
-    warnings: [Warning.t()],
-    start_time: DateTime.t()
-  }
+          document: Document.t(),
+          mode: validation_mode(),
+          overrides: [atom()],
+          errors: [Error.t()],
+          warnings: [Warning.t()],
+          start_time: DateTime.t()
+        }
 
   defstruct [
     :document,

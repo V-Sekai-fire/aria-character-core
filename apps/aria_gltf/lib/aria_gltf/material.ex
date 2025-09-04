@@ -154,9 +154,17 @@ defmodule AriaGltf.Material do
     |> put_if_present("name", material.name)
     |> put_if_present("extensions", material.extensions)
     |> put_if_present("extras", material.extras)
-    |> put_if_present("pbrMetallicRoughness", material.pbr_metallic_roughness, &PbrMetallicRoughness.to_map/1)
+    |> put_if_present(
+      "pbrMetallicRoughness",
+      material.pbr_metallic_roughness,
+      &PbrMetallicRoughness.to_map/1
+    )
     |> put_if_present("normalTexture", material.normal_texture, &NormalTextureInfo.to_map/1)
-    |> put_if_present("occlusionTexture", material.occlusion_texture, &OcclusionTextureInfo.to_map/1)
+    |> put_if_present(
+      "occlusionTexture",
+      material.occlusion_texture,
+      &OcclusionTextureInfo.to_map/1
+    )
     |> put_if_present("emissiveTexture", material.emissive_texture, &TextureInfo.to_map/1)
     |> put_if_present("emissiveFactor", material.emissive_factor, [0.0, 0.0, 0.0])
     |> put_if_present("alphaMode", alpha_mode_to_string(material.alpha_mode), "OPAQUE")
@@ -169,7 +177,8 @@ defmodule AriaGltf.Material do
   """
   @spec from_map(map()) :: {:ok, t()} | {:error, String.t()}
   def from_map(map) when is_map(map) do
-    with {:ok, pbr_metallic_roughness} <- parse_pbr_metallic_roughness(Map.get(map, "pbrMetallicRoughness")),
+    with {:ok, pbr_metallic_roughness} <-
+           parse_pbr_metallic_roughness(Map.get(map, "pbrMetallicRoughness")),
          {:ok, normal_texture} <- parse_normal_texture(Map.get(map, "normalTexture")),
          {:ok, occlusion_texture} <- parse_occlusion_texture(Map.get(map, "occlusionTexture")),
          {:ok, emissive_texture} <- parse_emissive_texture(Map.get(map, "emissiveTexture")),
@@ -239,7 +248,8 @@ defmodule AriaGltf.Material do
     PbrMetallicRoughness.validate(pbr)
   end
 
-  defp validate_pbr_metallic_roughness(_), do: {:error, "pbr_metallic_roughness must be PbrMetallicRoughness struct"}
+  defp validate_pbr_metallic_roughness(_),
+    do: {:error, "pbr_metallic_roughness must be PbrMetallicRoughness struct"}
 
   defp validate_normal_texture(nil), do: :ok
 
@@ -255,7 +265,8 @@ defmodule AriaGltf.Material do
     OcclusionTextureInfo.validate(texture)
   end
 
-  defp validate_occlusion_texture(_), do: {:error, "occlusion_texture must be OcclusionTextureInfo struct"}
+  defp validate_occlusion_texture(_),
+    do: {:error, "occlusion_texture must be OcclusionTextureInfo struct"}
 
   defp validate_emissive_texture(nil), do: :ok
 
@@ -269,7 +280,10 @@ defmodule AriaGltf.Material do
 
   defp put_if_present(map, key, value), do: Map.put(map, key, value)
   defp put_if_present(map, _key, nil), do: map
-  defp put_if_present(map, key, value, transform_fn) when is_function(transform_fn, 1), do: Map.put(map, key, transform_fn.(value))
+
+  defp put_if_present(map, key, value, transform_fn) when is_function(transform_fn, 1),
+    do: Map.put(map, key, transform_fn.(value))
+
   defp put_if_present(map, key, value, _default), do: Map.put(map, key, value)
   defp put_if_present(map, _key, value, default) when value == default, do: map
 

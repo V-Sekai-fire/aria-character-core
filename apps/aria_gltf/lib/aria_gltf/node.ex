@@ -9,19 +9,19 @@ defmodule AriaGltf.Node do
   """
 
   @type t :: %__MODULE__{
-    camera: non_neg_integer() | nil,
-    children: [non_neg_integer()] | nil,
-    skin: non_neg_integer() | nil,
-    matrix: [float()] | nil,
-    mesh: non_neg_integer() | nil,
-    rotation: [float()] | nil,
-    scale: [float()] | nil,
-    translation: [float()] | nil,
-    weights: [float()] | nil,
-    name: String.t() | nil,
-    extensions: map() | nil,
-    extras: any() | nil
-  }
+          camera: non_neg_integer() | nil,
+          children: [non_neg_integer()] | nil,
+          skin: non_neg_integer() | nil,
+          matrix: [float()] | nil,
+          mesh: non_neg_integer() | nil,
+          rotation: [float()] | nil,
+          scale: [float()] | nil,
+          translation: [float()] | nil,
+          weights: [float()] | nil,
+          name: String.t() | nil,
+          extensions: map() | nil,
+          extras: any() | nil
+        }
 
   defstruct [
     :camera,

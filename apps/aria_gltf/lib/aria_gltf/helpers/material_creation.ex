@@ -68,7 +68,8 @@ defmodule AriaGltf.Helpers.MaterialCreation do
       metallic_factor: metallic_factor,
       roughness_factor: roughness_factor,
       base_color_texture: if(base_color_texture, do: %{index: base_color_texture}),
-      metallic_roughness_texture: if(metallic_roughness_texture, do: %{index: metallic_roughness_texture})
+      metallic_roughness_texture:
+        if(metallic_roughness_texture, do: %{index: metallic_roughness_texture})
     }
 
     %Material{

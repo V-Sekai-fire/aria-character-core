@@ -99,30 +99,30 @@ defmodule AriaGltf.Camera do
 
   # Perspective camera properties
   @type perspective :: %{
-    yfov: float(),
-    znear: float(),
-    aspect_ratio: float() | nil,
-    zfar: float() | nil
-  }
+          yfov: float(),
+          znear: float(),
+          aspect_ratio: float() | nil,
+          zfar: float() | nil
+        }
 
   # Orthographic camera properties
   @type orthographic :: %{
-    xmag: float(),
-    ymag: float(),
-    zfar: float(),
-    znear: float()
-  }
+          xmag: float(),
+          ymag: float(),
+          zfar: float(),
+          znear: float()
+        }
 
   @type camera_type :: :perspective | :orthographic
 
   @type t :: %__MODULE__{
-    type: camera_type(),
-    perspective: perspective() | nil,
-    orthographic: orthographic() | nil,
-    name: String.t() | nil,
-    extensions: map() | nil,
-    extras: any() | nil
-  }
+          type: camera_type(),
+          perspective: perspective() | nil,
+          orthographic: orthographic() | nil,
+          name: String.t() | nil,
+          extensions: map() | nil,
+          extras: any() | nil
+        }
 
   defstruct [:type, :perspective, :orthographic, :name, :extensions, :extras]
 
@@ -160,7 +160,6 @@ defmodule AriaGltf.Camera do
          {:ok, znear} <- validate_znear(Keyword.get(options, :znear)),
          {:ok, aspect_ratio} <- validate_aspect_ratio(Keyword.get(options, :aspect_ratio)),
          {:ok, zfar} <- validate_zfar(Keyword.get(options, :zfar), znear) do
-
       perspective = %{
         yfov: yfov,
         znear: znear,
@@ -212,7 +211,6 @@ defmodule AriaGltf.Camera do
          {:ok, ymag} <- validate_mag(Keyword.get(options, :ymag), :ymag),
          {:ok, znear} <- validate_znear(Keyword.get(options, :znear)),
          {:ok, zfar} <- validate_zfar_required(Keyword.get(options, :zfar), znear) do
-
       orthographic = %{
         xmag: xmag,
         ymag: ymag,
@@ -249,6 +247,7 @@ defmodule AriaGltf.Camera do
           zfar: Map.get(properties, :zfar),
           name: name
         ]
+
         new_perspective(options)
 
       "orthographic" ->
@@ -259,6 +258,7 @@ defmodule AriaGltf.Camera do
           znear: Map.get(properties, :znear),
           name: name
         ]
+
         new_orthographic(options)
 
       _ ->
@@ -305,6 +305,7 @@ defmodule AriaGltf.Camera do
               zfar: Map.get(perspective_data, "zfar"),
               name: name
             ]
+
             new_perspective(options)
         end
 
@@ -321,6 +322,7 @@ defmodule AriaGltf.Camera do
               znear: Map.get(orthographic_data, "znear"),
               name: name
             ]
+
             new_orthographic(options)
         end
 
@@ -353,11 +355,12 @@ defmodule AriaGltf.Camera do
   """
   @spec to_json(t()) :: map()
   def to_json(%__MODULE__{type: :perspective, perspective: perspective} = camera) do
-    perspective_json = %{}
-    |> Map.put("yfov", perspective.yfov)
-    |> Map.put("znear", perspective.znear)
-    |> maybe_put("aspectRatio", perspective.aspect_ratio)
-    |> maybe_put("zfar", perspective.zfar)
+    perspective_json =
+      %{}
+      |> Map.put("yfov", perspective.yfov)
+      |> Map.put("znear", perspective.znear)
+      |> maybe_put("aspectRatio", perspective.aspect_ratio)
+      |> maybe_put("zfar", perspective.zfar)
 
     %{}
     |> Map.put("type", "perspective")
@@ -366,11 +369,12 @@ defmodule AriaGltf.Camera do
   end
 
   def to_json(%__MODULE__{type: :orthographic, orthographic: orthographic} = camera) do
-    orthographic_json = %{}
-    |> Map.put("xmag", orthographic.xmag)
-    |> Map.put("ymag", orthographic.ymag)
-    |> Map.put("zfar", orthographic.zfar)
-    |> Map.put("znear", orthographic.znear)
+    orthographic_json =
+      %{}
+      |> Map.put("xmag", orthographic.xmag)
+      |> Map.put("ymag", orthographic.ymag)
+      |> Map.put("zfar", orthographic.zfar)
+      |> Map.put("znear", orthographic.znear)
 
     %{}
     |> Map.put("type", "orthographic")
@@ -412,6 +416,7 @@ defmodule AriaGltf.Camera do
   # Private validation functions
 
   defp validate_yfov(nil), do: {:error, {:missing_required_field, :yfov}}
+
   defp validate_yfov(yfov) when is_number(yfov) do
     if yfov > 0 and yfov < :math.pi() do
       {:ok, yfov}
@@ -419,6 +424,7 @@ defmodule AriaGltf.Camera do
       {:error, {:invalid_yfov, yfov, "must be > 0 and < π"}}
     end
   end
+
   defp validate_yfov(yfov), do: {:error, {:invalid_yfov, yfov, "must be > 0 and < π"}}
 
   defp validate_znear(nil), do: {:error, {:missing_required_field, :znear}}
@@ -430,12 +436,21 @@ defmodule AriaGltf.Camera do
   defp validate_aspect_ratio(ratio), do: {:error, {:invalid_aspect_ratio, ratio, "must be > 0"}}
 
   defp validate_zfar(nil, _znear), do: {:ok, nil}
-  defp validate_zfar(zfar, znear) when is_number(zfar) and is_number(znear) and zfar > znear, do: {:ok, zfar}
-  defp validate_zfar(zfar, znear), do: {:error, {:invalid_zfar, zfar, "must be > znear (#{znear})"}}
+
+  defp validate_zfar(zfar, znear) when is_number(zfar) and is_number(znear) and zfar > znear,
+    do: {:ok, zfar}
+
+  defp validate_zfar(zfar, znear),
+    do: {:error, {:invalid_zfar, zfar, "must be > znear (#{znear})"}}
 
   defp validate_zfar_required(nil, _znear), do: {:error, {:missing_required_field, :zfar}}
-  defp validate_zfar_required(zfar, znear) when is_number(zfar) and is_number(znear) and zfar > znear, do: {:ok, zfar}
-  defp validate_zfar_required(zfar, znear), do: {:error, {:invalid_zfar, zfar, "must be > znear (#{znear})"}}
+
+  defp validate_zfar_required(zfar, znear)
+       when is_number(zfar) and is_number(znear) and zfar > znear,
+       do: {:ok, zfar}
+
+  defp validate_zfar_required(zfar, znear),
+    do: {:error, {:invalid_zfar, zfar, "must be > znear (#{znear})"}}
 
   defp validate_mag(nil, field), do: {:error, {:missing_required_field, field}}
   defp validate_mag(mag, _field) when is_number(mag) and mag > 0, do: {:ok, mag}

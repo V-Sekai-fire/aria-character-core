@@ -11,11 +11,11 @@ defmodule AriaGltf.Animation.Channel.Target do
   @type path_t :: :translation | :rotation | :scale | :weights
 
   @type t :: %__MODULE__{
-    node: non_neg_integer() | nil,
-    path: path_t(),
-    extensions: map() | nil,
-    extras: any() | nil
-  }
+          node: non_neg_integer() | nil,
+          path: path_t(),
+          extensions: map() | nil,
+          extras: any() | nil
+        }
 
   @enforce_keys [:path]
   defstruct [
@@ -51,6 +51,7 @@ defmodule AriaGltf.Animation.Channel.Target do
         extensions: Map.get(json, "extensions"),
         extras: Map.get(json, "extras")
       }
+
       {:ok, target}
     end
   end
@@ -64,11 +65,13 @@ defmodule AriaGltf.Animation.Channel.Target do
       _ -> {:error, :invalid_path}
     end
   end
+
   defp parse_path(_), do: {:error, :missing_path}
 
   defp parse_node(%{"node" => node}) when is_integer(node) and node >= 0 do
     {:ok, node}
   end
+
   defp parse_node(json) when is_map(json) do
     # Node is optional for some animation targets
     {:ok, nil}

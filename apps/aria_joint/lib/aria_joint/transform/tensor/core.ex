@@ -12,12 +12,12 @@ defmodule AriaJoint.Transform.Tensor.Core do
   alias AriaJoint.{Joint, DirtyState}
 
   @type joint_tensor() :: %{
-    ids: Nx.Tensor.t(),
-    local_transforms: Nx.Tensor.t(),
-    global_transforms: Nx.Tensor.t(),
-    parent_indices: Nx.Tensor.t(),
-    dirty_flags: Nx.Tensor.t()
-  }
+          ids: Nx.Tensor.t(),
+          local_transforms: Nx.Tensor.t(),
+          global_transforms: Nx.Tensor.t(),
+          parent_indices: Nx.Tensor.t(),
+          dirty_flags: Nx.Tensor.t()
+        }
 
   @doc """
   Convert a list of joints to tensor format for batch operations.
@@ -32,39 +32,48 @@ defmodule AriaJoint.Transform.Tensor.Core do
     num_joints = length(joints)
 
     # Extract transforms as tensor data
-    local_transforms = joints
-    |> Enum.map(fn joint -> Matrix4.to_tuple_list(joint.local_transform) end)
-    |> Nx.tensor(type: :f32)
-    |> Nx.reshape({num_joints, 4, 4})
+    local_transforms =
+      joints
+      |> Enum.map(fn joint -> Matrix4.to_tuple_list(joint.local_transform) end)
+      |> Nx.tensor(type: :f32)
+      |> Nx.reshape({num_joints, 4, 4})
 
-    global_transforms = joints
-    |> Enum.map(fn joint -> Matrix4.to_tuple_list(joint.global_transform) end)
-    |> Nx.tensor(type: :f32)
-    |> Nx.reshape({num_joints, 4, 4})
+    global_transforms =
+      joints
+      |> Enum.map(fn joint -> Matrix4.to_tuple_list(joint.global_transform) end)
+      |> Nx.tensor(type: :f32)
+      |> Nx.reshape({num_joints, 4, 4})
 
     # Create ID mapping for parent relationships
-    joint_id_to_index = joints
-    |> Enum.with_index()
-    |> Map.new(fn {joint, index} -> {joint.id, index} end)
+    joint_id_to_index =
+      joints
+      |> Enum.with_index()
+      |> Map.new(fn {joint, index} -> {joint.id, index} end)
 
-    parent_indices = joints
-    |> Enum.map(fn joint ->
-      case joint.parent do
-        nil -> -1  # Use -1 to indicate no parent
-        parent_id -> Map.get(joint_id_to_index, parent_id, -1)
-      end
-    end)
-    |> Nx.tensor(type: :s32)
+    parent_indices =
+      joints
+      |> Enum.map(fn joint ->
+        case joint.parent do
+          # Use -1 to indicate no parent
+          nil -> -1
+          parent_id -> Map.get(joint_id_to_index, parent_id, -1)
+        end
+      end)
+      |> Nx.tensor(type: :s32)
 
     # Extract dirty flags as bit flags
-    dirty_flags = joints
-    |> Enum.map(fn joint -> DirtyState.to_integer(joint.dirty) end)
-    |> Nx.tensor(type: :u8)
+    dirty_flags =
+      joints
+      |> Enum.map(fn joint -> DirtyState.to_integer(joint.dirty) end)
+      |> Nx.tensor(type: :u8)
 
     # Store joint IDs for mapping back
-    ids = joints
-    |> Enum.map(fn joint -> :erlang.ref_to_list(joint.id) |> :erlang.list_to_binary() |> Base.encode64() end)
-    |> Nx.tensor(type: :binary)
+    ids =
+      joints
+      |> Enum.map(fn joint ->
+        :erlang.ref_to_list(joint.id) |> :erlang.list_to_binary() |> Base.encode64()
+      end)
+      |> Nx.tensor(type: :binary)
 
     %{
       ids: ids,
@@ -84,14 +93,17 @@ defmodule AriaJoint.Transform.Tensor.Core do
   """
   @spec to_joints(joint_tensor(), [Joint.t()]) :: [Joint.t()]
   def to_joints(tensor_data, original_joints) do
-    local_transforms_list = tensor_data.local_transforms
-    |> Nx.to_list()
+    local_transforms_list =
+      tensor_data.local_transforms
+      |> Nx.to_list()
 
-    global_transforms_list = tensor_data.global_transforms
-    |> Nx.to_list()
+    global_transforms_list =
+      tensor_data.global_transforms
+      |> Nx.to_list()
 
-    dirty_flags_list = tensor_data.dirty_flags
-    |> Nx.to_list()
+    dirty_flags_list =
+      tensor_data.dirty_flags
+      |> Nx.to_list()
 
     original_joints
     |> Enum.zip([local_transforms_list, global_transforms_list, dirty_flags_list])
@@ -100,10 +112,11 @@ defmodule AriaJoint.Transform.Tensor.Core do
       global_transform = Matrix4.from_tuple_list(global_matrix)
       dirty_state = DirtyState.from_integer(dirty_int)
 
-      %{joint |
-        local_transform: local_transform,
-        global_transform: global_transform,
-        dirty: dirty_state
+      %{
+        joint
+        | local_transform: local_transform,
+          global_transform: global_transform,
+          dirty: dirty_state
       }
     end)
   end

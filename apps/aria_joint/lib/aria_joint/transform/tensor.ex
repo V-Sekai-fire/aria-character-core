@@ -49,7 +49,9 @@ defmodule AriaJoint.Transform.Tensor do
 
   # Hierarchy operations
   defdelegate compute_global_transforms_batch(joint_tensor), to: Hierarchy
-  defdelegate compute_global_transforms_constant_memory(joint_tensor, chunk_size \\ 512), to: Hierarchy
+
+  defdelegate compute_global_transforms_constant_memory(joint_tensor, chunk_size \\ 512),
+    to: Hierarchy
 
   # Advanced operations
   defdelegate solve_ik_batch(joint_tensor, target_positions, chain_indices), to: Advanced

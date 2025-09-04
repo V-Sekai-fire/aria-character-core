@@ -12,11 +12,11 @@ defmodule AriaGltf.Validation.Error do
   @type severity :: :critical | :error | :warning
 
   @type t :: %__MODULE__{
-    location: location(),
-    message: String.t(),
-    severity: severity(),
-    timestamp: DateTime.t()
-  }
+          location: location(),
+          message: String.t(),
+          severity: severity(),
+          timestamp: DateTime.t()
+        }
 
   defstruct [
     :location,
@@ -52,9 +52,11 @@ defmodule AriaGltf.Validation.Error do
   def format_location(location) when is_atom(location) do
     Atom.to_string(location)
   end
+
   def format_location({field, index}) when is_atom(field) and is_integer(index) do
     "#{field}[#{index}]"
   end
+
   def format_location(path) when is_list(path) do
     path
     |> Enum.map(fn
@@ -64,6 +66,7 @@ defmodule AriaGltf.Validation.Error do
     end)
     |> Enum.join(".")
   end
+
   def format_location(other), do: inspect(other)
 
   @doc """

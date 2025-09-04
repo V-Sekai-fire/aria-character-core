@@ -26,11 +26,12 @@ defmodule AriaJoint.Transform do
   """
   @spec get_local(AriaJoint.Joint.t()) :: transform()
   def get_local(node) do
-    node = if DirtyState.has_dirty_flag?(node.dirty, DirtyState.dirty_local()) do
-      update_local_transform(node)
-    else
-      node
-    end
+    node =
+      if DirtyState.has_dirty_flag?(node.dirty, DirtyState.dirty_local()) do
+        update_local_transform(node)
+      else
+        node
+      end
 
     node.local_transform
   end
@@ -48,36 +49,41 @@ defmodule AriaJoint.Transform do
   @spec get_global(AriaJoint.Joint.t()) :: transform()
   def get_global(node) do
     # Always get the latest node from registry to ensure we have current state
-    current_node = case Registry.get_node_by_id(node.id) do
-      nil -> node
-      registry_node -> registry_node
-    end
+    current_node =
+      case Registry.get_node_by_id(node.id) do
+        nil -> node
+        registry_node -> registry_node
+      end
 
     if DirtyState.has_dirty_flag?(current_node.dirty, DirtyState.dirty_global()) do
-      updated_node = if DirtyState.has_dirty_flag?(current_node.dirty, DirtyState.dirty_local()) do
-        update_local_transform(current_node)
-      else
-        current_node
-      end
+      updated_node =
+        if DirtyState.has_dirty_flag?(current_node.dirty, DirtyState.dirty_local()) do
+          update_local_transform(current_node)
+        else
+          current_node
+        end
 
-      global_transform = case Hierarchy.get_parent_node(updated_node) do
-        nil ->
-          updated_node.local_transform
+      global_transform =
+        case Hierarchy.get_parent_node(updated_node) do
+          nil ->
+            updated_node.local_transform
 
-        parent_node ->
-          parent_global = get_global(parent_node)
-          Matrix4.multiply(parent_global, updated_node.local_transform)
-      end
+          parent_node ->
+            parent_global = get_global(parent_node)
+            Matrix4.multiply(parent_global, updated_node.local_transform)
+        end
 
-      global_transform = if updated_node.disable_scale do
-        Matrix4.orthogonalize(global_transform)
-      else
-        global_transform
-      end
+      global_transform =
+        if updated_node.disable_scale do
+          Matrix4.orthogonalize(global_transform)
+        else
+          global_transform
+        end
 
-      final_node = %{updated_node |
-        global_transform: global_transform,
-        dirty: DirtyState.remove_dirty_flag(updated_node.dirty, DirtyState.dirty_global())
+      final_node = %{
+        updated_node
+        | global_transform: global_transform,
+          dirty: DirtyState.remove_dirty_flag(updated_node.dirty, DirtyState.dirty_global())
       }
 
       Registry.update_node(final_node)
@@ -102,17 +108,19 @@ defmodule AriaJoint.Transform do
   @spec set_local(AriaJoint.Joint.t(), transform()) :: AriaJoint.Joint.t() | {:error, term()}
   def set_local(node, transform) do
     # Get the latest node state from registry to ensure we have current children list
-    current_node = case Registry.get_node_by_id(node.id) do
-      nil -> node
-      registry_node -> registry_node
-    end
+    current_node =
+      case Registry.get_node_by_id(node.id) do
+        nil -> node
+        registry_node -> registry_node
+      end
 
     if Matrix4.equal?(current_node.local_transform, transform) do
       current_node
     else
-      updated_node = %{current_node |
-        local_transform: transform,
-        dirty: DirtyState.add_dirty_flag(current_node.dirty, DirtyState.dirty_global())
+      updated_node = %{
+        current_node
+        | local_transform: transform,
+          dirty: DirtyState.add_dirty_flag(current_node.dirty, DirtyState.dirty_global())
       }
 
       case Registry.update_node(updated_node) do
@@ -140,20 +148,22 @@ defmodule AriaJoint.Transform do
   """
   @spec set_global(AriaJoint.Joint.t(), transform()) :: AriaJoint.Joint.t()
   def set_global(node, global_transform) do
-    local_transform = case Hierarchy.get_parent_node(node) do
-      nil ->
-        global_transform
+    local_transform =
+      case Hierarchy.get_parent_node(node) do
+        nil ->
+          global_transform
 
-      parent_node ->
-        parent_global = get_global(parent_node)
-        {parent_inverse, _valid} = Matrix4.inverse(parent_global)
-        Matrix4.multiply(parent_inverse, global_transform)
-    end
+        parent_node ->
+          parent_global = get_global(parent_node)
+          {parent_inverse, _valid} = Matrix4.inverse(parent_global)
+          Matrix4.multiply(parent_inverse, global_transform)
+      end
 
-    updated_node = %{node |
-      local_transform: local_transform,
-      global_transform: global_transform,
-      dirty: DirtyState.remove_dirty_flag(node.dirty, DirtyState.dirty_global())
+    updated_node = %{
+      node
+      | local_transform: local_transform,
+        global_transform: global_transform,
+        dirty: DirtyState.remove_dirty_flag(node.dirty, DirtyState.dirty_global())
     }
 
     Registry.update_node(updated_node)
@@ -210,7 +220,8 @@ defmodule AriaJoint.Transform do
   @spec rotate_local_with_global(AriaJoint.Joint.t(), basis(), boolean()) :: AriaJoint.Joint.t()
   def rotate_local_with_global(node, basis, propagate \\ false) do
     case Hierarchy.get_parent_node(node) do
-      nil -> node
+      nil ->
+        node
 
       parent_node ->
         parent_global = get_global(parent_node)
@@ -219,18 +230,21 @@ defmodule AriaJoint.Transform do
 
         # new_rot = parent_inverse * basis * parent_basis * local_basis
         local_basis = Matrix4.extract_basis(node.local_transform)
-        new_local_basis = parent_inverse
-                         |> Matrix4.multiply(basis)
-                         |> Matrix4.multiply(parent_basis)
-                         |> Matrix4.multiply(local_basis)
+
+        new_local_basis =
+          parent_inverse
+          |> Matrix4.multiply(basis)
+          |> Matrix4.multiply(parent_basis)
+          |> Matrix4.multiply(local_basis)
 
         # Update local transform with new basis
         {translation, _rotation, scale} = Matrix4.decompose(node.local_transform)
         new_local_transform = Matrix4.compose(translation, new_local_basis, scale)
 
-        updated_node = %{node |
-          local_transform: new_local_transform,
-          dirty: DirtyState.add_dirty_flag(node.dirty, DirtyState.dirty_global())
+        updated_node = %{
+          node
+          | local_transform: new_local_transform,
+            dirty: DirtyState.add_dirty_flag(node.dirty, DirtyState.dirty_global())
         }
 
         Registry.update_node(updated_node)
@@ -257,9 +271,10 @@ defmodule AriaJoint.Transform do
     {translation, _old_rotation, _old_scale} = Matrix4.decompose(node.local_transform)
     new_local_transform = Matrix4.compose(translation, new_basis, {sx, sy, sz})
 
-    updated_node = %{node |
-      local_transform: new_local_transform,
-      dirty: DirtyState.remove_dirty_flag(node.dirty, DirtyState.dirty_local())
+    updated_node = %{
+      node
+      | local_transform: new_local_transform,
+        dirty: DirtyState.remove_dirty_flag(node.dirty, DirtyState.dirty_local())
     }
 
     Registry.update_node(updated_node)

@@ -21,6 +21,7 @@ defmodule AriaGltf.Import.Parser.Scene do
   """
   @spec parse_asset(map() | nil) :: Asset.t() | nil
   def parse_asset(nil), do: nil
+
   def parse_asset(asset_data) when is_map(asset_data) do
     %Asset{
       copyright: asset_data["copyright"],
@@ -43,6 +44,7 @@ defmodule AriaGltf.Import.Parser.Scene do
   """
   @spec parse_scenes(list() | nil) :: [Scene.t()]
   def parse_scenes(nil), do: []
+
   def parse_scenes(scenes_data) when is_list(scenes_data) do
     Enum.map(scenes_data, &parse_scene/1)
   end
@@ -68,6 +70,7 @@ defmodule AriaGltf.Import.Parser.Scene do
   """
   @spec parse_nodes(list() | nil) :: [Node.t()]
   def parse_nodes(nil), do: []
+
   def parse_nodes(nodes_data) when is_list(nodes_data) do
     Enum.map(nodes_data, &parse_node/1)
   end
@@ -101,6 +104,7 @@ defmodule AriaGltf.Import.Parser.Scene do
   """
   @spec parse_cameras(list() | nil) :: [Camera.t()]
   def parse_cameras(nil), do: []
+
   def parse_cameras(cameras_data) when is_list(cameras_data) do
     Enum.map(cameras_data, &parse_camera/1)
   end
@@ -119,6 +123,7 @@ defmodule AriaGltf.Import.Parser.Scene do
 
   @spec parse_orthographic(map() | nil) :: Camera.Orthographic.t() | nil
   defp parse_orthographic(nil), do: nil
+
   defp parse_orthographic(ortho_data) when is_map(ortho_data) do
     %Camera.Orthographic{
       xmag: ortho_data["xmag"],
@@ -132,6 +137,7 @@ defmodule AriaGltf.Import.Parser.Scene do
 
   @spec parse_perspective(map() | nil) :: Camera.Perspective.t() | nil
   defp parse_perspective(nil), do: nil
+
   defp parse_perspective(persp_data) when is_map(persp_data) do
     %Camera.Perspective{
       aspect_ratio: persp_data["aspectRatio"],

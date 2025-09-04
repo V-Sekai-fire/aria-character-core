@@ -151,8 +151,9 @@ defmodule AriaJoint.NestedSetTest do
       nested_set = NestedSet.build_nested_set([root])
 
       # Clear all dirty flags
-      clean_nested_set = %{nested_set |
-        dirty_flags: Map.new(nested_set.dirty_flags, fn {k, _v} -> {k, false} end)
+      clean_nested_set = %{
+        nested_set
+        | dirty_flags: Map.new(nested_set.dirty_flags, fn {k, _v} -> {k, false} end)
       }
 
       dirty_nodes = NestedSet.get_dirty_range(clean_nested_set)
@@ -286,7 +287,8 @@ defmodule AriaJoint.NestedSetTest do
       manager_with_joint = HierarchyManager.add_joint(manager, updated_root)
 
       # Get global transform
-      global_transform = HierarchyManager.get_global_transform(manager_with_joint, updated_root.id)
+      global_transform =
+        HierarchyManager.get_global_transform(manager_with_joint, updated_root.id)
 
       # Should be the same as the local transform (since it's root)
       assert Matrix4.equal?(global_transform, transform)
@@ -375,7 +377,8 @@ defmodule AriaJoint.NestedSetTest do
 
       # Root should span entire tree
       root_meta = Map.get(nested_set.node_id_to_metadata, root.id)
-      assert root_meta.span == 5  # All 5 nodes
+      # All 5 nodes
+      assert root_meta.span == 5
 
       # Left subtree should span 2 nodes (left + left_child)
       left_meta = Map.get(nested_set.node_id_to_metadata, left.id)

@@ -31,7 +31,8 @@ config :nx, :default_backend, {Torchx.Backend, device: :cuda}
 config :torchx,
   default_device: :cuda,
   # Use more aggressive GPU settings for better performance
-  memory_fraction: 0.9,  # Use 90% of available GPU memory
+  # Use 90% of available GPU memory
+  memory_fraction: 0.9,
   allow_mixed_precision: true
 
 # Import environment specific config files
