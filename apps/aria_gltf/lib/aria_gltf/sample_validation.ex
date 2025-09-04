@@ -37,7 +37,7 @@ defmodule AriaGltf.SampleValidation do
       # report.validation_passed  # => true
   """
   def validate_simple_skin(opts \\ []) do
-    file_path = Keyword.get(opts, :file_path, "/tmp/SimpleSkin.gltf")
+    file_path = Keyword.get(opts, :file_path, "apps/aria_joint/test/samples/SimpleSkin.gltf")
     validate_joints = Keyword.get(opts, :validate_joints, true)
     validate_animation = Keyword.get(opts, :validate_animation, true)
 
