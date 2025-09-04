@@ -7,6 +7,7 @@ We are implementing the `aria_ewbik` app, which provides Entirely Wahba's-proble
 The internal EWBIK modules are complete with basic implementations, but the external API delegation is missing. All public functions in `AriaEwbik` module are commented out with TODOs, making the system unusable for external consumers. This is the critical blocking issue that must be resolved before the EWBIK system can be considered functional.
 
 **Immediate Next Steps:**
+
 1. Uncomment and implement all defdelegate statements in `lib/aria_ewbik.ex`
 2. Connect `AriaEwbik.solve_ik/3` to `AriaEwbik.Solver.solve_ik/3`
 3. Connect `AriaEwbik.solve_multi_effector/3` to `AriaEwbik.Solver.solve_multi_effector/3`
@@ -16,10 +17,13 @@ The internal EWBIK modules are complete with basic implementations, but the exte
 
 ### 2. Key Technical Concepts
 
-- **EWBIK Algorithm**: Entirely Wahba's-problem Based Inverse Kinematics for multi-effector solving
+- **EWBIK Algorithm**: Entirely Wahba's-problem Based Inverse Kinematics for multi-effector solving with sophisticated decomposition
+- **Multi-Effector Architecture**: ChainIK (simple chains) → ManyBoneIK (complex multi-effector) → BranchIK (branched skeletons)
+- **Decomposition Algorithm**: Bone chain analysis with effector group creation and solve order determination
 - **Kusudama Constraints**: Cone-based joint orientation limits for anatomical realism
 - **VRM1 Collision Detection**: Sphere, capsule, and plane collider system for character-environment interaction
-- **Multi-Effector Coordination**: Priority-weighted solving for complex character poses
+- **Priority Weighting**: Effector opacity and weight-based coordination for complex poses
+- **Pole Targets**: Twist and swing control for procedural animation
 - **Godot Integration**: SkeletonProfileHumanoid anatomical limits and coordinate system conversion
 - **Temporal Planning**: Integration with AriaHybridPlanner for smooth pose transitions
 - **External API Design**: Clean delegation pattern with stubbed functions ready for implementation
@@ -114,6 +118,7 @@ The internal EWBIK modules are complete with basic implementations, but the exte
    - [x] Implement motion propagation management system
 
    **✅ INTERNAL MODULES IMPLEMENTED:**
+
    - **Basic solver structure** - solve_ik/3 and solve_multi_effector/3 functions implemented
    - **Chain segmentation** - build_chain/2 and analyze_chains/2 functions working
    - **Kusudama constraints** - Cone-based orientation limits implemented
@@ -122,6 +127,7 @@ The internal EWBIK modules are complete with basic implementations, but the exte
    - **Test suite** - 37 tests implemented across 4 modules
 
    **⚠️ CRITICAL GAP IDENTIFIED:**
+
    - **External API delegation NOT implemented** - All functions in AriaEwbik module still commented out
    - **Real EWBIK algorithm NOT integrated** - Internal modules contain placeholder implementations
    - **AriaQCP integration MISSING** - Wahba's problem solver not actually connected
@@ -222,23 +228,126 @@ global_transform = AriaJoint.HierarchyManager.get_global_transform(manager, join
 manager = AriaJoint.HierarchyManager.mark_subtree_dirty(manager, joint_id)
 ```
 
+**EWBIK Decomposition Algorithm (Multi-Effector Core):**
+
+```elixir
+# Eron Gjoni's decomposition algorithm for multi-effector IK
+defmodule AriaEwbik.Decomposition do
+  def decompose_multi_effector(skeleton, effector_targets) do
+    # 1. For each effector, traverse to root finding other effectors
+    effector_chains = Enum.map(effector_targets, fn {effector_id, _} ->
+      traverse_to_root(skeleton, effector_id, effector_targets)
+    end)
+
+    # 2. Find overlapping bone sequences (effector groups)
+    effector_groups = find_overlapping_sequences(effector_chains)
+
+    # 3. Determine solve order (rootmost bones first)
+    solve_order = determine_solve_order(effector_groups)
+
+    # 4. Create processing groups with constant effector sets
+    processing_groups = create_processing_groups(solve_order, effector_groups)
+
+    {processing_groups, effector_groups}
+  end
+
+  defp traverse_to_root(skeleton, effector_id, all_effectors) do
+    # Traverse from effector to root, tracking bones and effector weights
+    traverse_chain(skeleton, effector_id, all_effectors, [], 1.0)
+  end
+
+  defp find_overlapping_sequences(chains) do
+    # Find subsets of identical bone sequences among effector chains
+    # Consolidate into effector groups
+    consolidate_overlaps(chains)
+  end
+
+  defp determine_solve_order(groups) do
+    # Sort by distance from skeleton root
+    Enum.sort_by(groups, &distance_from_root/1, :desc)
+  end
+end
+```
+
+**Multi-Effector Architecture:**
+
+```elixir
+# ChainIK → ManyBoneIK → BranchIK progression
+defmodule AriaEwbik.MultiEffectorSolver do
+  def solve_chain_ik(skeleton, single_chain) do
+    # Simple chain solving (no branching)
+    # Uses basic CCD/FABRIK approaches
+    solve_simple_chain(skeleton, single_chain)
+  end
+
+  def solve_many_bone_ik(skeleton, effector_targets) do
+    # Complex multi-effector solving
+    # Uses decomposition algorithm + QCP
+    {groups, effector_groups} = Decomposition.decompose_multi_effector(skeleton, effector_targets)
+
+    Enum.reduce(groups, skeleton, fn group, skel_acc ->
+      solve_effector_group(skel_acc, group, effector_groups)
+    end)
+  end
+
+  def solve_branch_ik(skeleton, effector_targets, branch_points) do
+    # Extended ManyBoneIK for branched skeletons
+    # Handles junctions and split effector lists
+    solve_branched_skeleton(skeleton, effector_targets, branch_points)
+  end
+end
+```
+
 **EWBIK Algorithm Structure (Target Implementation):**
 
 ```elixir
-# Planned EWBIK solving pipeline
+# Complete EWBIK solving pipeline with multi-effector support
 defmodule AriaEwbik.Solver do
   def solve_ik(skeleton, effector_targets, opts \\ []) do
-    # 1. Segment skeleton using AriaJoint optimized hierarchy
-    {:ok, segments} = AriaEwbik.Segmentation.analyze_chains(skeleton, effector_targets)
+    cond do
+      # Single effector - use ChainIK approach
+      length(effector_targets) == 1 ->
+        solve_single_effector(skeleton, effector_targets, opts)
 
-    # 2. Apply Kusudama constraints using AriaMath quaternion operations
-    constrained_segments = Enum.map(segments, &AriaEwbik.Kusudama.apply_constraints/1)
+      # Multiple effectors - use decomposition algorithm
+      has_branching?(skeleton) ->
+        solve_branch_ik(skeleton, effector_targets, opts)
+
+      # Multi-effector without branching - use ManyBoneIK
+      true ->
+        solve_many_bone_ik(skeleton, effector_targets, opts)
+    end
+  end
+
+  def solve_single_effector(skeleton, [{effector_id, target}], opts) do
+    # 1. Build simple chain using AriaJoint
+    chain = AriaEwbik.Segmentation.build_chain(skeleton, effector_id)
+
+    # 2. Apply Kusudama constraints
+    constrained_chain = apply_chain_constraints(chain, skeleton)
+
+    # 3. Solve using iterative approach
+    solve_chain_iterative(constrained_chain, target, opts)
+  end
+
+  def solve_many_bone_ik(skeleton, effector_targets, opts) do
+    # 1. Decompose into effector groups using AriaJoint hierarchy
+    {groups, effector_groups} = AriaEwbik.Decomposition.decompose_multi_effector(skeleton, effector_targets)
+
+    # 2. Apply Kusudama constraints to each group
+    constrained_groups = Enum.map(groups, &apply_group_constraints(&1, skeleton))
 
     # 3. Solve using AriaQCP Wahba's problem algorithm
-    solutions = AriaQCP.solve_multi_effector(constrained_segments, opts)
+    solutions = AriaQCP.solve_multi_effector(constrained_groups, opts)
 
     # 4. Apply motion propagation with AriaJoint batch updates
     final_pose = AriaEwbik.Propagation.apply_propagation(solutions, skeleton)
+  end
+
+  def solve_branch_ik(skeleton, effector_targets, opts) do
+    # Handle branched skeletons with split effector lists
+    branch_points = find_branch_points(skeleton)
+    solve_branched_multi_effector(skeleton, effector_targets, branch_points, opts)
   end
 end
 ```
@@ -281,9 +390,52 @@ def apply_godot_anatomical_limits(skeleton) do
 end
 ```
 
+**Use Cases and Technical Challenges:**
+
+**Primary Use Cases (from Godot ManyBoneIK3D):**
+
+- **Procedural Animation**: Fully procedural character animation without keyframes
+- **Complex Interactions**: Bouldering, climbing, and dynamic environments
+- **Foot Correction**: Automatic foot placement on uneven terrain
+- **Multi-Effector Scenarios**: Hand-arm and foot-leg coordination
+- **Interactive Characters**: Real-time response to environmental changes
+
+**Technical Challenges Addressed:**
+
+- **Branching at Junctions**: Handling skeleton branches with split effector lists
+- **Iteration Order Complexity**: Different solving orders for ChainIK vs ManyBoneIK
+- **Pole Target Support**: Twist and swing control for natural poses
+- **Effector Priority Weighting**: Opacity-based coordination between effectors
+- **Solve Order Determination**: Root-to-leaf processing with proper dependencies
+
+**Multi-Effector Coordination Patterns:**
+
+```elixir
+# Effector opacity and priority weighting
+defmodule AriaEwbik.EffectorCoordinator do
+  def calculate_effector_weights(effector_targets, skeleton) do
+    # Calculate opacity for each effector pair
+    # Weight effector influence based on distance and priority
+    Enum.map(effector_targets, fn {effector_id, target} ->
+      opacity = calculate_opacity(effector_id, target, skeleton)
+      priority = calculate_priority(effector_id, skeleton)
+      {effector_id, target, opacity, priority}
+    end)
+  end
+
+  def resolve_conflicts(effector_solutions) do
+    # Resolve mutually exclusive solutions
+    # Apply priority weighting and blending
+    blend_solutions_by_priority(effector_solutions)
+  end
+end
+```
+
 **Performance Targets:**
 
 - **IK Solving**: Real-time performance (30+ FPS) for character animation
+- **Multi-Effector Coordination**: Efficient decomposition algorithm execution
+- **Branch Handling**: Fast junction detection and effector list splitting
 - **Collision Detection**: Efficient VRM1 validation with minimal frame impact
 - **Constraint Evaluation**: Fast Kusudama cone validation
 - **Memory Usage**: Efficient registry-based joint state management
@@ -295,5 +447,6 @@ end
 - **IEEE-754**: Numerical precision and stability requirements
 - **VRM 1.0**: Avatar collision detection and constraint specifications
 - **Godot Integration**: SkeletonProfileHumanoid anatomical constraint compatibility
+- **Multi-Effector IK**: Support for complex procedural animation scenarios
 
 This comprehensive implementation provides a complete EWBIK system with realistic character animation capabilities, proper collision avoidance, and anatomical constraints for production-quality results.
