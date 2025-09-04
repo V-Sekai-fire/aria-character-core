@@ -10,21 +10,51 @@ AriaEwbik implements Entirely Wahba's-problem Based Inverse Kinematics (EWBIK) w
 
 ## Current Status
 
-**App Creation:** ✅ Complete (June 30, 2025)
+**App Creation:** ⚠️ Minimal structure only (June 30, 2025)
 
-- ✅ External API module created with comprehensive documentation
-- ✅ Dependencies configured (aria_joint, aria_qcp, aria_math, aria_state)
-- ✅ Project structure and documentation complete
-- ✅ Ready for implementation phases
+- ✅ Basic mix.exs and application.ex created
+- ✅ External API module created (all functions currently stubbed/TODO)
+- ✅ Dependencies configured (aria_joint, aria_qcp, aria_math, aria_hybrid_planner)
+- ✅ Project structure created
+- ❌ All core implementation modules missing (Solver, Segmentation, Kusudama, etc.)
+- ❌ External API functions not implemented (all commented out with TODO)
 
 **Mathematical Foundation:** ✅ Available
 
 - ✅ **AriaJoint**: 48/48 tests passing, 160K+ poses/second performance
 - ✅ **AriaQCP**: 69/69 tests passing, production-ready QCP algorithm
 - ✅ **AriaMath**: IEEE-754 compliant mathematical primitives
-- ✅ **AriaState**: Configuration storage for VRM1 and constraints
+- ✅ **AriaHybridPlanner** (includes AriaState): Configuration storage for VRM1 and constraints
 
 ## Implementation Phases
+
+### Phase 0: Foundation Verification (CRITICAL PRIORITY)
+
+**Priority: CRITICAL - Verify all dependencies before implementation**
+
+**External Dependencies Verification:**
+- [ ] Confirm `aria_math` external git repo accessibility and basic functionality
+- [ ] Confirm `aria_qcp` external git repo accessibility and QCP algorithm functionality
+- [ ] Verify `aria_hybrid_planner` external dependency and AriaState integration
+- [ ] Test `aria_joint` in_umbrella dependency compilation and API availability
+
+**Internal Structure Validation:**
+- [ ] Verify `lib/aria_ewbik.ex` external API module structure
+- [ ] Confirm all external API functions are properly stubbed with TODO comments
+- [ ] Validate `lib/aria_ewbik/application.ex` basic application setup
+- [ ] Test basic app compilation without external dependencies
+
+**Dependency Integration Testing:**
+- [ ] Test AriaJoint API calls from external module (get_parent/1, to_global/2, etc.)
+- [ ] Verify AriaMath quaternion operations availability
+- [ ] Confirm AriaQCP algorithm integration points
+- [ ] Validate AriaHybridPlanner state management integration
+
+**Success Criteria:**
+- [ ] All external dependencies compile successfully
+- [ ] Basic app structure compiles without errors
+- [ ] External API stubs are properly documented
+- [ ] Foundation dependencies provide expected functionality
 
 ### Phase 1: Core EWBIK Algorithm Implementation (HIGH PRIORITY)
 
@@ -223,6 +253,11 @@ AriaEwbik implements Entirely Wahba's-problem Based Inverse Kinematics (EWBIK) w
 
 **Priority: MEDIUM - Enable external API delegation after internal modules are complete**
 
+**Current Status: All functions stubbed with TODO comments**
+- External API functions exist but are not implemented
+- All delegations commented out pending internal module creation
+- Ready for implementation once core modules (Solver, Segmentation, etc.) are complete
+
 - [ ] **Core EWBIK API Functions**
   - [ ] Implement `AriaEwbik.solve_ik/3` delegation to `AriaEwbik.Solver`
   - [ ] Implement `AriaEwbik.solve_multi_effector/3` delegation to `AriaEwbik.Solver`
@@ -276,10 +311,10 @@ AriaEwbik implements Entirely Wahba's-problem Based Inverse Kinematics (EWBIK) w
 
 **Tier 3 App Dependencies:**
 
-- **aria_math** (Tier 1): Mathematical primitives and IEEE-754 operations
-- **aria_joint** (Tier 2): Joint hierarchy management and transform operations
-- **aria_qcp** (Tier 2): Quaternion Characteristic Polynomial algorithm
-- **aria_state** (Tier 3): Configuration storage for VRM1 and constraint parameters
+- **aria_math** (External Git): Mathematical primitives and IEEE-754 operations
+- **aria_joint** (Umbrella Tier 2): Joint hierarchy management and transform operations
+- **aria_qcp** (External Git): Quaternion Characteristic Polynomial algorithm
+- **aria_hybrid_planner** (External Git): Configuration storage (includes AriaState) for VRM1 and constraint parameters
 
 **Testing Dependencies:**
 
