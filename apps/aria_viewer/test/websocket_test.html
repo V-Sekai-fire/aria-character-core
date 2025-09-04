@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IK Solver WebSocket Test Client</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            margin: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+        }
+        .status {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 4px;
+            font-weight: bold;
+        }
+        .status.connected { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .status.disconnected { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+        .status.error { background: #fff3cd; color: #856404; border: 1px solid #ffeaa7; }
+
+        .test-section {
+            margin: 20px 0;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        .test-section h3 {
+            margin-top: 0;
+            color: #555;
+        }
+
+        .form-group {
+            margin: 10px 0;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        input, select, button {
+            padding: 8px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+        input[type="number"] { width: 80px; }
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            cursor: pointer;
+            padding: 10px 15px;
+        }
+        button:hover { background: #0056b3; }
+        button:disabled { background: #ccc; cursor: not-allowed; }
+
+        .message-log {
+            margin-top: 20px;
+            padding: 10px;
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            max-height: 300px;
+            overflow-y: auto;
+            font-family: monospace;
+            font-size: 12px;
+        }
+        .message-log div {
+            margin: 2px 0;
+            padding: 2px 0;
+        }
+        .message-sent { color: #007bff; }
+        .message-received { color: #28a745; }
+        .message-error { color: #dc3545; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧪 IK Solver WebSocket Test Client</h1>
+
+        <div id="connection-status" class="status disconnected">
+            Disconnected - Click "Connect" to start testing
+        </div>
+
+        <div class="test-section">
+            <h3>🔌 Connection</h3>
+            <button id="connect-btn">Connect to IK Solver</button>
+            <button id="disconnect-btn" disabled>Disconnect</button>
+        </div>
+
+        <div class="test-section">
+            <h3>🎯 IK Target Testing</h3>
+            <div class="form-group">
+                <label for="end-effector">End Effector:</label>
+                <select id="end-effector">
+                    <option value="leftHand">Left Hand</option>
+                    <option value="rightHand">Right Hand</option>
+                    <option value="leftFoot">Left Foot</option>
+                    <option value="rightFoot">Right Foot</option>
+                    <option value="head">Head</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Target Position:</label>
+                <label for="pos-x">X:</label>
+                <input type="number" id="pos-x" step="0.1" value="0.5">
+                <label for="pos-y">Y:</label>
+                <input type="number" id="pos-y" step="0.1" value="1.2">
+                <label for="pos-z">Z:</label>
+                <input type="number" id="pos-z" step="0.1" value="0.3">
+            </div>
+            <button id="send-target-btn" disabled>Send IK Target</button>
+        </div>
+
+        <div class="test-section">
+            <h3>📁 Model Loading Testing</h3>
+            <div class="form-group">
+                <label for="model-path">Model Path:</label>
+                <input type="text" id="model-path" value="VRM1_Constraint_Twist_Sample.vrm" style="width: 300px;">
+            </div>
+            <button id="load-model-btn" disabled>Load VRM Model</button>
+        </div>
+
+        <div class="test-section">
+            <h3>📊 Message Log</h3>
+            <div id="message-log" class="message-log"></div>
+            <button id="clear-log-btn">Clear Log</button>
+        </div>
+    </div>
+
+    <!-- Phoenix Socket -->
+    <script src="https://cdn.jsdelivr.net/npm/phoenix@1.6.6/priv/static/phoenix.min.js"></script>
+
+    <script>
+        class IKTestClient {
+            constructor() {
+                this.socket = null;
+                this.channel = null;
+                this.messageLog = document.getElementById('message-log');
+
+                this.initEventListeners();
+            }
+
+            initEventListeners() {
+                document.getElementById('connect-btn').addEventListener('click', () => this.connect());
+                document.getElementById('disconnect-btn').addEventListener('click', () => this.disconnect());
+                document.getElementById('send-target-btn').addEventListener('click', () => this.sendIKTarget());
+                document.getElementById('load-model-btn').addEventListener('click', () => this.loadModel());
+                document.getElementById('clear-log-btn').addEventListener('click', () => this.clearLog());
+            }
+
+            connect() {
+                this.log('Attempting to connect to WebSocket...', 'info');
+
+                // Connect to Phoenix socket
+                this.socket = new Phoenix.Socket("/socket");
+                this.socket.connect();
+
+                // Join IK channel
+                this.channel = this.socket.channel("ik:lobby", {});
+                this.channel.join()
+                    .receive("ok", resp => {
+                        this.log(`✅ Connected to IK channel: ${JSON.stringify(resp)}`, 'received');
+                        this.updateConnectionStatus(true);
+                    })
+                    .receive("error", resp => {
+                        this.log(`❌ Failed to join channel: ${JSON.stringify(resp)}`, 'error');
+                        this.updateConnectionStatus(false);
+                    });
+
+                // Listen for pose updates
+                this.channel.on("new_pose", payload => {
+                    this.log(`📥 Received pose update: ${JSON.stringify(payload, null, 2)}`, 'received');
+                });
+
+                // Listen for model loading responses
+                this.channel.on("phx_reply", payload => {
+                    if (payload.response && payload.response.message) {
+                        this.log(`📥 Model response: ${payload.response.message}`, 'received');
+                    }
+                });
+            }
+
+            disconnect() {
+                if (this.channel) {
+                    this.channel.leave();
+                    this.log('Disconnected from channel', 'info');
+                }
+                if (this.socket) {
+                    this.socket.disconnect();
+                }
+                this.updateConnectionStatus(false);
+            }
+
+            sendIKTarget() {
+                if (!this.channel) return;
+
+                const endEffector = document.getElementById('end-effector').value;
+                const x = parseFloat(document.getElementById('pos-x').value);
+                const y = parseFloat(document.getElementById('pos-y').value);
+                const z = parseFloat(document.getElementById('pos-z').value);
+
+                const message = {
+                    endEffector: endEffector,
+                    position: { x, y, z }
+                };
+
+                this.log(`📤 Sending IK target: ${JSON.stringify(message)}`, 'sent');
+                this.channel.push("update_target", message);
+            }
+
+            loadModel() {
+                if (!this.channel) return;
+
+                const modelPath = document.getElementById('model-path').value;
+                const message = { model_path: modelPath };
+
+                this.log(`📤 Loading model: ${JSON.stringify(message)}`, 'sent');
+                this.channel.push("load_model", message);
+            }
+
+            updateConnectionStatus(connected) {
+                const statusEl = document.getElementById('connection-status');
+                const connectBtn = document.getElementById('connect-btn');
+                const disconnectBtn = document.getElementById('disconnect-btn');
+                const sendBtn = document.getElementById('send-target-btn');
+                const loadBtn = document.getElementById('load-model-btn');
+
+                if (connected) {
+                    statusEl.textContent = '🟢 Connected to IK Solver Backend';
+                    statusEl.className = 'status connected';
+                    connectBtn.disabled = true;
+                    disconnectBtn.disabled = false;
+                    sendBtn.disabled = false;
+                    loadBtn.disabled = false;
+                } else {
+                    statusEl.textContent = '🔴 Disconnected - Click "Connect" to start testing';
+                    statusEl.className = 'status disconnected';
+                    connectBtn.disabled = false;
+                    disconnectBtn.disabled = true;
+                    sendBtn.disabled = true;
+                    loadBtn.disabled = true;
+                }
+            }
+
+            log(message, type = 'info') {
+                const timestamp = new Date().toLocaleTimeString();
+                const div = document.createElement('div');
+                div.className = `message-${type}`;
+                div.textContent = `[${timestamp}] ${message}`;
+                this.messageLog.appendChild(div);
+                this.messageLog.scrollTop = this.messageLog.scrollHeight;
+            }
+
+            clearLog() {
+                this.messageLog.innerHTML = '';
+            }
+        }
+
+        // Initialize test client when page loads
+        document.addEventListener('DOMContentLoaded', () => {
+            new IKTestClient();
+        });
+    </script>
+</body>
+</html>

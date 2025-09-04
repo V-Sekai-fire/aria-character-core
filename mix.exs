@@ -8,6 +8,8 @@ defmodule AriaCharacterCore.MixProject do
       apps_path: "apps",
       version: "0.2.0",
       start_permanent: Mix.env() == :prod,
+      # Specify aria_viewer as the main Phoenix app for umbrella
+      app: :aria_viewer,
       deps: deps(),
       aliases: aliases(),
       preferred_cli_env: [
@@ -135,6 +137,9 @@ defmodule AriaCharacterCore.MixProject do
       setup: ["deps.get"],
       format: ["format"],
       quality: ["credo --strict", "dialyzer"],
+      # IK Solver development shortcuts
+      "dev.ik": ["phx.server"],
+      "ik.server": ["phx.server"],
       "cycle.analyze": ["run scripts/analyze_commit_cycles.exs"],
       "cycle.format": [
         "cmd",

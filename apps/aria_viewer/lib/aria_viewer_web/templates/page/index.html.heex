@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta http-equiv="X-UA-Compatible" content="IE=edge"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Aria IK Solver - Real-time Inverse Kinematics</title>
+  <link rel="stylesheet" href={Routes.static_path(@conn, "/css/app.css")}/>
+  <script defer phx-track-static type="text/javascript" src={Routes.static_path(@conn, "/js/app.js")}></script>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>🎯 Aria Real-Time IK Solver</h1>
+      <p>Interactive 3D Inverse Kinematics with VRM Model Support</p>
+    </header>
+
+    <div class="main-content">
+      <div class="controls-panel">
+        <div class="control-group">
+          <h3>Model Loading</h3>
+          <div class="drop-zone" id="dropZone">
+            <p>Drop VRM file here or click to browse</p>
+            <input type="file" id="fileInput" accept=".vrm" style="display: none;">
+          </div>
+          <button id="loadDefaultBtn">Load Sample Model</button>
+        </div>
+
+        <div class="control-group">
+          <h3>Bone Selection</h3>
+          <select id="boneSelect">
+            <option value="">Select a bone...</option>
+            <option value="leftHand">Left Hand</option>
+            <option value="rightHand">Right Hand</option>
+            <option value="leftFoot">Left Foot</option>
+            <option value="rightFoot">Right Foot</option>
+            <option value="head">Head</option>
+          </select>
+        </div>
+
+        <div class="control-group">
+          <h3>Target Position</h3>
+          <div class="position-inputs">
+            <label>X: <input type="number" id="posX" step="0.1" value="0.5"></label>
+            <label>Y: <input type="number" id="posY" step="0.1" value="1.2"></label>
+            <label>Z: <input type="number" id="posZ" step="0.1" value="0.3"></label>
+          </div>
+          <button id="updateTargetBtn">Update IK Target</button>
+        </div>
+
+        <div class="control-group">
+          <h3>Status</h3>
+          <div id="status">Ready to load VRM model</div>
+        </div>
+      </div>
+
+      <div class="viewer-panel">
+        <canvas id="viewerCanvas"></canvas>
+      </div>
+    </div>
+
+    <footer>
+      <p>WebSocket Status: <span id="wsStatus">Disconnected</span></p>
+      <p>Real-time IK solving powered by AriaEwbik</p>
+    </footer>
+  </div>
+</body>
+</html>
