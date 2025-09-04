@@ -1,0 +1,12 @@
+; DO NOT EDIT (unless you know what you are doing)
+;
+; This subdirectory is a git "subrepo", and this file is maintained by the
+; git-subrepo command. See https://github.com/ingydotnet/git-subrepo#readme
+;
+[subrepo]
+	remote = https://github.com/fire/Cline.git
+	branch = main
+	commit = 46068947ecf1024e7dbb2405edc1e906e60b08ff
+	parent = 5b45256a3669e7da849c0a8a8901833f6781cba2
+	method = merge
+	cmdver = 0.4.9
