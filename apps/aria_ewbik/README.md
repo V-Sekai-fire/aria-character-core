@@ -6,6 +6,12 @@ Entirely Wahba's-problem Based Inverse Kinematics (EWBIK) solver for advanced ch
 
 AriaEwbik provides sophisticated multi-effector inverse kinematics solving with comprehensive constraint management, collision detection, and anti-uncanny valley features. Built on production-ready mathematical foundations from the Aria umbrella project.
 
+**Current Status**: Phase 1.5 - External API Implementation (Critical Priority)
+- ✅ Internal modules complete with 37 tests passing
+- ✅ EWBIK decomposition algorithm implemented
+- ❌ External API delegation missing (blocking issue)
+- 🔄 MultiIK design strategy documented and ready for implementation
+
 ## Features
 
 ### Core EWBIK Capabilities
@@ -113,9 +119,53 @@ segments = AriaEwbik.segment_chains(skeleton, effector_list)
 - **Constraint evaluation**: Fast Kusudama cone validation with O(c×j) complexity
 - **Memory efficiency**: Registry-based joint state management
 
+## MultiIK Design Strategy
+
+AriaEwbik implements a sophisticated MultiIK (Multi-Effector Inverse Kinematics) approach based on insights from the Godot ManyBoneIK3D implementation:
+
+### Core Design Principles
+
+- **Single Root, Multiple End Effectors**: One skeleton root with multiple target points
+- **Automatic Junction Detection**: System identifies branch points in skeleton hierarchy
+- **Effector List Splitting**: Chain segmentation at each junction for optimal processing
+- **Pole Target Support**: Twist and swing control for natural pose orientation
+
+### Implementation Architecture
+
+```elixir
+# ChainIK → ManyBoneIK → BranchIK progression
+defmodule AriaEwbik.MultiEffectorSolver do
+  def solve_chain_ik(skeleton, single_chain) do
+    # Simple chain solving (no branching)
+  end
+
+  def solve_many_bone_ik(skeleton, effector_targets) do
+    # Complex multi-effector solving with decomposition
+  end
+
+  def solve_branch_ik(skeleton, effector_targets, branch_points) do
+    # Extended solving for branched skeletons
+  end
+end
+```
+
+### Key Features
+
+- **Decomposition Algorithm**: Eron Gjoni's approach for multi-effector coordination
+- **Priority Weighting**: Effector opacity and influence control
+- **Real-time Performance**: Optimized for 30+ FPS character animation
+- **Complex Rigs**: Support for 100+ joint skeletons
+
 ## Development Status
 
-This app is currently under development as part of the comprehensive EWBIK implementation plan. See `todo.md` for detailed implementation progress and roadmap.
+This app is currently under development as part of the comprehensive EWBIK implementation plan.
+
+- **Phase 1**: ✅ Internal modules complete (Segmentation, Solver, Kusudama, Propagation)
+- **Phase 1.5**: 🔄 External API implementation (Critical Priority - IN PROGRESS)
+- **MultiIK Strategy**: ✅ Documented and ready for implementation
+
+See `todo.md` for detailed implementation progress and roadmap.
+See `thirdparty/many_bone_ik/task_with_context.md` for comprehensive MultiIK design strategy.
 
 ## Standards Compliance
 
