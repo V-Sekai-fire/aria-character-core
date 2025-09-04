@@ -92,12 +92,12 @@ defmodule AriaInteractivity.SpecParser do
     Enum.join(description_lines, " ")
   end
 
-  defp extract_inputs(section) do
+  defp extract_inputs(_section) do
     # Simple extraction - this will be refined
     []
   end
 
-  defp extract_outputs(section) do
+  defp extract_outputs(_section) do
     # Simple extraction - this will be refined
     []
   end

@@ -9,7 +9,6 @@ defmodule AriaInteractivity.NodeParser do
   """
 
   alias AriaInteractivity.Domain
-  alias AriaInteractivity.Temporal
 
   # ============================================================================
   # GLTF NODE TYPE MAPPINGS
@@ -118,7 +117,7 @@ defmodule AriaInteractivity.NodeParser do
   def graph_to_planning_problem(graph) do
     nodes = graph["nodes"] || []
     variables = graph["variables"] || []
-    events = graph["events"] || []
+    _events = graph["events"] || []
 
     # Parse initial state from variables
     initial_state = build_initial_state(variables)
@@ -234,7 +233,7 @@ defmodule AriaInteractivity.NodeParser do
   end
 
   # Extract goal from graph structure
-  defp extract_goal_from_graph(graph) do
+  defp extract_goal_from_graph(_graph) do
     # For now, return a simple goal - this would be more complex
     # in a full implementation based on graph analysis
     %{

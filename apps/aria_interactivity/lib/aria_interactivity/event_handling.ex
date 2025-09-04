@@ -17,7 +17,7 @@ defmodule AriaInteractivity.EventHandling do
   # Event Trigger
   @unigoal_method predicate: "event_triggered"
   @spec trigger_event(AriaState.t(), {atom(), term()}) :: {:ok, [AriaEngine.todo_item()]} | {:error, atom()}
-  def trigger_event(state, {event_name, event_data}) do
+  def trigger_event(_state, {event_name, event_data}) do
     {:ok, [
       {:action, {:send_event, [event_name, event_data]}}
     ]}
@@ -26,7 +26,7 @@ defmodule AriaInteractivity.EventHandling do
   # Custom Event Trigger
   @unigoal_method predicate: "custom_event_triggered"
   @spec trigger_custom_event(AriaState.t(), {String.t(), term()}) :: {:ok, [AriaEngine.todo_item()]} | {:error, atom()}
-  def trigger_custom_event(state, {event_id, event_data}) do
+  def trigger_custom_event(_state, {event_id, event_data}) do
     {:ok, [
       {:action, {:send_custom_event, [event_id, event_data]}}
     ]}
@@ -35,7 +35,7 @@ defmodule AriaInteractivity.EventHandling do
   # Broadcast Event
   @unigoal_method predicate: "event_broadcasted"
   @spec broadcast_event(AriaState.t(), {atom(), term()}) :: {:ok, [AriaEngine.todo_item()]} | {:error, atom()}
-  def broadcast_event(state, {event_name, event_data}) do
+  def broadcast_event(_state, {event_name, event_data}) do
     {:ok, [
       {:action, {:broadcast_event, [event_name, event_data]}}
     ]}
@@ -48,7 +48,7 @@ defmodule AriaInteractivity.EventHandling do
   # Event Receive
   @unigoal_method predicate: "event_received"
   @spec receive_event(AriaState.t(), {atom()}) :: {:ok, [AriaEngine.todo_item()]} | {:error, atom()}
-  def receive_event(state, {event_name}) do
+  def receive_event(_state, {event_name}) do
     {:ok, [
       {:action, {:wait_for_event, [event_name]}}
     ]}
@@ -57,7 +57,7 @@ defmodule AriaInteractivity.EventHandling do
   # Wait for Custom Event
   @unigoal_method predicate: "custom_event_received"
   @spec wait_for_custom_event(AriaState.t(), {String.t()}) :: {:ok, [AriaEngine.todo_item()]} | {:error, atom()}
-  def wait_for_custom_event(state, {event_id}) do
+  def wait_for_custom_event(_state, {event_id}) do
     {:ok, [
       {:goal, {:custom_event_received, event_id, true}}
     ]}
@@ -66,7 +66,7 @@ defmodule AriaInteractivity.EventHandling do
   # Event Listener
   @unigoal_method predicate: "event_listener_active"
   @spec setup_event_listener(AriaState.t(), {atom(), atom()}) :: {:ok, [AriaEngine.todo_item()]} | {:error, atom()}
-  def setup_event_listener(state, {event_name, handler_function}) do
+  def setup_event_listener(_state, {event_name, handler_function}) do
     {:ok, [
       {:action, {:setup_event_listener, [event_name, handler_function]}}
     ]}
@@ -79,7 +79,7 @@ defmodule AriaInteractivity.EventHandling do
   # Filter Events
   @unigoal_method predicate: "events_filtered"
   @spec filter_events(AriaState.t(), {atom(), term()}) :: {:ok, [AriaEngine.todo_item()]} | {:error, atom()}
-  def filter_events(state, {event_name, filter_criteria}) do
+  def filter_events(_state, {event_name, filter_criteria}) do
     {:ok, [
       {:action, {:filter_events, [event_name, filter_criteria]}}
     ]}
@@ -88,7 +88,7 @@ defmodule AriaInteractivity.EventHandling do
   # Event Debouncing
   @unigoal_method predicate: "event_debounced"
   @spec debounce_event(AriaState.t(), {atom(), float()}) :: {:ok, [AriaEngine.todo_item()]} | {:error, atom()}
-  def debounce_event(state, {event_name, debounce_time}) do
+  def debounce_event(_state, {event_name, debounce_time}) do
     {:ok, [
       {:temporal_action, {:debounce_event, [event_name, debounce_time]}}
     ]}
@@ -97,7 +97,7 @@ defmodule AriaInteractivity.EventHandling do
   # Event Throttling
   @unigoal_method predicate: "event_throttled"
   @spec throttle_event(AriaState.t(), {atom(), float()}) :: {:ok, [AriaEngine.todo_item()]} | {:error, atom()}
-  def throttle_event(state, {event_name, throttle_time}) do
+  def throttle_event(_state, {event_name, throttle_time}) do
     {:ok, [
       {:temporal_action, {:throttle_event, [event_name, throttle_time]}}
     ]}
@@ -110,7 +110,7 @@ defmodule AriaInteractivity.EventHandling do
   # Event Sequence
   @unigoal_method predicate: "event_sequence_started"
   @spec event_sequence(AriaState.t(), {[atom()], float()}) :: {:ok, [AriaEngine.todo_item()]} | {:error, atom()}
-  def event_sequence(state, {event_names, timeout}) do
+  def event_sequence(_state, {event_names, timeout}) do
     {:ok, [
       {:temporal_action, {:wait_for_event_sequence, [event_names, timeout]}}
     ]}
@@ -119,7 +119,7 @@ defmodule AriaInteractivity.EventHandling do
   # Event Race
   @unigoal_method predicate: "event_race_completed"
   @spec event_race(AriaState.t(), {[atom()], float()}) :: {:ok, [AriaEngine.todo_item()]} | {:error, atom()}
-  def event_race(state, {event_names, timeout}) do
+  def event_race(_state, {event_names, timeout}) do
     {:ok, [
       {:temporal_action, {:wait_for_event_race, [event_names, timeout]}}
     ]}
@@ -128,7 +128,7 @@ defmodule AriaInteractivity.EventHandling do
   # Event All
   @unigoal_method predicate: "all_events_received"
   @spec wait_for_all_events(AriaState.t(), {[atom()], float()}) :: {:ok, [AriaEngine.todo_item()]} | {:error, atom()}
-  def wait_for_all_events(state, {event_names, timeout}) do
+  def wait_for_all_events(_state, {event_names, timeout}) do
     {:ok, [
       {:temporal_action, {:wait_for_all_events, [event_names, timeout]}}
     ]}
@@ -141,7 +141,7 @@ defmodule AriaInteractivity.EventHandling do
   # Extract Event Data
   @unigoal_method predicate: "event_data_extracted"
   @spec extract_event_data(AriaState.t(), {atom(), atom()}) :: {:ok, [AriaEngine.todo_item()]} | {:error, atom()}
-  def extract_event_data(state, {event_name, data_key}) do
+  def extract_event_data(_state, {event_name, data_key}) do
     {:ok, [
       {:action, {:extract_event_data, [event_name, data_key]}}
     ]}
@@ -150,7 +150,7 @@ defmodule AriaInteractivity.EventHandling do
   # Transform Event Data
   @unigoal_method predicate: "event_data_transformed"
   @spec transform_event_data(AriaState.t(), {atom(), atom(), term()}) :: {:ok, [AriaEngine.todo_item()]} | {:error, atom()}
-  def transform_event_data(state, {event_name, transformation, new_value}) do
+  def transform_event_data(_state, {event_name, transformation, new_value}) do
     {:ok, [
       {:action, {:transform_event_data, [event_name, transformation, new_value]}}
     ]}
@@ -159,7 +159,7 @@ defmodule AriaInteractivity.EventHandling do
   # Validate Event Data
   @unigoal_method predicate: "event_data_valid"
   @spec validate_event_data(AriaState.t(), {atom(), term()}) :: {:ok, [AriaEngine.todo_item()]} | {:error, atom()}
-  def validate_event_data(state, {event_name, validation_rules}) do
+  def validate_event_data(_state, {event_name, validation_rules}) do
     {:ok, [
       {:action, {:validate_event_data, [event_name, validation_rules]}}
     ]}
@@ -172,7 +172,7 @@ defmodule AriaInteractivity.EventHandling do
   # Schedule Event
   @unigoal_method predicate: "event_scheduled"
   @spec schedule_event(AriaState.t(), {atom(), term(), float()}) :: {:ok, [AriaEngine.todo_item()]} | {:error, atom()}
-  def schedule_event(state, {event_name, event_data, delay}) do
+  def schedule_event(_state, {event_name, event_data, delay}) do
     {:ok, [
       {:temporal_action, {:schedule_event, [event_name, event_data, delay]}}
     ]}
@@ -181,7 +181,7 @@ defmodule AriaInteractivity.EventHandling do
   # Cancel Scheduled Event
   @unigoal_method predicate: "scheduled_event_cancelled"
   @spec cancel_scheduled_event(AriaState.t(), {atom()}) :: {:ok, [AriaEngine.todo_item()]} | {:error, atom()}
-  def cancel_scheduled_event(state, {event_name}) do
+  def cancel_scheduled_event(_state, {event_name}) do
     {:ok, [
       {:action, {:cancel_scheduled_event, [event_name]}}
     ]}
@@ -190,7 +190,7 @@ defmodule AriaInteractivity.EventHandling do
   # Periodic Event
   @unigoal_method predicate: "periodic_event_started"
   @spec start_periodic_event(AriaState.t(), {atom(), term(), float()}) :: {:ok, [AriaEngine.todo_item()]} | {:error, atom()}
-  def start_periodic_event(state, {event_name, event_data, interval}) do
+  def start_periodic_event(_state, {event_name, event_data, interval}) do
     {:ok, [
       {:temporal_action, {:start_periodic_event, [event_name, event_data, interval]}}
     ]}
@@ -199,7 +199,7 @@ defmodule AriaInteractivity.EventHandling do
   # Stop Periodic Event
   @unigoal_method predicate: "periodic_event_stopped"
   @spec stop_periodic_event(AriaState.t(), {atom()}) :: {:ok, [AriaEngine.todo_item()]} | {:error, atom()}
-  def stop_periodic_event(state, {event_name}) do
+  def stop_periodic_event(_state, {event_name}) do
     {:ok, [
       {:action, {:stop_periodic_event, [event_name]}}
     ]}
@@ -212,7 +212,7 @@ defmodule AriaInteractivity.EventHandling do
   # Log Event
   @unigoal_method predicate: "event_logged"
   @spec log_event(AriaState.t(), {atom(), atom()}) :: {:ok, [AriaEngine.todo_item()]} | {:error, atom()}
-  def log_event(state, {event_name, log_level}) do
+  def log_event(_state, {event_name, log_level}) do
     {:ok, [
       {:action, {:log_event, [event_name, log_level]}}
     ]}
@@ -221,7 +221,7 @@ defmodule AriaInteractivity.EventHandling do
   # Monitor Event Frequency
   @unigoal_method predicate: "event_monitoring_started"
   @spec monitor_event_frequency(AriaState.t(), {atom(), float()}) :: {:ok, [AriaEngine.todo_item()]} | {:error, atom()}
-  def monitor_event_frequency(state, {event_name, time_window}) do
+  def monitor_event_frequency(_state, {event_name, time_window}) do
     {:ok, [
       {:action, {:monitor_event_frequency, [event_name, time_window]}}
     ]}
@@ -230,7 +230,7 @@ defmodule AriaInteractivity.EventHandling do
   # Event Statistics
   @unigoal_method predicate: "event_statistics_available"
   @spec get_event_statistics(AriaState.t(), {atom()}) :: {:ok, [AriaEngine.todo_item()]} | {:error, atom()}
-  def get_event_statistics(state, {event_name}) do
+  def get_event_statistics(_state, {event_name}) do
     {:ok, [
       {:action, {:get_event_statistics, [event_name]}}
     ]}
@@ -243,7 +243,7 @@ defmodule AriaInteractivity.EventHandling do
   # Event Error Handler
   @unigoal_method predicate: "event_error_handler_set"
   @spec set_event_error_handler(AriaState.t(), {atom(), atom()}) :: {:ok, [AriaEngine.todo_item()]} | {:error, atom()}
-  def set_event_error_handler(state, {event_name, error_handler}) do
+  def set_event_error_handler(_state, {event_name, error_handler}) do
     {:ok, [
       {:action, {:set_event_error_handler, [event_name, error_handler]}}
     ]}
@@ -252,7 +252,7 @@ defmodule AriaInteractivity.EventHandling do
   # Retry Failed Event
   @unigoal_method predicate: "failed_event_retried"
   @spec retry_failed_event(AriaState.t(), {atom(), integer()}) :: {:ok, [AriaEngine.todo_item()]} | {:error, atom()}
-  def retry_failed_event(state, {event_name, max_retries}) do
+  def retry_failed_event(_state, {event_name, max_retries}) do
     {:ok, [
       {:action, {:retry_failed_event, [event_name, max_retries]}}
     ]}
@@ -261,7 +261,7 @@ defmodule AriaInteractivity.EventHandling do
   # Event Timeout Handler
   @unigoal_method predicate: "event_timeout_handled"
   @spec handle_event_timeout(AriaState.t(), {atom(), float(), atom()}) :: {:ok, [AriaEngine.todo_item()]} | {:error, atom()}
-  def handle_event_timeout(state, {event_name, timeout, timeout_handler}) do
+  def handle_event_timeout(_state, {event_name, timeout, timeout_handler}) do
     {:ok, [
       {:temporal_action, {:handle_event_timeout, [event_name, timeout, timeout_handler]}}
     ]}

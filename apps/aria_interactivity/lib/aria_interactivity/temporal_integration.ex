@@ -17,7 +17,7 @@ defmodule AriaInteractivity.TemporalIntegration do
   # Set Temporal Constraint
   @unigoal_method predicate: "temporal_constraint_set"
   @spec set_temporal_constraint(AriaState.t(), {atom(), atom(), float()}) :: {:ok, [AriaEngine.todo_item()]} | {:error, atom()}
-  def set_temporal_constraint(state, {from_action, to_action, min_delay}) do
+  def set_temporal_constraint(_state, {from_action, to_action, min_delay}) do
     {:ok, [
       {:action, {:set_temporal_constraint, [from_action, to_action, min_delay]}}
     ]}
@@ -26,7 +26,7 @@ defmodule AriaInteractivity.TemporalIntegration do
   # Remove Temporal Constraint
   @unigoal_method predicate: "temporal_constraint_removed"
   @spec remove_temporal_constraint(AriaState.t(), {atom(), atom()}) :: {:ok, [AriaEngine.todo_item()]} | {:error, atom()}
-  def remove_temporal_constraint(state, {from_action, to_action}) do
+  def remove_temporal_constraint(_state, {from_action, to_action}) do
     {:ok, [
       {:action, {:remove_temporal_constraint, [from_action, to_action]}}
     ]}
@@ -35,7 +35,7 @@ defmodule AriaInteractivity.TemporalIntegration do
   # Validate Temporal Constraints
   @unigoal_method predicate: "temporal_constraints_valid"
   @spec validate_temporal_constraints(AriaState.t(), {atom()}) :: {:ok, [AriaEngine.todo_item()]} | {:error, atom()}
-  def validate_temporal_constraints(state, {constraint_set}) do
+  def validate_temporal_constraints(_state, {constraint_set}) do
     {:ok, [
       {:action, {:validate_temporal_constraints, [constraint_set]}}
     ]}
@@ -48,7 +48,7 @@ defmodule AriaInteractivity.TemporalIntegration do
   # Set Action Duration
   @unigoal_method predicate: "action_duration_set"
   @spec set_action_duration(AriaState.t(), {atom(), String.t()}) :: {:ok, [AriaEngine.todo_item()]} | {:error, atom()}
-  def set_action_duration(state, {action_name, duration}) do
+  def set_action_duration(_state, {action_name, duration}) do
     {:ok, [
       {:action, {:set_action_duration, [action_name, duration]}}
     ]}
@@ -57,7 +57,7 @@ defmodule AriaInteractivity.TemporalIntegration do
   # Get Action Duration
   @unigoal_method predicate: "action_duration_retrieved"
   @spec get_action_duration(AriaState.t(), {atom()}) :: {:ok, [AriaEngine.todo_item()]} | {:error, atom()}
-  def get_action_duration(state, {action_name}) do
+  def get_action_duration(_state, {action_name}) do
     {:ok, [
       {:action, {:get_action_duration, [action_name]}}
     ]}
@@ -66,7 +66,7 @@ defmodule AriaInteractivity.TemporalIntegration do
   # Calculate Total Duration
   @unigoal_method predicate: "total_duration_calculated"
   @spec calculate_total_duration(AriaState.t(), {[atom()]}) :: {:ok, [AriaEngine.todo_item()]} | {:error, atom()}
-  def calculate_total_duration(state, {action_names}) do
+  def calculate_total_duration(_state, {action_names}) do
     {:ok, [
       {:action, {:calculate_total_duration, [action_names]}}
     ]}
@@ -79,7 +79,7 @@ defmodule AriaInteractivity.TemporalIntegration do
   # Define Time Window
   @unigoal_method predicate: "time_window_defined"
   @spec define_time_window(AriaState.t(), {atom(), String.t(), String.t()}) :: {:ok, [AriaEngine.todo_item()]} | {:error, atom()}
-  def define_time_window(state, {window_name, start_time, end_time}) do
+  def define_time_window(_state, {window_name, start_time, end_time}) do
     {:ok, [
       {:action, {:define_time_window, [window_name, start_time, end_time]}}
     ]}
@@ -88,7 +88,7 @@ defmodule AriaInteractivity.TemporalIntegration do
   # Check Time Window
   @unigoal_method predicate: "time_window_checked"
   @spec check_time_window(AriaState.t(), {atom(), String.t()}) :: {:ok, [AriaEngine.todo_item()]} | {:error, atom()}
-  def check_time_window(state, {window_name, current_time}) do
+  def check_time_window(_state, {window_name, current_time}) do
     {:ok, [
       {:action, {:check_time_window, [window_name, current_time]}}
     ]}
@@ -97,7 +97,7 @@ defmodule AriaInteractivity.TemporalIntegration do
   # Extend Time Window
   @unigoal_method predicate: "time_window_extended"
   @spec extend_time_window(AriaState.t(), {atom(), String.t()}) :: {:ok, [AriaEngine.todo_item()]} | {:error, atom()}
-  def extend_time_window(state, {window_name, new_end_time}) do
+  def extend_time_window(_state, {window_name, new_end_time}) do
     {:ok, [
       {:action, {:extend_time_window, [window_name, new_end_time]}}
     ]}
@@ -110,7 +110,7 @@ defmodule AriaInteractivity.TemporalIntegration do
   # Synchronize Actions
   @unigoal_method predicate: "actions_synchronized"
   @spec synchronize_actions(AriaState.t(), {[atom()], String.t()}) :: {:ok, [AriaEngine.todo_item()]} | {:error, atom()}
-  def synchronize_actions(state, {action_names, sync_time}) do
+  def synchronize_actions(_state, {action_names, sync_time}) do
     {:ok, [
       {:temporal_action, {:synchronize_actions, [action_names, sync_time]}}
     ]}
@@ -119,7 +119,7 @@ defmodule AriaInteractivity.TemporalIntegration do
   # Sequence Actions Temporally
   @unigoal_method predicate: "actions_sequenced"
   @spec sequence_actions_temporally(AriaState.t(), {[atom()], [float()]}) :: {:ok, [AriaEngine.todo_item()]} | {:error, atom()}
-  def sequence_actions_temporally(state, {action_names, delays}) do
+  def sequence_actions_temporally(_state, {action_names, delays}) do
     {:ok, [
       {:temporal_action, {:sequence_actions_temporally, [action_names, delays]}}
     ]}
@@ -128,7 +128,7 @@ defmodule AriaInteractivity.TemporalIntegration do
   # Parallel Actions with Duration
   @unigoal_method predicate: "parallel_actions_started"
   @spec start_parallel_actions(AriaState.t(), {[atom()], String.t()}) :: {:ok, [AriaEngine.todo_item()]} | {:error, atom()}
-  def start_parallel_actions(state, {action_names, max_duration}) do
+  def start_parallel_actions(_state, {action_names, max_duration}) do
     {:ok, [
       {:temporal_action, {:start_parallel_actions, [action_names, max_duration]}}
     ]}
@@ -141,7 +141,7 @@ defmodule AriaInteractivity.TemporalIntegration do
   # Monitor Action Timing
   @unigoal_method predicate: "action_timing_monitored"
   @spec monitor_action_timing(AriaState.t(), {atom()}) :: {:ok, [AriaEngine.todo_item()]} | {:error, atom()}
-  def monitor_action_timing(state, {action_name}) do
+  def monitor_action_timing(_state, {action_name}) do
     {:ok, [
       {:action, {:monitor_action_timing, [action_name]}}
     ]}
@@ -150,7 +150,7 @@ defmodule AriaInteractivity.TemporalIntegration do
   # Get Timing Statistics
   @unigoal_method predicate: "timing_statistics_available"
   @spec get_timing_statistics(AriaState.t(), {atom()}) :: {:ok, [AriaEngine.todo_item()]} | {:error, atom()}
-  def get_timing_statistics(state, {action_name}) do
+  def get_timing_statistics(_state, {action_name}) do
     {:ok, [
       {:action, {:get_timing_statistics, [action_name]}}
     ]}
@@ -159,7 +159,7 @@ defmodule AriaInteractivity.TemporalIntegration do
   # Check Timing Violations
   @unigoal_method predicate: "timing_violations_checked"
   @spec check_timing_violations(AriaState.t(), {atom()}) :: {:ok, [AriaEngine.todo_item()]} | {:error, atom()}
-  def check_timing_violations(state, {constraint_set}) do
+  def check_timing_violations(_state, {constraint_set}) do
     {:ok, [
       {:action, {:check_timing_violations, [constraint_set]}}
     ]}
@@ -172,7 +172,7 @@ defmodule AriaInteractivity.TemporalIntegration do
   # Schedule Action at Time
   @unigoal_method predicate: "action_scheduled"
   @spec schedule_action_at_time(AriaState.t(), {atom(), String.t(), [term()]}) :: {:ok, [AriaEngine.todo_item()]} | {:error, atom()}
-  def schedule_action_at_time(state, {action_name, scheduled_time, args}) do
+  def schedule_action_at_time(_state, {action_name, scheduled_time, args}) do
     {:ok, [
       {:temporal_action, {:schedule_action_at_time, [action_name, scheduled_time, args]}}
     ]}
@@ -181,7 +181,7 @@ defmodule AriaInteractivity.TemporalIntegration do
   # Cancel Scheduled Action
   @unigoal_method predicate: "scheduled_action_cancelled"
   @spec cancel_scheduled_action(AriaState.t(), {atom()}) :: {:ok, [AriaEngine.todo_item()]} | {:error, atom()}
-  def cancel_scheduled_action(state, {action_name}) do
+  def cancel_scheduled_action(_state, {action_name}) do
     {:ok, [
       {:action, {:cancel_scheduled_action, [action_name]}}
     ]}
@@ -190,7 +190,7 @@ defmodule AriaInteractivity.TemporalIntegration do
   # Reschedule Action
   @unigoal_method predicate: "action_rescheduled"
   @spec reschedule_action(AriaState.t(), {atom(), String.t()}) :: {:ok, [AriaEngine.todo_item()]} | {:error, atom()}
-  def reschedule_action(state, {action_name, new_time}) do
+  def reschedule_action(_state, {action_name, new_time}) do
     {:ok, [
       {:temporal_action, {:reschedule_action, [action_name, new_time]}}
     ]}
@@ -257,7 +257,7 @@ defmodule AriaInteractivity.TemporalIntegration do
   # Query Current Time
   @unigoal_method predicate: "current_time_retrieved"
   @spec get_current_time(AriaState.t(), {atom()}) :: {:ok, [AriaEngine.todo_item()]} | {:error, atom()}
-  def get_current_time(state, {time_format}) do
+  def get_current_time(_state, {time_format}) do
     {:ok, [
       {:action, {:get_current_time, [time_format]}}
     ]}
@@ -266,7 +266,7 @@ defmodule AriaInteractivity.TemporalIntegration do
   # Check Time Elapsed
   @unigoal_method predicate: "time_elapsed_checked"
   @spec check_time_elapsed(AriaState.t(), {String.t(), String.t()}) :: {:ok, [AriaEngine.todo_item()]} | {:error, atom()}
-  def check_time_elapsed(state, {start_time, end_time}) do
+  def check_time_elapsed(_state, {start_time, end_time}) do
     {:ok, [
       {:action, {:check_time_elapsed, [start_time, end_time]}}
     ]}
@@ -275,7 +275,7 @@ defmodule AriaInteractivity.TemporalIntegration do
   # Calculate Time Difference
   @unigoal_method predicate: "time_difference_calculated"
   @spec calculate_time_difference(AriaState.t(), {String.t(), String.t()}) :: {:ok, [AriaEngine.todo_item()]} | {:error, atom()}
-  def calculate_time_difference(state, {time1, time2}) do
+  def calculate_time_difference(_state, {time1, time2}) do
     {:ok, [
       {:action, {:calculate_time_difference, [time1, time2]}}
     ]}
@@ -288,7 +288,7 @@ defmodule AriaInteractivity.TemporalIntegration do
   # Handle Temporal Violation
   @unigoal_method predicate: "temporal_violation_handled"
   @spec handle_temporal_violation(AriaState.t(), {atom(), atom()}) :: {:ok, [AriaEngine.todo_item()]} | {:error, atom()}
-  def handle_temporal_violation(state, {violation_type, recovery_action}) do
+  def handle_temporal_violation(_state, {violation_type, recovery_action}) do
     {:ok, [
       {:action, {:handle_temporal_violation, [violation_type, recovery_action]}}
     ]}
@@ -297,7 +297,7 @@ defmodule AriaInteractivity.TemporalIntegration do
   # Retry Temporal Action
   @unigoal_method predicate: "temporal_action_retried"
   @spec retry_temporal_action(AriaState.t(), {atom(), integer()}) :: {:ok, [AriaEngine.todo_item()]} | {:error, atom()}
-  def retry_temporal_action(state, {action_name, max_retries}) do
+  def retry_temporal_action(_state, {action_name, max_retries}) do
     {:ok, [
       {:action, {:retry_temporal_action, [action_name, max_retries]}}
     ]}
@@ -306,7 +306,7 @@ defmodule AriaInteractivity.TemporalIntegration do
   # Temporal Timeout Handler
   @unigoal_method predicate: "temporal_timeout_handled"
   @spec handle_temporal_timeout(AriaState.t(), {atom(), float(), atom()}) :: {:ok, [AriaEngine.todo_item()]} | {:error, atom()}
-  def handle_temporal_timeout(state, {action_name, timeout, timeout_handler}) do
+  def handle_temporal_timeout(_state, {action_name, timeout, timeout_handler}) do
     {:ok, [
       {:temporal_action, {:handle_temporal_timeout, [action_name, timeout, timeout_handler]}}
     ]}

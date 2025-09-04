@@ -17,7 +17,7 @@ defmodule AriaInteractivity.FlowControl do
   # Sequence - n-to-n mapping of tasks to todo_items
   @task_method true
   @spec sequence(AriaState.t(), [term()]) :: {:ok, [AriaEngine.todo_item()]} | {:error, atom()}
-  def sequence(state, tasks) do
+  def sequence(_state, tasks) do
     # Generate n-to-n mapping: each input task becomes a todo_item
     todo_items = Enum.map(tasks, fn task_spec ->
       case task_spec do
@@ -37,7 +37,7 @@ defmodule AriaInteractivity.FlowControl do
   # Branch
   @task_method true
   @spec branch(AriaState.t(), [term]) :: {:ok, [AriaEngine.todo_item()]} | {:error, atom()}
-  def branch(state, [condition, true_branch, false_branch]) do
+  def branch(_state, [condition, true_branch, false_branch]) do
     if condition do
       {:ok, [{:task, {:execute_branch, [true_branch]}}]}
     else
@@ -48,7 +48,7 @@ defmodule AriaInteractivity.FlowControl do
   # Switch/Case
   @task_method true
   @spec switch(AriaState.t(), [term]) :: {:ok, [AriaEngine.todo_item()]} | {:error, atom()}
-  def switch(state, [value | cases]) do
+  def switch(_state, [value | cases]) do
     # Find matching case
     matching_case = Enum.find(cases, fn {case_value, _} -> case_value == value end)
 
@@ -71,7 +71,7 @@ defmodule AriaInteractivity.FlowControl do
   # While Loop
   @task_method true
   @spec while_loop(AriaState.t(), [term]) :: {:ok, [AriaEngine.todo_item()]} | {:error, atom()}
-  def while_loop(state, [condition_fn, body_tasks]) do
+  def while_loop(_state, [_condition_fn, body_tasks]) do
     # For now, execute once - full loop logic would need state tracking
     {:ok, [{:task, {:execute_while_body, [body_tasks]}}]}
   end
@@ -79,7 +79,7 @@ defmodule AriaInteractivity.FlowControl do
   # For Loop
   @task_method true
   @spec for_loop(AriaState.t(), [term]) :: {:ok, [AriaEngine.todo_item()]} | {:error, atom()}
-  def for_loop(state, [start, stop, step, body_tasks]) do
+  def for_loop(_state, [start, stop, step, body_tasks]) do
     # Generate iterations based on range
     iterations = Enum.take_every(start..stop, step)
 
@@ -93,7 +93,7 @@ defmodule AriaInteractivity.FlowControl do
   # Repeat N Times
   @task_method true
   @spec repeat_n(AriaState.t(), [term]) :: {:ok, [AriaEngine.todo_item()]} | {:error, atom()}
-  def repeat_n(state, [n, body_tasks]) do
+  def repeat_n(_state, [n, body_tasks]) do
     todo_items = Enum.map(1..n, fn i ->
       {:task, {:execute_iteration, [i, body_tasks]}}
     end)
@@ -108,7 +108,7 @@ defmodule AriaInteractivity.FlowControl do
   # Wait All - wait for multiple conditions
   @task_method true
   @spec wait_all(AriaState.t(), [term]) :: {:ok, [AriaEngine.todo_item()]} | {:error, atom()}
-  def wait_all(state, conditions) do
+  def wait_all(_state, conditions) do
     # Create goals for each condition
     goals = Enum.map(conditions, fn condition ->
       {:condition_met, condition, true}
@@ -120,7 +120,7 @@ defmodule AriaInteractivity.FlowControl do
   # Wait Any - wait for any of multiple conditions
   @task_method true
   @spec wait_any(AriaState.t(), [term]) :: {:ok, [AriaEngine.todo_item()]} | {:error, atom()}
-  def wait_any(state, conditions) do
+  def wait_any(_state, conditions) do
     # Create goals where any condition being met satisfies the requirement
     goals = Enum.map(conditions, fn condition ->
       {:condition_met, condition, true}
@@ -136,7 +136,7 @@ defmodule AriaInteractivity.FlowControl do
   # Delay execution
   @task_method true
   @spec delay(AriaState.t(), [term]) :: {:ok, [AriaEngine.todo_item()]} | {:error, atom()}
-  def delay(state, [duration, delayed_tasks]) do
+  def delay(_state, [duration, delayed_tasks]) do
     {:ok, [
       {:temporal_action, {:delay_execution, [duration, delayed_tasks]}}
     ]}
@@ -145,7 +145,7 @@ defmodule AriaInteractivity.FlowControl do
   # Timeout
   @task_method true
   @spec timeout(AriaState.t(), [term]) :: {:ok, [AriaEngine.todo_item()]} | {:error, atom()}
-  def timeout(state, [duration, timeout_tasks, normal_tasks]) do
+  def timeout(_state, [duration, timeout_tasks, normal_tasks]) do
     {:ok, [
       {:temporal_action, {:timeout_execution, [duration, timeout_tasks, normal_tasks]}}
     ]}
@@ -158,7 +158,7 @@ defmodule AriaInteractivity.FlowControl do
   # Parallel execution of multiple tasks
   @task_method true
   @spec parallel(AriaState.t(), [term]) :: {:ok, [AriaEngine.todo_item()]} | {:error, atom()}
-  def parallel(state, task_groups) do
+  def parallel(_state, task_groups) do
     # Flatten all tasks into parallel execution
     all_tasks = List.flatten(task_groups)
 
@@ -180,7 +180,7 @@ defmodule AriaInteractivity.FlowControl do
   # Execute if condition is true
   @task_method true
   @spec execute_if(AriaState.t(), [term]) :: {:ok, [AriaEngine.todo_item()]} | {:error, atom()}
-  def execute_if(state, [condition, true_tasks, false_tasks]) do
+  def execute_if(_state, [condition, true_tasks, false_tasks]) do
     if condition do
       {:ok, Enum.map(true_tasks, fn task -> {:task, {task, []}} end)}
     else
@@ -191,7 +191,7 @@ defmodule AriaInteractivity.FlowControl do
   # Execute unless condition is true
   @task_method true
   @spec execute_unless(AriaState.t(), [term]) :: {:ok, [AriaEngine.todo_item()]} | {:error, atom()}
-  def execute_unless(state, [condition, tasks]) do
+  def execute_unless(_state, [condition, tasks]) do
     unless condition do
       {:ok, Enum.map(tasks, fn task -> {:task, {task, []}} end)}
     else

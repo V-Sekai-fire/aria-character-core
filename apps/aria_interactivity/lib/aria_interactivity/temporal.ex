@@ -191,22 +191,22 @@ defmodule AriaInteractivity.Temporal do
     duration_parts = []
 
     if days > 0 do
-      duration_parts = ["#{days}D" | duration_parts]
+      _duration_parts = ["#{days}D" | duration_parts]
     end
 
     time_parts = []
     if hours > 0 do
-      time_parts = ["#{hours}H" | time_parts]
+      _time_parts = ["#{hours}H" | time_parts]
     end
     if minutes > 0 do
-      time_parts = ["#{minutes}M" | time_parts]
+      _time_parts = ["#{minutes}M" | time_parts]
     end
     if seconds > 0 do
-      time_parts = ["#{seconds}S" | time_parts]
+      _time_parts = ["#{seconds}S" | time_parts]
     end
 
     if time_parts != [] do
-      duration_parts = ["T" <> Enum.join(Enum.reverse(time_parts), "") | duration_parts]
+      _duration_parts = ["T" <> Enum.join(Enum.reverse(time_parts), "") | duration_parts]
     end
 
     if duration_parts == [] do
@@ -297,17 +297,17 @@ defmodule AriaInteractivity.Temporal do
   defp parse_float(nil), do: 0.0
   defp parse_float(str), do: String.to_float(str)
 
-  defp check_duration_conflicts(actions) do
+  defp check_duration_conflicts(_actions) do
     # Check for actions with conflicting duration requirements
     []
   end
 
-  defp check_resource_conflicts(actions) do
+  defp check_resource_conflicts(_actions) do
     # Check for actions that require the same resources simultaneously
     []
   end
 
-  defp check_temporal_ordering(actions) do
+  defp check_temporal_ordering(_actions) do
     # Check for violations of temporal ordering constraints
     []
   end
@@ -319,7 +319,7 @@ defmodule AriaInteractivity.Temporal do
     end)
   end
 
-  defp get_gltf_animation_duration(gltf_animation) do
+  defp get_gltf_animation_duration(_gltf_animation) do
     # Extract duration from glTF animation data
     # This would need to analyze the animation's sampler input accessor
     # For now, return a default duration

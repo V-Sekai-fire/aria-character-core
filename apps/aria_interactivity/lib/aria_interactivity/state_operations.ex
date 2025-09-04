@@ -17,7 +17,7 @@ defmodule AriaInteractivity.StateOperations do
   # Variable Set
   @unigoal_method predicate: "variable_set"
   @spec set_variable(AriaState.t(), {atom(), term()}) :: {:ok, [AriaEngine.todo_item()]} | {:error, atom()}
-  def set_variable(state, {variable_name, value}) do
+  def set_variable(_state, {variable_name, value}) do
     {:ok, [
       {:action, {:update_variable, [variable_name, value]}}
     ]}
@@ -26,7 +26,7 @@ defmodule AriaInteractivity.StateOperations do
   # Variable Get
   @unigoal_method predicate: "variable_get"
   @spec get_variable(AriaState.t(), {atom()}) :: {:ok, [AriaEngine.todo_item()]} | {:error, atom()}
-  def get_variable(state, {variable_name}) do
+  def get_variable(_state, {variable_name}) do
     {:ok, [
       {:action, {:read_variable, [variable_name]}}
     ]}
@@ -35,7 +35,7 @@ defmodule AriaInteractivity.StateOperations do
   # Variable Increment
   @unigoal_method predicate: "variable_incremented"
   @spec increment_variable(AriaState.t(), {atom(), number()}) :: {:ok, [AriaEngine.todo_item()]} | {:error, atom()}
-  def increment_variable(state, {variable_name, amount}) do
+  def increment_variable(_state, {variable_name, amount}) do
     {:ok, [
       {:action, {:increment_variable, [variable_name, amount]}}
     ]}
@@ -44,7 +44,7 @@ defmodule AriaInteractivity.StateOperations do
   # Variable Decrement
   @unigoal_method predicate: "variable_decremented"
   @spec decrement_variable(AriaState.t(), {atom(), number()}) :: {:ok, [AriaEngine.todo_item()]} | {:error, atom()}
-  def decrement_variable(state, {variable_name, amount}) do
+  def decrement_variable(_state, {variable_name, amount}) do
     {:ok, [
       {:action, {:decrement_variable, [variable_name, amount]}}
     ]}
@@ -57,7 +57,7 @@ defmodule AriaInteractivity.StateOperations do
   # Check if variable equals value
   @unigoal_method predicate: "variable_equals"
   @spec variable_equals(AriaState.t(), {atom(), term()}) :: {:ok, [AriaEngine.todo_item()]} | {:error, atom()}
-  def variable_equals(state, {variable_name, expected_value}) do
+  def variable_equals(_state, {variable_name, expected_value}) do
     {:ok, [
       {:goal, {:variable_equals, variable_name, expected_value}}
     ]}
@@ -66,7 +66,7 @@ defmodule AriaInteractivity.StateOperations do
   # Check if variable is greater than value
   @unigoal_method predicate: "variable_greater_than"
   @spec variable_greater_than(AriaState.t(), {atom(), number()}) :: {:ok, [AriaEngine.todo_item()]} | {:error, atom()}
-  def variable_greater_than(state, {variable_name, threshold}) do
+  def variable_greater_than(_state, {variable_name, threshold}) do
     {:ok, [
       {:goal, {:variable_greater_than, variable_name, threshold}}
     ]}
@@ -75,7 +75,7 @@ defmodule AriaInteractivity.StateOperations do
   # Check if variable is less than value
   @unigoal_method predicate: "variable_less_than"
   @spec variable_less_than(AriaState.t(), {atom(), number()}) :: {:ok, [AriaEngine.todo_item()]} | {:error, atom()}
-  def variable_less_than(state, {variable_name, threshold}) do
+  def variable_less_than(_state, {variable_name, threshold}) do
     {:ok, [
       {:goal, {:variable_less_than, variable_name, threshold}}
     ]}
@@ -88,7 +88,7 @@ defmodule AriaInteractivity.StateOperations do
   # Transition to state
   @unigoal_method predicate: "state_transitioned"
   @spec transition_to_state(AriaState.t(), {atom(), atom()}) :: {:ok, [AriaEngine.todo_item()]} | {:error, atom()}
-  def transition_to_state(state, {from_state, to_state}) do
+  def transition_to_state(_state, {from_state, to_state}) do
     {:ok, [
       {:action, {:transition_state, [from_state, to_state]}}
     ]}
@@ -97,7 +97,7 @@ defmodule AriaInteractivity.StateOperations do
   # Set state flag
   @unigoal_method predicate: "flag_set"
   @spec set_flag(AriaState.t(), {atom(), boolean()}) :: {:ok, [AriaEngine.todo_item()]} | {:error, atom()}
-  def set_flag(state, {flag_name, value}) do
+  def set_flag(_state, {flag_name, value}) do
     {:ok, [
       {:action, {:set_flag, [flag_name, value]}}
     ]}
@@ -106,7 +106,7 @@ defmodule AriaInteractivity.StateOperations do
   # Toggle state flag
   @unigoal_method predicate: "flag_toggled"
   @spec toggle_flag(AriaState.t(), {atom()}) :: {:ok, [AriaEngine.todo_item()]} | {:error, atom()}
-  def toggle_flag(state, {flag_name}) do
+  def toggle_flag(_state, {flag_name}) do
     {:ok, [
       {:action, {:toggle_flag, [flag_name]}}
     ]}
@@ -119,7 +119,7 @@ defmodule AriaInteractivity.StateOperations do
   # Validate state consistency
   @unigoal_method predicate: "state_valid"
   @spec validate_state(AriaState.t(), {atom()}) :: {:ok, [AriaEngine.todo_item()]} | {:error, atom()}
-  def validate_state(state, {validation_type}) do
+  def validate_state(_state, {validation_type}) do
     {:ok, [
       {:action, {:validate_state, [validation_type]}}
     ]}
@@ -128,7 +128,7 @@ defmodule AriaInteractivity.StateOperations do
   # Check state invariants
   @unigoal_method predicate: "invariants_checked"
   @spec check_invariants(AriaState.t(), {atom()}) :: {:ok, [AriaEngine.todo_item()]} | {:error, atom()}
-  def check_invariants(state, {invariant_set}) do
+  def check_invariants(_state, {invariant_set}) do
     {:ok, [
       {:action, {:check_invariants, [invariant_set]}}
     ]}
@@ -141,7 +141,7 @@ defmodule AriaInteractivity.StateOperations do
   # Record state change
   @unigoal_method predicate: "state_recorded"
   @spec record_state_change(AriaState.t(), {atom(), term(), term()}) :: {:ok, [AriaEngine.todo_item()]} | {:error, atom()}
-  def record_state_change(state, {variable_name, old_value, new_value}) do
+  def record_state_change(_state, {variable_name, old_value, new_value}) do
     {:ok, [
       {:action, {:record_state_change, [variable_name, old_value, new_value]}}
     ]}
@@ -150,7 +150,7 @@ defmodule AriaInteractivity.StateOperations do
   # Undo state change
   @unigoal_method predicate: "state_undone"
   @spec undo_state_change(AriaState.t(), {atom()}) :: {:ok, [AriaEngine.todo_item()]} | {:error, atom()}
-  def undo_state_change(state, {variable_name}) do
+  def undo_state_change(_state, {variable_name}) do
     {:ok, [
       {:action, {:undo_state_change, [variable_name]}}
     ]}
@@ -163,7 +163,7 @@ defmodule AriaInteractivity.StateOperations do
   # Save state
   @unigoal_method predicate: "state_saved"
   @spec save_state(AriaState.t(), {atom()}) :: {:ok, [AriaEngine.todo_item()]} | {:error, atom()}
-  def save_state(state, {save_slot}) do
+  def save_state(_state, {save_slot}) do
     {:ok, [
       {:action, {:save_state, [save_slot]}}
     ]}
@@ -172,7 +172,7 @@ defmodule AriaInteractivity.StateOperations do
   # Load state
   @unigoal_method predicate: "state_loaded"
   @spec load_state(AriaState.t(), {atom()}) :: {:ok, [AriaEngine.todo_item()]} | {:error, atom()}
-  def load_state(state, {save_slot}) do
+  def load_state(_state, {save_slot}) do
     {:ok, [
       {:action, {:load_state, [save_slot]}}
     ]}
@@ -181,7 +181,7 @@ defmodule AriaInteractivity.StateOperations do
   # Reset state
   @unigoal_method predicate: "state_reset"
   @spec reset_state(AriaState.t(), {atom()}) :: {:ok, [AriaEngine.todo_item()]} | {:error, atom()}
-  def reset_state(state, {reset_type}) do
+  def reset_state(_state, {reset_type}) do
     {:ok, [
       {:action, {:reset_state, [reset_type]}}
     ]}
