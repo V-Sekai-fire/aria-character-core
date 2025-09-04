@@ -47,8 +47,8 @@ defmodule AriaInteractivity.SpecParser do
     # Filter for sections that contain node definitions
     Enum.filter(sections, fn section ->
       String.contains?(section, "Operation") &&
-      String.contains?(section, "math/") || String.contains?(section, "flow/") ||
-      String.contains?(section, "event/") || String.contains?(section, "pointer/")
+      (String.contains?(section, "math/") || String.contains?(section, "flow/") ||
+       String.contains?(section, "event/") || String.contains?(section, "pointer/"))
     end)
   end
 
@@ -68,11 +68,11 @@ defmodule AriaInteractivity.SpecParser do
 
   defp extract_operation(section) do
     # Look for the operation pattern like `math/add`
-    case Regex.run(~r/Operation.*?\* ([a-zA-Z0-9/_]+)\*/, section) do
+    case Regex.run(~r/Operation.*?\* ([a-zA-Z0-9_\/]+)\*/, section) do
       [_, operation] -> operation
       nil ->
         # Fallback: look for other patterns
-        case Regex.run(~r/Operation.*?\* `([a-zA-Z0-9/_]+)`/, section) do
+        case Regex.run(~r/Operation.*?\* `([a-zA-Z0-9_\/]+)`/, section) do
           [_, operation] -> operation
           nil -> "unknown_operation"
         end
