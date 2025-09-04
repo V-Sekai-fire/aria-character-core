@@ -1,0 +1,12 @@
+; DO NOT EDIT (unless you know what you are doing)
+;
+; This subdirectory is a git "subrepo", and this file is maintained by the
+; git-subrepo command. See https://github.com/ingydotnet/git-subrepo#readme
+;
+[subrepo]
+	remote = https://github.com/mdda/arc-dsl-llm.git
+	branch = main
+	commit = 1c9ea2f4b0194b09f2706b4dec94faa98c9492c0
+	parent = 2a71762a15dd5fae3cfd14c33e3e6631930d5032
+	method = merge
+	cmdver = 0.4.9
