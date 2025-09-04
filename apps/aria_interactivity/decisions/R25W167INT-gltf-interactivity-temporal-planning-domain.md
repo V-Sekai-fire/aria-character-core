@@ -32,13 +32,13 @@ Create aria_interactivity app that maps glTF Interactivity Extension nodes to IP
 
 ### Node → Domain Element Mapping
 
-| glTF Node Category | IPyHOP Element    | Domain Task-Goal Pattern                    |
-| ------------------ | ----------------- | ------------------------------------------- |
-| Math Operations    | @action/@command  | `math/add` → planning + execution           |
-| Flow Control       | @task_method      | `flow/sequence` → task decomposition        |
-| State Operations   | @unigoal_method   | `variable/set` → goal achievement           |
-| Animation Control  | @unigoal_method   | `animation/play` → goal achievement         |
-| Event Handling     | @unigoal_method   | `event/trigger` → goal achievement          |
+| glTF Node Category | IPyHOP Element   | Domain Task-Goal Pattern             |
+| ------------------ | ---------------- | ------------------------------------ |
+| Math Operations    | @action/@command | `math/add` → planning + execution    |
+| Flow Control       | @task_method     | `flow/sequence` → task decomposition |
+| State Operations   | @unigoal_method  | `variable/set` → goal achievement    |
+| Animation Control  | @unigoal_method  | `animation/play` → goal achievement  |
+| Event Handling     | @unigoal_method  | `event/trigger` → goal achievement   |
 
 ### Domain Task-Goal Implementation Patterns
 
@@ -73,13 +73,10 @@ def create_temporal_animation(state, [animation_index, duration, start_time, end
 end
 ```
 
-_Inline lambda creation provides the cleanest approach for procedural temporal action generation_
-
 ### Manual Annotation Workaround for Lambda Actions
 
 **Since lambda functions cannot use compile-time `@action` attributes, use this manual inline lambda creation process:**
 
-#### **Pattern 2: Inline Lambda Creation (RECOMMENDED)**
 ```elixir
 @task_method true
 @spec create_annotated_lambda(AriaState.t(), [animation_index, duration, start_time, end_time, speed]) :: {:ok, [AriaEngine.todo_item()]} | {:error, atom()}
