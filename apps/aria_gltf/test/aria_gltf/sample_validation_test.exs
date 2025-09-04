@@ -2,6 +2,7 @@
 
 defmodule AriaGltf.SampleValidationTest do
   use ExUnit.Case
+  require Logger
   doctest AriaGltf.SampleValidation
 
   alias AriaGltf.SampleValidation

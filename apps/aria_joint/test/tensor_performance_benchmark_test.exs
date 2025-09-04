@@ -10,6 +10,7 @@ defmodule AriaJoint.TensorPerformanceBenchmarkTest do
   @moduletag timeout: 300_000  # 5 minutes for long benchmarks
 
   describe "tensor vs scalar performance comparison" do
+    @describetag :integration
     test "benchmark: batch transform operations (tensor vs scalar)" do
       # Use GPU-optimized batch sizes based on memory management
       sizes = [1000, 5000, 25000, 50000, 100000]
@@ -53,6 +54,7 @@ defmodule AriaJoint.TensorPerformanceBenchmarkTest do
       end
     end
 
+    @describetag :integration
     test "benchmark: hierarchy propagation (tensor batch)" do
       # Use memory-optimized sizes
       sizes = [5000, 25000, 50000, 100000]
@@ -88,6 +90,7 @@ defmodule AriaJoint.TensorPerformanceBenchmarkTest do
       end
     end
 
+    @describetag :integration
     test "benchmark: position extraction from transforms" do
       sizes = [1000, 5000, 10000, 50000]
 
@@ -107,6 +110,7 @@ defmodule AriaJoint.TensorPerformanceBenchmarkTest do
       end
     end
 
+    @describetag :integration
     test "benchmark: batch coordinate transformations" do
       sizes = [1000, 5000, 10000]
       points_per_joint = [1, 10, 100]
@@ -148,6 +152,7 @@ defmodule AriaJoint.TensorPerformanceBenchmarkTest do
       end
     end
 
+    @describetag :integration
     test "benchmark: memory efficiency comparison" do
       sizes = [1000, 10000, 50000]
 
@@ -176,6 +181,7 @@ defmodule AriaJoint.TensorPerformanceBenchmarkTest do
       end
     end
 
+    @describetag :integration
     test "benchmark: GPU-optimized operations (TensorGPU vs Tensor)" do
       # Test larger sizes where GPU should excel
       sizes = [10000, 50000, 100000]
@@ -214,6 +220,7 @@ defmodule AriaJoint.TensorPerformanceBenchmarkTest do
       end
     end
 
+    @describetag :integration
     test "benchmark: complete GPU pipeline vs CPU pipeline" do
       # Test complete processing pipeline
       sizes = [25000, 50000, 100000]

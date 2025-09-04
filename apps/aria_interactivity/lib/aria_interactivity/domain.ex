@@ -2,7 +2,6 @@ defmodule AriaInteractivity.Domain do
   @moduledoc "glTF 2.0 Interactivity Extension as Temporal Planning Domain"
   use AriaCore.ActionAttributes
 
-  # glTF type aliases for specification compliance
   @type gltf_float :: float()
   @type gltf_float2 :: {float(), float()}
   @type gltf_float3 :: {float(), float(), float()}
@@ -10,8 +9,6 @@ defmodule AriaInteractivity.Domain do
   @type gltf_int :: integer()
   @type gltf_bool :: boolean()
   @type result :: {:ok, AriaState.t()} | {:error, atom()}
-
-  # Delegate only to functions that actually exist in the modules
 
   # Math operations that exist in MathOperations module
   @spec add(AriaState.t(), [number()]) :: result()

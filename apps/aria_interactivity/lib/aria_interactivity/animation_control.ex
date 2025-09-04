@@ -14,7 +14,6 @@ defmodule AriaInteractivity.AnimationControl do
   # ANIMATION PLAYBACK CONTROL
   # ============================================================================
 
-  # Animation Play
   @unigoal_method predicate: "animation_playing"
   @spec play_animation(AriaState.t(), {integer(), boolean()}) :: {:ok, [AriaEngine.todo_item()]} | {:error, atom()}
   def play_animation(state, {animation_id, true}) do
@@ -23,7 +22,6 @@ defmodule AriaInteractivity.AnimationControl do
     ]}
   end
 
-  # Animation Stop
   @unigoal_method predicate: "animation_stopped"
   @spec stop_animation(AriaState.t(), {integer(), boolean()}) :: {:ok, [AriaEngine.todo_item()]} | {:error, atom()}
   def stop_animation(_state, {animation_id, true}) do
@@ -32,7 +30,6 @@ defmodule AriaInteractivity.AnimationControl do
     ]}
   end
 
-  # Animation Pause
   @unigoal_method predicate: "animation_paused"
   @spec pause_animation(AriaState.t(), {integer(), boolean()}) :: {:ok, [AriaEngine.todo_item()]} | {:error, atom()}
   def pause_animation(_state, {animation_id, true}) do
@@ -41,7 +38,6 @@ defmodule AriaInteractivity.AnimationControl do
     ]}
   end
 
-  # Animation Resume
   @unigoal_method predicate: "animation_resumed"
   @spec resume_animation(AriaState.t(), {integer(), boolean()}) :: {:ok, [AriaEngine.todo_item()]} | {:error, atom()}
   def resume_animation(_state, {animation_id, true}) do
@@ -54,7 +50,6 @@ defmodule AriaInteractivity.AnimationControl do
   # ANIMATION TIMING CONTROL
   # ============================================================================
 
-  # Animation Seek
   @unigoal_method predicate: "animation_seeked"
   @spec seek_animation(AriaState.t(), {integer(), float()}) :: {:ok, [AriaEngine.todo_item()]} | {:error, atom()}
   def seek_animation(_state, {animation_id, time_position}) do
@@ -63,7 +58,6 @@ defmodule AriaInteractivity.AnimationControl do
     ]}
   end
 
-  # Animation Speed Control
   @unigoal_method predicate: "animation_speed_set"
   @spec set_animation_speed(AriaState.t(), {integer(), float()}) :: {:ok, [AriaEngine.todo_item()]} | {:error, atom()}
   def set_animation_speed(_state, {animation_id, speed}) do
@@ -72,7 +66,6 @@ defmodule AriaInteractivity.AnimationControl do
     ]}
   end
 
-  # Animation Loop Control
   @unigoal_method predicate: "animation_loop_set"
   @spec set_animation_loop(AriaState.t(), {integer(), boolean()}) :: {:ok, [AriaEngine.todo_item()]} | {:error, atom()}
   def set_animation_loop(_state, {animation_id, loop}) do
@@ -94,7 +87,6 @@ defmodule AriaInteractivity.AnimationControl do
     ]}
   end
 
-  # Check if animation is completed
   @unigoal_method predicate: "animation_completed"
   @spec is_animation_completed(AriaState.t(), {integer()}) :: {:ok, [AriaEngine.todo_item()]} | {:error, atom()}
   def is_animation_completed(_state, {animation_id}) do
@@ -103,7 +95,6 @@ defmodule AriaInteractivity.AnimationControl do
     ]}
   end
 
-  # Get animation current time
   @unigoal_method predicate: "animation_time"
   @spec get_animation_time(AriaState.t(), {integer()}) :: {:ok, [AriaEngine.todo_item()]} | {:error, atom()}
   def get_animation_time(_state, {animation_id}) do
