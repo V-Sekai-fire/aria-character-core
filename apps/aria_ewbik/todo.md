@@ -1,6 +1,18 @@
 ### 1. Current Work
 
-We are implementing the `aria_ewbik` app, which provides Entirely Wahba's-problem Based Inverse Kinematics (EWBIK) solver with sophisticated multi-effector coordination, VRM1 collision detection, and anti-uncanny valley features for realistic character animation. The app is currently in minimal structure phase with basic files created but all core functionality stubbed. We need to systematically implement the EWBIK algorithm using existing mathematical foundations (AriaJoint, AriaQCP, AriaMath, AriaHybridPlanner) while maintaining clean external API boundaries.
+We are implementing the `aria_ewbik` app, which provides Entirely Wahba's-problem Based Inverse Kinematics (EWBIK) solver with sophisticated multi-effector coordination, VRM1 collision detection, and anti-uncanny valley features for realistic character animation.
+
+**CURRENT STATUS: Phase 1.5 - External API Implementation (CRITICAL PRIORITY)**
+
+The internal EWBIK modules are complete with basic implementations, but the external API delegation is missing. All public functions in `AriaEwbik` module are commented out with TODOs, making the system unusable for external consumers. This is the critical blocking issue that must be resolved before the EWBIK system can be considered functional.
+
+**Immediate Next Steps:**
+1. Uncomment and implement all defdelegate statements in `lib/aria_ewbik.ex`
+2. Connect `AriaEwbik.solve_ik/3` to `AriaEwbik.Solver.solve_ik/3`
+3. Connect `AriaEwbik.solve_multi_effector/3` to `AriaEwbik.Solver.solve_multi_effector/3`
+4. Implement skeleton analysis API functions
+5. Add comprehensive error handling and validation
+6. Test end-to-end functionality
 
 ### 2. Key Technical Concepts
 
@@ -166,22 +178,66 @@ We are implementing the `aria_ewbik` app, which provides Entirely Wahba's-proble
 
 **Technical Implementation Details:**
 
-**EWBIK Algorithm Structure:**
+**Current Solver Interface:**
 
 ```elixir
-# Core solving pipeline
+# Current AriaEwbik.Solver interface (implemented)
+defmodule AriaEwbik.Solver do
+  def solve_ik(skeleton, {effector_id, target_position}, opts \\ [])
+  def solve_multi_effector(skeleton, effector_targets, opts \\ [])
+end
+
+# Current AriaEwbik.Segmentation interface (implemented)
+defmodule AriaEwbik.Segmentation do
+  def build_chain(skeleton, effector_id)
+  def analyze_chains(skeleton, effector_targets)
+end
+
+# Current AriaEwbik.Kusudama interface (implemented)
+defmodule AriaEwbik.Kusudama do
+  def apply_constraint(joint, constraint_data, orientation)
+  def validate_constraints(skeleton)
+end
+
+# Current AriaEwbik.Propagation interface (implemented)
+defmodule AriaEwbik.Propagation do
+  def apply_propagation(solutions, skeleton, factors)
+end
+```
+
+**AriaJoint Integration Patterns:**
+
+```elixir
+# Using AriaJoint.HierarchyManager for optimized transform calculations
+{:ok, manager} = AriaJoint.HierarchyManager.new()
+manager = AriaJoint.HierarchyManager.rebuild_from_nodes(manager, all_joints)
+
+# Batch update global transforms (26x faster than registry approach)
+manager = AriaJoint.HierarchyManager.update_global_transforms_functional(manager, all_joints)
+
+# Get cached global transform
+global_transform = AriaJoint.HierarchyManager.get_global_transform(manager, joint_id)
+
+# Mark subtree dirty for efficient propagation (O(span) vs O(depth))
+manager = AriaJoint.HierarchyManager.mark_subtree_dirty(manager, joint_id)
+```
+
+**EWBIK Algorithm Structure (Target Implementation):**
+
+```elixir
+# Planned EWBIK solving pipeline
 defmodule AriaEwbik.Solver do
   def solve_ik(skeleton, effector_targets, opts \\ []) do
-    # 1. Segment skeleton using AriaJoint
-    segments = AriaEwbik.Segmentation.analyze_chains(skeleton, effector_targets)
+    # 1. Segment skeleton using AriaJoint optimized hierarchy
+    {:ok, segments} = AriaEwbik.Segmentation.analyze_chains(skeleton, effector_targets)
 
-    # 2. Apply Kusudama constraints
+    # 2. Apply Kusudama constraints using AriaMath quaternion operations
     constrained_segments = Enum.map(segments, &AriaEwbik.Kusudama.apply_constraints/1)
 
-    # 3. Solve using QCP algorithm
+    # 3. Solve using AriaQCP Wahba's problem algorithm
     solutions = AriaQCP.solve_multi_effector(constrained_segments, opts)
 
-    # 4. Apply motion propagation
+    # 4. Apply motion propagation with AriaJoint batch updates
     final_pose = AriaEwbik.Propagation.apply_propagation(solutions, skeleton)
   end
 end
