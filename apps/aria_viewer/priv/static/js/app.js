@@ -1,5 +1,4 @@
-// Aria IK Solver - Three.js Frontend Application
-
+// Aria Real-Time IK Solver Frontend
 class AriaIKSolver {
     constructor() {
         this.scene = null;
@@ -7,374 +6,261 @@ class AriaIKSolver {
         this.renderer = null;
         this.vrm = null;
         this.channel = null;
-        this.selectedBone = null;
-        this.targetSphere = null;
-        this.boneFilters = new Map(); // For 1 euro filter smoothing
-        this.raycaster = new THREE.Raycaster();
-        this.mouse = new THREE.Vector2();
+        this.currentModel = null;
+        this.targetHelper = null;
 
         this.init();
         this.setupWebSocket();
         this.setupEventListeners();
-        this.animate();
     }
 
     init() {
-        // Scene setup
+        // Initialize Three.js scene
         this.scene = new THREE.Scene();
-        this.scene.background = new THREE.Color(0x1a1a1a);
-
-        // Camera setup
         this.camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-        this.camera.position.set(0, 1.6, 3);
-
-        // Renderer setup
         this.renderer = new THREE.WebGLRenderer({ antialias: true });
         this.renderer.setSize(window.innerWidth, window.innerHeight);
-        this.renderer.setPixelRatio(window.devicePixelRatio);
-        this.renderer.shadowMap.enabled = true;
-        this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+        this.renderer.setClearColor(0x1a1a1a);
 
-        const container = document.getElementById('scene');
+        const container = document.getElementById('container');
         container.appendChild(this.renderer.domElement);
 
-        // Lighting
+        // Setup camera
+        this.camera.position.set(0, 1.5, 3);
+        this.camera.lookAt(0, 1, 0);
+
+        // Add lighting
         const ambientLight = new THREE.AmbientLight(0x404040, 0.6);
         this.scene.add(ambientLight);
 
         const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
-        directionalLight.position.set(5, 5, 5);
-        directionalLight.castShadow = true;
+        directionalLight.position.set(1, 1, 1);
         this.scene.add(directionalLight);
 
-        // Ground plane
-        const planeGeometry = new THREE.PlaneGeometry(10, 10);
-        const planeMaterial = new THREE.MeshLambertMaterial({ color: 0x333333 });
-        const plane = new THREE.Mesh(planeGeometry, planeMaterial);
-        plane.rotation.x = -Math.PI / 2;
-        plane.receiveShadow = true;
-        this.scene.add(plane);
-
-        // Target sphere (invisible initially)
-        const sphereGeometry = new THREE.SphereGeometry(0.05, 16, 16);
-        const sphereMaterial = new THREE.MeshBasicMaterial({ color: 0xff0000, transparent: true, opacity: 0.7 });
-        this.targetSphere = new THREE.Mesh(sphereGeometry, sphereMaterial);
-        this.targetSphere.visible = false;
-        this.scene.add(this.targetSphere);
-
-        // Grid helper
-        const gridHelper = new THREE.GridHelper(10, 10, 0x444444, 0x222222);
+        // Add grid helper
+        const gridHelper = new THREE.GridHelper(10, 10);
         this.scene.add(gridHelper);
 
-        this.updateStatus('Scene initialized - ready for VRM loading');
+        // Create target position helper
+        this.createTargetHelper();
+
+        this.animate();
+        this.updateStatus('Three.js initialized');
+    }
+
+    createTargetHelper() {
+        // Create a sphere to show target position
+        const geometry = new THREE.SphereGeometry(0.05, 16, 16);
+        const material = new THREE.MeshBasicMaterial({ color: 0xff0000 });
+        this.targetHelper = new THREE.Mesh(geometry, material);
+        this.targetHelper.position.set(0.5, 1.2, 0.3);
+        this.scene.add(this.targetHelper);
     }
 
     setupWebSocket() {
-        const socket = new Phoenix.Socket("/socket");
-        socket.connect();
+        const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+        const wsUrl = `${protocol}//${window.location.host}/socket`;
 
-        this.channel = socket.channel("ik:lobby", {});
+        this.socket = new Phoenix.Socket(wsUrl);
+        this.socket.connect();
+
+        this.channel = this.socket.channel("ik:lobby", {});
         this.channel.join()
             .receive("ok", resp => {
                 console.log("Joined IK channel successfully", resp);
-                this.updateStatus('Connected to IK solver backend', 'success');
+                this.updateWebSocketStatus('Connected');
             })
             .receive("error", resp => {
                 console.log("Unable to join IK channel", resp);
-                this.updateStatus('Failed to connect to backend', 'error');
+                this.updateWebSocketStatus('Connection Failed');
             });
 
         // Listen for pose updates
         this.channel.on("new_pose", payload => {
+            console.log("Received new pose:", payload);
             this.applyPoseUpdate(payload.joints);
         });
     }
 
     setupEventListeners() {
+        // Update target button
+        document.getElementById('update-target').addEventListener('click', () => {
+            this.updateTarget();
+        });
+
+        // Load VRMA button
+        document.getElementById('load-vrma').addEventListener('click', () => {
+            this.showDropZone();
+        });
+
+        // File input
+        document.getElementById('file-input').addEventListener('change', (event) => {
+            const file = event.target.files[0];
+            if (file) {
+                this.loadVRMFile(file);
+            }
+        });
+
+        // Drag and drop
+        const dropZone = document.getElementById('drop-zone');
+        dropZone.addEventListener('click', () => {
+            document.getElementById('file-input').click();
+        });
+
+        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+            dropZone.addEventListener(eventName, this.preventDefaults, false);
+        });
+
+        ['dragenter', 'dragover'].forEach(eventName => {
+            dropZone.addEventListener(eventName, () => {
+                dropZone.classList.add('dragover');
+            });
+        });
+
+        ['dragleave', 'drop'].forEach(eventName => {
+            dropZone.addEventListener(eventName, () => {
+                dropZone.classList.remove('dragover');
+            });
+        });
+
+        dropZone.addEventListener('drop', (e) => {
+            const file = e.dataTransfer.files[0];
+            if (file) {
+                this.loadVRMFile(file);
+            }
+        });
+
         // Window resize
         window.addEventListener('resize', () => {
             this.camera.aspect = window.innerWidth / window.innerHeight;
             this.camera.updateProjectionMatrix();
             this.renderer.setSize(window.innerWidth, window.innerHeight);
         });
+    }
 
-        // Mouse events for bone selection
-        this.renderer.domElement.addEventListener('mousedown', (event) => {
-            this.onMouseDown(event);
+    preventDefaults(e) {
+        e.preventDefault();
+        e.stopPropagation();
+    }
+
+    updateTarget() {
+        const boneSelect = document.getElementById('bone-select');
+        const x = parseFloat(document.getElementById('target-x').value);
+        const y = parseFloat(document.getElementById('target-y').value);
+        const z = parseFloat(document.getElementById('target-z').value);
+
+        const endEffector = boneSelect.value;
+        const position = { x, y, z };
+
+        // Update target helper position
+        this.targetHelper.position.set(x, y, z);
+
+        // Send to backend
+        this.channel.push("update_target", {
+            endEffector: endEffector,
+            position: position
         });
 
-        // Drag and drop for VRM files
+        this.updateStatus(`Updated target for ${endEffector}`);
+    }
+
+    showDropZone() {
         const dropZone = document.getElementById('drop-zone');
-        const container = document.getElementById('container');
+        dropZone.classList.add('visible');
+    }
 
-        // Show drop zone when dragging files over
-        ['dragenter', 'dragover'].forEach(eventName => {
-            container.addEventListener(eventName, (e) => {
-                e.preventDefault();
-                dropZone.style.display = 'block';
-                dropZone.classList.add('dragover');
-            });
-        });
-
-        ['dragleave', 'drop'].forEach(eventName => {
-            container.addEventListener(eventName, (e) => {
-                e.preventDefault();
-                dropZone.classList.remove('dragover');
-            });
-        });
-
-        // Hide drop zone when not dragging
-        container.addEventListener('dragleave', (e) => {
-            if (!container.contains(e.relatedTarget)) {
-                dropZone.style.display = 'none';
-            }
-        });
-
-        // Handle file drop
-        container.addEventListener('drop', (e) => {
-            e.preventDefault();
-            dropZone.style.display = 'none';
-
-            const files = e.dataTransfer.files;
-            if (files.length > 0) {
-                this.loadVRMFile(files[0]);
-            }
-        });
-
-        // UI controls
-        document.getElementById('update-target').addEventListener('click', () => {
-            this.sendIKTarget();
-        });
-
-        document.getElementById('bone-select').addEventListener('change', (e) => {
-            this.selectedBone = e.target.value;
-            this.updateTargetSphere();
-        });
-
-        // Target position inputs
-        ['target-x', 'target-y', 'target-z'].forEach(id => {
-            document.getElementById(id).addEventListener('input', () => {
-                this.updateTargetSphere();
-            });
-        });
+    hideDropZone() {
+        const dropZone = document.getElementById('drop-zone');
+        dropZone.classList.remove('visible');
     }
 
     async loadVRMFile(file) {
-        if (!file.name.toLowerCase().endsWith('.vrm')) {
-            this.updateStatus('Please select a .vrm file', 'error');
-            return;
-        }
-
-        this.updateStatus('Loading VRM file...', 'info');
+        this.updateStatus(`Loading VRM file: ${file.name}`);
+        this.hideDropZone();
 
         try {
             const arrayBuffer = await file.arrayBuffer();
             const vrm = await THREE.VRMLoader.loadAsync(arrayBuffer);
 
-            // Remove existing VRM if present
-            if (this.vrm) {
-                this.scene.remove(this.vrm.scene);
+            // Remove existing model
+            if (this.currentModel) {
+                this.scene.remove(this.currentModel);
             }
 
+            // Add new model
+            this.currentModel = vrm.scene;
+            this.scene.add(this.currentModel);
+
+            // Store VRM instance for bone manipulation
             this.vrm = vrm;
-            this.scene.add(vrm.scene);
 
-            // Position the model
-            vrm.scene.position.set(0, 0, 0);
-            vrm.scene.rotation.set(0, 0, 0);
+            this.updateModelStatus(`${file.name} loaded`);
+            this.updateStatus('VRM model loaded successfully');
 
-            // Setup bone filters for smoothing
-            this.setupBoneFilters();
-
-            // Notify backend about model loading
-            this.channel.push("load_model", { model_path: file.name });
-
-            this.updateStatus(`VRM loaded: ${file.name}`, 'success');
-
-            // Hide drop zone and show UI
-            document.getElementById('drop-zone').style.display = 'none';
-            document.getElementById('ui').style.display = 'block';
+            // Load model on backend
+            this.channel.push("load_model", {
+                model_path: `/static/${file.name}`
+            });
 
         } catch (error) {
             console.error('Error loading VRM:', error);
-            this.updateStatus('Failed to load VRM file', 'error');
+            this.updateStatus(`Error loading VRM: ${error.message}`);
         }
-    }
-
-    setupBoneFilters() {
-        if (!this.vrm) return;
-
-        // Initialize 1 euro filters for each bone
-        this.vrm.humanoid.humanBones.forEach((bone, name) => {
-            if (bone) {
-                this.boneFilters.set(name, new OneEuroFilter(0.001, 0.007, 0.1));
-            }
-        });
-    }
-
-    onMouseDown(event) {
-        // Convert mouse position to normalized device coordinates
-        this.mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
-        this.mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
-
-        // Update the raycaster
-        this.raycaster.setFromCamera(this.mouse, this.camera);
-
-        // Check for intersections with VRM bones
-        if (this.vrm) {
-            const intersects = this.raycaster.intersectObjects(this.vrm.scene.children, true);
-
-            if (intersects.length > 0) {
-                // Find the bone that was clicked
-                const clickedBone = this.findBoneFromIntersection(intersects[0]);
-                if (clickedBone) {
-                    this.selectBone(clickedBone);
-                }
-            }
-        }
-    }
-
-    findBoneFromIntersection(intersection) {
-        // Walk up the hierarchy to find a bone
-        let object = intersection.object;
-        while (object) {
-            if (object.userData && object.userData.boneName) {
-                return object.userData.boneName;
-            }
-            object = object.parent;
-        }
-        return null;
-    }
-
-    selectBone(boneName) {
-        this.selectedBone = boneName;
-        document.getElementById('bone-select').value = boneName;
-        this.updateTargetSphere();
-
-        this.updateStatus(`Selected bone: ${boneName}`, 'info');
-    }
-
-    updateTargetSphere() {
-        if (!this.selectedBone || !this.vrm) {
-            this.targetSphere.visible = false;
-            return;
-        }
-
-        const bone = this.vrm.humanoid.getBoneNode(this.selectedBone);
-        if (bone) {
-            // Position target sphere at current bone position
-            bone.getWorldPosition(this.targetSphere.position);
-            this.targetSphere.visible = true;
-        }
-    }
-
-    sendIKTarget() {
-        if (!this.selectedBone || !this.channel) return;
-
-        const x = parseFloat(document.getElementById('target-x').value) || 0;
-        const y = parseFloat(document.getElementById('target-y').value) || 0;
-        const z = parseFloat(document.getElementById('target-z').value) || 0;
-
-        const message = {
-            endEffector: this.selectedBone,
-            position: { x, y, z }
-        };
-
-        this.channel.push("update_target", message);
-        this.updateStatus(`Sent IK target for ${this.selectedBone}`, 'info');
-
-        // Update target sphere position
-        this.targetSphere.position.set(x, y, z);
-        this.targetSphere.visible = true;
     }
 
     applyPoseUpdate(joints) {
-        if (!this.vrm) return;
+        if (!this.vrm) {
+            console.warn('No VRM model loaded');
+            return;
+        }
 
         joints.forEach(joint => {
-            const bone = this.vrm.humanoid.getBoneNode(joint.bone);
-            if (bone) {
-                // Apply 1 euro filter for smooth interpolation
-                const smoothedRotation = this.smoothBoneRotation(joint.bone, joint.rotation);
-
-                // Apply the smoothed rotation
-                bone.quaternion.set(...smoothedRotation);
+            try {
+                const bone = this.vrm.humanoid.getBoneNode(joint.bone);
+                if (bone && joint.rotation && joint.rotation.length === 4) {
+                    const [x, y, z, w] = joint.rotation;
+                    bone.quaternion.set(x, y, z, w);
+                }
+            } catch (error) {
+                console.warn(`Could not apply rotation to bone ${joint.bone}:`, error);
             }
         });
 
-        this.updateStatus(`Applied pose update for ${joints.length} joints`, 'success');
-    }
-
-    smoothBoneRotation(boneName, newRotation) {
-        const filter = this.boneFilters.get(boneName);
-        if (!filter) return newRotation;
-
-        const timestamp = performance.now();
-        const smoothed = [];
-
-        // Apply filter to each quaternion component
-        for (let i = 0; i < 4; i++) {
-            smoothed[i] = filter.filter(newRotation[i], timestamp);
-        }
-
-        return smoothed;
-    }
-
-    updateStatus(message, type = 'info') {
-        const statusEl = document.getElementById('status');
-        statusEl.textContent = message;
-        statusEl.className = type;
+        this.updateStatus(`Applied pose update with ${joints.length} joint rotations`);
     }
 
     animate() {
         requestAnimationFrame(() => this.animate());
 
-        // Update any animations or interactions here
-        if (this.vrm) {
-            // Update VRM
-            this.vrm.update();
+        // Add subtle rotation to target helper
+        if (this.targetHelper) {
+            this.targetHelper.rotation.y += 0.01;
         }
 
         this.renderer.render(this.scene, this.camera);
     }
-}
 
-// 1 Euro Filter implementation for smooth pose interpolation
-class OneEuroFilter {
-    constructor(alpha, minCutoff, beta) {
-        this.alpha = alpha;
-        this.minCutoff = minCutoff;
-        this.beta = beta;
-        this.prevValue = null;
-        this.prevDeriv = 0;
-        this.prevTimestamp = 0;
+    updateStatus(message) {
+        const statusDiv = document.getElementById('status');
+        const timestamp = new Date().toLocaleTimeString();
+        statusDiv.innerHTML = `
+            Status: ${message}<br>
+            WebSocket: <span id="ws-status">${document.getElementById('ws-status').textContent}</span><br>
+            Model: <span id="model-status">${document.getElementById('model-status').textContent}</span><br>
+            Time: ${timestamp}
+        `;
     }
 
-    filter(value, timestamp) {
-        if (this.prevValue === null) {
-            this.prevValue = value;
-            this.prevTimestamp = timestamp;
-            return value;
-        }
+    updateWebSocketStatus(status) {
+        document.getElementById('ws-status').textContent = status;
+    }
 
-        const dt = timestamp - this.prevTimestamp;
-        if (dt <= 0) return this.prevValue;
-
-        const deriv = (value - this.prevValue) / dt;
-        const cutoff = this.minCutoff + this.beta * Math.abs(deriv);
-        const alpha = this.alpha / (this.alpha + dt * cutoff);
-
-        const filteredValue = alpha * value + (1 - alpha) * this.prevValue;
-
-        this.prevValue = filteredValue;
-        this.prevDeriv = deriv;
-        this.prevTimestamp = timestamp;
-
-        return filteredValue;
+    updateModelStatus(status) {
+        document.getElementById('model-status').textContent = status;
     }
 }
 
-// Initialize the application when DOM is loaded
+// Initialize when page loads
 document.addEventListener('DOMContentLoaded', () => {
     new AriaIKSolver();
 });

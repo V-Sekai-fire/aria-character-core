@@ -20,6 +20,13 @@ defmodule AriaViewerWeb.Router do
     get "/", PageController, :index
   end
 
+  # Serve static files
+  scope "/js" do
+    pipe_through :browser
+
+    get "/app.js", AriaViewerWeb.AssetController, :js
+  end
+
   # Other scopes may use custom stacks.
   # scope "/api", AriaViewerWeb do
   #   pipe_through :api
