@@ -4,7 +4,7 @@ defmodule AriaViewer.MixProject do
   def project do
     [
       listeners: [Phoenix.CodeReloader],
-      app: :aria_viewer,
+      app: :aria_neon_frontlines,
       version: "0.1.0",
       build_path: "../../_build",
       config_path: "../../config/config.exs",
