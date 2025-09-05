@@ -14,7 +14,7 @@
 
 ## Architecture Overview
 
-```mermaid
+```mermaid.js
     graph TD
         subgraph "Real-Time"
             Godot[Godot Clients]
