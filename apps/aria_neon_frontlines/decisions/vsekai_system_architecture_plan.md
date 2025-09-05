@@ -16,6 +16,8 @@ This document outlines a scalable architecture for the V-Sekai massive online mu
 
 The real-time layer is an Erlang-based game server that uses `dragonhunt02/enet-godot`. This project is an Erlang port of the ENet protocol library, created for compatibility with the ENet implementation used by Godot Engine clients. Since the server and clients both adhere to the ENet protocol, they can communicate directly. This implementation allows the server to leverage Erlang's lightweight processes to achieve massive concurrency. Each active world instance is managed by a dedicated process, which synchronizes ephemeral state data such as player position, VR motion, and avatar animations. This design also enables seamless world transitions by handling the state hand-off between world instances as a high-speed, in-memory messaging operation, which avoids the persistence layer entirely.
 
+**Testing Implementation:** The real-time layer should be tested using `dragonhunt02/enet-godot` with block mesh style capsules in Godot Engine 3D. This approach provides a simplified geometric representation for collision detection and spatial reasoning, enabling efficient testing of multi-agent interactions, world transitions, and spatial synchronization without the computational overhead of complex 3D models.
+
 The API layer is the `aria_neon_frontlines` Elixir Phoenix application. It provides REST API endpoints and WebSocket channels for real-time communication. Its responsibilities include handling user authentication, authorizing world transitions, retrieving world data, and managing inventory persistence. The Phoenix application can be configured in a distributed cluster to handle horizontal scaling. This layer also provides a dedicated, non-blocking ingestion endpoint to receive high-volume analytics events from the game server.
 
 The persistence layer uses FoundationDB with the Ecto.Adapters.FoundationDB adapter to provide a distributed, ACID-compliant key-value store with multi-tenant isolation. FoundationDB manages all permanent data for the V-Sekai universe through logical tenant separation rather than traditional table-based organization. The primary tenant handles user accounts and social graphs. The analytics tenant uses FoundationDB's efficient key-value structure for high-volume event ingestion with custom indexing for temporal queries. The per-world tenant uses multi-tenant isolation to segregate world-specific data, enabling horizontal scaling through FoundationDB's built-in distribution capabilities. This approach provides immediate horizontal scalability without requiring schema migrations or sharding extensions.
@@ -83,9 +85,9 @@ The adoption of FoundationDB introduces several architectural patterns that enha
 
 **Phase 2: Real-time Infrastructure (Priority: Medium)**
 - Implement ENet game server (`dragonhunt02/enet-godot`)
-- Add Godot client integration
+- Add Godot client integration with block mesh style capsules for 3D testing
 - Establish DTLS-secured communication channels
-- Performance testing with concurrent connections
+- Performance testing with concurrent connections using simplified geometric representations
 
 **Phase 3: FoundationDB Integration (Priority: Low)**
 - Replace PostgreSQL with FoundationDB cluster
