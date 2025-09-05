@@ -294,7 +294,7 @@ defmodule AriaViewerWeb.IKChannel do
 
   # Get joint rotations for a specific animation frame
   defp get_animation_frame_rotations(
-         %{animation: animation, document: document},
+         %{animation: _animation, document: _document},
          target_joint_index
        ) do
     # For mock IK, we'll return rotations that simulate reaching toward the target

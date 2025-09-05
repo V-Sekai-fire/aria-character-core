@@ -7,9 +7,17 @@ defmodule AriaNeonFrontlines.GameDomain do
   - Block Explorer: Supply transfer and logistics routing
   - Local Achiever: Resource allocation and optimization
   - Block Competitor: Firefight coordination and tactical advantage
+
+  Refactored to use separate archetype modules following ADR R25W1398085.
   """
 
-  @behaviour AriaHybridPlanner.Domain
+  use AriaCore.ActionAttributes
+
+  # Import archetype modules
+  alias AriaNeonFrontlines.BlockExplorer
+  alias AriaNeonFrontlines.LocalSocializer
+  alias AriaNeonFrontlines.LocalAchiever
+  alias AriaNeonFrontlines.BlockCompetitor
 
   # Operative Archetypes for Cyberpunk Logistics Warfare
   @archetypes [
@@ -36,77 +44,37 @@ defmodule AriaNeonFrontlines.GameDomain do
 
   @doc """
   Initialize domain state for a new operative.
+  Delegates to appropriate archetype module.
   """
   def init_state(operative_id, archetype) do
-    base_state = %{
-      operative_id: operative_id,
-      archetype: archetype,
-      location: "command_post",
-      supplies: 100,
-      squad_members: [],
-      tactical_log: [],
-      block_position: {0, 0},
-      neon_level: 0.8
-    }
-
-    # Archetype-specific initialization
     case archetype do
-      :local_socializer ->
-        Map.merge(base_state, %{
-          squad_members: ["operative_1", "operative_2", "operative_3"],
-          command_authority: :high,
-          coordination_bonus: 0.2
-        })
-
-      :block_explorer ->
-        Map.merge(base_state, %{
-          supply_routes: [],
-          transfer_efficiency: 1.0,
-          block_knowledge: [:alleyways, :rooftops, :subway_access]
-        })
-
-      :local_achiever ->
-        Map.merge(base_state, %{
-          resource_allocation: %{},
-          optimization_score: 0,
-          efficiency_metrics: %{},
-          allocation_history: []
-        })
-
-      :block_competitor ->
-        Map.merge(base_state, %{
-          combat_readiness: 0.9,
-          tactical_advantage: 0,
-          firefight_coordination: [],
-          enemy_positions: []
-        })
+      :block_explorer -> BlockExplorer.init_state(operative_id)
+      :local_socializer -> LocalSocializer.init_state(operative_id)
+      :local_achiever -> LocalAchiever.init_state(operative_id)
+      :block_competitor -> BlockCompetitor.init_state(operative_id)
+      _ -> raise "Unknown archetype: #{archetype}"
     end
   end
 
   @doc """
   Get available actions for the current state.
+  Delegates to archetype-specific modules.
   """
   def actions(state) do
     case state.archetype do
-      :local_socializer -> socializer_actions(state)
-      :block_explorer -> explorer_actions(state)
-      :local_achiever -> achiever_actions(state)
-      :block_competitor -> competitor_actions(state)
+      :block_explorer -> BlockExplorer.actions(state)
+      :local_socializer -> LocalSocializer.actions(state)
+      :local_achiever -> LocalAchiever.actions(state)
+      :block_competitor -> BlockCompetitor.actions(state)
+      _ -> []
     end
   end
 
-  # Local Socializer Actions
-  defp socializer_actions(state) do
-    [
-      {:command_squad, "Issue tactical commands to squad members"},
-      {:log_tactical_decision, "Record important tactical decisions"},
-      {:coordinate_movement, "Coordinate squad movement through the block"},
-      {:establish_command_post, "Set up a new command position"}
-    ]
-  end
-
-  # Block Explorer Actions
-  defp explorer_actions(state) do
+  # Archetype-specific action lists (for backward compatibility)
+  @doc """
+  Get actions for block explorer archetype.
+  """
+  def explorer_actions(_state) do
     [
       {:transfer_supplies, "Transfer supplies between block locations"},
       {:map_block_route, "Map an efficient supply route"},
@@ -115,8 +83,22 @@ defmodule AriaNeonFrontlines.GameDomain do
     ]
   end
 
-  # Local Achiever Actions
-  defp achiever_actions(state) do
+  @doc """
+  Get actions for local socializer archetype.
+  """
+  def socializer_actions(_state) do
+    [
+      {:command_squad, "Issue tactical commands to squad members"},
+      {:log_tactical_decision, "Record important tactical decisions"},
+      {:coordinate_movement, "Coordinate squad movement through the block"},
+      {:establish_command_post, "Set up a new command position"}
+    ]
+  end
+
+  @doc """
+  Get actions for local achiever archetype.
+  """
+  def achiever_actions(_state) do
     [
       {:allocate_resources, "Allocate resources for maximum efficiency"},
       {:optimize_supply_chain, "Optimize the supply chain logistics"},
@@ -125,8 +107,10 @@ defmodule AriaNeonFrontlines.GameDomain do
     ]
   end
 
-  # Block Competitor Actions
-  defp competitor_actions(state) do
+  @doc """
+  Get actions for block competitor archetype.
+  """
+  def competitor_actions(_state) do
     [
       {:coordinate_firefight, "Coordinate squad in firefight"},
       {:gain_tactical_advantage, "Position for tactical advantage"},
@@ -143,7 +127,7 @@ defmodule AriaNeonFrontlines.GameDomain do
       {:command_squad, target_squad} ->
         target_squad in state.squad_members
 
-      {:transfer_supplies, {from, to, amount}} ->
+      {:transfer_supplies, {_from, _to, amount}} ->
         # Check if transfer is possible
         state.supplies >= amount
 

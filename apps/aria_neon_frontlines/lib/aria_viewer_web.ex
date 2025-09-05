@@ -19,7 +19,9 @@ defmodule AriaViewerWeb do
 
   def controller do
     quote do
-      use Phoenix.Controller, namespace: AriaViewerWeb
+      use Phoenix.Controller,
+        formats: [:html, :json],
+        layouts: [html: AriaViewerWeb.LayoutView]
 
       import Plug.Conn
       import AriaViewerWeb.Gettext
@@ -30,8 +32,7 @@ defmodule AriaViewerWeb do
   def view do
     quote do
       use Phoenix.View,
-        root: "lib/aria_viewer_web/templates",
-        namespace: AriaViewerWeb
+        root: "lib/aria_viewer_web/templates"
 
       # Import convenience functions from controllers
       import Phoenix.Controller,

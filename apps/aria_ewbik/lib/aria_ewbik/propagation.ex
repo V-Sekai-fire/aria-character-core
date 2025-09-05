@@ -98,13 +98,13 @@ defmodule AriaEwbik.Propagation do
     :math.pow(0.8, distance)
   end
 
-  defp scale_adjustment(adjustment, factor) do
+  defp scale_adjustment(adjustment, _factor) do
     # TODO: Scale adjustment based on factor
     # This depends on adjustment format (rotation, translation, etc.)
     adjustment
   end
 
-  defp get_hierarchical_weight(hierarchy, joint_id) do
+  defp get_hierarchical_weight(_hierarchy, _joint_id) do
     # TODO: Calculate weight based on joint's position in hierarchy
     # Root joints might have different weights than leaf joints
     1.0
@@ -129,7 +129,7 @@ defmodule AriaEwbik.Propagation do
     end
   end
 
-  defp resolve_multiple_adjustments(adjustments, hierarchy, joint_id) do
+  defp resolve_multiple_adjustments(adjustments, _hierarchy, joint_id) do
     # TODO: Implement conflict resolution strategy
     # Options:
     # 1. Weighted average based on effector priorities
@@ -137,7 +137,7 @@ defmodule AriaEwbik.Propagation do
     # 3. Hierarchical weighting
 
     # Placeholder: return first adjustment
-    [{_joint_id, first_adjustment} | _rest] = adjustments
+    [{^joint_id, first_adjustment} | _rest] = adjustments
     first_adjustment
   end
 
