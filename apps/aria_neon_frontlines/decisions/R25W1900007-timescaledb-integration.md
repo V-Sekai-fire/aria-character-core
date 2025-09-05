@@ -2,7 +2,7 @@
 
 ## Status
 
-Proposed
+Active (Started: September 5, 2025)
 
 ## Context
 
