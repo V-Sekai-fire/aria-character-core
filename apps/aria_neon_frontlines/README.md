@@ -1,34 +1,34 @@
-# Aria Viewer - Real-Time IK Solver with Interactive 3D Web Interface
+# Aria Neon Frontlines - Cyberpunk Logistics Warfare Simulator
 
-A comprehensive real-time Inverse Kinematics (IK) solver system featuring a Phoenix WebSocket backend and Three.js frontend for interactive 3D testing of VRM character models.
+A real-time multi-agent simulation system for cyberpunk logistics warfare within a single neon-lit city block. Features concurrent execution of cybernetically-enhanced operatives with different archetypes, real-time activity logging, and web-based monitoring through Phoenix dashboard.
 
 ## 🎯 Features
 
-- **Real-time IK Solving**: Interactive bone manipulation with immediate visual feedback
-- **VRM Model Support**: Full VRM 1.0 compatibility with drag-and-drop loading
-- **WebSocket Communication**: Bidirectional real-time messaging between frontend and backend
-- **Performance Optimized**: Nested set model providing 26x faster pose calculations
-- **Smooth Pose Transitions**: 1 euro filter algorithm for responsive yet smooth interpolation
-- **Professional UI**: Clean interface with bone selection, target positioning, and status feedback
-- **Comprehensive Testing**: WebSocket test client and end-to-end validation tools
+- **Multi-Agent Simulation**: Concurrent execution of 50+ cybernetically-enhanced operatives
+- **4 Operative Archetypes**: Local Socializer, Block Explorer, Local Achiever, Block Competitor
+- **Neon City Block Environment**: Grid-based urban space with buildings, alleys, and strategic chokepoints
+- **Real-time Activity Logging**: Process-based broadcasting of operative actions and block state
+- **Phoenix Web Dashboard**: Clean interface for simulation monitoring and control
+- **TimescaleDB Integration**: Hypertable optimization for simulation event storage
+- **Block Transfer Protocol**: Fast, in-memory state hand-off between local destinations
+- **Cyberpunk Logistics Warfare**: Supply chain networks, tactical operations, and resource economy
 
 ## 🏗️ Architecture
 
 ```
-┌─────────────────────────────────┐    WebSocket    ┌─────────────────────────────────┐
-│         Three.js Frontend       │◄──────────────►│        Phoenix Backend         │
-│                                 │   JSON msgs     │                                 │
-│ • VRM Loading (Drag & Drop)     │                 │ • IKChannel WebSocket Handler  │
-│ • Bone Selection (Raycasting)   │                 │ • Skeleton Management          │
-│ • Interactive IK Targets        │                 │ • VRM Bone Mapping             │
-│ • Real-time Pose Updates        │                 │ • Pose Broadcasting            │
-│ • 1 Euro Filter Smoothing       │                 │ • AriaJoint Integration        │
-│ • UI Controls & Status          │                 │ • AriaGltf Integration         │
-└─────────────────────────────────┘                 └─────────────────────────────────┘
+┌─────────────────────────────────┐  Process Msgs  ┌─────────────────────────────────┐
+│         Phoenix Dashboard       │◄──────────────►│      Elixir Simulation Engine   │
+│                                 │   JSON msgs    │                                 │
+│ • Operative Status Displays     │                │ • AriaHybridPlanner Domain      │
+│ • Simulation Controls           │                │ • Multi-Agent Execution         │
+│ • Activity Visualization        │                │ • Block State Synchronization   │
+│ • Real-time Metrics             │                │ • TimescaleDB Event Logging     │
+│ • WebSocket Connection          │                │ • Cybernetic Operative Mgmt     │
+└─────────────────────────────────┘                └─────────────────────────────────┘
          │                                               │
-         └────────────────► AriaJoint ◄──────────────────┘
-                           AriaGltf
-                           AriaEwbik (ready for integration)
+         └────────────────► AriaState ◄──────────────────┘
+                           AriaHybridPlanner
+                           TimescaleDB
 ```
 
 ## 🚀 Quick Start
@@ -36,70 +36,63 @@ A comprehensive real-time Inverse Kinematics (IK) solver system featuring a Phoe
 ### Prerequisites
 
 - Elixir 1.18+
-- Node.js (for frontend dependencies)
+- TimescaleDB (for event storage)
 - Modern web browser with WebSocket support
 
 ### Installation
 
 1. **Start the Phoenix server:**
    ```bash
-   cd apps/aria_viewer
+   cd apps/aria_neon_frontlines
    mix deps.get
    mix phx.server
    ```
 
 2. **Open the application:**
-   - Main IK Solver: http://localhost:4000
-   - WebSocket Test Client: http://localhost:4000/test/websocket_test.html
+   - Simulation Dashboard: http://localhost:4000
+   - Operative Monitor: http://localhost:4000/operatives
 
 ### Testing the System
 
-1. **Open the main application** in your browser
-2. **Drag and drop** the included `VRM1_Constraint_Twist_Sample.vrm` file onto the interface
-3. **Select a bone** from the dropdown (Left Hand, Right Hand, etc.)
-4. **Adjust target position** using the X, Y, Z controls
-5. **Click "Update IK Target"** to see real-time pose solving
+1. **Open the simulation dashboard** in your browser
+2. **Configure operative count** and archetype distribution
+3. **Start the simulation** to see cybernetically-enhanced agents in action
+4. **Monitor real-time activities** through the web interface
+5. **View block transfer events** and logistics operations
 
-## 📋 WebSocket API
+## 📋 Operative Archetypes
 
-### Message Contracts
+### Local Socializer (High Player Concurrency)
+- **Squad Deployment**: Command cybernetic squads in neon-lit urban warfare
+- **Strategic Decisions**: Make tactical choices in high-stakes logistics scenarios
+- **Mission Logging**: Track operative activities and decision outcomes
 
-**Frontend → Backend:**
-```json
-// Update IK target
-{
-  "endEffector": "leftHand",
-  "position": {"x": 0.5, "y": 1.2, "z": 0.3}
-}
+### Block Explorer (High Instance Count)
+- **Resource Allocation**: Manage supply chains and distribution networks
+- **Logistics Optimization**: Coordinate block-wide resource flows
+- **Supply Chain Management**: Oversee warehouses and distribution centers
 
-// Load VRM model
-{
-  "model_path": "/path/to/model.vrm"
-}
-```
+### Local Achiever (High Transactional Intensity)
+- **Mission Planning**: Design HTN task hierarchies for complex operations
+- **Operational Oversight**: Monitor and coordinate multiple concurrent missions
+- **Performance Tracking**: Measure operative effectiveness and mission success
 
-**Backend → Frontend:**
-```json
-// New pose data
-{
-  "joints": [
-    {"bone": "leftShoulder", "rotation": [0.1, 0.2, 0.3, 0.9]},
-    {"bone": "leftUpperArm", "rotation": [0.4, 0.5, 0.6, 0.8]}
-  ]
-}
-```
+### Block Competitor (High-Stakes Interaction)
+- **Tactical Combat**: Engage in cyberpunk warfare scenarios
+- **Resource Management**: Control ammunition and tactical supplies
+- **Battlefield Coordination**: Direct firefights and strategic positioning
 
 ## 🧪 Testing
 
-### WebSocket Test Client
+### Simulation Test Client
 
-The included test client (`test/websocket_test.html`) provides:
+The included test client provides:
 
-- **Connection testing** to verify WebSocket communication
-- **IK target testing** with manual position controls
-- **Model loading testing** with path validation
-- **Message logging** for debugging and validation
-- **Real-time feedback** on connection status and responses
+- **Operative spawning** with archetype selection
+- **Block state testing** with transfer validation
+- **Activity logging** with TimescaleDB verification
+- **Performance monitoring** for simulation metrics
+- **Real-time feedback** on operative status and block dynamics
 
 ### Running Tests
 
@@ -108,7 +101,7 @@ The included test client (`test/websocket_test.html`) provides:
 mix test
 
 # Run specific test file
-mix test apps/aria_viewer/test/
+mix test apps/aria_neon_frontlines/test/
 
 # Start server for manual testing
 mix phx.server
@@ -121,41 +114,41 @@ mix phx.server
 Key configuration files:
 - `config/config.exs` - Main application config
 - `config/dev.exs` - Development environment
-- `apps/aria_viewer/config/config.exs` - App-specific config
+- `apps/aria_neon_frontlines/config/config.exs` - App-specific config
 
-### WebSocket Configuration
+### Process Messaging Configuration
 
-- **Endpoint**: `/socket` (Phoenix Socket)
-- **Channel**: `ik:lobby` (IK solver channel)
-- **Heartbeat**: Automatic via Phoenix Channels
+- **Registry**: Elixir Registry for operative process lookup
+- **Block Transfer Protocol**: In-memory state synchronization
+- **Supervision**: OTP supervision trees for operative management
 
 ## 📁 Project Structure
 
 ```
-apps/aria_viewer/
+apps/aria_neon_frontlines/
 ├── lib/
-│   ├── aria_viewer/
+│   ├── aria_neon_frontlines/
 │   │   ├── application.ex          # OTP application
 │   │   └── web/
 │   │       ├── channels/
-│   │       │   └── ik_channel.ex   # WebSocket handler
+│   │       │   └── simulation_channel.ex  # Process messaging handler
 │   │       ├── controllers/
-│   │       │   └── page_controller.ex
+│   │       │   └── dashboard_controller.ex
 │   │       ├── endpoint.ex         # Phoenix endpoint
 │   │       ├── gettext.ex          # Internationalization
 │   │       ├── router.ex           # Route definitions
 │   │       └── user_socket.ex      # Socket configuration
-│   └── aria_viewer.ex
+│   └── aria_neon_frontlines.ex
 ├── priv/
 │   └── static/
-│       ├── index.html              # Main IK solver interface
+│       ├── dashboard.html          # Simulation dashboard
 │       ├── js/
-│       │   └── app.js              # Three.js application
-│       └── VRM1_Constraint_Twist_Sample.vrm  # Test model
+│       │   └── simulation.js       # Operative monitoring
+│       └── block_config.json       # City block definition
 ├── test/
-│   └── websocket_test.html         # WebSocket test client
+│   └── simulation_test.html        # Process messaging test client
 ├── decisions/
-│   └── R25W167IK-real-time-ik-solver-web-interface.md
+│   └── task_with_context.md        # Implementation plan
 └── README.md
 ```
 
@@ -163,61 +156,61 @@ apps/aria_viewer/
 
 ### Basic Workflow
 
-1. **Load a VRM Model**
-   - Drag and drop a `.vrm` file onto the interface
-   - Or use the WebSocket API to load programmatically
+1. **Configure Simulation**
+   - Set operative count and archetype ratios
+   - Define city block parameters and supply chains
 
-2. **Select a Bone**
-   - Use the dropdown to choose an end effector
-   - Or click on bones directly in the 3D view
+2. **Start Operatives**
+   - Spawn cybernetically-enhanced agents with different archetypes
+   - Initialize block state and logistics networks
 
-3. **Set IK Target**
-   - Adjust X, Y, Z coordinates
-   - Or drag the target sphere in 3D space
+3. **Monitor Activities**
+   - Watch real-time operative actions via dashboard
+   - Track block transfers and tactical decisions
 
-4. **Solve IK**
-   - Click "Update IK Target" for immediate solving
-   - See real-time pose updates with smooth interpolation
+4. **Analyze Performance**
+   - Review TimescaleDB logs for behavior patterns
+   - Generate reports on operative effectiveness
 
 ### Advanced Features
 
-- **Multiple End Effectors**: Support for simultaneous multi-target IK
-- **Pose Smoothing**: 1 euro filter prevents jerky movements
-- **Bone Hierarchy**: Full VRM 1.0 bone structure support
-- **Real-time Feedback**: Visual indicators and status messages
+- **Concurrent Execution**: 50+ operatives running simultaneously
+- **Block Transfer**: Zero-IOPS movement within the neon city block
+- **Real-time Broadcasting**: Process-based synchronization of operative states
+- **Performance Metrics**: Comprehensive simulation monitoring
 
 ## 🔍 Troubleshooting
 
 ### Common Issues
 
-**WebSocket Connection Failed**
+**Process Registry Not Found**
+- Ensure operative processes are properly registered
+- Check Registry configuration in application startup
+- Verify process naming conventions
+
+**Simulation Not Starting**
+- Confirm TimescaleDB is running and configured
+- Check operative archetype configurations
+- Verify block state initialization
+
+**Dashboard Not Loading**
 - Ensure Phoenix server is running on port 4000
-- Check browser console for connection errors
-- Verify firewall settings allow WebSocket connections
-
-**VRM Model Not Loading**
-- Confirm file is valid VRM 1.0 format
-- Check browser console for Three.js errors
-- Ensure CORS headers are properly configured
-
-**IK Solving Not Working**
-- Verify skeleton data is loaded in backend
-- Check WebSocket message format
-- Ensure bone names match VRM specification
+- Check browser console for WebSocket errors
+- Verify CORS headers are properly configured
 
 ### Debug Tools
 
 - **Browser Console**: Check for JavaScript errors
-- **Phoenix Logs**: Monitor server-side activity
-- **WebSocket Test Client**: Validate message contracts
-- **Network Tab**: Inspect WebSocket traffic
+- **Phoenix Logs**: Monitor server-side simulation activity
+- **Process Monitor**: Track operative process lifecycle
+- **TimescaleDB Queries**: Inspect event logging
 
 ## 📈 Performance
 
-- **26x faster pose calculations** using nested set optimization
-- **Real-time IK solving** with sub-100ms response times
-- **Smooth 30+ FPS animation** with 1 euro filter
-- **Efficient memory usage** with optimized skeleton management
+- **50+ Concurrent Operatives**: Multi-agent simulation with cybernetic enhancements
+- **Real-time Block Transfers**: Zero IOPS for local destination movement
+- **TimescaleDB Hypertables**: Optimized event storage and querying
+- **Process Messaging**: Efficient state synchronization across operatives
 
 ## 🤝 Contributing
 
@@ -232,21 +225,22 @@ apps/aria_viewer/
 
 2. **Start development server:**
    ```bash
-   cd apps/aria_viewer
+   cd apps/aria_neon_frontlines
    mix phx.server
    ```
 
 3. **Run tests:**
    ```bash
-   mix test apps/aria_viewer/test/
+   mix test apps/aria_neon_frontlines/test/
    ```
 
 ### Code Organization
 
-- **Backend**: Phoenix Channels for real-time communication
-- **Frontend**: Three.js with VRM support for 3D interaction
-- **Integration**: WebSocket JSON contracts for seamless communication
-- **Testing**: Comprehensive test suite with WebSocket validation
+- **Backend**: Phoenix Channels for dashboard communication
+- **Simulation**: Process-based multi-agent execution engine
+- **State Management**: AriaState for block and operative tracking
+- **Domain Logic**: AriaHybridPlanner for cyberpunk logistics warfare
+- **Storage**: TimescaleDB for event logging and analytics
 
 ## 📄 License
 
@@ -254,11 +248,10 @@ This project is part of the aria-character-core umbrella application.
 
 ## 🙏 Acknowledgments
 
-- **Three.js**: 3D graphics and VRM model support
-- **Phoenix Framework**: Real-time WebSocket backend
-- **VRM Specification**: Character model standard
-- **Aria Ecosystem**: Joint, GLTF, and Ewbik integrations
+- **Phoenix Framework**: Real-time web dashboard backend
+- **TimescaleDB**: Time-series database for event storage
+- **Aria Ecosystem**: State management and hybrid planning integrations
 
 ---
 
-**Ready to test the real-time IK solver?** Start the Phoenix server and open http://localhost:4000!
+**Ready to deploy cybernetically-enhanced operatives?** Start the Phoenix server and open http://localhost:4000!
