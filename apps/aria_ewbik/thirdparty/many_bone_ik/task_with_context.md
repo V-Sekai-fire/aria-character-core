@@ -1,246 +1,145 @@
-# AriaEwbik MultiIK Design Strategy
+## Current Work
 
-## Context and Background
+Creating a City Block V-Sekai domain simulator that runs the game domain defined in `apps/aria_viewer/decisions/draft_vsekai_domain.exs`. The simulator will execute 4 Bartle taxonomy-based player archetypes adapted for urban community dynamics within a single city block environment, with real-time activity logging through a web interface.
 
-This document outlines our strategy for implementing MultiIK (Multi-Effector Inverse Kinematics) in the AriaEwbik system, based on insights from the Godot ManyBoneIK3D implementation and the broader EWBIK (Entirely Wahba's-problem Based Inverse Kinematics) research.
+## Key Technical Concepts
 
-### Current Godot ManyBoneIK3D Implementation Insights
+- **City Block Game Domain**: 4 Bartle-based archetypes adapted for local community interactions within one contained urban space
+- **AriaHybridPlanner.Domain**: Domain definition framework for urban simulation
+- **Phoenix Framework**: Web application with real-time capabilities via channels
+- **TimescaleDB**: Time-series database for simulation event logging with hypertables
+- **AriaState**: State management for block state and agent tracking
+- **Multi-agent Simulation**: Concurrent execution of community member agents
+- **Block Transfer**: Fast, in-memory state hand-off between local destinations (adapted from zone transfer concept)
 
-**Existing GUI System:**
-- **Sphere Visualization**: Current GUI uses small spheres (0.02f scale) to represent kusudama constraints
-- **Shader Rendering**: Custom shader system for cone visualization with RGBA color data
-- **Bone Selection**: Click-to-select bones with yellow/blue visual feedback
-- **Edit Mode**: Toggle button for switching between view and edit modes
-- **Real-time Updates**: Gizmos update dynamically with bone transformations
+## Relevant Files and Code
 
-**Technical Architecture:**
-- **Gizmo Plugin System**: EditorNode3DGizmoPlugin with Node3DEditor integration
-- **Mesh Generation**: Procedural sphere creation with 8×8 ring/radial segments
-- **Coordinate Transforms**: Complex skeleton ↔ gizmo ↔ constraint space transformations
-- **Material System**: ShaderMaterial with custom parameters for constraint visualization
+### Game Domain Definition
 
-**Current Limitations:**
-- Basic sphere visualization (not advanced cone rendering)
-- Limited multi-effector management
-- No pole target visualization
-- Manual constraint setup process
+- `apps/aria_viewer/decisions/draft_vsekai_domain.exs`: Complete Vsekai.GameDomain with 4 Bartle archetypes
+  - Social Explorer → Local Socializer: join_world → socialize → log_social_event
+  - World Hopper → Block Explorer: visit_new_world → transfer_to_world (block transfer)
+  - Achiever → Local Achiever: refine_resource → process_item for resource accumulation
+  - Competitor → Block Competitor: engage_in_combat → record_match_outcome for ranking
 
-## Current Status
+### Existing Infrastructure
 
-### EWBIK Implementation Progress
+- `apps/aria_viewer/lib/aria_viewer_web/channels/ik_channel.ex`: Phoenix channel (needs adaptation for simulation)
+- `apps/aria_viewer/priv/static/js/app.js`: WebSocket client setup (can be adapted)
+- `apps/aria_viewer/mix.exs`: Phoenix dependencies already configured
+- `apps/aria_viewer/decisions/timescaledb_optimization.sql`: TimescaleDB setup scripts
+- `apps/aria_viewer/decisions/V-Sekai System Architecture Plan.md`: Block transfer concept reference
 
-- ✅ **Phase 1**: Internal modules complete (Segmentation, Solver, Kusudama, Propagation)
-- ✅ **Phase 1.5**: External API implementation (IN PROGRESS - Critical Priority)
-- 🔄 **MultiIK Design**: Strategy documented and ready for implementation
+### Database Optimization Files
 
-### Technical Foundation
+- `apps/aria_viewer/decisions/bitemporal_6nf_postgres.sql`: Bitemporal schema reference
+- `apps/aria_viewer/decisions/timescaledb_optimization.sql`: Hypertable optimization patterns
 
-- **37 tests passing** across 4 modules
-- **Decomposition algorithm** implemented for multi-effector coordination
-- **AriaJoint integration** for optimized transform calculations
-- **QCP algorithm** ready for Wahba's problem solving
+## City Block Environment Features
 
-## MultiIK Design Strategy
+- **Block Map**: Grid-based representation of buildings and streets
+- **Business Registry**: Local businesses with owners and specialties
+- **Community Events**: Scheduled gatherings and block activities
+- **Resource Economy**: Block-level goods and services
+- **Social Networks**: Relationship tracking between block residents
 
-### Core Principles (from Godot ManyBoneIK3D)
+## Problem Solving
 
-> "And after then I will continue to experiment with MultiIK in https://github.com/TokageItLab/godot/tree/multi-ik-3d. The things that have been almost decided are: Having a GUI that allows you to set one Root and multiple End Effectors, thereby eliminating duplicated joint and generating a split list at each junction, and allowing the use to set pole targets and limitations within that list. Then, there are too many things to discuss about the GUI, so we should set up a meeting somewhere and share mockups in the near future."
+### Architecture Decisions Made
 
-### Key Design Decisions
+1. **Reuse aria_viewer**: Leverage existing Phoenix + WebSocket infrastructure
+2. **Multi-agent simulation**: Run concurrent agents with different Bartle archetypes
+3. **Real-time logging**: Capture all domain actions via Phoenix channels
+4. **TimescaleDB integration**: Apply optimizations for simulation event storage
+5. **Web dashboard**: Clean interface for simulation monitoring and control
+6. **City block ethos**: Single contained environment with local community dynamics
+7. **Block transfer**: Fast in-memory state hand-off between local destinations
 
-#### 1. Single Root, Multiple End Effectors
+### Technical Challenges Addressed
 
-- **Root Node**: Single skeleton root for the entire IK chain
-- **End Effectors**: Multiple target points (hands, feet, head, etc.)
-- **Automatic Junction Detection**: System identifies branch points in skeleton hierarchy
+- **Domain adaptation**: Move Vsekai.GameDomain to AriaViewer.GameDomain with city block modifications
+- **State management**: AriaState.RelationalState for agent and block state
+- **Concurrent execution**: Manage multiple agents running simultaneously within block
+- **Event streaming**: Real-time broadcasting of simulation activities
+- **Performance monitoring**: Track simulation metrics and agent behavior
+- **Block transfer implementation**: Fast in-memory movement between local destinations
 
-#### 2. Junction-Based Chain Splitting
+## Pending Tasks and Next Steps
 
-- **Branch Detection**: Automatic identification of skeleton junctions
-- **Chain Segmentation**: Split effector lists at each junction
-- **Dependency Management**: Ensure proper solve order (parents before children)
+### Phase 1: Domain Integration & City Block Setup
 
-#### 3. Pole Target and Limitation Support
+1. Move Vsekai.GameDomain into AriaViewer.GameDomain namespace
+2. Adapt domain methods for city block environment (block transfer vs world hopping)
+3. Create city block environment definition (buildings, businesses, locations)
+4. Implement agent archetypes for local community setting
+5. Set up AriaState integration for block simulation state
 
-- **Pole Targets**: Control twist/swing orientation at each junction
-- **Joint Limitations**: Per-joint angle constraints (Kusudama cones)
-- **Priority Weighting**: Effector opacity and influence control
+### Phase 2: Simulation Engine & Agent Behaviors
 
-## Implementation Architecture
+1. Create simulation engine for multi-agent execution within city block
+2. Implement Social Explorer archetype (cafe visits, neighbor interactions)
+3. Implement World Hopper archetype (local discovery, block transfers)
+4. Implement Achiever archetype (business success, service provision)
+5. Implement Competitor archetype (community leadership, local rivalries)
+6. Build agent scheduler for concurrent block resident management
 
-### Multi-Effector Solver Hierarchy
+### Phase 3: Real-time Simulation & Broadcasting
 
-```elixir
-# ChainIK → ManyBoneIK → BranchIK progression
-defmodule AriaEwbik.MultiEffectorSolver do
-  def solve_chain_ik(skeleton, single_chain) do
-    # Simple chain solving (no branching)
-    solve_simple_chain(skeleton, single_chain)
-  end
+1. Implement activity logging for all agent actions with block location metadata
+2. Add TimescaleDB integration for event storage with hypertables
+3. Create simulation channel for real-time event broadcasting
+4. Build simulation controls (start/stop/pause, agent count adjustment)
+5. Add performance monitoring and simulation metrics
 
-  def solve_many_bone_ik(skeleton, effector_targets) do
-    # Complex multi-effector solving
-    {groups, effector_groups} = Decomposition.decompose_multi_effector(skeleton, effector_targets)
-    solve_with_groups(skeleton, groups, effector_groups)
-  end
+### Phase 4: Web Simulation Interface
 
-  def solve_branch_ik(skeleton, effector_targets, branch_points) do
-    # Extended ManyBoneIK for branched skeletons
-    solve_branched_multi_effector(skeleton, effector_targets, branch_points)
-  end
-end
-```
+1. Remove 3D IK dependencies and adapt existing channel for simulation
+2. Create simulation dashboard for real-time block monitoring
+3. Add agent status displays with individual activity tracking
+4. Implement web-based simulation controls
+5. Build activity visualization with charts and graphs for block dynamics
 
-### GUI Design Requirements (Based on Current Godot Implementation)
+### Phase 5: Analytics & Community Insights
 
-#### Core Features (Existing in Godot ManyBoneIK3D)
+1. Create simulation analytics for agent behavior patterns
+2. Build historical reports using TimescaleDB data
+3. Implement archetype analysis and comparison within block context
+4. Add performance metrics and system utilization tracking
+5. Create data export capabilities for community behavior analysis
 
-1. **Sphere-based Kusudama Visualization**: 0.02f scale spheres with 8×8 ring/radial segments for smooth constraint rendering
-2. **Bone Selection System**: Click-to-select bones with visual feedback (yellow selected, blue unselected)
-3. **Edit Mode Toggle**: Button to switch between view and edit modes with joint handle display
-4. **Shader-based Constraint Rendering**: Custom shader with RGBA color data for kusudama cone visualization
-5. **Real-time Gizmo Updates**: Dynamic constraint visualization that updates with bone transformations
+## Implementation Strategy
 
-#### Advanced Features (To Be Implemented)
+### Core Simulation Loop
 
-1. **Root Selection Interface**: Visual picker for IK chain root with skeleton hierarchy display
-2. **Multi-Effector Management**: Add/remove multiple end effectors with drag-and-drop
-3. **Junction Visualization**: Show automatic branch detection with colored indicators
-4. **Pole Target Controls**: Per-junction orientation controls with visual pole target spheres
-5. **Effector Priority Sliders**: Weight controls for each effector influence
-6. **Real-time IK Preview**: Live solution visualization with performance metrics
-7. **Constraint Library**: Preset anatomical constraints (humanoid, quadruped, etc.)
-8. **Animation Integration**: Keyframe animation compatibility with procedural IK baking
+- Initialize agents as block residents with different Bartle archetypes
+- Execute domain actions based on local goals and community state
+- Log all activities with timestamps and block location metadata
+- Broadcast events in real-time via WebSockets
+- Maintain block state and resident status
 
-## Technical Implementation Plan
+### Agent Archetypes Implementation
 
-### Phase 0: QCP Algorithm Migration (FOUNDATIONAL TASK)
+- **Social Explorer**: Cafe visits → neighbor socialization → community event logging
+- **World Hopper**: Local discovery → block transfers → destination exploration
+- **Achiever**: Business operations → service provision → community reputation
+- **Competitor**: Community leadership → event organization → local influence
 
-- [ ] **Migrate QCP Insights**: Port Quaternion Characteristic Polynomial algorithm insights from Elixir (69/69 tests passing) to C++ Many Bone IK
-- [ ] **Test Suite Translation**: Convert comprehensive Elixir QCP test suite to C++ unit tests
-- [ ] **Performance Benchmarking**: Establish baseline performance metrics for C++ QCP implementation
-- [ ] **Integration Validation**: Ensure C++ QCP produces identical results to Elixir reference implementation
-- [ ] **Documentation**: Document QCP algorithm insights and mathematical foundations for C++ implementation
+### Real-time Architecture
 
-### Phase 1: Core MultiIK Algorithm
-
-- [ ] Implement junction detection algorithm
-- [ ] Create effector list splitting logic
-- [ ] Add pole target support to solver
-- [ ] Integrate with existing decomposition algorithm
-
-### Phase 2: GUI Framework (Based on Godot Gizmo Plugin Architecture)
-
-- [ ] **Implement Gizmo Plugin System**: Create EditorNode3DGizmoPlugin with gizmo registration
-- [ ] **Sphere Mesh Generation**: 8 rings × 8 radial segments for smooth kusudama visualization (0.02f scale)
-- [ ] **Shader Material System**: Custom ShaderMaterial with RGBA color data for constraint rendering
-- [ ] **Bone Selection Interface**: Click-to-select with visual feedback (yellow/blue color coding)
-- [ ] **Edit Mode Toggle**: Button integration with Node3DEditor menu panel
-- [ ] **Transform Coordinate Handling**: Complex skeleton ↔ gizmo ↔ constraint space transformations
-- [ ] **Real-time Gizmo Updates**: Dynamic constraint visualization with bone pose changes
-- [ ] **Handle Mesh System**: Point-based bone handles with custom shader materials
-
-### Phase 3: Advanced Features
-
-- [ ] Effector priority weighting system
-- [ ] Pole target visualization and editing
-- [ ] Constraint library and presets
-- [ ] Animation integration
-
-### Phase 4: Optimization and Testing
-
-- [ ] Performance optimization for complex rigs
-- [ ] Comprehensive test suite for multi-effector scenarios
-- [ ] Integration testing with AriaJoint and AriaQCP
-- [ ] User experience validation
-
-## Use Cases and Applications
-
-### Primary Scenarios
-
-1. **Character Animation**: Full-body procedural IK for games
-2. **Bouldering/Climbing**: Complex hand-foot coordination
-3. **Foot Placement**: Automatic foot positioning on uneven terrain
-4. **Interactive Characters**: Real-time response to environmental changes
-
-### Technical Requirements
-
-1. **Real-time Performance**: 30+ FPS for character animation
-2. **Complex Rigs**: Support for 100+ joint skeletons
-3. **Stability**: Robust convergence for edge cases
-4. **Flexibility**: Easy setup for different character types
-
-## Integration with Existing Systems
-
-### AriaJoint Integration
-
-- **HierarchyManager**: Optimized transform calculations
-- **Batch Updates**: Efficient dirty flag propagation
-- **Nested Sets**: Fast subtree operations
-
-### AriaQCP Integration
-
-- **Wahba's Problem**: Multi-effector coordinate solving
-- **Quaternion Mathematics**: Stable orientation calculations
-- **Performance**: Optimized for real-time use
-
-### AriaMath Integration
-
-- **IEEE-754 Compliance**: Numerical stability
-- **Quaternion Operations**: Dot, angle, normalize functions
-- **Matrix Operations**: Transform calculations
-
-## Challenges and Solutions
-
-### Technical Challenges
-
-1. **Branch Detection**: Identifying skeleton junctions automatically
-2. **Solve Order**: Determining optimal processing sequence
-3. **Convergence**: Ensuring stable solutions for complex scenarios
-4. **Performance**: Maintaining real-time performance with multiple effectors
-
-### GUI Challenges
-
-1. **Complex Visualization**: Showing multi-effector relationships
-2. **User Experience**: Intuitive controls for complex IK setup
-3. **Real-time Feedback**: Live preview of IK solutions
-4. **Constraint Editing**: Visual tools for Kusudama cones
+- Phoenix channels for simulation event broadcasting
+- WebSocket streaming of block activities and social dynamics
+- TimescaleDB for persistent event storage with block-specific metadata
+- Dashboard for live community monitoring
+- Controls for simulation management within city block context
 
 ## Success Criteria
 
-### Functional Requirements
+- **Multi-agent simulation**: Successfully run 50+ concurrent block residents
+- **Real-time monitoring**: Live dashboard showing block activities and social dynamics
+- **Complete domain execution**: All 4 Bartle archetypes functioning with local goal-task chains
+- **Block transfer performance**: Zero IOPS for movement within the block (in-memory)
+- **TimescaleDB integration**: Efficient storage of community interaction events
+- **Web interface**: Intuitive controls and visualization of block community state
+- **Performance**: Maintain simulation performance with active community interactions
 
-- [ ] Single root with multiple end effectors
-- [ ] Automatic junction detection and chain splitting
-- [ ] Pole target support for each junction
-- [ ] Real-time IK solving at 30+ FPS
-- [ ] Stable convergence for complex character rigs
-
-### User Experience Requirements
-
-- [ ] Intuitive GUI for IK chain setup
-- [ ] Visual feedback for junction detection
-- [ ] Easy constraint editing and visualization
-- [ ] Integration with existing animation workflows
-
-## Future Considerations
-
-### Extended Features
-
-1. **Animation Baking**: Convert procedural IK to keyframe animation
-2. **Motion Capture Integration**: Use IK for retargeting mocap data
-3. **Physics Integration**: Combine IK with physical simulation
-4. **Machine Learning**: AI-assisted IK solving for complex poses
-
-### Research Opportunities
-
-1. **Advanced Constraints**: Soft constraints and spring systems
-2. **Predictive IK**: Anticipate and prevent unnatural poses
-3. **Adaptive IK**: Learn from user corrections and preferences
-4. **Multi-character IK**: Coordination between multiple characters
-
-## Conclusion
-
-The MultiIK design strategy provides a solid foundation for implementing sophisticated multi-effector inverse kinematics in the AriaEwbik system. By following the Godot ManyBoneIK3D approach of single root with multiple end effectors, automatic junction detection, and comprehensive pole target support, we can create a powerful and user-friendly IK system for complex character animation scenarios.
-
-The phased implementation approach ensures we build a robust foundation before adding advanced GUI features and optimization, resulting in a production-ready MultiIK system that serves the needs of game developers and animation professionals.
+This city block simulation creates an intimate, observable environment where community dynamics unfold in real-time, with agents forming relationships, competing for local status, and participating in block-level activities. The block transfer mechanism ensures seamless movement between local destinations while maintaining the original architecture's performance benefits.
