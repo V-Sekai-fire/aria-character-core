@@ -40,7 +40,8 @@ defmodule AriaViewer.MixProject do
       {:mox, "~> 1.0", only: [:test]},
       {:aria_ewbik, in_umbrella: true},
       {:aria_joint, in_umbrella: true},
-      {:aria_gltf, in_umbrella: true}
+      {:aria_gltf, in_umbrella: true},
+      {:aria_hybrid_planner, git: "https://github.com/V-Sekai-fire/aria-hybrid-planner.git"}
     ]
   end
 end
