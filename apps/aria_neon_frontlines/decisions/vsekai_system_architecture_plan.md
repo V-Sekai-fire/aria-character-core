@@ -15,20 +15,20 @@
 ## Architecture Overview
 
 ```mermaid.js
-    graph TD
-        subgraph "Real-Time"
-            Godot[Godot Clients]
-            GameServer[ENet Game Server]
-        end
-        subgraph "API"
-            API[aria_neon_frontlines]
-        end
-        subgraph "Persistence"
-            PostgreSQL[PostgreSQL + TimescaleDB]
-        end
-        Godot --> GameServer
-        GameServer --> API
-        API --> PostgreSQL
+graph TD
+    subgraph "Real-Time"
+        Godot[Godot Clients]
+        GameServer[ENet Game Server]
+    end
+    subgraph "API"
+        API[aria_neon_frontlines]
+    end
+    subgraph "Persistence"
+        PostgreSQL[PostgreSQL + TimescaleDB]
+    end
+    Godot --> GameServer
+    GameServer --> API
+    API --> PostgreSQL
 ```
 
 ## Current Status
