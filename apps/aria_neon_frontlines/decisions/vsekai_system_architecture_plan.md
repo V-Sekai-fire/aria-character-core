@@ -6,6 +6,10 @@ V-Sekai: Neon Frontlines combines emergent AI planning systems with immersive 3D
 
 Neon Frontlines features intelligent AI companions with goal-task temporal planning, massive scalability through Erlang/Elixir servers, an immersive cyberpunk world in a single city block, and four distinct play styles: Socializers who command squads and coordinate tactical operations, Explorers who master supply chains and optimize resource distribution, Achievers who maximize efficiency through intelligent resource allocation, and Competitors who outmaneuver rivals in high-stakes firefight coordination.
 
+## Steam Tags
+
+Multiplayer, Strategy, Cyberpunk, AI, Tactical, Planning, Logistics, Competitive, Cooperative, Sci-fi, Resource Management, Combat
+
 ## System Requirements
 
 **Minimum:**
@@ -23,10 +27,6 @@ Neon Frontlines features intelligent AI companions with goal-task temporal plann
 - Memory: 16 GB RAM
 - Graphics: NVIDIA RTX 3070
 - Storage: 50 GB SSD space
-
-## Steam Tags
-
-Multiplayer, Strategy, Cyberpunk, AI, Tactical, Planning, Logistics, Competitive, Cooperative, Sci-fi, Resource Management, Combat
 
 ## Roadmap
 
