@@ -26,13 +26,7 @@ This document outlines a scalable architecture for the V-Sekai massive online mu
 
 ## Current Implementation Status
 
-**Note:** This architecture plan is in research phase. The current Aria Character Core project implements a subset of these concepts:
-
-- ✅ **Phoenix Web Framework**: `aria_neon_frontlines` application with WebSocket support
-- ✅ **Temporal Planning**: Complete HTN+STN hybrid planning system
-- ✅ **PostgreSQL with TimescaleDB**: Current persistence layer with hypertables
-- ✅ **Real-time Communication**: Phoenix Channels for WebSocket communication
-- 🧪 **Research Components**: ENet game server integration (experimental)
+This architecture plan is currently in research phase. The Aria Character Core project has implemented several key components that form the foundation of the V-Sekai system. The Phoenix web framework has been successfully implemented through the aria_neon_frontlines application, providing robust WebSocket support for real-time communication. The temporal planning system is complete, featuring a sophisticated HTN+STN hybrid approach that handles complex scheduling and constraint solving. PostgreSQL with TimescaleDB serves as the current persistence layer, utilizing hypertables for efficient time-series data storage and retrieval. Real-time communication is handled through Phoenix Channels, enabling seamless WebSocket connections. The ENet game server integration remains in experimental phase, representing an area for future development and testing.
 
 The real-time layer is an Erlang-based game server that uses `dragonhunt02/enet-godot`. This project is an Erlang port of the ENet protocol library, created for compatibility with the ENet implementation used by Godot Engine clients. Since the server and clients both adhere to the ENet protocol, they can communicate directly. This implementation allows the server to leverage Erlang's lightweight processes to achieve massive concurrency. Each active world instance is managed by a dedicated process, which synchronizes ephemeral state data such as player position, VR motion, and avatar animations. This design also enables seamless world transitions by handling the state hand-off between world instances as a high-speed, in-memory messaging operation, which avoids the persistence layer entirely.
 
@@ -46,10 +40,13 @@ The architecture leverages PostgreSQL and TimescaleDB's relational and time-seri
 
 The architecture's performance under load can be understood through four distinct player persona scenarios, reflecting the Bartle taxonomy. Each scenario stresses a different part of the system and demonstrates how the design remains efficient and responsive.
 
-- **The Social Explorer (High Player Concurrency):** This persona, combining Bartle's Socializer and Explorer types, represents many users gathering in popular worlds or discovering new content. The primary load is on the Real-Time Application Layer. To support this, the Erlang game server cluster is scaled horizontally to handle the high number of concurrent connections. The core gameplay experience of fluid locomotion and expressive VR motion is managed entirely in memory. This ensures maximum responsiveness and generates zero database IOPS for movement, effectively decoupling player count from database load.
-- **The World Hopper (High Instance Count):** A specific type of Explorer, this persona represents players who frequently traverse many different worlds or create numerous private instances. This activity tests the system's ability to manage state for a large number of active, concurrent worlds. PostgreSQL's schema-based isolation is critical here, as it provides logical separation of world data with built-in clustering across the database. Seamless zone transfers are essential for this persona, supported by fast, in-memory state hand-offs that leverage PostgreSQL's optimized transaction latency for any required persistence operations.
-- **The Achiever (High Transactional Intensity):** This persona, represented by a trader or collector, engages in frequent economic or goal-oriented activity. This activity leverages PostgreSQL's ACID transaction guarantees for inventory transfers and economic operations. PostgreSQL's multi-version concurrency control (MVCC) ensures that high-frequency trading operations remain consistent and isolated, with schema-based separation preventing cross-world interference. The architecture supports trustworthy operations through PostgreSQL's atomic transactions, which provide serializable isolation for complex economic interactions.
-- **The Competitor (High-Stakes Interaction):** This persona, representing Bartle's Killer type, engages in competitive activities like player-vs-player combat. This scenario places high demands on the Real-Time Application Layer to ensure low-latency, fair, and responsive gameplay. It also leverages PostgreSQL's transaction capabilities when match outcomes are recorded. A victory or defeat triggers an atomic transaction to update player rankings and distribute rewards, utilizing PostgreSQL's schema isolation for both world-specific leaderboards and global ranking systems with guaranteed consistency.
+The Social Explorer represents a combination of Bartle's Socializer and Explorer types, where many users gather in popular worlds or discover new content. This scenario places primary load on the Real-Time Application Layer. To support this usage pattern, the Erlang game server cluster scales horizontally to handle high numbers of concurrent connections. The core gameplay experience of fluid locomotion and expressive VR motion is managed entirely in memory, ensuring maximum responsiveness while generating zero database IOPS for movement. This effectively decouples player count from database load, allowing the system to scale to thousands of concurrent users without database bottlenecks.
+
+The World Hopper represents a specific type of Explorer who frequently traverses many different worlds or creates numerous private instances. This activity tests the system's ability to manage state for a large number of active, concurrent worlds. PostgreSQL's schema-based isolation is critical here, as it provides logical separation of world data with built-in clustering across the database. Seamless zone transfers are essential for this persona, supported by fast, in-memory state hand-offs that leverage PostgreSQL's optimized transaction latency for any required persistence operations.
+
+The Achiever represents a trader or collector who engages in frequent economic or goal-oriented activity. This persona leverages PostgreSQL's ACID transaction guarantees for inventory transfers and economic operations. PostgreSQL's multi-version concurrency control ensures that high-frequency trading operations remain consistent and isolated, with schema-based separation preventing cross-world interference. The architecture supports trustworthy operations through PostgreSQL's atomic transactions, which provide serializable isolation for complex economic interactions.
+
+The Competitor represents Bartle's Killer type, engaging in competitive activities like player-vs-player combat. This scenario places high demands on the Real-Time Application Layer to ensure low-latency, fair, and responsive gameplay. It also leverages PostgreSQL's transaction capabilities when match outcomes are recorded. A victory or defeat triggers an atomic transaction to update player rankings and distribute rewards, utilizing PostgreSQL's schema isolation for both world-specific leaderboards and global ranking systems with guaranteed consistency.
 
 The system's data flow is designed around this separation of concerns. A user login validates credentials against the PostgreSQL user tables, and initial world state is loaded from the per-world schemas with optimized queries. Real-time locomotion and VR motion are synchronized entirely in-memory, with asynchronous events sent to the analytics hypertables using TimescaleDB's efficient time-series ingestion. A seamless world transition is a fast, in-memory messaging operation, while a persistent state change like an inventory update is handled as an efficient, atomic transaction within the appropriate schema. PostgreSQL's schema-based architecture ensures complete isolation between different data domains while maintaining transactional consistency across the entire system.
 
@@ -71,42 +68,19 @@ The adoption of PostgreSQL with TimescaleDB introduces several architectural pat
 
 ### Current Technology Stack (Aria Character Core v0.2.0)
 
-- **Database**: PostgreSQL with TimescaleDB hypertables
-- **Web Framework**: Phoenix 1.8 with LiveView
-- **Real-time**: Phoenix Channels (WebSocket)
-- **Planning Engine**: Custom HTN+STN implementation
-- **Testing**: 382 passing tests with comprehensive coverage
+The current implementation of Aria Character Core v0.2.0 utilizes PostgreSQL with TimescaleDB hypertables as the database layer, providing efficient time-series data storage and retrieval. The web framework is built on Phoenix 1.8 with LiveView, offering a modern, real-time web experience. Real-time communication is handled through Phoenix Channels, enabling seamless WebSocket connections for interactive features. The planning engine features a custom HTN+STN implementation that handles complex temporal scheduling and constraint solving. The project maintains comprehensive test coverage with 382 passing tests, ensuring reliability and stability of the core functionality.
 
 ### Production Migration Path
 
-**Phase 1: Database Migration ✅ COMPLETED**
+The production migration follows a phased approach to ensure stability and maintainability. Phase 1, database migration, has been completed successfully. This phase involved migrating from SQLite to PostgreSQL with TimescaleDB, implementing hypertables for optimal time-series data handling, adding multi-tenant isolation patterns, and maintaining backward compatibility throughout the transition.
 
-- ✅ Migrate from SQLite to PostgreSQL with TimescaleDB
-- ✅ Implement hypertables for time-series data
-- ✅ Add multi-tenant isolation patterns
-- ✅ Maintain backward compatibility during transition
+Phase 2 focuses on real-time infrastructure development with medium priority. This phase will implement the ENet game server using the dragonhunt02/enet-godot project, add Godot client integration with block mesh style capsules for 3D testing, establish DTLS-secured communication channels, and conduct performance testing with concurrent connections using simplified geometric representations.
 
-**Phase 2: Real-time Infrastructure (Priority: Medium)**
-
-- Implement ENet game server (`dragonhunt02/enet-godot`)
-- Add Godot client integration with block mesh style capsules for 3D testing
-- Establish DTLS-secured communication channels
-- Performance testing with concurrent connections using simplified geometric representations
-
-**Phase 3: Advanced Scaling & Optimization (Priority: Low)**
-
-- Implement PostgreSQL clustering for high availability
-- Add TimescaleDB continuous aggregates for real-time analytics
-- Implement advanced compression policies for historical data
-- Optimize query performance with specialized indexing strategies
+Phase 3 addresses advanced scaling and optimization with low priority. This final phase will implement PostgreSQL clustering for high availability, add TimescaleDB continuous aggregates for real-time analytics, implement advanced compression policies for historical data, and optimize query performance with specialized indexing strategies.
 
 ### Research Components Status
 
-- ✅ **Temporal Planning**: Complete HTN+STN implementation
-- ✅ **Web Framework**: Phoenix application functional
-- ✅ **Database Migration**: Completed (SQLite → PostgreSQL with TimescaleDB)
-- 🧪 **ENet Integration**: Experimental (dragonhunt02/enet-godot)
-- 📋 **Multi-tenant Architecture**: Designed but not implemented
+The temporal planning component is complete, featuring a full HTN+STN implementation that handles complex hierarchical task decomposition and temporal constraint solving. The web framework is fully functional, with the Phoenix application providing robust real-time capabilities through WebSocket channels. Database migration has been completed successfully, transitioning from SQLite to PostgreSQL with TimescaleDB for optimal time-series performance. ENet integration remains in experimental phase, utilizing the dragonhunt02/enet-godot project for game server communication. Multi-tenant architecture has been designed but not yet implemented, representing a future enhancement for data isolation and scalability.
 
 ## Implementation Notes
 
