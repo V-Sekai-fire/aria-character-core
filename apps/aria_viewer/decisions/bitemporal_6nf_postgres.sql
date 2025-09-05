@@ -1,0 +1,126 @@
+-- PostgreSQL script for the Bitemporal 6NF Data Format Specification
+-- Version: 1.3
+-- Date: 2025-09-04
+-- This file defines the table structure and populates it with examples.
+--
+-- Amended from the original specification by Alexey Zimarev:
+-- https://habr.com/en/post/773955/
+
+-- -----------------------------------------------------------------------------
+-- Bitemporal 6NF Specification - Embedded Documentation
+-- -----------------------------------------------------------------------------
+--
+-- ## DESIGN PRINCIPLES ##
+--
+-- 1. Database Friendly Flat Structure:
+--    Each record is an atomic fact. No nested objects or JSON parsing is needed.
+--
+-- 2. 6NF Compatibility:
+--    Each record represents a single attribute of a single entity, aligning
+--    with the principles of the Sixth Normal Form.
+--
+-- 3. Complete Bitemporal Modeling:
+--    Data is tracked along two independent time axes, allowing for a complete,
+--    auditable history.
+--
+-- 4. Immutability:
+--    Data is never physically deleted. Changes are recorded by logically
+--    closing old records and creating new ones.
+--
+-- ## CORE CONCEPTS: THE TWO TIMELINES ##
+--
+-- The format is built upon two distinct time dimensions, represented as
+-- half-open intervals [start, end). A NULL end-date implies infinity.
+--
+-- ### Valid Time: The Real World Timeline ###
+-- Describes when a fact is true in the real world.
+--
+--   - "valid_from": The timestamp when the data BECAME true.
+--   - "valid_to":   The timestamp when the data CEASED to be true.
+--                   A NULL value means the fact is still considered valid.
+--
+-- ### Transaction Time: The System Timeline ###
+-- Describes when a fact was known to the system, providing an audit trail.
+--
+--   - "recorded_at": The timestamp when the data was RECORDED in the database.
+--   - "recorded_to": The timestamp when this record was SUPERSEDED by a new
+--                    version (due to a correction or a new valid state).
+--                    A NULL value means this is the current active record.
+--
+-- ## AMENDED EBNF SYNTAX (v1.3) ##
+--
+-- This is the formal EBNF for the amended, fully bitemporal 6NF format. It
+-- incorporates the detailed syntax from the original specification and adds
+-- optional `VALID_TO` and `RECORDED_TO` fields for complete bitemporal modeling.
+--
+-- ```ebnf
+-- bitemporal_6nf      = [ version ] { record } ;
+-- record              = entity | reference | attribute | attribute_ref | struct | attribute_of_struct | relationship | NEWLINE ;
+--
+-- version             = "VERSION" number NEWLINE ;
+-- entity              = "ENTITY" entity_name entity_id NEWLINE ;
+-- reference           = "REFERENCE" name reference_id value NEWLINE ;
+--
+-- attribute           = "ATTRIBUTE_OF" entity_name entity_id name value timestamp_block NEWLINE ;
+-- attribute_ref       = "ATTRIBUTE_REF_OF" entity_name entity_id name reference_id timestamp_block NEWLINE ;
+-- struct              = "STRUCT_OF" entity_name entity_id name struct_id timestamp_block NEWLINE ;
+-- attribute_of_struct = "ATTRIBUTE_OF_STRUCT" struct_id name value NEWLINE ;
+-- relationship        = "RELATIONSHIP" name relationship_id entity_name entity_id entity_name entity_id timestamp_block NEWLINE ;
+--
+-- timestamp_block     = "VALID_FROM" valid_from [ "VALID_TO" valid_to ] "RECORDED_AT" recorded_at [ "RECORDED_TO" recorded_to ] ;
+--
+-- value               = string | number | "true" | "false" ;
+-- string              = "\"" (* any character except double quote *) "\"" ;
+-- number              = [ "-" ] digit { digit } [ "." digit { digit } ] ;
+-- valid_from          = iso8601 ;
+-- valid_to            = iso8601 ;
+-- recorded_at         = iso8601 ;
+-- recorded_to         = iso8601 ;
+-- iso8601             = (* e.g., "2023-01-01T12:00:00Z" *) ;
+--
+-- entity_name         = ( letter | "_" ) { letter | digit | "_" } ;
+-- name                = ( letter | "_" ) { letter | digit | "_" } ;
+--
+-- entity_id           = 26 * base32_char ;
+-- reference_id        = 26 * base32_char ;
+-- relationship_id     = 26 * base32_char ;
+-- struct_id           = 26 * base32_char ;
+--
+-- base32_char         = "0" | "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9"
+--                     | "A" | "B" | "C" | "D" | "E" | "F" | "G" | "H" | "J" | "K"
+--                     | "M" | "N" | "P" | "Q" | "R" | "S" | "T" | "V" | "W" | "X" | "Y" | "Z" ;
+-- ```
+--
+-- ## FULL TEXT FORMAT EXAMPLE ##
+--
+-- This example demonstrates the amended 6NF text format syntax defined above.
+--
+-- ```
+-- # Entity Declarations
+-- ENTITY bank "01K3Y0690AJCRFEJ2J49X6ZECY"
+-- ENTITY customer "CUST123"
+-- ENTITY bank "01K5B2..."
+--
+-- # Reference Value Declaration
+-- REFERENCE country_code "01K3Y07Z94DGJWVMB0JG4YSDBV" "US"
+--
+-- # Simple Attribute (Bank Name)
+-- ATTRIBUTE_OF bank "01K3Y0690AJCRFEJ2J49X6ZECY" bank_name "Bank Alpha" VALID_FROM 2023-01-01T00:00:00Z RECORDED_AT 2023-01-01T12:00:00Z
+--
+-- # Attribute Reference (Bank's Country)
+-- ATTRIBUTE_REF_OF bank "01K3Y0690AJCRFEJ2J49X6ZECY" country_code "01K3Y07Z94DGJWVMB0JG4YSDBV" VALID_FROM 2023-01-01T00:00:00Z RECORDED_AT 2023-01-01T12:00:00Z
+--
+-- # Struct (Customer Address)
+-- STRUCT_OF customer "CUST123" address "ADDR_ID_1" VALID_FROM 2024-06-01T00:00:00Z RECORDED_AT 2024-06-01T10:00:00Z
+-- ATTRIBUTE_OF_STRUCT "ADDR_ID_1" street "123 Main St"
+-- ATTRIBUTE_OF_STRUCT "ADDR_ID_1" city "Anytown"
+-- ATTRIBUTE_OF_STRUCT "ADDR_ID_1" zip_code "12345"
+--
+-- # Relationship (Acquisition)
+-- RELATIONSHIP subsidiary_of "REL_ID_1" bank "01K5B2..." bank "01K3Y0690AJCRFEJ2J49X6ZECY" VALID_FROM 2026-03-15T00:00:00Z RECORDED_AT 2026-03-15T17:00:00Z
+--
+-- # Correction of an Error (updating "Bank of Amerigo" to "Bank of America")
+-- ATTRIBUTE_OF bank "01K3Y0..." bank_name "Bank of Amerigo" VALID_FROM 2025-09-04T00:00:00Z RECORDED_AT 2025-09-04T21:00:00Z RECORDED_TO 2025-09-04T22:00:00Z
+-- ATTRIBUTE_OF bank "01K3Y0..." bank_name "Bank of America" VALID_FROM 2025-09-04T00:00:00Z RECORDED_AT 2025-09-04T22:00:00Z
+-- 
+
