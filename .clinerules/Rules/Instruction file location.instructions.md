@@ -1,6 +1,6 @@
 ---
 applyTo: ".clinerules/**"
-textId: "INST-012"
+textId: "E8BMA0Y9APK218WFMVVHKC4K1"
 ---
 
 ## Instruction File Location

@@ -1,6 +1,6 @@
 ---
 applyTo: "**"
-textId: "INST-014"
+textId: "WW4HFK8FTVWGJY8FMVVHKC4K1"
 ---
 
 ## Commit message style

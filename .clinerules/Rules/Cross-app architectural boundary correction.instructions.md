@@ -1,6 +1,6 @@
 ---
 applyTo: "apps/**"
-textId: "INST-045"
+textId: "YB7PYRC9B2SZEA9EMVVHKC4K1"
 ---
 
 # Cross-app architectural boundary correction

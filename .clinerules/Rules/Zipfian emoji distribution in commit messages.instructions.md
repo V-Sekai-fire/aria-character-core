@@ -1,6 +1,6 @@
 ---
 applyTo: "**"
-textId: "INST-007"
+textId: "59JTWVNC75KT8REEMVVHKC4K1"
 ---
 
 ## Zipfian emoji distribution in commit messages

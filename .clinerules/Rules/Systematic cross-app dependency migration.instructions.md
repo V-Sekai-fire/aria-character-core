@@ -1,6 +1,6 @@
 ---
 applyTo: "apps/**"
-textId: "INST-042"
+textId: "KC0B8C71TS7GX5QEMVVHKC4K1"
 ---
 
 # Systematic cross-app dependency migration

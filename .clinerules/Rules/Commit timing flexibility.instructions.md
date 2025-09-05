@@ -1,6 +1,6 @@
 ---
 applyTo: "**"
-textId: "INST-030"
+textId: "00M8F74AG376MCNFMVVHKC4K1"
 ---
 
 ## Commit timing flexibility

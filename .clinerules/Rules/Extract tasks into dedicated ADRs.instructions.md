@@ -1,6 +1,6 @@
 ---
 applyTo: "**"
-textId: "INST-024"
+textId: "1X24SYHKVHB279YEMVVHKC4K1"
 ---
 
 ## Extract tasks into dedicated ADRs

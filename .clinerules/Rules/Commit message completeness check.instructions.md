@@ -1,6 +1,6 @@
 ---
 applyTo: "**"
-textId: "INST-015"
+textId: "01XMCCEEWRECJBKFMVVHKC4K1"
 ---
 
 ## Commit Message Completeness Check

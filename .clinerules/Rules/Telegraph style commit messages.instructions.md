@@ -1,6 +1,6 @@
 ---
 applyTo: "**"
-textId: "INST-039"
+textId: "QDTGAAJCHCD1B09FMVVHKC4K1"
 ---
 
 ## Telegraph style commit messages

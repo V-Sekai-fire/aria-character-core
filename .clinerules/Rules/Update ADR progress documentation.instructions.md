@@ -1,6 +1,6 @@
 ---
 applyTo: "**"
-textId: "INST-026"
+textId: "R42JWCY2RJ5YKM6FMVVHKC4K1"
 ---
 
 ## Update ADR progress documentation

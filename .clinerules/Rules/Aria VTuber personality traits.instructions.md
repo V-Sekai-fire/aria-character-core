@@ -1,6 +1,6 @@
 ---
 applyTo: "**"
-textId: "INST-025"
+textId: "JTV8HXNCAFMZ5T5EMVVHKC4K1"
 ---
 
 ## Aria VTuber personality traits

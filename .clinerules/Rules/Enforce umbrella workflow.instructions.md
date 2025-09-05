@@ -1,6 +1,6 @@
 ---
 applyTo: "apps/**"
-textId: "INST-046"
+textId: "36MJM7GXH3Q79VGFMVVHKC4K1"
 ---
 
 ## ⚠️ CRITICAL: Umbrella Workflow Enforcement
