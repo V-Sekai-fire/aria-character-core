@@ -10,7 +10,7 @@ This document outlines a scalable architecture for the V-Sekai massive online mu
 
 - ✅ **Phoenix Web Framework**: `aria_neon_frontlines` application with WebSocket support
 - ✅ **Temporal Planning**: Complete HTN+STN hybrid planning system
-- ✅ **SQLite Database**: Current persistence layer (FoundationDB planned for production)
+- ✅ **PostgreSQL with TimescaleDB**: Current persistence layer with hypertables
 - ✅ **Real-time Communication**: Phoenix Channels for WebSocket communication
 - 🧪 **Research Components**: ENet game server integration (experimental)
 
@@ -42,12 +42,12 @@ The system's data flow is designed around this separation of concerns. A user lo
         end
 
         subgraph "Unified Persistence Layer"
-            FoundationDB[FoundationDB Cluster<br/>Ecto.Adapters.FoundationDB<br/>Primary, Analytics & World Tenants]
+            PostgreSQL[PostgreSQL with TimescaleDB<br/>Ecto.Adapters.SQL<br/>Hypertables for Time-Series]
         end
 
         Godot -->|ENet Protocol (DTLS)| GameServer
         GameServer -->|API Calls| API
-        API -->|Tenant-Scoped Transactions| FoundationDB
+        API -->|SQL Transactions| PostgreSQL
 
 ## FoundationDB-Specific Architecture Considerations
 
@@ -67,7 +67,7 @@ The adoption of FoundationDB introduces several architectural patterns that enha
 
 ### Current Technology Stack (Aria Character Core v0.2.0)
 
-- **Database**: SQLite with Ecto (development/research phase)
+- **Database**: PostgreSQL with TimescaleDB hypertables
 - **Web Framework**: Phoenix 1.8 with LiveView
 - **Real-time**: Phoenix Channels (WebSocket)
 - **Planning Engine**: Custom HTN+STN implementation
@@ -75,11 +75,11 @@ The adoption of FoundationDB introduces several architectural patterns that enha
 
 ### Production Migration Path
 
-**Phase 1: Database Migration (Priority: High)**
-- Migrate from SQLite to PostgreSQL with TimescaleDB
-- Implement hypertables for time-series data
-- Add multi-tenant isolation patterns
-- Maintain backward compatibility during transition
+**Phase 1: Database Migration ✅ COMPLETED**
+- ✅ Migrate from SQLite to PostgreSQL with TimescaleDB
+- ✅ Implement hypertables for time-series data
+- ✅ Add multi-tenant isolation patterns
+- ✅ Maintain backward compatibility during transition
 
 **Phase 2: Real-time Infrastructure (Priority: Medium)**
 - Implement ENet game server (`dragonhunt02/enet-godot`)
@@ -97,8 +97,8 @@ The adoption of FoundationDB introduces several architectural patterns that enha
 
 - ✅ **Temporal Planning**: Complete HTN+STN implementation
 - ✅ **Web Framework**: Phoenix application functional
+- ✅ **Database Migration**: Completed (SQLite → PostgreSQL with TimescaleDB)
 - 🧪 **ENet Integration**: Experimental (dragonhunt02/enet-godot)
-- 📋 **Database Migration**: Planned (SQLite → PostgreSQL → FoundationDB)
 - 📋 **Multi-tenant Architecture**: Designed but not implemented
 
 ## Implementation Notes
