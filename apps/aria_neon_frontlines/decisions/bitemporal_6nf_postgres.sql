@@ -4,7 +4,7 @@
 -- This file defines the table structure and populates it with examples.
 --
 -- Amended from the original specification by Alexey Zimarev:
--- https://habr.com/en/post/773955/
+-- https://habr.com/en/articles/942516/
 
 -- -----------------------------------------------------------------------------
 -- Bitemporal 6NF Specification - Embedded Documentation
@@ -81,11 +81,12 @@
 -- entity_name         = ( letter | "_" ) { letter | digit | "_" } ;
 -- name                = ( letter | "_" ) { letter | digit | "_" } ;
 --
+-- (*  Uses Crockford’s Base32 - encoded UUIDv7 for identifiers *) ;
 -- entity_id           = 26 * base32_char ;
 -- reference_id        = 26 * base32_char ;
 -- relationship_id     = 26 * base32_char ;
 -- struct_id           = 26 * base32_char ;
---
+-- 
 -- base32_char         = "0" | "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9"
 --                     | "A" | "B" | "C" | "D" | "E" | "F" | "G" | "H" | "J" | "K"
 --                     | "M" | "N" | "P" | "Q" | "R" | "S" | "T" | "V" | "W" | "X" | "Y" | "Z" ;
