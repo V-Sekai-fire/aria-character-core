@@ -1,8 +1,22 @@
+# V-Sekai System Architecture Plan
+
+## Status: Proposed (Research Phase)
+
 This document outlines a scalable architecture for the V-Sekai massive online multiplayer platform. The design consolidates all persistent data into a single, horizontally-scalable database technology to prioritize operational simplicity and data locality. A fundamental principle of the architecture is the separation of the real-time application layer from the persistence layer. This separation ensures that high-frequency, low-latency gameplay interactions do not create a bottleneck for the database service that stores permanent data.
+
+## Current Implementation Status
+
+**Note:** This architecture plan is in research phase. The current Aria Character Core project implements a subset of these concepts:
+
+- ✅ **Phoenix Web Framework**: `aria_neon_frontlines` application with WebSocket support
+- ✅ **Temporal Planning**: Complete HTN+STN hybrid planning system
+- ✅ **SQLite Database**: Current persistence layer (FoundationDB planned for production)
+- ✅ **Real-time Communication**: Phoenix Channels for WebSocket communication
+- 🧪 **Research Components**: ENet game server integration (experimental)
 
 The real-time layer is an Erlang-based game server that uses `dragonhunt02/enet-godot`. This project is an Erlang port of the ENet protocol library, created for compatibility with the ENet implementation used by Godot Engine clients. Since the server and clients both adhere to the ENet protocol, they can communicate directly. This implementation allows the server to leverage Erlang's lightweight processes to achieve massive concurrency. Each active world instance is managed by a dedicated process, which synchronizes ephemeral state data such as player position, VR motion, and avatar animations. This design also enables seamless world transitions by handling the state hand-off between world instances as a high-speed, in-memory messaging operation, which avoids the persistence layer entirely.
 
-The API layer is the existing `uro/` Elixir Phoenix application. It provides REST API endpoints that the game server uses to interact with the persistence layer. Its responsibilities include handling user authentication, authorizing world transitions, retrieving world data, and managing inventory persistence. The Phoenix application can be configured in a distributed cluster to handle horizontal scaling. This layer also provides a dedicated, non-blocking ingestion endpoint to receive high-volume analytics events from the game server.
+The API layer is the `aria_neon_frontlines` Elixir Phoenix application. It provides REST API endpoints and WebSocket channels for real-time communication. Its responsibilities include handling user authentication, authorizing world transitions, retrieving world data, and managing inventory persistence. The Phoenix application can be configured in a distributed cluster to handle horizontal scaling. This layer also provides a dedicated, non-blocking ingestion endpoint to receive high-volume analytics events from the game server.
 
 The persistence layer uses FoundationDB with the Ecto.Adapters.FoundationDB adapter to provide a distributed, ACID-compliant key-value store with multi-tenant isolation. FoundationDB manages all permanent data for the V-Sekai universe through logical tenant separation rather than traditional table-based organization. The primary tenant handles user accounts and social graphs. The analytics tenant uses FoundationDB's efficient key-value structure for high-volume event ingestion with custom indexing for temporal queries. The per-world tenant uses multi-tenant isolation to segregate world-specific data, enabling horizontal scaling through FoundationDB's built-in distribution capabilities. This approach provides immediate horizontal scalability without requiring schema migrations or sharding extensions.
 
@@ -24,7 +38,7 @@ The system's data flow is designed around this separation of concerns. A user lo
         end
 
         subgraph "API Layer"
-            API[uro/ REST API<br/>Elixir Phoenix]
+            API[aria_neon_frontlines REST API<br/>Elixir Phoenix]
         end
 
         subgraph "Unified Persistence Layer"
@@ -48,3 +62,51 @@ The adoption of FoundationDB introduces several architectural patterns that enha
 **Watch-Based Real-Time Features:** FoundationDB's watch mechanism enables real-time notifications for critical events, such as inventory changes or leaderboard updates, which can be pushed to clients through the Phoenix channels.
 
 **Horizontal Scalability:** FoundationDB's built-in distribution eliminates the need for manual sharding strategies, providing seamless scaling as the platform grows while maintaining sub-millisecond latency for tenant-scoped operations.
+
+## Technology Alternatives & Migration Path
+
+### Current Technology Stack (Aria Character Core v0.2.0)
+
+- **Database**: SQLite with Ecto (development/research phase)
+- **Web Framework**: Phoenix 1.8 with LiveView
+- **Real-time**: Phoenix Channels (WebSocket)
+- **Planning Engine**: Custom HTN+STN implementation
+- **Testing**: 382 passing tests with comprehensive coverage
+
+### Production Migration Path
+
+**Phase 1: Database Migration (Priority: High)**
+- Migrate from SQLite to PostgreSQL with TimescaleDB
+- Implement hypertables for time-series data
+- Add multi-tenant isolation patterns
+- Maintain backward compatibility during transition
+
+**Phase 2: Real-time Infrastructure (Priority: Medium)**
+- Implement ENet game server (`dragonhunt02/enet-godot`)
+- Add Godot client integration
+- Establish DTLS-secured communication channels
+- Performance testing with concurrent connections
+
+**Phase 3: FoundationDB Integration (Priority: Low)**
+- Replace PostgreSQL with FoundationDB cluster
+- Implement tenant-based data isolation
+- Add watch-based real-time features
+- Optimize for sub-millisecond latency requirements
+
+### Research Components Status
+
+- ✅ **Temporal Planning**: Complete HTN+STN implementation
+- ✅ **Web Framework**: Phoenix application functional
+- 🧪 **ENet Integration**: Experimental (dragonhunt02/enet-godot)
+- 📋 **Database Migration**: Planned (SQLite → PostgreSQL → FoundationDB)
+- 📋 **Multi-tenant Architecture**: Designed but not implemented
+
+## Implementation Notes
+
+This architecture document represents the target state for V-Sekai's massive multiplayer platform. The current Aria Character Core project serves as a research foundation, implementing core planning algorithms and web infrastructure that will form the basis of the full V-Sekai system.
+
+Key research achievements from the current project:
+- Complete temporal constraint solving with MiniZinc integration
+- Hybrid HTN+STN planning with 382 test cases
+- Real-time WebSocket communication via Phoenix Channels
+- Comprehensive test coverage and algorithm validation
