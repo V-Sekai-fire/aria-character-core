@@ -2,26 +2,15 @@
 
 ## Status: Proposed (Research Phase)
 
-### Decision 1: PostgreSQL with TimescaleDB for persistence
-**Rationale**: Robust ACID compliance, time-series optimization, horizontal scalability.
-
-### Decision 2: Three-layer architecture (Real-time, API, Persistence)
-**Rationale**: Separates concerns to prevent real-time bottlenecks.
-
-### Decision 3: Erlang/Elixir for real-time game server
-**Rationale**: Lightweight processes enable massive multiplayer concurrency.
-
-### Decision 4: HTN+STN hybrid planning system
-**Rationale**: Combines hierarchical decomposition with temporal constraint solving.
-
-### Decision 5: Web-based text interface for Phase 4
-**Rationale**: Accessible testing and platform interaction entry point.
-
-### Decision 6: 3D domain simulation for Phase 5
-**Rationale**: Realistic multi-agent interactions via operational archetypes.
-
-### Decision 7: Four Bartle taxonomy personas
-**Rationale**: Efficient scaling across different player interaction patterns.
+| Decision                          | Technical Rationale                                                       | Student/Marketing Explanation                                                                                             |
+| --------------------------------- | ------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------- |
+| **PostgreSQL with TimescaleDB**   | Robust ACID compliance, time-series optimization, horizontal scalability  | Like a super-organized filing system that grows with your needs and handles time-based data efficiently                   |
+| **Three-layer architecture**      | Separates real-time, API, and persistence concerns to prevent bottlenecks | Think of it as separating the kitchen, dining room, and storage - each handles its job without slowing others down        |
+| **Erlang/Elixir for game server** | Lightweight processes enable massive multiplayer concurrency              | Like having thousands of tiny helpers working simultaneously, each handling one player's actions instantly                |
+| **HTN+STN hybrid planning**       | Combines hierarchical decomposition with temporal constraint solving      | A smart planning system that breaks big goals into steps while respecting time limits, like a chess master thinking ahead |
+| **Web-based text interface**      | Accessible testing and platform interaction entry point                   | A simple chat-like interface where anyone can test the system without complex setup                                       |
+| **3D domain simulation**          | Realistic multi-agent interactions via operational archetypes             | Virtual characters that act like real people in a 3D world, making the simulation feel alive and authentic                |
+| **Four Bartle taxonomy personas** | Efficient scaling across different player interaction patterns            | Four personality types (socializers, explorers, achievers, competitors) that represent how different people play games    |
 
 ## Architecture Overview
 
@@ -44,13 +33,12 @@
 
 ## Current Status
 
-| Component | Status |
-|-----------|--------|
-| Phoenix Framework | ✅ COMPLETED |
-| HTN+STN Planning | ✅ COMPLETED |
-| PostgreSQL Migration | ✅ COMPLETED |
-| ENet Game Server | 🧪 EXPERIMENTAL |
-
+| Component            | Status          |
+| -------------------- | --------------- |
+| Phoenix Framework    | ✅ COMPLETED    |
+| HTN+STN Planning     | ✅ COMPLETED    |
+| PostgreSQL Migration | ✅ COMPLETED    |
+| ENet Game Server     | 🧪 EXPERIMENTAL |
 
 ## Next Steps
 
@@ -59,4 +47,4 @@
 
 ---
 
-*See separate documents for detailed implementation and database architecture*
+_See separate documents for detailed implementation and database architecture_
