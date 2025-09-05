@@ -4,7 +4,15 @@
 
 V-Sekai: Neon Frontlines combines emergent AI planning systems with immersive 3D environments in a neon-drenched cyberpunk metropolis where every shadow hides opportunity and danger lurks in the glow.
 
-Neon Frontlines features intelligent AI companions with goal-task temporal planning, massive scalability through Erlang/Elixir servers, an immersive cyberpunk world in a single city block, and four distinct play styles: Socializers who command squads and coordinate tactical operations, Explorers who master supply chains and optimize resource distribution, Achievers who maximize efficiency through intelligent resource allocation, and Competitors who outmaneuver rivals in high-stakes firefight coordination.
+Neon Frontlines features intelligent AI companions with goal-task temporal planning, massive scalability through Erlang/Elixir servers, an immersive cyberpunk world in a single city block, and four distinct play styles.
+
+Socializers: Command squads and coordinate tactical operations, offering a fast-paced, team-oriented approach ideal for players seeking quick wins.
+
+Explorers: Master supply chains and optimize resource distribution, emphasizing strategic planning and adaptability.
+
+Achievers: Maximize efficiency through intelligent resource allocation, ideal for players who enjoy complex problem-solving.
+
+Competitors: Outmaneuver rivals in high-stakes firefight coordination, fostering skill-based combat and teamwork.
 
 ## Steam Tags
 
