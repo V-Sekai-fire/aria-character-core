@@ -74,9 +74,9 @@ The current implementation of Aria Character Core v0.2.0 utilizes PostgreSQL wit
 
 The production migration follows a phased approach to ensure stability and maintainability. Phase 1, database migration, has been completed successfully. This phase involved migrating from SQLite to PostgreSQL with TimescaleDB, implementing hypertables for optimal time-series data handling, adding multi-tenant isolation patterns, and maintaining backward compatibility throughout the transition.
 
-Phase 2 focuses on real-time infrastructure development with medium priority. This phase will implement the ENet game server using the dragonhunt02/enet-godot project, add Godot client integration with block mesh style capsules for 3D testing, establish DTLS-secured communication channels, and conduct performance testing with concurrent connections using simplified geometric representations.
+Phase 4 focuses on providing a comprehensive text interface on the web. This phase will develop a user-friendly web-based interface that allows users to interact with the V-Sekai system through text commands and queries, providing an accessible entry point for testing and using the platform's capabilities.
 
-Phase 3 addresses advanced scaling and optimization with low priority. This final phase will implement PostgreSQL clustering for high availability, add TimescaleDB continuous aggregates for real-time analytics, implement advanced compression policies for historical data, and optimize query performance with specialized indexing strategies.
+Phase 5 addresses simulating the 3D domain tasks as outlined in the domain adaptation specification. This phase will implement the core 3D simulation capabilities, focusing on the operational archetypes and transfer protocols defined in the neon frontlines domain adaptation document, enabling realistic multi-agent interactions within the simulated environment.
 
 ### Research Components Status
 
