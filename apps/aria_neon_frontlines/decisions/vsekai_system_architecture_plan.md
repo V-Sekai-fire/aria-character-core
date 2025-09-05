@@ -63,7 +63,9 @@ Multiplayer, Strategy, Simulation, Cyberpunk, AI, Tactical, Real-time, Planning,
 ## Roadmap
 
 **Phase 4**: Web-based text interface for easy access and testing
+
 **Phase 5**: Enhanced 3D domain simulation with advanced archetypes
+
 **Future Updates**: Cross-platform mobile support, VR integration, custom world creation
 
 ## Technical Architecture
