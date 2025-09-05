@@ -32,7 +32,9 @@ Multiplayer, Strategy, Cyberpunk, AI, Tactical, Planning, Logistics, Competitive
 
 **Phase 4**: Web-based text interface
 
-**Phase 5**: Enhanced 3D domain simulation
+**Phase 5**: Domain simulation
+
+**Phase 6**: Enhanced 3D domain simulation
 
 ## Technical Architecture
 
