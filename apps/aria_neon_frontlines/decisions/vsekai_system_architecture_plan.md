@@ -21,7 +21,7 @@ In this neon-drenched city block, four distinct operative archetypes clash in ta
 
 ⚡ **Massive Scalability**
 
-- Erlang/Elixir game server handling thousands of concurrent players
+- Erlang/Elixir game server handling a plethora of concurrent players
 - PostgreSQL with TimescaleDB for lightning-fast time-series data
 - Horizontal scaling that grows with your community
 
