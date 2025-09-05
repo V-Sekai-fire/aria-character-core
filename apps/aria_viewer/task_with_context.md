@@ -1,108 +1,122 @@
 ## Current Work
 
-Creating a comprehensive session logging app for the V-Sekai MMO platform with 3D WebGL2 visualization. The app will display global session logs of players in real-time using capsule-based avatars in a 3D space.
+Creating a V-Sekai domain simulator that runs the game domain defined in `apps/aria_viewer/decisions/draft_vsekai_domain.exs`. The simulator will execute the 4 player archetypes (Social Explorer, World Hopper, Achiever, Competitor) and log their activities in real-time through a web interface.
 
 ## Key Technical Concepts
 
-- **Elixir Phoenix Framework**: Web application with real-time capabilities
-- **WebGL2 + Three.js**: 3D visualization for session monitoring
-- **PostgreSQL + TimescaleDB**: Time-series database for session analytics
-- **Oban**: Background job processing for analytics
-- **ENet (dragonhunt02/enet-godot)**: Real-time communication protocol
-- **Capsule-based 3D avatars**: 1.8h × 0.3r representations for players
-- **Player archetypes**: Social Explorer, World Hopper, Achiever, Competitor
+- **V-Sekai Game Domain**: 4 player archetypes with distinct behaviors and goals
+- **AriaHybridPlanner.Domain**: Domain definition framework for game simulation
+- **Phoenix Framework**: Web application with real-time capabilities via channels
+- **TimescaleDB**: Time-series database for simulation event logging
+- **AriaState**: State management for simulation state and agent tracking
+- **Multi-agent Simulation**: Concurrent execution of multiple player agents
 
 ## Relevant Files and Code
 
-### Existing Game Domain
+### Game Domain Definition
 
 - `apps/aria_viewer/decisions/draft_vsekai_domain.exs`: Complete Vsekai.GameDomain with 4 player archetypes
-- Includes join_world, socialize, engage_in_combat, and other game actions
-- Ready to be moved into AriaViewer.GameDomain
+  - Social Explorer: join_world → socialize → log_social_event
+  - World Hopper: visit_new_world → transfer_to_world
+  - Achiever: refine_resource → process_item for resource accumulation
+  - Competitor: engage_in_combat → record_match_outcome for ranking
+
+### Existing Infrastructure
+
+- `apps/aria_viewer/lib/aria_viewer_web/channels/ik_channel.ex`: Phoenix channel for real-time communication
+- `apps/aria_viewer/priv/static/js/app.js`: WebSocket client setup (can be adapted)
+- `apps/aria_viewer/mix.exs`: Phoenix dependencies already configured
+- `apps/aria_viewer/decisions/timescaledb_optimization.sql`: TimescaleDB setup scripts
 
 ### Database Optimization Files
 
 - `apps/aria_viewer/decisions/bitemporal_6nf_postgres.sql`: Bitemporal schema reference
-- `apps/aria_viewer/decisions/timescaledb_optimization.sql`: TimescaleDB optimization patterns
-- URO project has existing non-bitemporal schema that needs TimescaleDB integration
-
-### WebGL2 Infrastructure
-
-- `apps/aria_viewer/priv/static/js/app.js`: Existing Three.js setup with WebSocket
-- Phoenix channels for real-time communication
-- Ready for capsule avatar extension
-
-### URO Integration
-
-- Project location: `/home/fire/Developer/uro`
-- Existing Phoenix application with PostgreSQL + TimescaleDB
-- Oban job queue for background processing
-- ENet integration for real-time player events
+- `apps/aria_viewer/decisions/timescaledb_optimization.sql`: Hypertable optimization patterns
 
 ## Problem Solving
 
 ### Architecture Decisions Made
 
-1. **Reuse aria_viewer**: Leverage existing Phoenix + WebGL2 setup
-2. **Capsule avatars**: 1.8h × 0.3r for efficient 3D representation
-3. **Color coding**: Blue (Social), Green (World Hopper), Yellow (Achiever), Red (Competitor)
-4. **TimescaleDB integration**: Apply optimizations to existing URO schema
-5. **ENet integration**: Capture player events from dragonhunt02/enet-godot
+1. **Reuse aria_viewer**: Leverage existing Phoenix + WebSocket infrastructure
+2. **Multi-agent simulation**: Run concurrent agents with different archetypes
+3. **Real-time logging**: Capture all domain actions via Phoenix channels
+4. **TimescaleDB integration**: Apply optimizations for simulation event storage
+5. **Web dashboard**: Clean interface for simulation monitoring and control
 
 ### Technical Challenges Addressed
 
-- **Schema compatibility**: Work with URO's existing non-bitemporal schema
-- **Real-time streaming**: WebSocket integration for live session updates
-- **Performance optimization**: TimescaleDB compression for historical data
-- **3D visualization**: Efficient rendering of hundreds of capsule avatars
+- **Domain integration**: Move Vsekai.GameDomain into AriaViewer namespace
+- **State management**: AriaState.RelationalState for agent and world state
+- **Concurrent execution**: Manage multiple agents running simultaneously
+- **Event streaming**: Real-time broadcasting of simulation activities
+- **Performance monitoring**: Track simulation metrics and agent behavior
 
 ## Pending Tasks and Next Steps
 
-1. **Review URO's existing PostgreSQL schema** (non-bitemporal)
-2. **Apply TimescaleDB optimizations to analytics tables**
-3. **Create session-specific tables with time-series design**
-4. **Move Vsekai.GameDomain into AriaViewer**
-5. **Implement session logging with TimescaleDB**
-6. **Integrate with URO's Oban job queue**
-7. **Extend WebGL2 setup for capsule visualization**
-8. **Connect session logging with ENet events**
+### Phase 1: Domain Integration & Simulation Core
+
+1. Move Vsekai.GameDomain into AriaViewer.GameDomain namespace
+2. Create simulation engine for multi-agent execution
+3. Implement agent archetypes (Social Explorer, World Hopper, Achiever, Competitor)
+4. Set up AriaState integration for simulation state
+5. Create simulation scheduler for concurrent agent management
+
+### Phase 2: Real-time Simulation & Logging
+
+1. Implement activity logging for all agent actions
+2. Add TimescaleDB integration for event storage
+3. Create real-time broadcasting via Phoenix channels
+4. Build simulation controls (start/stop/pause, agent count adjustment)
+5. Implement simulation metrics and performance tracking
+
+### Phase 3: Web Simulation Interface
+
+1. Remove WebGL2 dependencies and 3D components
+2. Create simulation dashboard for real-time monitoring
+3. Add agent monitoring with individual status displays
+4. Implement web-based simulation controls
+5. Build activity visualization with charts and graphs
+
+### Phase 4: Analytics & Reporting
+
+1. Create simulation analytics for agent behavior patterns
+2. Build historical reports using TimescaleDB data
+3. Implement archetype analysis and comparison
+4. Add performance metrics and system utilization tracking
+5. Create data export capabilities for further analysis
 
 ## Implementation Strategy
 
-### Phase 1: Database & Backend
+### Core Simulation Loop
 
-- Assess URO's current schema structure
-- Apply TimescaleDB optimizations from reference files
-- Create session logging tables with time-series design
-- Move game domain into AriaViewer namespace
+- Initialize multiple agents with different archetypes
+- Execute domain actions based on agent goals and current state
+- Log all activities with timestamps and metadata
+- Broadcast events in real-time via WebSockets
+- Maintain simulation state and agent status
 
-### Phase 2: Session Processing
+### Agent Archetypes Implementation
 
-- Implement session tracking and logging modules
-- Integrate with Oban for background analytics processing
-- Connect with ENet events from dragonhunt02/enet-godot
-- Set up real-time broadcasting via Phoenix channels
+- **Social Explorer**: World discovery → social interaction → event logging
+- **World Hopper**: Multi-world exploration → fast transfers → visit tracking
+- **Achiever**: Resource gathering → refinement processing → quantity accumulation
+- **Competitor**: Match finding → combat engagement → ranking updates
 
-### Phase 3: 3D Visualization
+### Real-time Architecture
 
-- Extend existing WebGL2 setup for capsule avatars
-- Implement color-coded player archetypes
-- Add world clustering and spatial organization
-- Create interactive inspection features
-
-### Phase 4: Analytics Dashboard
-
-- Build real-time session monitoring interface
-- Add historical data visualization
-- Implement filtering and search capabilities
-- Create performance metrics display
+- Phoenix channels for simulation event broadcasting
+- WebSocket streaming of agent activities
+- TimescaleDB for persistent event storage
+- Dashboard for live simulation monitoring
+- Controls for simulation management
 
 ## Success Criteria
 
-- **Real-time session tracking**: Live monitoring of player activities
-- **3D visualization**: Immersive capsule-based player representation
-- **Scalable architecture**: TimescaleDB optimization for performance
-- **Complete integration**: Seamless connection with URO and ENet
-- **Interactive dashboard**: Full session analytics and monitoring capabilities
+- **Multi-agent simulation**: Successfully run 100+ concurrent agents
+- **Real-time monitoring**: Live dashboard showing agent activities
+- **Complete domain execution**: All 4 archetypes functioning with proper goal-task chains
+- **TimescaleDB integration**: Efficient storage and querying of simulation events
+- **Web interface**: Intuitive controls and visualization of simulation state
+- **Performance**: Maintain simulation performance with multiple concurrent agents
 
-This implementation will create a powerful session logging system that provides real-time insights into player behavior across the V-Sekai MMO platform with stunning 3D visualization.
+This implementation will create a comprehensive V-Sekai domain simulator that can run complex multi-agent scenarios and provide real-time insights into player behavior patterns across all defined archetypes.
