@@ -28,13 +28,6 @@ Create standalone `aria_neon_traverse` bot harness app with AriaHybridPlanner in
 - Authoritative inventory trading engine
 - Concurrent bot management
 
-## Implementation
-
-- Week 1: Core domain and movement
-- Week 2: Zone transfers
-- Week 3: Trading system
-- Week 4: Performance optimization
-
 ## Success Criteria
 
 - Bot block-to-block movement working
@@ -43,6 +36,3 @@ Create standalone `aria_neon_traverse` bot harness app with AriaHybridPlanner in
 - 1000+ concurrent bots
 - <100ms response time
 
-## Timeline
-
-4 weeks to production-ready app
