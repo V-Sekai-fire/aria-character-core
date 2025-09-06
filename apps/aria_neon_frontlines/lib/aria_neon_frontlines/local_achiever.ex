@@ -49,7 +49,7 @@ defmodule AriaNeonFrontlines.LocalAchiever do
   @spec init_state(String.t()) :: map()
   def init_state(operative_id) do
     # Initialize with entity registration
-    {:ok, initial_state} = register_local_achiever(%AriaState{}, [operative_id])
+    {:ok, initial_state} = register_local_achiever(AriaState.RelationalState.new(), [operative_id])
 
     initial_state
     |> Map.put(:resource_allocation, %{})
@@ -220,14 +220,14 @@ defmodule AriaNeonFrontlines.LocalAchiever do
   end
 
   # Helper functions
-  defp calculate_overall_efficiency(state) do
+  def calculate_overall_efficiency(state) do
     utilization = calculate_resource_utilization(state)
     effectiveness = calculate_allocation_effectiveness(state)
 
     (utilization + effectiveness) / 2.0
   end
 
-  defp calculate_resource_utilization(state) do
+  def calculate_resource_utilization(state) do
     allocated = AriaState.RelationalState.get_fact(state, "resource_allocation", "current") || %{}
     total_allocated = Enum.sum(Map.values(allocated))
     available = AriaState.RelationalState.get_fact(state, "available_resources", "total") || 100
@@ -239,7 +239,7 @@ defmodule AriaNeonFrontlines.LocalAchiever do
     end
   end
 
-  defp calculate_allocation_effectiveness(state) do
+  def calculate_allocation_effectiveness(state) do
     # Simplified effectiveness calculation
     history_count = length(AriaState.RelationalState.get_fact(state, "allocation_history", "all") || [])
     base_effectiveness = 0.5
@@ -247,19 +247,19 @@ defmodule AriaNeonFrontlines.LocalAchiever do
     min(base_effectiveness + (history_count * 0.05), 1.0)
   end
 
-  defp calculate_chain_efficiency(state, chain_id) do
+  def calculate_chain_efficiency(state, chain_id) do
     base_efficiency = 0.7
     optimization_applied = AriaState.RelationalState.get_fact(state, "optimization_applied", chain_id) || false
 
     if optimization_applied, do: base_efficiency * 1.2, else: base_efficiency
   end
 
-  defp calculate_refinement_factor(metrics) do
+  def calculate_refinement_factor(metrics) do
     overall_efficiency = Map.get(metrics, :overall_efficiency, 0.5)
     max(0.1, 1.0 - overall_efficiency)  # More refinement needed when efficiency is lower
   end
 
-  defp check_allocation_conflicts(state, allocation) do
+  def check_allocation_conflicts(state, allocation) do
     # Check for resource conflicts
     current_allocation = AriaState.RelationalState.get_fact(state, "resource_allocation", "current") || %{}
 

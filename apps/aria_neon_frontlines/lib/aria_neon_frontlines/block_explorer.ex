@@ -49,7 +49,7 @@ defmodule AriaNeonFrontlines.BlockExplorer do
   @spec init_state(String.t()) :: map()
   def init_state(operative_id) do
     # Initialize with entity registration
-    {:ok, initial_state} = register_block_explorer(%AriaState{}, [operative_id])
+    {:ok, initial_state} = register_block_explorer(AriaState.RelationalState.new(), [operative_id])
 
     initial_state
     |> Map.put(:supply_routes, [])

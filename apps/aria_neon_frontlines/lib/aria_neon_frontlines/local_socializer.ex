@@ -49,7 +49,7 @@ defmodule AriaNeonFrontlines.LocalSocializer do
   @spec init_state(String.t()) :: map()
   def init_state(operative_id) do
     # Initialize with entity registration
-    {:ok, initial_state} = register_local_socializer(%AriaState{}, [operative_id])
+    {:ok, initial_state} = register_local_socializer(AriaState.RelationalState.new(), [operative_id])
 
     initial_state
     |> Map.put(:squad_members, ["operative_1", "operative_2", "operative_3"])

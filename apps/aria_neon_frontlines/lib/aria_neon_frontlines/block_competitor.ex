@@ -49,7 +49,7 @@ defmodule AriaNeonFrontlines.BlockCompetitor do
   @spec init_state(String.t()) :: map()
   def init_state(operative_id) do
     # Initialize with entity registration
-    {:ok, initial_state} = register_block_competitor(%AriaState{}, [operative_id])
+    {:ok, initial_state} = register_block_competitor(AriaState.RelationalState.new(), [operative_id])
 
     initial_state
     |> Map.put(:combat_readiness, 0.9)
@@ -240,7 +240,7 @@ defmodule AriaNeonFrontlines.BlockCompetitor do
   end
 
   # Helper functions
-  defp calculate_tactical_advantage(state, position_id) do
+  def calculate_tactical_advantage(state, position_id) do
     # Base advantage calculation
     base_advantage = 0.5
 
@@ -259,7 +259,7 @@ defmodule AriaNeonFrontlines.BlockCompetitor do
     max(0.0, min(1.0, base_advantage + total_modifier))
   end
 
-  defp calculate_position_security(state, position_id) do
+  def calculate_position_security(state, position_id) do
     # Security calculation based on various factors
     base_security = 0.5
 
@@ -278,7 +278,7 @@ defmodule AriaNeonFrontlines.BlockCompetitor do
     max(0.0, min(1.0, base_security + total_modifier))
   end
 
-  defp assess_firefight_risk(state, firefight_id) do
+  def assess_firefight_risk(state, firefight_id) do
     # Risk assessment for firefight coordination
     enemy_strength = AriaState.RelationalState.get_fact(state, "enemy_strength", firefight_id) || 0.5
     friendly_support = AriaState.RelationalState.get_fact(state, "friendly_support", firefight_id) || 0.5
