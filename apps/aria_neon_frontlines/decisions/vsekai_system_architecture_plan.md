@@ -1,7 +1,3 @@
-Of course. Here is the "V-Sekai: Neon Frontlines" description rewritten in the style of "Operation Neon Spike."
-
----
-
 ## Announcing: "Project Metropolis" - The Genesis Block Sprint
 
 This isn't a game alpha; it's a **focused technical sprint** with one objective: to build a live, persistent city block that proves our riskiest technologies can create emergent, intelligent life. We're treating this like a simulation stress test—functional, deep, and data-driven over flashy.
