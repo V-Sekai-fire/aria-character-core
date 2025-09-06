@@ -1,4 +1,4 @@
-# ADR-002: Phase 1 - Core Gameplay Module (Alpha Sector)
+# Phase 1 - Core Gameplay Module (Alpha Sector Cluster)
 
 ## Status
 
@@ -6,30 +6,25 @@ Proposed
 
 ## Context
 
-To ensure a stable and scalable foundation for "V-Sekai: Neon Frontlines," the project requires a focused initial phase that de-risks the most critical backend systems. The previous proposal's scope, including a dynamic procedural world, introduced too much complexity for a foundational release. This revised plan returns to the core principle: build a stable, playable game module on a massive scale, but within a controlled, static environment.
+"V-Sekai: Neon Frontlines" requires a foundational phase to de-risk core backend systems at scale. This initial release must validate essential gameplay loops and critical infrastructure—specifically seamless shard transfers—within a controlled, static environment before introducing procedural complexity.
 
 ## Decision
 
-We will build and launch **Phase 1: Alpha Sector**. This release will be a fully playable, persistent online world set within a single, large, handcrafted city district. The gameplay will be focused on validating three core pillars at scale, without the complexity of procedural generation:
+Launch **Phase 1: Alpha Sector Cluster**, a live, persistent game module set in a handcrafted multi-district world. The focus is to validate the core engine at scale via three gameplay pillars:
 
-1.  **Massive-Scale Traversal:** Players will navigate the large, detailed Alpha Sector. The primary goal is to test and validate the seamless streaming and state management required to support thousands of concurrent players in a single, contiguous zone.
-2.  **Live Contract Board:** To provide clear goals and drive player interaction, the game will feature a live, server-driven contract board. This system will offer a constant stream of simple, systemic objectives (e.g., courier runs, item acquisition, location surveys) that encourage players to engage with the world and its economy.
-3.  **Core Player-Driven Economy:** A robust, authoritative trading system will allow players to exchange goods. This provides the foundational economic loop and tests the system's transactional integrity under heavy load.
+1.  **Traversal & Shard Transfers:** Players will navigate between handcrafted districts to validate the seamless hand-off of player state across server processes (shards).
+2.  **Live Contract Board:** A server-driven system will offer simple, systemic objectives (courier runs, item acquisition) to drive player interaction and test world systems.
+3.  **Core Player Economy:** An authoritative trading system will validate transactional integrity under heavy, concurrent load.
 
-The success of this phase is a stable, live game environment within the Alpha Sector that proves the engine can support thousands of concurrent players with responsive (<100ms) interactions.
+## Success Criteria
+
+A stable, live environment supporting thousands of concurrent players with seamless shard transfers and responsive (<100ms) interactions.
 
 ## Consequences
 
-### Positive:
-
-- **Drastically Reduced Scope:** Focusing on a single, static zone eliminates the immense complexity and unpredictability of procedural generation, allowing the team to focus on core engine stability.
-- **Clear, Measurable Goals:** The performance of the traversal, contract, and trading systems within a known environment can be benchmarked precisely.
-- **Delivers a Polished Experience:** By limiting the scope, the team can deliver a more stable, polished, and performant experience for the initial launch.
-- **Establishes a Scalable Foundation:** The engine, once proven in the Alpha Sector, provides a reliable foundation upon which future content, features, and procedural systems can be built.
-
-### Negative:
-
-- **Limited Replayability:** A static world with systemic quests will have less long-term replayability than a dynamic one. The engagement will rely on the core loop and player-to-player interactions.
-- **Content is Finite:** Players will eventually explore the entirety of the Alpha Sector. This plan accepts that the initial phase is about depth of mechanics, not breadth of content.
+- **De-risks Core Tech:** This architecture directly tests the shard transfer mechanic, a critical and complex piece of MMO infrastructure.
+- **Provides a Scalable Foundation:** A proven engine provides a reliable base upon which future content, features, and procedural systems can be built.
+- **Ensures Focused Scope:** Using static zones instead of procedural generation allows the team to concentrate on core engine stability and performance.
+- **Accepted Trade-offs:** This focused approach accepts that a static world with systemic quests has finite content and limited long-term replayability. The priority for Phase 1 is validating mechanical depth over content breadth.
 
 - **Technology Stack:** Elixir, Phoenix, PostgreSQL, Godot Engine\*
