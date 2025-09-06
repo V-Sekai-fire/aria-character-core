@@ -10,7 +10,7 @@ The Aria ecosystem currently has `aria_neon_frontlines` which provides comprehen
 
 ### Current State
 
-The Aria ecosystem currently includes `aria_neon_frontlines`, a comprehensive app providing single-block logistics warfare mechanics with 116 tests passing. However, the system lacks dedicated inter-block movement mechanics, zone transfer stress testing capabilities, and a P2P inventory trading system. There is also a need for a standalone app specifically designed to handle concurrent player load testing at scale.
+The Aria ecosystem currently includes `aria_neon_frontlines`, a comprehensive app providing single-block logistics warfare mechanics with 116 tests passing. However, the system lacks dedicated inter-block movement mechanics, zone transfer stress testing capabilities, and an authoritative inventory trading system. There is also a need for a standalone app specifically designed to handle concurrent player load testing at scale.
 
 ### Requirements
 
@@ -28,7 +28,7 @@ The `aria_neon_traverse` app will be built as a focused domain for inter-block m
 
 The app will consist of four primary systems working together to enable seamless inter-block gameplay. The Block Movement System handles traversal between adjacent city blocks, utilizing AriaHybridPlanner for path optimization and providing real-time position tracking for all active players.
 
-Zone Transfer Mechanics will manage boundary crossings with complete state persistence, enforcing zone-specific rules and restrictions while ensuring seamless transitions that maintain gameplay continuity. The Inventory Trading Engine implements a P2P item exchange system with planner-optimized trade negotiations, supporting concurrent transaction handling for high-volume trading scenarios.
+Zone Transfer Mechanics will manage boundary crossings with complete state persistence, enforcing zone-specific rules and restrictions while ensuring seamless transitions that maintain gameplay continuity. The Inventory Trading Engine implements an authoritative item exchange system with planner-optimized trade negotiations, supporting concurrent transaction handling for high-volume trading scenarios.
 
 Finally, Concurrent Player Management will synchronize positions for 1000+ simultaneous players, implementing efficient state updates, conflict resolution mechanisms, and load balancing to maintain performance under heavy concurrent load.
 
@@ -38,7 +38,7 @@ The implementation will follow a four-week phased approach to ensure systematic 
 
 Phase 2 will concentrate on zone transfer mechanics, implementing boundary crossing logic with complete state persistence. Zone-specific validation rules will be added, and boundary stress testing will begin to identify potential performance bottlenecks early in development.
 
-During Phase 3, the P2P inventory trading system will be built with full planner integration for trade optimization. Concurrent transaction handling will be implemented to support multiple simultaneous trades, with comprehensive trading stress tests to validate the system's ability to handle high-volume trading scenarios.
+During Phase 3, the authoritative inventory trading system will be built with full planner integration for trade optimization. Concurrent transaction handling will be implemented to support multiple simultaneous trades, with comprehensive trading stress tests to validate the system's ability to handle high-volume trading scenarios.
 
 The final Phase 4 will focus on performance optimization for massive multiplayer scenarios. The system will be tuned for 1000+ concurrent players with efficient state synchronization mechanisms. Performance monitoring will be added throughout, and final stress testing will validate all performance benchmarks are met.
 
@@ -55,8 +55,8 @@ The final Phase 4 will focus on performance optimization for massive multiplayer
 ### Trading Actions
 
 ```elixir
-{:initiate_trade, "Start P2P inventory trading session"}
-{:complete_trade, "Finalize item exchange with planner validation"}
+{:initiate_trade, "Start authoritative inventory trading session"}
+{:complete_trade, "Finalize mediated item exchange with planner validation"}
 {:cancel_trade, "Cancel active trading session"}
 ```
 
@@ -117,7 +117,7 @@ end
 
 ## Stress Testing Strategy
 
-The stress testing strategy will focus on validating the system's ability to handle massive multiplayer scenarios. Concurrent load testing will simulate 1000+ simultaneous players performing various actions simultaneously. This includes high-frequency position updates as players move between blocks, concurrent P2P transactions during peak trading periods, and zone transfers that occur when players cross boundaries under heavy load.
+The stress testing strategy will focus on validating the system's ability to handle massive multiplayer scenarios. Concurrent load testing will simulate 1000+ simultaneous players performing various actions simultaneously. This includes high-frequency position updates as players move between blocks, concurrent authoritative transactions during peak trading periods, and zone transfers that occur when players cross boundaries under heavy load.
 
 Performance metrics will be closely monitored throughout development and testing. The system must maintain response times under 100ms for position updates to ensure smooth gameplay. Throughput requirements include supporting 1000+ trades per second during peak activity. Memory usage will be optimized for efficient state management, and CPU utilization will be monitored to ensure planning algorithms remain performant under load.
 
@@ -127,7 +127,7 @@ Performance metrics will be closely monitored throughout development and testing
 
 - Block-to-block movement working
 - Zone transfers with state persistence
-- P2P inventory trading system
+- Authoritative inventory trading system
 - AriaHybridPlanner integration
 - 1000+ concurrent player support
 
