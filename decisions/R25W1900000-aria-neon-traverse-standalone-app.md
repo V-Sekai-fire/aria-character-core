@@ -6,7 +6,9 @@ Proposed
 
 ## Context
 
-Need bot harness for stress testing inter-block movement, zone transfers, and authoritative trading with 1000+ concurrent bots. Current `aria_neon_frontlines` lacks these features.
+Need bot harness for stress testing navmesh-based city block simulation with 1000+ concurrent bots. Navmesh serves as the core simulation mechanism for movement, zone transfers, and trading interactions. Current `aria_neon_frontlines` lacks these features.
+
+A navigation mesh (navmesh) is a data structure that represents the walkable surfaces of a 3D environment as a network of interconnected polygons. It enables efficient pathfinding and collision detection for AI agents in complex environments like city blocks.
 
 ## Decision
 
