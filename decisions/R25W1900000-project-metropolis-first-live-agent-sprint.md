@@ -16,22 +16,22 @@ By the end of this two-week sprint, a live, end-to-end demonstration will be del
 
 ### Key Result #1: The Backend Simulation Loop is Functional
 
-* **Description:** The Elixir application must manage the full lifecycle of an agent's decision-making process, from perception to action and consequence.
-* **Success Criteria:**
-    * An AI agent (`GenServer`) spawns with a predefined goal (e.g., `acquire_wood`).
-    * The agent successfully reads the initial world state from the PostgreSQL database (e.g., a tree with wood exists).
-    * The agent uses the HTN planner to generate a valid plan (e.g., `[GoTo(tree), Chop(tree)]`).
-    * The agent executes the plan, resulting in a permanent state change written back to the PostgreSQL database (e.g., the tree no longer has wood, the agent now has wood).
-    * Upon successful action, the agent **broadcasts the state change** to the ENet network hub.
+- **Description:** The Elixir application must manage the full lifecycle of an agent's decision-making process, from perception to action and consequence.
+- **Success Criteria:**
+  - An AI agent (`GenServer`) spawns with a predefined goal (e.g., `acquire_wood`).
+  - The agent successfully reads the initial world state from the PostgreSQL database (e.g., a tree with wood exists).
+  - The agent uses the HTN planner to generate a valid plan (e.g., `[GoTo(tree), Chop(tree)]`).
+  - The agent executes the plan, resulting in a permanent state change written back to the PostgreSQL database (e.g., the tree no longer has wood, the agent now has wood).
+  - Upon successful action, the agent **broadcasts the state change** to the ENet network hub.
 
 ### Key Result #2: The Godot Visualization Client is Live
 
-* **Description:** A Godot client must connect to the Elixir server and act as a "dumb" visualizer for the world state.
-* **Success Criteria:**
-    * A simple 3D scene exists containing a capsule (`agent_01`) and a cube (`tree_01`).
-    * The Godot client successfully connects to the Elixir ENet hub on startup using the `enet-godot` library.
-    * The client receives the `tree_01` state-change broadcast from the server.
-    * Upon receiving the message, the corresponding `tree_01` cube in the 3D scene is hidden or removed.
+- **Description:** A Godot client must connect to the Elixir server and act as a "dumb" visualizer for the world state.
+- **Success Criteria:**
+  - A simple 3D scene exists containing a capsule (`agent_01`) and a cube (`tree_01`).
+  - The Godot client successfully connects to the Elixir ENet hub on startup using the `enet-godot` library.
+  - The client receives the `tree_01` state-change broadcast from the server.
+  - Upon receiving the message, the corresponding `tree_01` cube in the 3D scene is hidden or removed.
 
 ### The Final Test (End-to-End Verification)
 
@@ -39,22 +39,22 @@ By the end of this two-week sprint, a live, end-to-end demonstration will be del
 
 ## Rules of Engagement (Scope Boundaries)
 
-* **Viewer Only:** The Godot client is a passive viewer. No player input or controls.
-* **Minimalist Art:** The world is untextured cubes and capsules. No animations.
-* **Backend is Truth:** All game logic, state, and planning resides in Elixir.
-* **Happy Path Focus:** We will not build complex reconnect logic or error handling.
-* **One Agent, One Goal:** This sprint focuses on a single agent to prove the pipeline.
+- **Viewer Only:** The Godot client is a passive viewer. No player input or controls.
+- **Minimalist Art:** The world is untextured cubes and capsules. No animations.
+- **Backend is Truth:** All game logic, state, and planning resides in Elixir.
+- **Happy Path Focus:** We will not build complex reconnect logic or error handling.
+- **One Agent, One Goal:** This sprint focuses on a single agent to prove the pipeline.
 
 ## Resources & Timeline
 
-* **Team:** 1 Engineer
-* **Sprint Duration:** **2 Weeks** (10 working days)
-* **Total Capacity:** 10 Person-Days
-* **Estimated Effort:** **8 Person-Days**
-    * *(~4 days for Backend Loop + HTN + DB Integration)*
-    * *(~4 days for ENet Hub + Godot Client Integration)*
-* **Buffer:** **2 Person-Days**
-* **Note on Risk:** The primary risk is the initial integration of three complex, distinct systems (AI Planner, Database, ENet Networking). The 2-day buffer is tight and requires a sharp focus on the defined success criteria to avoid scope creep.
+- **Team:** 1 Engineer
+- **Sprint Duration:** **2 Weeks** (10 working days)
+- **Total Capacity:** 10 Person-Days
+- **Estimated Effort:** **8 Person-Days**
+  - _(~4 days for Backend Loop + HTN + DB Integration)_
+  - _(~4 days for ENet Hub + Godot Client Integration)_
+- **Buffer:** **2 Person-Days**
+- **Note on Risk:** The primary risk is the initial integration of three complex, distinct systems (AI Planner, Database, ENet Networking). The 2-day buffer is tight and requires a sharp focus on the defined success criteria to avoid scope creep.
 
 ## Implementation Plan
 
@@ -90,18 +90,21 @@ We will implement this as a unified sprint combining backend AI agent logic with
 ## Consequences/Risks
 
 ### Positive Consequences
+
 - Validates the entire V-Sekai technology stack in one integrated proof-of-concept
 - Provides clear evidence of feasibility for autonomous agents with visual representation
 - Establishes patterns for future agent-world interactions
 - Demonstrates real-time state synchronization between backend and client
 
 ### Negative Consequences
+
 - Tight timeline with minimal buffer may lead to rushed implementation
 - Minimalist scope may not reveal edge cases in production scenarios
 - Focus on happy path may miss error handling requirements
 - Single agent/single goal may not scale to multi-agent scenarios
 
 ### Risks
+
 - **High Risk:** Integration of three complex systems (AI Planner, Database, ENet) in short timeframe
 - **Medium Risk:** ENet-Godot library compatibility and performance
 - **Low Risk:** PostgreSQL schema design is straightforward for this scope
@@ -109,26 +112,29 @@ We will implement this as a unified sprint combining backend AI agent logic with
 ## Success Criteria
 
 ### Must-Have (Critical Path)
+
 - [ ] Backend agent successfully executes HTN plan and modifies database state
 - [ ] State change is broadcast via ENet to connected clients
 - [ ] Godot client receives broadcast and updates 3D scene accordingly
 - [ ] End-to-end test passes: agent action → database change → client visualization
 
 ### Should-Have (Important but not critical)
+
 - [ ] Clean separation between backend logic and client visualization
 - [ ] Documented setup and run procedures
 - [ ] Basic error logging for debugging
 
 ### Nice-to-Have (If time permits)
+
 - [ ] Multiple agent types with different goals
 - [ ] Additional world objects beyond tree/agent
 - [ ] Basic animation for state changes
 
 ## Related ADRs
 
-- **ADR-XXX:** Temporal Planner Architecture (for HTN integration)
-- **ADR-YYY:** Database Schema Design (for world state persistence)
-- **ADR-ZZZ:** Godot Integration Patterns (for client visualization)
+- **R25W1398085:** Unified Durative Action Specification and Planner Standardization (for HTN integration)
+- **bitemporal_6nf_postgres.sql:** Bitemporal 6NF PostgreSQL Schema (for world state persistence)
+- **R25W118994A:** Godot LibGodot Integration via Membrane Unifex (for client visualization)
 
 ## Notes
 
