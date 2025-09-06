@@ -1,98 +1,47 @@
-V-Sekai: Neon Frontlines
+Of course. Here is the "V-Sekai: Neon Frontlines" description rewritten in the style of "Operation Neon Spike."
 
-About This Game
+---
 
-V-Sekai: Neon Frontlines combines emergent AI planning systems with immersive 3D environments in a neon-drenched cyberpunk metropolis where every shadow hides opportunity and danger lurks in the glow.
+## Announcing: "Project Metropolis" - The Genesis Block Sprint
 
-Neon Frontlines features intelligent AI companions with goal-task temporal planning, massive scalability through Erlang/Elixir servers, an immersive cyberpunk world in a single city block, and four distinct play styles.
+This isn't a game alpha; it's a **focused technical sprint** with one objective: to build a live, persistent city block that proves our riskiest technologies can create emergent, intelligent life. We're treating this like a simulation stress test—functional, deep, and data-driven over flashy.
 
-The Tactician: Lead your squad in coordinated, high-stakes operations. Master positioning and planning to execute flawless strategies, perfect for the natural raid leader.
+### The Mission
 
-The Gather: Become the engine of the district. Master supply chains, corner the market, and explore the block to fuel the economy through gathering and logistics.
+In this sprint, we will build a live, single-instance micro-verse to prove our core architecture is ready for prime time. By the end, we'll have a running server that validates our **AI Planning Engine** can manage a complex economy and our **Erlang backend** can handle massive concurrency.
 
-The Crafter: Push the limits of efficiency. Optimize resource pipelines and craft superior gear, dedicating yourself to mastering the intricate systems of the metropolis.
+### The Playground (Our "Genesis Block")
 
-The Combatant: Rise through the ranks in competitive combat. Outmaneuver rival squads in skill-based firefights where only the sharpest reflexes and tightest teamwork prevail.
-Steam Tags
+We're building the simplest possible "city" to act as a testbed. Think of it as a **live ecosystem stress test**, not a polished game slice.
 
-Multiplayer, Strategy, Cyberpunk, AI, Tactical, Planning, Logistics, Competitive, Cooperative, Sci-fi, Resource Management, Combat
-System Requirements
+- **The World:** One greybox city block, running as a single, persistent server process.
+- **The "Inhabitants":** Hundreds of AI agents driven by our goal-task temporal planner, alongside a handful of player-observers.
+- **The "Gameplay":** Players don't complete missions; they observe the simulation. They can interact with the world by placing resource orders or tactical objectives to see how the AI agents adapt and coordinate.
 
-Minimum:
+### Sprint Goal #1: The Emergent Ecosystem
 
-    OS: Windows 10, Ubuntu 18.04
+This is the main event. We need to build a **real, functional AI-driven economy** that operates without direct developer intervention.
 
-    Processor: Intel Core i5-6600K
+- **The Challenge:** The Hierarchical Task Network (HTN) must coordinate dozens of multi-agent plans for gathering, crafting, and distribution. The system must intelligently schedule complex tasks, manage resource contention, and adapt to changing conditions.
+- **Definition of Done:** We can demo an AI-run supply chain operating for 24 hours straight. "Gatherer" AIs deplete resource nodes, "Crafter" AIs process materials, and "Tactician" AIs coordinate security patrols. The system must demonstrate **stable, complex, multi-step problem-solving** in real-time with **zero collapses**.
 
-    Memory: 8 GB RAM
+---
 
-    Graphics: NVIDIA GTX 1060 6GB
+### Sprint Goal #2: The Concurrent Hive
 
-    Storage: 20 GB available space
+This tests if our server architecture is solid. We'll implement a barebones slice of the world and flood it with actors.
 
-Recommended:
+- **The Challenge:** The Erlang backend must handle thousands of lightweight processes—one for every AI and player—on a single server instance. The in-memory state must sync flawlessly across this massive population with zero-IOPS transfers.
+- **Definition of Done:** The Genesis Block can sustain **5,000 concurrent AI and player processes** while maintaining a stable server tick rate. The system must pass a "Chaos Test," where an automated script bombards the server with thousands of planning requests and state changes to try and crash the BEAM VM.
 
-    OS: Windows 11, Ubuntu 20.04
+### The "Sim" Rules (Ruthless Scoping)
 
-    Processor: Intel Core i7-8700K
+To finish this, we are explicitly **NOT** building:
 
-    Memory: 16 GB RAM
+- **High-Fidelity Art:** The world will be untextured cubes. Agents will be capsules.
+- **Player-Facing UI:** We'll use a web-based text interface and debug overlays to interact with the simulation.
+- **Sound, Music, or Animations:** Agents will glide. The world is silent.
+- **Direct Player Combat:** The "Combatant" role exists only as a set of behaviors for the AI to test tactical planning.
+- **Anything Else:** If it doesn't directly serve to test the **Emergent Ecosystem** or the **Concurrent Hive**, it's cut.
 
-    Graphics: NVIDIA RTX 3070
-
-    Storage: 50 GB SSD space
-
-Roadmap
-
-Phase 4: Web-based text interface
-Phase 5: Domain simulation
-Phase 6: Enhanced 3D domain simulation
-Technical Architecture
-
-```mermaid
-graph TD
-subgraph "Real-Time Layer<br/>Erlang/Elixir<br/>Lightweight Processes"
-A[Godot Clients<br/>ENet Protocol<br/>DTLS Encryption<br/>3D Block Capsules]
-B[ENet Game Server<br/>Massive Concurrency<br/>Process per World Instance<br/>In-Memory State Sync<br/>Zero-IOPS Transfers]
-end
-
-    subgraph "API Layer<br/>Phoenix/Elixir<br/>Distributed Cluster"
-        C[aria_neon_frontlines<br/>WebSocket Channels<br/>REST Endpoints<br/>User Authentication<br/>World Transitions<br/>Inventory Persistence<br/>Analytics Ingestion]
-    end
-
-    subgraph "Persistence Layer<br/>PostgreSQL + TimescaleDB<br/>ACID Transactions"
-        D[User Tables<br/>Session Management<br/>CDN Metadata<br/>High-Read Consistency]
-        E[World Schemas<br/>Bitemporal 6NF<br/>Time-Series Hypertables<br/>Automatic Partitioning<br/>Compression Policies]
-        F[Analytics Hypertables<br/>Temporal Queries<br/>Event Ingestion<br/>LISTEN/NOTIFY<br/>Real-Time Notifications]
-    end
-
-    subgraph "Planning Engine<br/>HTN+STN Hybrid<br/>382 Test Cases"
-        G[Hierarchical Task Networks<br/>Temporal Constraint Solving<br/>Multi-Agent Coordination<br/>Complex Scheduling<br/>Resource Management]
-        H[The Tactician<br/>Squad Command<br/>Tactical Coordination<br/>Log Tactical Decisions]
-        I[The Provider<br/>Supply Chain Optimization<br/>Route Mapping<br/>Resource Distribution]
-        J[The Artisan<br/>Efficiency Optimization<br/>Resource Allocation<br/>Performance Metrics]
-        K[The Mercenary<br/>Firefight Coordination<br/>Tactical Advantage<br/>Strategic Positioning]
-    end
-
-    subgraph "Database Architecture<br/>Three Logical Databases"
-        L[Lobby & Login<br/>PostgreSQL Standard<br/>User Auth & Sessions]
-        M[Game Server State<br/>AriaState Relational<br/>Predicate-Subject-Fact<br/>Real-Time Sync]
-        N[Per-World Bitemporal<br/>TimescaleDB Hypertables<br/>Historical Versioning<br/>Complex Temporal Queries]
-    end
-
-    A -->|"ENet Protocol<br/>UDP-based<br/>Reliable Messaging"| B
-    B -->|"Phoenix Channels<br/>WebSocket<br/>JSON Payloads"| C
-    C -->|"Ecto Transactions<br/>Optimized Queries<br/>Connection Pooling"| D
-    C -->|"Hypertable Inserts<br/>Time-Series Data<br/>Automatic Partitioning"| E
-    C -->|"Analytics Events<br/>Temporal Bucketing<br/>Real-Time Aggregation"| F
-    G -->|"Intelligent Behavior<br/>Constraint Resolution<br/>Multi-Step Planning"| B
-    H -.->|"Social Coordination<br/>Team Communication<br/>Tactical Planning"| G
-    I -.->|"Logistics Optimization<br/>Route Optimization<br/>Supply Management"| G
-    J -.->|"Efficiency Metrics<br/>Resource Optimization<br/>Performance Tracking"| G
-    K -.->|"Combat Tactics<br/>Strategic Positioning<br/>Risk Assessment"| G
-    D -.->|"User Authentication<br/>Session Validation<br/>Access Control"| L
-    E -.->|"World State Persistence<br/>Temporal Versioning<br/>Historical Queries"| M
-    F -.->|"Event Analytics<br/>Performance Monitoring<br/>Usage Statistics"| N
-```
-
-Built with Elixir, Phoenix, PostgreSQL, and Godot Engine
+This sprint will give us the hard data and confidence we need to move forward, proving our foundational tech is not just a theory, but a living, breathing reality. Let's build the block. 🚀
