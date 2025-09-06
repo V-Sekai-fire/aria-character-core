@@ -6,25 +6,25 @@ Proposed
 
 ## Context
 
-Need inter-block movement, zone transfers, and authoritative trading for 1000+ concurrent players. Current `aria_neon_frontlines` lacks these features.
+Need bot harness for stress testing inter-block movement, zone transfers, and authoritative trading with 1000+ concurrent bots. Current `aria_neon_frontlines` lacks these features.
 
 ## Decision
 
-Create standalone `aria_neon_traverse` app with AriaHybridPlanner integration for massive multiplayer stress testing.
+Create standalone `aria_neon_traverse` bot harness app with AriaHybridPlanner integration for massive multiplayer stress testing.
 
 ## Requirements
 
 - Standalone operation, no `aria_neon_*` dependencies
-- AriaHybridPlanner integration for path optimization
-- 1000+ concurrent player support
+- AriaHybridPlanner integration for bot path optimization
+- 1000+ concurrent bot support
 - Authoritative trading system
 
 ## Architecture
 
-- Block movement with planner optimization
+- Bot block movement with planner optimization
 - Zone transfer mechanics with state persistence
 - Authoritative inventory trading engine
-- Concurrent player management
+- Concurrent bot management
 
 ## Implementation
 
@@ -35,10 +35,10 @@ Create standalone `aria_neon_traverse` app with AriaHybridPlanner integration fo
 
 ## Success Criteria
 
-- Block-to-block movement working
+- Bot block-to-block movement working
 - Zone transfers with persistence
 - Authoritative trading system
-- 1000+ concurrent players
+- 1000+ concurrent bots
 - <100ms response time
 
 ## Timeline
