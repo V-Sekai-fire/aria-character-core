@@ -1,55 +1,97 @@
-[Google Gemini](https://gemini.google.com/app/53d715a6adf1e129)
+# V-Sekai: Neon Frontlines
 
-# R25W1900000: Aria Neon Traverse App
+**About This Game**
 
-## Status
+V-Sekai: Neon Frontlines combines emergent AI planning systems with immersive 3D environments in a neon-drenched cyberpunk metropolis where every shadow hides opportunity and danger lurks in the glow.
 
-Proposed
+Neon Frontlines features intelligent AI companions with goal-task temporal planning, massive scalability through Erlang/Elixir servers, an immersive cyberpunk world in a single city block, and four distinct play styles.
 
-## Context
+Command squads and coordinate tactical operations, offering a fast-paced, team-oriented approach ideal for players seeking quick wins.
 
-This project aims to create a standalone bot harness for stress testing a navmesh-based city block simulation. The simulation focuses on three core, simplified mechanics: seamless bot movement, zone transfers, and trading interactions. The goal is to isolate and rigorously test these specific features, rather than building a full-scale, complex city simulation. This approach allows for a focused and efficient stress test with 1000+ concurrent bots.
+Master supply chains and optimize resource distribution, emphasizing strategic planning and adaptability.
 
-A navigation mesh (navmesh) is a data structure that represents the walkable surfaces of a 3D environment as a network of interconnected polygons. It enables efficient pathfinding and collision detection for AI agents in complex environments.
+Maximize efficiency through intelligent resource allocation, ideal for players who enjoy complex problem-solving.
 
-## Decision
+Outmaneuver rivals in high-stakes firefight coordination, fostering skill-based combat and teamwork.
 
-Create standalone `aria_neon_traverse` bot harness app with AriaHybridPlanner integration for massive multiplayer stress testing.
+## Steam Tags
 
-## Requirements
+Multiplayer, Strategy, Cyberpunk, AI, Tactical, Planning, Logistics, Competitive, Cooperative, Sci-fi, Resource Management, Combat
 
-- Standalone operation, no `aria_neon_*` dependencies.
-- AriaHybridPlanner integration for efficient bot pathfinding.
-- Support for 1000+ concurrent bots.
-- Focus on three core mechanics: bot movement, seamless server travel, and an authoritative trading system.
+## System Requirements
 
-## Architecture
+**Minimum:**
 
-- A core system for bot block-to-block movement, utilizing the planner for path optimization.
-- Zone transfer mechanics with state persistence for seamless travel.
-- An authoritative engine for inventory trading.
-- A robust management system for concurrent bots.
+- OS: Windows 10, Ubuntu 18.04
+- Processor: Intel Core i5-6600K
+- Memory: 8 GB RAM
+- Graphics: NVIDIA GTX 1060 6GB
+- Storage: 20 GB available space
 
-## Success Criteria
+**Recommended:**
 
-- Bot block-to-block movement working.
-- Zone transfers with persistence.
-- Authoritative trading system.
-- 1000+ concurrent bots supported.
-- <100ms response time.
+- OS: Windows 11, Ubuntu 20.04
+- Processor: Intel Core i7-8700K
+- Memory: 16 GB RAM
+- Graphics: NVIDIA RTX 3070
+- Storage: 50 GB SSD space
 
-## Future Vision: V-Sekai: Neon Frontlines
+## Roadmap
 
-This project is the first phase of a larger vision for a multiplayer cyberpunk game. The `aria_neon_traverse_app` bot harness will test core systems, and the following stubs will be built upon for the full "V-Sekai: Neon Frontlines" experience.
+**Phase 4**: Web-based text interface
 
-**Core Gameplay** V-Sekai: Neon Frontlines is a massively scalable, multiplayer game set in a cyberpunk metropolis. The core gameplay loop focuses on intelligent AI planning, resource management, and competitive, tactical combat. The foundation laid by the `aria_neon_traverse_app` will allow for seamless bot movement, zone transfers, and trading between players and AI, which are crucial for all player archetypes.
+**Phase 5**: Domain simulation
 
-**Gameplay Focus**
+**Phase 6**: Enhanced 3D domain simulation
 
-- **Planning Engine:** An innovative AI planning system for complex, real-time decision-making and coordinated team actions.
-- **Player Archetypes:** Players can adopt distinct roles, including `Tactician`, `Gatherer`, `Crafter`, and `Combatant`. These roles are supported by the `aria_neon_traverse_app`'s core mechanics of movement and trading.
-- **Game Modes:** Structured multiplayer modes will be developed to support both competitive and cooperative play styles.
+## Technical Architecture
 
-**Long-Term Technical Architecture** The full architecture will be built upon a robust foundation using a distributed Erlang/Elixir cluster for real-time operations and a distributed database for state and analytics. This will enable massive concurrency and consistent, persistent game state. Key components include an ENet-based game server, a Phoenix/Elixir API layer, and a multi-database persistence system with TimescaleDB for temporal data.
+```mermaid
+graph TD
+    subgraph "Real-Time Layer<br/>Erlang/Elixir<br/>Lightweight Processes"
+        A[Godot Clients<br/>ENet Protocol<br/>DTLS Encryption<br/>3D Block Capsules]
+        B[ENet Game Server<br/>Massive Concurrency<br/>Process per World Instance<br/>In-Memory State Sync<br/>Zero-IOPS Transfers]
+    end
+
+    subgraph "API Layer<br/>Phoenix/Elixir<br/>Distributed Cluster"
+        C[aria_neon_frontlines<br/>WebSocket Channels<br/>REST Endpoints<br/>User Authentication<br/>World Transitions<br/>Inventory Persistence<br/>Analytics Ingestion]
+    end
+
+    subgraph "Persistence Layer<br/>PostgreSQL + TimescaleDB<br/>ACID Transactions"
+        D[User Tables<br/>Session Management<br/>CDN Metadata<br/>High-Read Consistency]
+        E[World Schemas<br/>Bitemporal 6NF<br/>Time-Series Hypertables<br/>Automatic Partitioning<br/>Compression Policies]
+        F[Analytics Hypertables<br/>Temporal Queries<br/>Event Ingestion<br/>LISTEN/NOTIFY<br/>Real-Time Notifications]
+    end
+
+    subgraph "Planning Engine<br/>HTN+STN Hybrid<br/>382 Test Cases"
+        G[Hierarchical Task Networks<br/>Temporal Constraint Solving<br/>Multi-Agent Coordination<br/>Complex Scheduling<br/>Resource Management]
+        H[Local Socializer Archetype<br/>Squad Command<br/>Tactical Coordination<br/>Log Tactical Decisions]
+        I[Block Explorer Archetype<br/>Supply Chain Optimization<br/>Route Mapping<br/>Resource Distribution]
+        J[Local Achiever Archetype<br/>Efficiency Optimization<br/>Resource Allocation<br/>Performance Metrics]
+        K[Block Competitor Archetype<br/>Firefight Coordination<br/>Tactical Advantage<br/>Strategic Positioning]
+    end
+
+    subgraph "Database Architecture<br/>Three Logical Databases"
+        L[Lobby & Login<br/>PostgreSQL Standard<br/>User Auth & Sessions]
+        M[Game Server State<br/>AriaState Relational<br/>Predicate-Subject-Fact<br/>Real-Time Sync]
+        N[Per-World Bitemporal<br/>TimescaleDB Hypertables<br/>Historical Versioning<br/>Complex Temporal Queries]
+    end
+
+    A -->|"ENet Protocol<br/>UDP-based<br/>Reliable Messaging"| B
+    B -->|"Phoenix Channels<br/>WebSocket<br/>JSON Payloads"| C
+    C -->|"Ecto Transactions<br/>Optimized Queries<br/>Connection Pooling"| D
+    C -->|"Hypertable Inserts<br/>Time-Series Data<br/>Automatic Partitioning"| E
+    C -->|"Analytics Events<br/>Temporal Bucketing<br/>Real-Time Aggregation"| F
+    G -->|"Intelligent Behavior<br/>Constraint Resolution<br/>Multi-Step Planning"| B
+    H -.->|"Social Coordination<br/>Team Communication<br/>Tactical Planning"| G
+    I -.->|"Logistics Optimization<br/>Route Optimization<br/>Supply Management"| G
+    J -.->|"Efficiency Metrics<br/>Resource Optimization<br/>Performance Tracking"| G
+    K -.->|"Combat Tactics<br/>Strategic Positioning<br/>Risk Assessment"| G
+    D -.->|"User Authentication<br/>Session Validation<br/>Access Control"| L
+    E -.->|"World State Persistence<br/>Temporal Versioning<br/>Historical Queries"| M
+    F -.->|"Event Analytics<br/>Performance Monitoring<br/>Usage Statistics"| N
+```
+
+---
 
 _Built with Elixir, Phoenix, PostgreSQL, and Godot Engine_
