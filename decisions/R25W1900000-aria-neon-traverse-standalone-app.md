@@ -29,8 +29,11 @@ Create standalone `aria_neon_traverse` app with AriaHybridPlanner integration fo
 ## Implementation
 
 Week 1: Core domain and movement
+
 Week 2: Zone transfers
+
 Week 3: Trading system
+
 Week 4: Performance optimization
 
 ## Success Criteria
