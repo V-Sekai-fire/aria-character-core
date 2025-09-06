@@ -1,0 +1,171 @@
+VERSION 1.3
+
+# -----------------------------------------------------------------------------
+# [T+00:00:00] Initial State: Sprint Start (Valid & Recorded: 2025-09-08T09:00:00Z)
+# All entities for two full squads are instantiated.
+# -----------------------------------------------------------------------------
+
+# Entity Declarations
+ENTITY squad "squad_alpha"
+ENTITY squad "squad_beta"
+ENTITY ai_agent "agent_gatherer_01"
+ENTITY ai_agent "agent_crafter_01"
+ENTITY ai_agent "agent_tactician_01"
+ENTITY ai_agent "agent_combatant_01"
+ENTITY ai_agent "agent_gatherer_02"
+ENTITY ai_agent "agent_crafter_02"
+ENTITY ai_agent "agent_tactician_02"
+ENTITY ai_agent "agent_combatant_02"
+ENTITY resource_node "resource_scrap_pile_01"
+ENTITY resource_node "resource_component_cache_02"
+ENTITY patrol_route "patrol_route_market"
+ENTITY patrol_route "patrol_route_warehouse"
+
+# Initial World State
+ATTRIBUTE_OF resource_node "resource_scrap_pile_01" capacity 10 VALID_FROM 2025-09-08T09:00:00Z RECORDED_AT 2025-09-08T09:00:00Z
+ATTRIBUTE_OF resource_node "resource_component_cache_02" capacity 10 VALID_FROM 2025-09-08T09:00:00Z RECORDED_AT 2025-09-08T09:00:00Z
+ATTRIBUTE_OF squad "squad_alpha" storage_count 0 VALID_FROM 2025-09-08T09:00:00Z RECORDED_AT 2025-09-08T09:00:00Z
+ATTRIBUTE_OF squad "squad_beta" storage_count 0 VALID_FROM 2025-09-08T09:00:00Z RECORDED_AT 2025-09-08T09:00:00Z
+
+# Initial Agent States (Alpha Squad)
+ATTRIBUTE_OF ai_agent "agent_gatherer_01" status "Idle" VALID_FROM 2025-09-08T09:00:00Z RECORDED_AT 2025-09-08T09:00:00Z
+ATTRIBUTE_OF ai_agent "agent_crafter_01" status "Idle" VALID_FROM 2025-09-08T09:00:00Z RECORDED_AT 2025-09-08T09:00:00Z
+ATTRIBUTE_OF ai_agent "agent_tactician_01" status "Idle" VALID_FROM 2025-09-08T09:00:00Z RECORDED_AT 2025-09-08T09:00:00Z
+ATTRIBUTE_OF ai_agent "agent_combatant_01" status "Idle" VALID_FROM 2025-09-08T09:00:00Z RECORDED_AT 2025-09-08T09:00:00Z
+RELATIONSHIP member_of "REL_A1" ai_agent "agent_gatherer_01" squad "squad_alpha" VALID_FROM 2025-09-08T09:00:00Z RECORDED_AT 2025-09-08T09:00:00Z
+RELATIONSHIP member_of "REL_A2" ai_agent "agent_crafter_01" squad "squad_alpha" VALID_FROM 2025-09-08T09:00:00Z RECORDED_AT 2025-09-08T09:00:00Z
+RELATIONSHIP member_of "REL_A3" ai_agent "agent_tactician_01" squad "squad_alpha" VALID_FROM 2025-09-08T09:00:00Z RECORDED_AT 2025-09-08T09:00:00Z
+RELATIONSHIP member_of "REL_A4" ai_agent "agent_combatant_01" squad "squad_alpha" VALID_FROM 2025-09-08T09:00:00Z RECORDED_AT 2025-09-08T09:00:00Z
+
+# Initial Agent States (Beta Squad)
+ATTRIBUTE_OF ai_agent "agent_gatherer_02" status "Idle" VALID_FROM 2025-09-08T09:00:00Z RECORDED_AT 2025-09-08T09:00:00Z
+ATTRIBUTE_OF ai_agent "agent_crafter_02" status "Idle" VALID_FROM 2025-09-08T09:00:00Z RECORDED_AT 2025-09-08T09:00:00Z
+ATTRIBUTE_OF ai_agent "agent_tactician_02" status "Idle" VALID_FROM 2025-09-08T09:00:00Z RECORDED_AT 2025-09-08T09:00:00Z
+ATTRIBUTE_OF ai_agent "agent_combatant_02" status "Idle" VALID_FROM 2025-09-08T09:00:00Z RECORDED_AT 2025-09-08T09:00:00Z
+RELATIONSHIP member_of "REL_B1" ai_agent "agent_gatherer_02" squad "squad_beta" VALID_FROM 2025-09-08T09:00:00Z RECORDED_AT 2025-09-08T09:00:00Z
+RELATIONSHIP member_of "REL_B2" ai_agent "agent_crafter_02" squad "squad_beta" VALID_FROM 2025-09-08T09:00:00Z RECORDED_AT 2025-09-08T09:00:00Z
+RELATIONSHIP member_of "REL_B3" ai_agent "agent_tactician_02" squad "squad_beta" VALID_FROM 2025-09-08T09:00:00Z RECORDED_AT 2025-09-08T09:00:00Z
+RELATIONSHIP member_of "REL_B4" ai_agent "agent_combatant_02" squad "squad_beta" VALID_FROM 2025-09-08T09:00:00Z RECORDED_AT 2025-09-08T09:00:00Z
+
+
+# -----------------------------------------------------------------------------
+# [T+00:05:00] Loop 1: Task Assignment (Valid & Recorded: 2025-09-08T09:05:00Z)
+# Both squads receive their initial objectives from the planner.
+# -----------------------------------------------------------------------------
+
+# Alpha Squad Deploys
+ATTRIBUTE_OF ai_agent "agent_gatherer_01" status "Idle" VALID_FROM 2025-09-08T09:00:00Z VALID_TO 2025-09-08T09:05:00Z RECORDED_AT 2025-09-08T09:00:00Z
+ATTRIBUTE_OF ai_agent "agent_gatherer_01" status "MovingToResource" VALID_FROM 2025-09-08T09:05:00Z RECORDED_AT 2025-09-08T09:05:00Z
+ATTRIBUTE_OF ai_agent "agent_tactician_01" status "Idle" VALID_FROM 2025-09-08T09:00:00Z VALID_TO 2025-09-08T09:05:00Z RECORDED_AT 2025-09-08T09:00:00Z
+ATTRIBUTE_OF ai_agent "agent_tactician_01" status "Patrolling" VALID_FROM 2025-09-08T09:05:00Z RECORDED_AT 2025-09-08T09:05:00Z
+
+# Beta Squad Deploys
+ATTRIBUTE_OF ai_agent "agent_gatherer_02" status "Idle" VALID_FROM 2025-09-08T09:00:00Z VALID_TO 2025-09-08T09:05:00Z RECORDED_AT 2025-09-08T09:00:00Z
+ATTRIBUTE_OF ai_agent "agent_gatherer_02" status "MovingToResource" VALID_FROM 2025-09-08T09:05:00Z RECORDED_AT 2025-09-08T09:05:00Z
+ATTRIBUTE_OF ai_agent "agent_tactician_02" status "Idle" VALID_FROM 2025-09-08T09:00:00Z VALID_TO 2025-09-08T09:05:00Z RECORDED_AT 2025-09-08T09:00:00Z
+ATTRIBUTE_OF ai_agent "agent_tactician_02" status "Patrolling" VALID_FROM 2025-09-08T09:05:00Z RECORDED_AT 2025-09-08T09:05:00Z
+
+
+# -----------------------------------------------------------------------------
+# [T+00:35:00] Loop 1: Gathering Complete (Valid & Recorded: 2025-09-08T09:35:00Z)
+# Both Gatherers have collected resources and begin their return.
+# -----------------------------------------------------------------------------
+
+# Alpha Gatherer
+ATTRIBUTE_OF resource_node "resource_scrap_pile_01" capacity 10 VALID_FROM 2025-09-08T09:00:00Z VALID_TO 2025-09-08T09:35:00Z RECORDED_AT 2025-09-08T09:00:00Z
+ATTRIBUTE_OF resource_node "resource_scrap_pile_01" capacity 9 VALID_FROM 2025-09-08T09:35:00Z RECORDED_AT 2025-09-08T09:35:00Z
+ATTRIBUTE_OF ai_agent "agent_gatherer_01" inventory_count 1 VALID_FROM 2025-09-08T09:35:00Z RECORDED_AT 2025-09-08T09:35:00Z
+ATTRIBUTE_OF ai_agent "agent_gatherer_01" status "Gathering" VALID_FROM 2025-09-08T09:20:00Z VALID_TO 2025-09-08T09:35:00Z RECORDED_AT 2025-09-08T09:20:00Z
+ATTRIBUTE_OF ai_agent "agent_gatherer_01" status "ReturningToBase" VALID_FROM 2025-09-08T09:35:00Z RECORDED_AT 2025-09-08T09:35:00Z
+
+# Beta Gatherer
+ATTRIBUTE_OF resource_node "resource_component_cache_02" capacity 10 VALID_FROM 2025-09-08T09:00:00Z VALID_TO 2025-09-08T09:35:00Z RECORDED_AT 2025-09-08T09:00:00Z
+ATTRIBUTE_OF resource_node "resource_component_cache_02" capacity 9 VALID_FROM 2025-09-08T09:35:00Z RECORDED_AT 2025-09-08T09:35:00Z
+ATTRIBUTE_OF ai_agent "agent_gatherer_02" inventory_count 1 VALID_FROM 2025-09-08T09:35:00Z RECORDED_AT 2025-09-08T09:35:00Z
+ATTRIBUTE_OF ai_agent "agent_gatherer_02" status "Gathering" VALID_FROM 2025-09-08T09:20:00Z VALID_TO 2025-09-08T09:35:00Z RECORDED_AT 2025-09-08T09:20:00Z
+ATTRIBUTE_OF ai_agent "agent_gatherer_02" status "ReturningToBase" VALID_FROM 2025-09-08T09:35:00Z RECORDED_AT 2025-09-08T09:35:00Z
+
+
+# -----------------------------------------------------------------------------
+# [T+01:00:00] Loop 1: Threat Detected & Crafting Begins (Valid & Recorded: 2025-09-08T10:00:00Z)
+# Alpha's Tactician spots a threat while Beta's Crafter begins work.
+# -----------------------------------------------------------------------------
+
+# Threat for Alpha Squad
+ENTITY threat "threat_drone_734"
+ATTRIBUTE_OF threat "threat_drone_734" status "Active" VALID_FROM 2025-09-08T10:00:00Z RECORDED_AT 2025-09-08T10:00:00Z
+ATTRIBUTE_OF squad "squad_alpha" alert_status "Threat Detected" VALID_FROM 2025-09-08T10:00:00Z RECORDED_AT 2025-09-08T10:00:00Z
+
+# Alpha Combatant Dispatched
+ATTRIBUTE_OF ai_agent "agent_combatant_01" status "Idle" VALID_FROM 2025-09-08T09:00:00Z VALID_TO 2025-09-08T10:00:00Z RECORDED_AT 2025-09-08T09:00:00Z
+ATTRIBUTE_OF ai_agent "agent_combatant_01" status "EngagingThreat" VALID_FROM 2025-09-08T10:00:00Z RECORDED_AT 2025-09-08T10:00:00Z
+
+# Crafters from both squads begin their work
+ATTRIBUTE_OF ai_agent "agent_crafter_01" status "Idle" VALID_FROM 2025-09-08T09:00:00Z VALID_TO 2025-09-08T10:00:00Z RECORDED_AT 2025-09-08T09:00:00Z
+ATTRIBUTE_OF ai_agent "agent_crafter_01" status "Crafting" VALID_FROM 2025-09-08T10:00:00Z RECORDED_AT 2025-09-08T10:00:00Z
+ATTRIBUTE_OF ai_agent "agent_crafter_02" status "Idle" VALID_FROM 2025-09-08T09:00:00Z VALID_TO 2025-09-08T10:00:00Z RECORDED_AT 2025-09-08T09:00:00Z
+ATTRIBUTE_OF ai_agent "agent_crafter_02" status "Crafting" VALID_FROM 2025-09-08T10:00:00Z RECORDED_AT 2025-09-08T10:00:00Z
+
+
+# -----------------------------------------------------------------------------
+# [T+01:25:00] Loop 1: Resolution (Valid & Recorded: 2025-09-08T10:25:00Z)
+# Alpha's threat is neutralized, and both Crafters complete their tasks.
+# -----------------------------------------------------------------------------
+
+# Alpha Threat Neutralized
+ATTRIBUTE_OF threat "threat_drone_734" status "Active" VALID_FROM 2025-09-08T10:00:00Z VALID_TO 2025-09-08T10:25:00Z RECORDED_AT 2025-09-08T10:00:00Z
+ATTRIBUTE_OF threat "threat_drone_734" status "Neutralized" VALID_FROM 2025-09-08T10:25:00Z RECORDED_AT 2025-09-08T10:25:00Z
+ATTRIBUTE_OF ai_agent "agent_combatant_01" status "EngagingThreat" VALID_FROM 2025-09-08T10:00:00Z VALID_TO 2025-09-08T10:25:00Z RECORDED_AT 2025-09-08T10:00:00Z
+ATTRIBUTE_OF ai_agent "agent_combatant_01" status "Idle" VALID_FROM 2025-09-08T10:25:00Z RECORDED_AT 2025-09-08T10:25:00Z
+
+# Both Crafters Complete
+ATTRIBUTE_OF squad "squad_alpha" storage_count 1 VALID_FROM 2025-09-08T10:25:00Z RECORDED_AT 2025-09-08T10:25:00Z
+ATTRIBUTE_OF ai_agent "agent_crafter_01" status "Crafting" VALID_FROM 2025-09-08T10:00:00Z VALID_TO 2025-09-08T10:25:00Z RECORDED_AT 2025-09-08T10:00:00Z
+ATTRIBUTE_OF ai_agent "agent_crafter_01" status "Idle" VALID_FROM 2025-09-08T10:25:00Z RECORDED_AT 2025-09-08T10:25:00Z
+ATTRIBUTE_OF squad "squad_beta" storage_count 1 VALID_FROM 2025-09-08T10:25:00Z RECORDED_AT 2025-09-08T10:25:00Z
+ATTRIBUTE_OF ai_agent "agent_crafter_02" status "Crafting" VALID_FROM 2025-09-08T10:00:00Z VALID_TO 2025-09-08T10:25:00Z RECORDED_AT 2025-09-08T10:00:00Z
+ATTRIBUTE_OF ai_agent "agent_crafter_02" status "Idle" VALID_FROM 2025-09-08T10:25:00Z RECORDED_AT 2025-09-08T10:25:00Z
+
+
+# -----------------------------------------------------------------------------
+# [T+01:30:00] Loop 2: New Tasks Assigned (Valid & Recorded: 2025-09-08T10:30:00Z)
+# With the first loop complete, the planner issues new, identical tasks to prove repeatability.
+# -----------------------------------------------------------------------------
+
+ATTRIBUTE_OF ai_agent "agent_gatherer_01" status "MovingToResource" VALID_FROM 2025-09-08T10:30:00Z RECORDED_AT 2025-09-08T10:30:00Z
+ATTRIBUTE_OF ai_agent "agent_tactician_01" status "Patrolling" VALID_FROM 2025-09-08T10:30:00Z RECORDED_AT 2025-09-08T10:30:00Z
+ATTRIBUTE_OF ai_agent "agent_gatherer_02" status "MovingToResource" VALID_FROM 2025-09-08T10:30:00Z RECORDED_AT 2025-09-08T10:30:00Z
+ATTRIBUTE_OF ai_agent "agent_tactician_02" status "Patrolling" VALID_FROM 2025-09-08T10:30:00Z RECORDED_AT 2025-09-08T10:30:00Z
+
+
+# -----------------------------------------------------------------------------
+# [T+02:15:00] Loop 2: Threat Detected for Beta (Valid & Recorded: 2025-09-08T11:15:00Z)
+# Beta's Tactician now discovers a threat, while Alpha continues its loop uninterrupted.
+# -----------------------------------------------------------------------------
+
+# Threat for Beta Squad
+ENTITY threat "threat_glitch_291"
+ATTRIBUTE_OF threat "threat_glitch_291" status "Active" VALID_FROM 2025-09-08T11:15:00Z RECORDED_AT 2025-09-08T11:15:00Z
+ATTRIBUTE_OF squad "squad_beta" alert_status "Threat Detected" VALID_FROM 2025-09-08T11:15:00Z RECORDED_AT 2025-09-08T11:15:00Z
+
+# Beta Combatant Dispatched
+ATTRIBUTE_OF ai_agent "agent_combatant_02" status "Idle" VALID_FROM 2025-09-08T09:00:00Z VALID_TO 2025-09-08T11:15:00Z RECORDED_AT 2025-09-08T09:00:00Z
+ATTRIBUTE_OF ai_agent "agent_combatant_02" status "EngagingThreat" VALID_FROM 2025-09-08T11:15:00Z RECORDED_AT 2025-09-08T11:15:00Z
+
+# Meanwhile, Alpha's Crafter begins its second run
+ATTRIBUTE_OF ai_agent "agent_crafter_01" status "Crafting" VALID_FROM 2025-09-08T11:15:00Z RECORDED_AT 2025-09-08T11:15:00Z
+
+
+# -----------------------------------------------------------------------------
+# [T+02:40:00] Loop 2: Resolution (Valid & Recorded: 2025-09-08T11:40:00Z)
+# Beta's threat is neutralized and the second loop of crafting completes for both squads.
+# -----------------------------------------------------------------------------
+
+# Beta Threat Neutralized
+ATTRIBUTE_OF threat "threat_glitch_291" status "Active" VALID_FROM 2025-09-08T11:15:00Z VALID_TO 2025-09-08T11:40:00Z RECORDED_AT 2025-09-08T11:15:00Z
+ATTRIBUTE_OF threat "threat_glitch_291" status "Neutralized" VALID_FROM 2025-09-08T11:40:00Z RECORDED_AT 2025-09-08T11:40:00Z
+ATTRIBUTE_OF ai_agent "agent_combatant_02" status "Idle" VALID_FROM 2025-09-08T11:40:00Z RECORDED_AT 2025-09-08T11:40:00Z
+
+# Both Crafters complete their second item, inventories are now 2
+ATTRIBUTE_OF squad "squad_alpha" storage_count 2 VALID_FROM 2025-09-08T11:40:00Z RECORDED_AT 2025-09-08T11:40:00Z
+ATTRIBUTE_OF squad "squad_beta" storage_count 2 VALID_FROM 2025-09-08T11:40:00Z RECORDED_AT 2025-09-08T11:40:00Z
